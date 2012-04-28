@@ -260,10 +260,6 @@ sub wertungspunkte_einfuegen($$) {
     }
 }
 
-my $cfg = cfg_datei_parsen($ARGV[0]);
-my $fahrer_nach_startnummer = dat_datei_parsen($ARGV[1]);
-wertungspunkte_einfuegen $fahrer_nach_startnummer, $cfg;
-
 sub rang_wenn_definiert($$) {
     my ($a, $b) = @_;
 
@@ -332,6 +328,10 @@ sub ergebnis_ausgeben($$) {
 	print "\n";
     }
 }
+
+my $cfg = cfg_datei_parsen($ARGV[0]);
+my $fahrer_nach_startnummer = dat_datei_parsen($ARGV[1]);
+wertungspunkte_einfuegen $fahrer_nach_startnummer, $cfg;
 
 # FIXME: Das ist böse ...
 binmode(STDOUT, ":utf8");
