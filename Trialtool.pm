@@ -1,32 +1,37 @@
 #! /usr/bin/perl -w
 
-# Trialtool - Dateiformat
+# Lesen des Trialtool - Dateiformats
+
+# Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher.gmail.com>
 #
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Affero General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+# details.
+#
+# You can find a copy of the GNU Affero General Public License at
+# <http://www.gnu.org/licenses/>.
+
 # Die *.dat - Dateien bestehen aus Datensätzen zu je 847 Bytes pro Fahrer,
 # direkt vom Dateianfang weg.  Das Format der Fahrerdaten ist in $fahrer_format
 # beschrieben.  Die Datensätze 0 - 999 enthalten die Fahrer mit zugeordneter
 # Startnummer, darauf folgen in den Datensätzen 1000 bis ~1400 Fahrer ohne
 # Startnummer.  Danach folgen die den Fahrern zugeordneten Helfer.
-# 
+#
 # Die *.cfg - Dateien enthalten die Veranstaltungsdaten (siehe $cfg_format).
 #
+# TODO:
 # * Wie werden die Zusatzpunkte gespeichert?
 # * Wie speichert das Trialtool die Reihenfolge der Fahrer in den
 #   Ergebnislisten?
-#
-# TODO:
-# * UTF-8 Zeichencodierung fixen
-# * Datenmodell
-# * Datenbank füttern
-# * Änderungen erkennen und nur Änderungen schicken
-# * "Dameon" mode
-# * Logfile?
-# * Web-Auswertung: PHP?
-# * Jahreswertung implementieren
-# * Wie doppelte Veranstaltungen erkennen? Über Titel?
+# * Wo stehen die Einstellungen für den Bewertungsmodus?
 
 use Parse::Binary::FixedFormat;
-use Data::Dumper;
 use FileHandle;
 use strict;
 
@@ -45,19 +50,6 @@ my $cfg_format = [
     ":A208",				# ?
     "runden:A:15",			# Anzahl der Runden je Klasse ("4")
 ];
-
-sub cfg_datei_parsen($) {
-    my ($dateiname) = @_;
-
-    my $fh = new FileHandle($dateiname);
-    binmode $fh, ":raw";
-    my $cfg = do { local $/; <$fh> };
-    my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
-    $cfg = $cfg_parser->unformat($cfg);
-    delete $cfg->{''};
-    $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
-    return $cfg;
-}
 
 my $fahrer_format = [
     "klasse:S<",
@@ -91,7 +83,7 @@ my $fahrer_format = [
     ":A2",				# Zusatzpunkte (Codierung?)
     "punkte_pro_runde:S<:5",
     ":A60",				# ?
-    "oer_1er_2er_3er:S<:4",
+    "os_1s_2s_3s:S<:4",
     ":A6",				# ?
     ":S<",				# Punkte + Zusatzpunkte (Codierung?)
     "ausfall:S<",			# 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
@@ -100,6 +92,19 @@ my $fahrer_format = [
     ":A2",				# ?
     "punkte_pro_sektion:S<:75",		# 6 = kein Ergebnis
 ];
+
+sub cfg_datei_parsen($) {
+    my ($dateiname) = @_;
+
+    my $fh = new FileHandle($dateiname);
+    binmode $fh, ":raw";
+    my $cfg = do { local $/; <$fh> };
+    my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
+    $cfg = $cfg_parser->unformat($cfg);
+    delete $cfg->{''};
+    $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
+    return $cfg;
+}
 
 sub runden_zaehlen($) {
     my ($string) = @_;
@@ -143,27 +148,28 @@ sub rang_vergleich($$) {
     my ($a, $b) = @_;
 
     # Fahrer mit Papierabnahme vor Fahrern ohne Papierabnahme
-    return $b->{papierabnahme} - $a->{papierabnahme}
-    	if $a->{papierabnahme} != $b->{papierabnahme};
+    return $b->{papierabnahme} <=> $a->{papierabnahme}
+	if $a->{papierabnahme} != $b->{papierabnahme};
+    # FIXME: Braucht es das wirklich?
 
     # Fahrer im Rennen und ausgefallene Fahrer vor Fahrern aus der Wertung und
     # nicht gestarteten Fahrern
-    return ($a->{ausfall} <= 3) - ($b->{ausfall} <= 3)
-    	if ($a->{ausfall} <= 3) != ($b->{ausfall} <= 3);
+    return ($a->{ausfall} <= 3) <=> ($b->{ausfall} <= 3)
+	if ($a->{ausfall} <= 3) != ($b->{ausfall} <= 3);
 
     # Abfallend nach gefahrenen Runden
-    return $b->{runden} - $a->{runden}
-    	if $a->{runden} != $b->{runden};
+    return $b->{runden} <=> $a->{runden}
+	if $a->{runden} != $b->{runden};
 
     # Aufsteigend nach Punkten
-    return $a->{punkte} - $b->{punkte}
+    return $a->{punkte} <=> $b->{punkte}
 	if $a->{punkte} != $b->{punkte};
 
     # Abfallend nach 0ern, 1ern, 2ern, 3ern
-    my $ax = $a->{oer_1er_2er_3er};
-    my $bx = $b->{oer_1er_2er_3er};
+    my $ax = $a->{os_1s_2s_3s};
+    my $bx = $b->{os_1s_2s_3s};
     for (my $n = 0; $n < @$ax; $n++) {
-	return $bx->[$n] - $ax->[$n]
+	return $bx->[$n] <=> $ax->[$n]
 	    if $ax->[$n] != $bx->[$n];
     }
 
@@ -171,12 +177,12 @@ sub rang_vergleich($$) {
     $ax = $a->{punkte_pro_runde};
     $bx = $b->{punkte_pro_runde};
     for (my $n = @$ax - 1; $n >= 0; $n--){
-	return $ax->[$n] - $bx->[$n]
+	return $ax->[$n] <=> $bx->[$n]
 	    if $ax->[$n] != $bx->[$n];
     }
 
     # Aufsteigend nach Ergebnis im Stechen
-    return $a->{stechen} - $b->{stechen};
+    return $a->{stechen} <=> $b->{stechen};
 }
 
 sub rang_berechnen($) {
@@ -223,6 +229,8 @@ sub dat_datei_parsen($) {
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
 	punkte_ausrechnen $fahrer;
+	delete $fahrer->{geburtsdatum}
+	    if $fahrer->{geburtsdatum} eq "01.01.1901";
 	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
     }
 
@@ -231,6 +239,11 @@ sub dat_datei_parsen($) {
     return $fahrer_nach_startnummern;
 }
 
+# FIXME:
+# * "Jahreswertung" beachten
+# * Angeben, nach welcher Wertung Punkte vergeben werden sollen
+# * Wenn Fahrer aus der Jahreswertung sind, stimmt der Rang nicht
+#   mehr mit den Punkten überein!
 sub wertungspunkte_einfuegen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
 
@@ -242,87 +255,36 @@ sub wertungspunkte_einfuegen($$) {
 		    $wp->[$fahrer->{rang} - 1] != 0 &&
 		    $fahrer->{runden} == $cfg->{runden}[$idx] &&
 		    !$fahrer->{ausfall};
-	
+
 	$fahrer->{wertungspunkte} = $wp->[$fahrer->{rang} - 1];
     }
 }
 
-sub rang_wenn_definiert($$) {
-    my ($a, $b) = @_;
+sub trialtool_dateien(@) {
+    my (%cfg, %dat);
 
-    return exists($a->{rang}) - exists($b->{rang})
-	if exists($a->{rang}) != exists($b->{rang});
-    return $a->{rang} <=> $b->{rang};
-}
-
-sub ergebnis_ausgeben($$) {
-    my ($cfg, $fahrer_nach_startnummer) = @_;
-
-    my $ausfall = {
-	3 => "ausgefallen",
-	4 => "aus der wertung",
-	5 => "nicht gestartet",
-	6 => "nicht gestartet, entschuldigt"
-    };
-
-    print "$cfg->{titel}[0]\n$cfg->{subtitel}[0]\n\n";
-
-    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
-    foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
-	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	my $idx = $klasse - 1;
-	my $runden = $cfg->{runden}[$idx];
-
-	printf "$cfg->{klassen}[$idx]\n";
-	print "     Nr." . (" " x 22);
-	for (my $n = 0; $n < $runden; $n++) {
-	   print "  R", $n + 1;
+    foreach my $arg (@_) {
+	if ($arg =~ /^(.*)\.cfg$/i) {
+	    $cfg{$1} = $arg;
+	} elsif ($arg =~ /^(.*)\.dat$/i) {
+	    $dat{$1} = $arg;
+	} else {
+	    $dat{$arg} = "$arg.dat";
 	}
-	print "  ZP  0S  1S  2S  3S  Ges  WP\n";
-	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
-	foreach my $fahrer (@$fahrer_in_klasse) {
-	    next if $fahrer->{runden} == 0;
-	    if ($fahrer->{runden} == $runden &&  !$fahrer->{ausfall}) {
-		printf " %2u", $fahrer->{rang};
-	    } else {
-		printf "   ";
-	    }
-	    printf " %s%3u", ($fahrer->{ausfall} == 4 ? "(" : " "), $fahrer->{startnummer};
-	    printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
-	    for (my $n = 0; $n < $runden; $n++) {
-		if ($fahrer->{runden} > $n) {
-		    printf "  %2u", $fahrer->{punkte_pro_runde}[$n];
-		} else {
-		    print "   -";
-		}
-	    }
-	    print "    ";
-	    if ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
-		print "  $ausfall->{$fahrer->{ausfall}}";
-	    } else {
-		for (my $n = 0; $n < 4; $n++) {
-		    printf "  %2u", $fahrer->{oer_1er_2er_3er}[$n];
-		}
-		printf "  %3u", $fahrer->{punkte};
-		if (exists $fahrer->{wertungspunkte}) {
-		    printf "  %2u", $fahrer->{wertungspunkte};
-		} elsif ($fahrer->{ausfall} == 4) {
-			print ")";
-		}
-	    }
-	    print "\n";
-	}
-	print "\n";
     }
+    foreach my $arg (keys %cfg) {
+	$dat{$arg} = "$arg.dat"
+	    unless exists $dat{$arg};
+    }
+    foreach my $arg (keys %dat) {
+	$cfg{$arg} = "$arg.cfg"
+	    unless exists $cfg{$arg};
+    }
+    for my $file (values %cfg, values %dat) {
+	die "Datei $file existiert nicht\n"
+	    unless -e $file;
+    }
+    return map { [$cfg{$_}, $dat{$_}] } sort keys %cfg;
 }
 
-my $cfg = cfg_datei_parsen($ARGV[0]);
-my $fahrer_nach_startnummer = dat_datei_parsen($ARGV[1]);
-wertungspunkte_einfuegen $fahrer_nach_startnummer, $cfg;
-
-# FIXME: Das ist böse ...
-binmode(STDOUT, ":utf8");
-
-ergebnis_ausgeben $cfg, $fahrer_nach_startnummer;
-# print Dumper($cfg);
-# print Dumper($fahrer_nach_startnummer);
+1;
