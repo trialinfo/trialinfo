@@ -1,6 +1,6 @@
 #! /usr/bin/perl -w
 
-# Trialtool
+# Trialtool - Dateiformat
 #
 # Die *.dat - Dateien bestehen aus Datensätzen zu je 847 Bytes pro Fahrer,
 # direkt vom Dateianfang weg.  Das Format der Fahrerdaten ist in $fahrer_format
@@ -8,6 +8,8 @@
 # Startnummer, darauf folgen in den Datensätzen 1000 bis ~1400 Fahrer ohne
 # Startnummer.  Danach folgen die den Fahrern zugeordneten Helfer.
 # 
+# Die *.cfg - Dateien enthalten die Veranstaltungsdaten (siehe $cfg_format).
+#
 # * Wie werden die Zusatzpunkte gespeichert?
 # * Wie speichert das Trialtool die Reihenfolge der Fahrer in den
 #   Ergebnislisten?
@@ -19,6 +21,9 @@
 # * Änderungen erkennen und nur Änderungen schicken
 # * "Dameon" mode
 # * Logfile?
+# * Web-Auswertung: PHP?
+# * Jahreswertung implementieren
+# * Wie doppelte Veranstaltungen erkennen? Über Titel?
 
 use Parse::Binary::FixedFormat;
 use Data::Dumper;
