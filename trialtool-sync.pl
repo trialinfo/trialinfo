@@ -22,7 +22,6 @@
 
 use Parse::Binary::FixedFormat;
 use Data::Dumper;
-use Encode qw(find_encoding);
 use FileHandle;
 use strict;
 
@@ -46,11 +45,11 @@ sub cfg_datei_parsen($) {
     my ($dateiname) = @_;
 
     my $fh = new FileHandle($dateiname);
+    binmode $fh, ":raw";
     my $cfg = do { local $/; <$fh> };
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
     $cfg = $cfg_parser->unformat($cfg);
     delete $cfg->{''};
-    zeichensatz_konvertieren($cfg, $cfg_format);
     $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
     return $cfg;
 }
@@ -96,23 +95,6 @@ my $fahrer_format = [
     ":A2",				# ?
     "punkte_pro_sektion:S<:75",		# 6 = kein Ergebnis
 ];
-
-sub zeichensatz_konvertieren($$) {
-    my ($fahrer, $fahrer_format) = @_;
-    my $encoding = find_encoding("iso-8859-15")
-	or die "Can't find iso-8859-15 encoding\n";
-
-    # FIXME: Aus irgend einem Grund decodiert er nicht richtig ...
-
-    foreach my $f (@$fahrer_format) {
-	next unless $f =~ /(.*):A/ && $1 ne "";
-	if (ref($fahrer->{$1}) eq "ARRAY") {
-	    $fahrer->{$1} = [ map { $encoding->decode($_) } @{$fahrer->{$1}} ];
-	} else {
-	    $fahrer->{$1} = $encoding->decode($fahrer->{$1});
-	}
-    }
-}
 
 sub runden_zaehlen($) {
     my ($string) = @_;
@@ -219,6 +201,7 @@ sub dat_datei_parsen($) {
     my ($dateiname) = @_;
 
     my $fh = new FileHandle($dateiname);
+    binmode $fh, ":raw";
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
     my $fahrer_nach_klassen;
@@ -230,7 +213,6 @@ sub dat_datei_parsen($) {
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
 	delete $fahrer->{''};
-	zeichensatz_konvertieren($fahrer, $fahrer_format);
 	$fahrer->{startnummer} = $n + 1;
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
