@@ -155,15 +155,24 @@ sub mtime($) {
     return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
 }
 
-sub in_datenbank_schreiben($$$$$$) {
-    my ($dbh, $id, $cfg_name, $dat_name, $fahrer_nach_startnummer, $cfg) = @_;
+sub veranstaltung_aktualisieren($$$$) {
+    my ($dbh, $id, $cfg_mtime, $dat_mtime) = @_;
+
+    my $sth = $dbh->prepare(qq{
+	UPDATE veranstaltung
+	SET cfg_mtime = ?, dat_mtime = ?
+	WHERE id = ?
+    });
+    $sth->execute($cfg_mtime, $dat_mtime, $id);
+}
+
+sub in_datenbank_schreiben($$$$$$$$) {
+    my ($dbh, $id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime,
+	$fahrer_nach_startnummer, $cfg) = @_;
     my $sth;
 
-    my $cfg_mtime = mtime($cfg_name);
-    my $dat_mtime = mtime($dat_name);
-
     if ($id) {
-	veranstaltung_loeschen  $dbh, $id;
+	veranstaltung_aktualisieren $dbh, $id, $cfg_mtime, $dat_mtime;
     } else {
 	$sth = $dbh->prepare(qq{
 	    SELECT MAX(id) + 1
@@ -171,13 +180,13 @@ sub in_datenbank_schreiben($$$$$$) {
 	});
 	$sth->execute;
 	$id = $sth->fetchrow_array || 1;
+	$sth = $dbh->prepare(qq{
+	    INSERT INTO veranstaltung (id, cfg_name, cfg_mtime,
+				       dat_name, dat_mtime)
+	    VALUES (?, ?, ?, ?, ?)
+	});
+	$sth->execute($id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime);
     }
-    $sth = $dbh->prepare(qq{
-	INSERT INTO veranstaltung (id, cfg_name, cfg_mtime,
-				   dat_name, dat_mtime)
-	VALUES (?, ?, ?, ?, ?)
-    });
-    $sth->execute($id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime);
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO wertung (id, nummer, titel, subtitel,
@@ -453,17 +462,6 @@ sub veranstaltung_umnummerieren($$) {
     return $old_id;
 }
 
-sub veranstaltung_aktualisieren($$$$) {
-    my ($dbh, $id, $cfg_mtime, $dat_mtime) = @_;
-
-    my $sth = $dbh->prepare(qq{
-	UPDATE veranstaltung
-	SET cfg_mtime = ?, dat_mtime = ?
-	WHERE id = ?
-    });
-    $sth->execute($cfg_mtime, $dat_mtime, $id);
-}
-
 my $tabellen_erzeugen;
 my $temp_db = ':memory:';
 my $poll_intervall;  # Sekunden
@@ -500,10 +498,13 @@ if (@ARGV) {
 	my ($id, $veraendert) = status($tmp_dbh, $cfg_name, $dat_name);
 
 	if ($veraendert || $poll_intervall || $force) {
+	    my $cfg_mtime = mtime($cfg_name);
+	    my $dat_mtime = mtime($dat_name);
 	    my $cfg = cfg_datei_parsen($cfg_name);
 	    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
 	    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
-	    $id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $dat_name,
+	    $id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
+					 $dat_name, $dat_mtime,
 					 $fahrer_nach_startnummer, $cfg;
 	}
 	if ($veraendert || $force) {
@@ -526,7 +527,8 @@ if (@ARGV) {
 		my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
 		rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
 		my $old_id = veranstaltung_umnummerieren $tmp_dbh, $id;
-		in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $dat_name,
+		in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
+				       $dat_name, $dat_mtime,
 				       $fahrer_nach_startnummer, $cfg;
 		$dbh->begin_work;
 		andere_tabellen_aktualisieren $tmp_dbh, $dbh, $id, $old_id;
