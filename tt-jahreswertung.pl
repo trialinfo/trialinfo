@@ -8,7 +8,7 @@
 #
 # * Lizenzfahrer bekommen (1-100) in den Klassen 1-10 keine Wertungspunkte =>
 #   überprüfen oder sogar erzwingen ...
-# * In der Klasse 5 gibt es keine Wertungspunkte.
+# * In der Klasse 5 gibt es keine Jahreswertungspunkte.
 
 use Trialtool;
 use strict;
