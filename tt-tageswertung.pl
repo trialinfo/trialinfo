@@ -4,7 +4,6 @@
 # TODO:
 # * UTF-8 Zeichencodierung fixen
 # * UTF-8-Codierung im Dateinamen in der Datenbank ist kaputt
-# * Jahreswertung implementieren
 
 use Trialtool;
 use strict;
@@ -29,6 +28,7 @@ sub tageswertung($$) {
 	6 => "nicht gestartet, entschuldigt"
     };
 
+    print "Tageswertung\n";
     print "$cfg->{titel}[0]\n$cfg->{subtitel}[0]\n\n";
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
@@ -86,7 +86,7 @@ binmode(STDOUT, ":utf8");
 foreach my $cfg_dat (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen($cfg_dat->[0]);
     my $fahrer_nach_startnummer = dat_datei_parsen($cfg_dat->[1]);
-    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
     tageswertung $cfg, $fahrer_nach_startnummer;
 }
 

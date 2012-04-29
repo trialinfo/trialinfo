@@ -185,13 +185,8 @@ sub rang_vergleich($$) {
     return $a->{stechen} <=> $b->{stechen};
 }
 
-# FIXME:
-# * "Jahreswertung" beachten
-# * Angeben, nach welcher Wertung Punkte vergeben werden sollen
-# * Wenn Fahrer aus der Jahreswertung sind, stimmt der Rang nicht
-#   mehr mit den Punkten überein!
-sub rang_und_wertungspunkte_berechnen($$) {
-    my ($fahrer_nach_startnummer, $cfg) = @_;
+sub rang_und_wertungspunkte_berechnen($$$) {
+    my ($fahrer_nach_startnummer, $wertung, $cfg) = @_;
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
     foreach my $klasse (keys %$fahrer_nach_klassen) {
@@ -221,6 +216,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    next unless defined $fahrer->{rang} &&
+			$fahrer->{wertungen}[$wertung - 1] &&
 			$fahrer->{runden} == $cfg->{runden}[$klasse - 1] &&
 			!$fahrer->{ausfall};
 	    if ($vorheriger_fahrer &&
