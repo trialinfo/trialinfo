@@ -83,9 +83,10 @@ sub tageswertung($$) {
 # FIXME: Das ist böse ...
 binmode(STDOUT, ":utf8");
 
-foreach my $cfg_dat (trialtool_dateien @ARGV) {
-    my $cfg = cfg_datei_parsen($cfg_dat->[0]);
-    my $fahrer_nach_startnummer = dat_datei_parsen($cfg_dat->[1]);
+foreach my $x (trialtool_dateien @ARGV) {
+    my ($cfg_name, $dat_name) = @$x;
+    my $cfg = cfg_datei_parsen($cfg_name);
+    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
     tageswertung $cfg, $fahrer_nach_startnummer;
 }
