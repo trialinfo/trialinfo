@@ -68,19 +68,21 @@ sub gesamtwertung($$) {
 print "ÖTSV und OSK Jahreswertung\n\n";
 
 my $fahrer_nach_klassen = fahrer_nach_klassen($letzte_fahrer);
-foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
+foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
     my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
-    printf " %3s  %-20.20s", "Nr.", "Name";
+    printf " %2s  %3s  %-20.20s", "", "Nr.", "Name";
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $gestartet = $veranstaltungen->[$n][0]{gestartete_klassen}[$klasse - 1];
 	printf "  %2s", $gestartet ? $n + 1 : "";
     }
     printf "  Ges\n";
-    foreach my $fahrer (sort gesamtwertung @$fahrer_in_klasse) {
+    $fahrer_in_klasse = [ sort gesamtwertung @$fahrer_in_klasse ];
+    for (my $idx = 0; $idx < @$fahrer_in_klasse; $idx++) {
+	my $fahrer = $fahrer_in_klasse->[$idx];
 	next unless exists $fahrer->{gesamtpunkte};
 	my $startnummer = $fahrer->{startnummer};
-	printf " %3u", $startnummer;
+	printf " %2s. %3u", $idx + 1, $startnummer;
 	printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	    my $veranstaltung = $veranstaltungen->[$n];

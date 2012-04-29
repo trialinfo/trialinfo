@@ -32,7 +32,7 @@ sub tageswertung($$) {
     print "$cfg->{titel}[0]\n$cfg->{subtitel}[0]\n\n";
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
-    foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
+    foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 	my $idx = $klasse - 1;
 	my $runden = $cfg->{runden}[$idx];
@@ -47,11 +47,11 @@ sub tageswertung($$) {
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    next if $fahrer->{runden} == 0 && !$fahrer->{papierabnahme};
 	    if ($fahrer->{runden} == $runden &&  !$fahrer->{ausfall}) {
-		printf " %2u", $fahrer->{rang};
+		printf " %2u.", $fahrer->{rang};
 	    } else {
 		printf "   ";
 	    }
-	    printf " %s%3u", ($fahrer->{ausfall} == 4 ? "(" : " "), $fahrer->{startnummer};
+	    printf "%s%3u", ($fahrer->{ausfall} == 4 ? "(" : " "), $fahrer->{startnummer};
 	    printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
