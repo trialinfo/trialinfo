@@ -127,9 +127,10 @@ DROP TABLE IF EXISTS `veranstaltung`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `veranstaltung` (
   `id` int(11) NOT NULL,
-  `dateiname` varchar(128) NOT NULL,
   `dat_mtime` datetime DEFAULT NULL,
   `cfg_mtime` datetime DEFAULT NULL,
+  `cfg_name` varchar(128) DEFAULT NULL,
+  `dat_name` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -173,4 +174,4 @@ CREATE TABLE `wertungspunkte` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-04-29  1:01:25
+-- Dump completed on 2012-04-29  3:27:01

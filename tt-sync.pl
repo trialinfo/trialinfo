@@ -17,25 +17,29 @@ use strict;
 
 my $pfx = "";  # Präfix für die Tabellennamen
 
-sub sync_to_db($$$$) {
-    my ($dbh, $dateiname, $fahrer_nach_startnummer, $cfg) = @_;
+sub mtime($) {
+    my ($dateiname) = @_;
+
+    my $stat = stat("$dateiname")
+	or die "$dateiname: $!\n";
+    return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
+}
+
+sub sync_to_db($$$$$) {
+    my ($dbh, $cfg_name, $dat_name, $fahrer_nach_startnummer, $cfg) = @_;
     my $sth;
     my $id;  # Identifier der Veranstaltung
 
-    my $cfg_st = stat("$dateiname.cfg")
-	or die "$dateiname.cfg: $!\n";
-    my $dat_st = stat("$dateiname.dat")
-	or die "$dateiname.dat: $!\n";
-    my $cfg_mtime = strftime("%Y-%m-%d %H:%M:%S", localtime($cfg_st->mtime));
-    my $dat_mtime = strftime("%Y-%m-%d %H:%M:%S", localtime($dat_st->mtime));
+    my $cfg_mtime = mtime($cfg_name);
+    my $dat_mtime = mtime($dat_name);
 
     $dbh->begin_work;
     $sth = $dbh->prepare(qq{
 	SELECT id, cfg_mtime, dat_mtime
 	FROM ${pfx}veranstaltung
-	WHERE dateiname = ?
+	WHERE cfg_name = ? AND dat_name = ?
     });
-    $sth->execute($dateiname);
+    $sth->execute($cfg_name, $dat_name);
     my @ids = $sth->fetchrow_array;
     if (@ids) {
 	if ($ids[1] eq $cfg_mtime && $ids[2] eq $dat_mtime) {
@@ -63,11 +67,11 @@ sub sync_to_db($$$$) {
 	@ids = $sth->fetchrow_array;
 	$id = (@ids && defined $ids[0]) ? $ids[0] : 1;
 	$sth = $dbh->prepare(qq{
-	    INSERT INTO ${pfx}veranstaltung (id, dateiname, cfg_mtime,
-					     dat_mtime)
-	    VALUES (?, ?, ?, ?)
+	    INSERT INTO ${pfx}veranstaltung (id, cfg_name, cfg_mtime,
+					     dat_name, dat_mtime)
+	    VALUES (?, ?, ?, ?, ?)
 	});
-	$sth->execute($id, $dateiname, $cfg_mtime, $dat_mtime);
+	$sth->execute($id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime);
     }
     $sth = $dbh->prepare(qq{
 	INSERT INTO ${pfx}wertung (veranstaltung, nummer, titel, subtitel,
@@ -154,20 +158,14 @@ sub sync_to_db($$$$) {
     $dbh->commit;
 }
 
-my $dateiname = $ARGV[0];
-$dateiname =~ s/\.(cfg|dat)$//i;
-print "Datei $dateiname.cfg nicht gefunden\n"
-    unless -e "$dateiname.cfg";
-print "Datei $dateiname.dat nicht gefunden\n"
-    unless -e "$dateiname.dat";
-
-my $cfg = cfg_datei_parsen("$dateiname.cfg");
-my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat");
-wertungspunkte_einfuegen $fahrer_nach_startnummer, $cfg;
-
 # 'DBI:mysql:databasename;host=db.example.com'
 my $dbh = DBI->connect('DBI:mysql:mydb', 'agruen', '76KILcxM',
 		       { RaiseError => 1, AutoCommit => 1 })
     or die "Could not connect to database: $DBI::errstr\n";
 
-sync_to_db $dbh, $dateiname, $fahrer_nach_startnummer, $cfg;
+foreach my $cfg_dat (trialtool_dateien @ARGV) {
+    my $cfg = cfg_datei_parsen($cfg_dat->[0]);
+    my $fahrer_nach_startnummer = dat_datei_parsen($cfg_dat->[1]);
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+    sync_to_db $dbh, $cfg_dat->[0], $cfg_dat->[1], $fahrer_nach_startnummer, $cfg;
+}
