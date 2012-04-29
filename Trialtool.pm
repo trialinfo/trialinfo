@@ -185,9 +185,15 @@ sub rang_vergleich($$) {
     return $a->{stechen} <=> $b->{stechen};
 }
 
-sub rang_berechnen($) {
-    my ($fahrer_nach_klassen) = @_;
+# FIXME:
+# * "Jahreswertung" beachten
+# * Angeben, nach welcher Wertung Punkte vergeben werden sollen
+# * Wenn Fahrer aus der Jahreswertung sind, stimmt der Rang nicht
+#   mehr mit den Punkten überein!
+sub rang_und_wertungspunkte_berechnen($$) {
+    my ($fahrer_nach_startnummer, $cfg) = @_;
 
+    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
     foreach my $klasse (keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 	my $rang = 1;
@@ -206,6 +212,28 @@ sub rang_berechnen($) {
 	}
 	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
     }
+
+    my $wp = $cfg->{wertungspunkte};
+    foreach my $klasse (keys %$fahrer_nach_klassen) {
+	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
+	my $idx = 0;
+
+	my $vorheriger_fahrer;
+	foreach my $fahrer (@$fahrer_in_klasse) {
+	    next unless defined $fahrer->{rang} &&
+			$fahrer->{runden} == $cfg->{runden}[$klasse - 1] &&
+			!$fahrer->{ausfall};
+	    if ($vorheriger_fahrer &&
+		$vorheriger_fahrer->{rang} == $fahrer->{rang}) {
+		$fahrer->{wertungspunkte} =
+		    $vorheriger_fahrer->{wertungspunkte};
+	    } elsif ($idx < @$wp && $wp->[$idx] != 0) {
+		$fahrer->{wertungspunkte} = $wp->[$idx];
+	    }
+	    $idx++;
+	    $vorheriger_fahrer = $fahrer;
+	}
+    }
 }
 
 sub dat_datei_parsen($) {
@@ -215,7 +243,6 @@ sub dat_datei_parsen($) {
     binmode $fh, ":raw";
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
-    my $fahrer_nach_klassen;
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($fahrer_format);
     for (my $n = 0; $n < 1000; $n++) {
@@ -234,30 +261,7 @@ sub dat_datei_parsen($) {
 	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
     }
 
-    $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummern);
-    rang_berechnen $fahrer_nach_klassen;
     return $fahrer_nach_startnummern;
-}
-
-# FIXME:
-# * "Jahreswertung" beachten
-# * Angeben, nach welcher Wertung Punkte vergeben werden sollen
-# * Wenn Fahrer aus der Jahreswertung sind, stimmt der Rang nicht
-#   mehr mit den Punkten überein!
-sub wertungspunkte_einfuegen($$) {
-    my ($fahrer_nach_startnummer, $cfg) = @_;
-
-    my $wp = $cfg->{wertungspunkte};
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	my $idx = $fahrer->{klasse} - 1;
-	next unless defined $fahrer->{rang} &&
-		    $fahrer->{rang} <= 20 &&
-		    $wp->[$fahrer->{rang} - 1] != 0 &&
-		    $fahrer->{runden} == $cfg->{runden}[$idx] &&
-		    !$fahrer->{ausfall};
-
-	$fahrer->{wertungspunkte} = $wp->[$fahrer->{rang} - 1];
-    }
 }
 
 sub trialtool_dateien(@) {

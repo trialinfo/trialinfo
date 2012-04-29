@@ -22,7 +22,7 @@ my $veranstaltungen;
 foreach my $cfg_dat (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen($cfg_dat->[0]);
     my $fahrer_nach_startnummer = dat_datei_parsen($cfg_dat->[1]);
-    wertungspunkte_einfuegen $fahrer_nach_startnummer, $cfg;
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
