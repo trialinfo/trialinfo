@@ -67,6 +67,14 @@ CREATE TABLE fahrer (
   PRIMARY KEY (id, startnummer)
 );
 
+DROP TABLE IF EXISTS fahrer_wertung;
+CREATE TABLE fahrer_wertung (
+  id INT NOT NULL,
+  startnummer INT NOT NULL,
+  wertung INT NOT NULL,
+  PRIMARY KEY (id, startnummer, wertung)
+);
+
 DROP TABLE IF EXISTS klasse;
 CREATE TABLE klasse (
   id INT NOT NULL,
@@ -246,6 +254,10 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	INSERT INTO runde (id, startnummer, runde, punkte)
 	VALUES (?, ?, ?, ?)
     });
+    my $sth4 = $dbh->prepare(qq{
+	INSERT INTO fahrer_wertung (id, startnummer, wertung)
+	VALUES (?, ?, ?)
+    });
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $geburtsdatum;
 	$geburtsdatum = "$3-$2-$1"
@@ -266,6 +278,10 @@ sub in_datenbank_schreiben($$$$$$$$) {
 		$sth3->execute($id, $fahrer->{startnummer}, $m + 1,
 			       $fahrer->{punkte_pro_runde}[$m]);
 	   }
+	}
+	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
+	    next unless $fahrer->{wertungen}[$n];
+	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1);
 	}
     }
     return $id;
