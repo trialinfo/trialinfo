@@ -27,8 +27,7 @@ use POSIX qw(strftime);
 use File::stat;
 use strict;
 
-my @tables = qw(fahrer klasse punkte runde sektion veranstaltung wertung
-		wertungspunkte);
+my @tables;  # Liste der Tabellen in der Datenbank
 
 my @create_table_statements = split /;/, q{
 DROP TABLE IF EXISTS fahrer;
@@ -495,6 +494,11 @@ if (@ARGV) {
 	or die "Could not create in-memory database: $DBI::errstr\n";
     tabellen_erzeugen $tmp_dbh;
     tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
+
+    my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
+    while (my @row = $sth->fetchrow_array) {
+	push @tables, $row[2];
+    }
 
     foreach my $x (trialtool_dateien @ARGV) {
 	my ($cfg_name, $dat_name) = @$x;
