@@ -16,6 +16,9 @@
 #
 # FIXME: Irgendwie das Feld klasse.jahreswertung setzen ... oder das pro
 # fahrer machen und gleich die ganzen wertungen unterstützen?
+#
+# * Filename globbing on Windows
+# * Only store filename without directories in veranstaltung; \ vs. /
 
 use DBI;
 use Trialtool;

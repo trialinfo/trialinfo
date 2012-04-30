@@ -147,14 +147,9 @@ sub fahrer_nach_klassen($) {
 sub rang_vergleich($$) {
     my ($a, $b) = @_;
 
-    # Fahrer mit Papierabnahme vor Fahrern ohne Papierabnahme
-    return $b->{papierabnahme} <=> $a->{papierabnahme}
-	if $a->{papierabnahme} != $b->{papierabnahme};
-    # FIXME: Braucht es das wirklich?
-
     # Fahrer im Rennen und ausgefallene Fahrer vor Fahrern aus der Wertung und
     # nicht gestarteten Fahrern
-    return ($a->{ausfall} <= 3) <=> ($b->{ausfall} <= 3)
+    return ($b->{ausfall} <= 3) <=> ($a->{ausfall} <= 3)
 	if ($a->{ausfall} <= 3) != ($b->{ausfall} <= 3);
 
     # Abfallend nach gefahrenen Runden
@@ -196,14 +191,12 @@ sub rang_und_wertungspunkte_berechnen($$$) {
 	$fahrer_in_klasse = [ sort rang_vergleich @$fahrer_in_klasse ];
 	for (my $n = 0, my $vorheriger_fahrer; $n < @$fahrer_in_klasse; $n++) {
 	    my $fahrer = $fahrer_in_klasse->[$n];
-	    if ($fahrer->{runden} > 0) {
-		$fahrer->{rang} =
-		    $vorheriger_fahrer &&
-		    rang_vergleich($vorheriger_fahrer, $fahrer) == 0 ?
-			$vorheriger_fahrer->{rang} : $rang;
-		$rang++;
-		$vorheriger_fahrer = $fahrer;
-	    }
+	    $fahrer->{rang} =
+		$vorheriger_fahrer &&
+		rang_vergleich($vorheriger_fahrer, $fahrer) == 0 ?
+		    $vorheriger_fahrer->{rang} : $rang;
+	    $rang++;
+	    $vorheriger_fahrer = $fahrer;
 	}
 	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
     }

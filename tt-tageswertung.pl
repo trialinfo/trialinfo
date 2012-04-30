@@ -37,19 +37,24 @@ sub tageswertung($$) {
 	my $idx = $klasse - 1;
 	my $runden = $cfg->{runden}[$idx];
 
+	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
+				     $_->{papierabnahme}) ?
+				     $_ : () } @$fahrer_in_klasse ];
+	next unless @$fahrer_in_klasse > 0;
+
 	printf "$cfg->{klassen}[$idx]\n";
 	printf "     Nr.  %-20.20s", "Name";
 	for (my $n = 0; $n < $runden; $n++) {
 	   print "  R", $n + 1;
 	}
 	print "  ZP  0S  1S  2S  3S  Ges  WP\n";
+
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 	foreach my $fahrer (@$fahrer_in_klasse) {
-	    next if $fahrer->{runden} == 0 && !$fahrer->{papierabnahme};
 	    if ($fahrer->{runden} == $runden &&  !$fahrer->{ausfall}) {
 		printf " %2u.", $fahrer->{rang};
 	    } else {
-		printf "   ";
+		printf "    ";
 	    }
 	    printf "%s%3u", ($fahrer->{ausfall} == 4 ? "(" : " "), $fahrer->{startnummer};
 	    printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
