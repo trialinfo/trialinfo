@@ -24,10 +24,6 @@
 # Startnummer.  Danach folgen die den Fahrern zugeordneten Helfer.
 #
 # Die *.cfg - Dateien enthalten die Veranstaltungsdaten (siehe $cfg_format).
-#
-# TODO:
-# * Wo stehen die Einstellungen für den Bewertungsmodus?
-# * Die anderen Bewertungsmodi sind noch nicht implementiert ...
 
 use Parse::Binary::FixedFormat;
 use Encode qw(decode);
@@ -38,7 +34,10 @@ my $cfg_format = [
     "titel:A70:4",
     "subtitel:A70:4",
     "wertungen:A20:4",			# Bezeichnungen der Wertungen
-    ":A11",
+    ":A1",
+    "wertungsmodus:C",			# Rundenergebnis bei Punktegleichheit:
+					# 0 = keines, 1 = aufsteigend, 2 = absteigend
+    ":A9",
     "kartenfarben:A7:5",		# "Blau", "Rot", "Gelb", "Weiss", "Keine"
     "ergebnisliste_feld:A18",		# "Fahrzeug"
     ":A5",				# ?
@@ -147,8 +146,8 @@ sub fahrer_nach_klassen($) {
     return $fahrer_nach_klassen;
 }
 
-sub rang_vergleich($$) {
-    my ($a, $b) = @_;
+sub rang_vergleich($$$) {
+    my ($a, $b, $cfg) = @_;
 
     # Fahrer im Rennen und ausgefallene Fahrer vor Fahrern aus der Wertung und
     # nicht gestarteten Fahrern
@@ -163,6 +162,10 @@ sub rang_vergleich($$) {
     return $a->{punkte} <=> $b->{punkte}
 	if $a->{punkte} != $b->{punkte};
 
+    # Aufsteigend nach Ergebnis im Stechen
+    return $a->{stechen} <=> $b->{stechen}
+	if  $a->{stechen} != $b->{stechen};
+
     # Abfallend nach 0ern, 1ern, 2ern, 3ern
     my $ax = $a->{os_1s_2s_3s};
     my $bx = $b->{os_1s_2s_3s};
@@ -171,16 +174,25 @@ sub rang_vergleich($$) {
 	    if $ax->[$n] != $bx->[$n];
     }
 
-    # Aufsteigend nach der besten letzten Runde
-    $ax = $a->{punkte_pro_runde};
-    $bx = $b->{punkte_pro_runde};
-    for (my $n = @$ax - 1; $n >= 0; $n--){
-	return $ax->[$n] <=> $bx->[$n]
-	    if $ax->[$n] != $bx->[$n];
+    # Aufsteigend nach der besten Runde?
+    if ($cfg->{wertungsmodus} != 0) {
+	$ax = $a->{punkte_pro_runde};
+	$bx = $b->{punkte_pro_runde};
+	if ($cfg->{wertungsmodus} == 1) {
+	    for (my $n = 0; $n < @$ax; $n++) {
+		return $ax->[$n] <=> $bx->[$n]
+		    if $ax->[$n] != $bx->[$n];
+	    }
+	} else {
+	    for (my $n = @$ax - 1; $n >= 0; $n--){
+		return $ax->[$n] <=> $bx->[$n]
+		    if $ax->[$n] != $bx->[$n];
+	    }
+	}
     }
 
-    # Aufsteigend nach Ergebnis im Stechen
-    return $a->{stechen} <=> $b->{stechen};
+    # Identische Wertung
+    return 0;
 }
 
 sub rang_und_wertungspunkte_berechnen($$) {
@@ -192,12 +204,12 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	my $rang = 1;
-	$fahrer_in_klasse = [ sort rang_vergleich @$fahrer_in_klasse ];
+	$fahrer_in_klasse = [ sort { rang_vergleich($a, $b, $cfg) } @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
 		$vorheriger_fahrer &&
-		rang_vergleich($vorheriger_fahrer, $fahrer) == 0 ?
+		rang_vergleich($vorheriger_fahrer, $fahrer, $cfg) == 0 ?
 		    $vorheriger_fahrer->{rang} : $rang;
 	    $rang++;
 	    $vorheriger_fahrer = $fahrer;
