@@ -384,7 +384,6 @@ sub tabelle_aktualisieren($$$$$) {
     my @keys = $tmp_dbh->primary_key(undef, undef, $table);
     die unless map { $_ eq "id" } @keys;
     my @other_keys = grep { $_ ne "id" } @keys;
-    die unless @other_keys;
     my $other_keys = join ", ", @other_keys;
     my $old_other_keys = join(",", map { "old.$_" } @other_keys);
 
@@ -396,46 +395,61 @@ sub tabelle_aktualisieren($$$$$) {
 	    unless exists $keys{$row[3]};
     }
 
-    $sth = $tmp_dbh->prepare(qq{
-	SELECT $old_other_keys
-	FROM (
-	    SELECT $other_keys
+    unless (@other_keys) {
+	$sth = $tmp_dbh->prepare(qq{
+	    SELECT COUNT(*)
 	    FROM $table
 	    WHERE id = ?
-	) AS old LEFT JOIN (
-	    SELECT $other_keys
-	    FROM $table
-	    WHERE id = ?
-	) AS new USING ($other_keys)
-	WHERE new.$other_keys[0] IS NULL
 	});
+    } else {
+	$sth = $tmp_dbh->prepare(qq{
+	    SELECT $old_other_keys
+	    FROM (
+		SELECT $other_keys
+		FROM $table
+		WHERE id = ?
+	    ) AS old LEFT JOIN (
+		SELECT $other_keys
+		FROM $table
+		WHERE id = ?
+	    ) AS new USING ($other_keys)
+	    WHERE new.$other_keys[0] IS NULL
+	    });
+    }
     $sth->execute($old_id, $id);
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
 	    $sth2 = $dbh->prepare(trace_sql_statement(
-		"DELETE FROM $table " .
-		"WHERE id = ? AND " .
-		       join(" AND ", map { "$_ = ?" } @other_keys)
+		"DELETE FROM $table WHERE " .
+		join(" AND ", map { "$_ = ?" } (@other_keys, "id"))
 	    ));
 	}
 	trace_sql_values ($id, @row);
-	$sth2->execute($id, @row);
+	$sth2->execute(@row, $id);
     }
 
-    $sth = $tmp_dbh->prepare(qq{
-	SELECT new.*
-	FROM (
+    unless (@other_keys) {
+	$sth = $tmp_dbh->prepare(qq{
 	    SELECT *
 	    FROM $table
 	    WHERE id = ?
-	) AS new LEFT JOIN (
-	    SELECT $other_keys
-	    FROM $table
-	    WHERE id = ?
-	) AS old USING ($other_keys)
-	WHERE old.$other_keys[0] IS NULL
-	});
+	    });
+    } else {
+	$sth = $tmp_dbh->prepare(qq{
+	    SELECT new.*
+	    FROM (
+		SELECT *
+		FROM $table
+		WHERE id = ?
+	    ) AS new LEFT JOIN (
+		SELECT $other_keys
+		FROM $table
+		WHERE id = ?
+	    ) AS old USING ($other_keys)
+	    WHERE old.$other_keys[0] IS NULL
+	    });
+    }
     $sth->execute($id, $old_id);
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
@@ -457,29 +471,44 @@ sub tabelle_aktualisieren($$$$$) {
 	my $all_nonkeys_equal = join(" AND ",
 	    map { "((old.$_ COLLATE BINARY = new.$_ COLLATE BINARY) OR
 		    (old.$_ IS NULL AND new.$_ IS NULL))" } @nonkeys);
-	$sth = $tmp_dbh->prepare(qq{
-	    SELECT $new_nonkeys, $old_other_keys
-	    FROM (
-		SELECT $other_keys, $nonkeys
-		FROM $table
-		WHERE id = ?
-	    ) AS old JOIN (
-		SELECT $other_keys, $nonkeys
-		FROM $table
-		WHERE id = ?
-	    ) AS new USING ($other_keys)
-	    WHERE NOT ($all_nonkeys_equal)
-	});
+	unless (@other_keys) {
+	    $sth = $tmp_dbh->prepare(qq{
+		SELECT $new_nonkeys
+		FROM (
+		    SELECT $nonkeys
+		    FROM $table
+		    WHERE id = ?
+		) AS old JOIN (
+		    SELECT $nonkeys
+		    FROM $table
+		    WHERE id = ?
+		) AS new
+		ON NOT ($all_nonkeys_equal)
+	    });
+	} else {
+	    $sth = $tmp_dbh->prepare(qq{
+		SELECT $new_nonkeys, $old_other_keys
+		FROM (
+		    SELECT $other_keys, $nonkeys
+		    FROM $table
+		    WHERE id = ?
+		) AS old JOIN (
+		    SELECT $other_keys, $nonkeys
+		    FROM $table
+		    WHERE id = ?
+		) AS new USING ($other_keys)
+		WHERE NOT ($all_nonkeys_equal)
+	    });
+	}
 	$sth->execute($old_id, $id);
 	$sth2 = undef;
 	while (my @row = $sth->fetchrow_array) {
 	    unless ($sth2) {
-		my $nonkeys = join(", ", map { "$_ = ?" } @nonkeys);
-		my $other_keys = join(" AND ", map { "$_ = ?" } @other_keys);
 		$sth2 = $dbh->prepare(trace_sql_statement(
 		    "UPDATE $table " .
-		    "SET $nonkeys " .
-		    "WHERE $other_keys AND id = ?"
+		    "SET " . join(", ", map { "$_ = ?" } @nonkeys) .
+		    "WHERE " .  join(" AND ",
+				     map { "$_ = ?" } (@other_keys, "id"))
 		));
 	    }
 	    trace_sql_values (@row, $id);
