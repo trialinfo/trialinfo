@@ -90,7 +90,7 @@ sub tageswertung($$) {
 		    print "   -";
 		}
 	    }
-	    print "    ";
+	    printf "  %2s", $fahrer->{zusatzpunkte} || "";
 	    if ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
 		print "  $ausfall->{$fahrer->{ausfall}}";
 	    } elsif ($fahrer->{runden} > 0) {
