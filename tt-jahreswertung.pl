@@ -97,13 +97,21 @@ sub gesamtwertung($$) {
 my ($letzte_cfg, $letzte_fahrer) =
     @{$veranstaltungen->[@$veranstaltungen - 1]};
 
+my $namen = 0;
+foreach my $fahrer (map { $letzte_fahrer->{$_} }
+			map { keys $_ } values %$gesamtpunkte) {
+    my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
+    $namen = $n
+	if $n > $namen;
+}
+
 print "$letzte_cfg->{wertungen}[$wertung]\n\n";
 
 foreach my $klasse (sort {$a <=> $b} keys %$gesamtpunkte) {
     my $gesamtpunkte_in_klasse = $gesamtpunkte->{$klasse};
 
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
-    printf " %2s  %3s  %-20.20s", "", "Nr.", "Name";
+    printf " %2s  %3s  %-*.*s", "", "Nr.", $namen, $namen, "Name";
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $gestartet = $veranstaltungen->[$n][0]{gestartete_klassen}[$klasse - 1];
 	printf "  %2s", $gestartet ? $n + 1 : "";
@@ -131,7 +139,7 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtpunkte) {
     foreach my $fahrer (@$fahrer_in_klasse) {
 	my $startnummer = $fahrer->{startnummer};
 	printf " %2s. %3u", $fahrer->{rang}, $startnummer;
-	printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	printf "  %-*.*s", $namen, $namen, $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	    my $veranstaltung = $veranstaltungen->[$n];
 	    my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];

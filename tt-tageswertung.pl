@@ -46,6 +46,13 @@ sub tageswertung($$) {
 	6 => "nicht gestartet, entschuldigt"
     };
 
+    my $namen = 0;
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
+	$namen = $n
+	    if $n > $namen;
+    }
+
     print "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]\n";
     print "$cfg->{titel}[0]\n$cfg->{subtitel}[0]\n\n";
 
@@ -61,7 +68,7 @@ sub tageswertung($$) {
 	next unless @$fahrer_in_klasse > 0;
 
 	printf "$cfg->{klassen}[$idx]\n";
-	printf "     Nr.  %-20.20s", "Name";
+	printf "     Nr.  %-*.*s", $namen, $namen, "Name";
 	for (my $n = 0; $n < $runden; $n++) {
 	   print "  R", $n + 1;
 	}
@@ -75,7 +82,7 @@ sub tageswertung($$) {
 		printf "    ";
 	    }
 	    printf "%s%3u", ($fahrer->{ausfall} == 4 ? "(" : " "), $fahrer->{startnummer};
-	    printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	    printf "  %-*.*s", $namen, $namen, $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
 		    printf "  %2u", $fahrer->{punkte_pro_runde}[$n];
