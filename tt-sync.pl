@@ -27,6 +27,7 @@
 # * Filename globbing on Windows
 # * Only store filename without directories in veranstaltung; \ vs. /
 # * Ergebnisse in Editor-Programm darstellen (wordpad?)
+# Alle SQL-Statements tracen
 
 use open IO => ":locale";
 use DBI;
@@ -98,7 +99,6 @@ CREATE TABLE fahrer (
   s3 INT,
   ausfall INT,
   punkte INT,
-  wertungspunkte INT,
   rang INT,
   PRIMARY KEY (id, startnummer)
 );
@@ -108,6 +108,7 @@ CREATE TABLE fahrer_wertung (
   id INT, -- veranstaltung
   startnummer INT,
   wertung INT,
+  wertungspunkte INT,
   PRIMARY KEY (id, startnummer, wertung)
 );
 
@@ -261,7 +262,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	startnummer klasse nachname vorname strasse wohnort plz club fahrzeug
 	telefon lizenznummer rahmennummer kennzeichen hubraum bemerkung land
 	startzeit zielzeit stechen nennungseingang papierabnahme runden ausfall
-	punkte wertungspunkte rang
+	punkte rang
     );
     $sth = $dbh->prepare(sprintf qq{
 	INSERT INTO fahrer (id, %s, geburtsdatum, s0, s1, s2, s3)
@@ -277,8 +278,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	VALUES (?, ?, ?, ?)
     });
     my $sth4 = $dbh->prepare(qq{
-	INSERT INTO fahrer_wertung (id, startnummer, wertung)
-	VALUES (?, ?, ?)
+	INSERT INTO fahrer_wertung (id, startnummer, wertung, wertungspunkte)
+	VALUES (?, ?, ?, ?)
     });
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $geburtsdatum;
@@ -303,7 +304,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
 	    next unless $fahrer->{wertungen}[$n];
-	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1);
+	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1,
+			   $fahrer->{wertungspunkte}[$n] || 0);
 	}
     }
     return $id;
@@ -585,7 +587,7 @@ if (@ARGV) {
 	if ($veraendert || $poll_intervall || $force) {
 	    my $cfg = cfg_datei_parsen($cfg_name);
 	    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
-	    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+	    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 	    $tmp_dbh->begin_work;
 	    $id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
 					 $dat_name, $dat_mtime,
@@ -609,7 +611,7 @@ if (@ARGV) {
 	    if ($veraendert || $force) {
 		my $cfg = cfg_datei_parsen($cfg_name);
 		my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
-		rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+		rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 		$tmp_dbh->begin_work;
 		my $old_id = veranstaltung_umnummerieren $tmp_dbh, $id;
 		in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,

@@ -18,8 +18,13 @@
 # <http://www.gnu.org/licenses/>.
 
 use open IO => ":locale";
+use utf8;
+
+use Getopt::Long;
 use Trialtool;
 use strict;
+
+my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 
 sub rang_wenn_definiert($$) {
     my ($a, $b) = @_;
@@ -41,7 +46,7 @@ sub tageswertung($$) {
 	6 => "nicht gestartet, entschuldigt"
     };
 
-    print "Tageswertung\n";
+    print "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]\n";
     print "$cfg->{titel}[0]\n$cfg->{subtitel}[0]\n\n";
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
@@ -86,8 +91,8 @@ sub tageswertung($$) {
 		    printf "  %2u", $fahrer->{os_1s_2s_3s}[$n];
 		}
 		printf "  %3u", $fahrer->{punkte};
-		if (exists $fahrer->{wertungspunkte}) {
-		    printf "  %2u", $fahrer->{wertungspunkte};
+		if (exists $fahrer->{wertungspunkte}[$wertung]) {
+		    printf "  %2u", $fahrer->{wertungspunkte}[$wertung];
 		} elsif ($fahrer->{ausfall} == 4) {
 			print ")";
 		}
@@ -98,11 +103,17 @@ sub tageswertung($$) {
     }
 }
 
+my $result = GetOptions("wertung=i" => sub { $wertung = $_[1]; });
+unless ($result) {
+    print "VERWENDUNG: $0 [--wertung=(1..4)]\n";
+    exit 1;
+}
+
 foreach my $x (trialtool_dateien @ARGV) {
     my ($cfg_name, $dat_name) = @$x;
     my $cfg = cfg_datei_parsen($cfg_name);
     my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
-    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     tageswertung $cfg, $fahrer_nach_startnummer;
 }
 

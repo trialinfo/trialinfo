@@ -197,17 +197,18 @@ sub rang_vergleich($$) {
     return $a->{stechen} <=> $b->{stechen};
 }
 
-sub rang_und_wertungspunkte_berechnen($$$) {
-    my ($fahrer_nach_startnummer, $wertung, $cfg) = @_;
+sub rang_und_wertungspunkte_berechnen($$) {
+    my ($fahrer_nach_startnummer, $cfg) = @_;
+    my $wertungspunkte = $cfg->{wertungspunkte};
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
     foreach my $klasse (keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	my $rang = 1;
 
+	my $rang = 1;
 	$fahrer_in_klasse = [ sort rang_vergleich @$fahrer_in_klasse ];
-	for (my $n = 0, my $vorheriger_fahrer; $n < @$fahrer_in_klasse; $n++) {
-	    my $fahrer = $fahrer_in_klasse->[$n];
+	my $vorheriger_fahrer;
+	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
 		$vorheriger_fahrer &&
 		rang_vergleich($vorheriger_fahrer, $fahrer) == 0 ?
@@ -218,26 +219,28 @@ sub rang_und_wertungspunkte_berechnen($$$) {
 	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
     }
 
-    my $wp = $cfg->{wertungspunkte};
-    foreach my $klasse (keys %$fahrer_nach_klassen) {
-	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	my $idx = 0;
+    for (my $wertung = 0; $wertung < @{$cfg->{wertungen}}; $wertung++) {
+	foreach my $klasse (keys %$fahrer_nach_klassen) {
+	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
-	my $vorheriger_fahrer;
-	foreach my $fahrer (@$fahrer_in_klasse) {
-	    next unless defined $fahrer->{rang} &&
-			$fahrer->{wertungen}[$wertung - 1] &&
-			$fahrer->{runden} == $cfg->{runden}[$klasse - 1] &&
-			!$fahrer->{ausfall};
-	    if ($vorheriger_fahrer &&
-		$vorheriger_fahrer->{rang} == $fahrer->{rang}) {
-		$fahrer->{wertungspunkte} =
-		    $vorheriger_fahrer->{wertungspunkte};
-	    } elsif ($idx < @$wp && $wp->[$idx] != 0) {
-		$fahrer->{wertungspunkte} = $wp->[$idx];
+	    my $wp_idx = 0;
+	    my $vorheriger_fahrer;
+	    foreach my $fahrer (@$fahrer_in_klasse) {
+		next unless defined $fahrer->{rang} &&
+			    $fahrer->{wertungen}[$wertung] &&
+			    $fahrer->{runden} == $cfg->{runden}[$klasse - 1] &&
+			    !$fahrer->{ausfall};
+		if ($vorheriger_fahrer &&
+		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
+		    $fahrer->{wertungspunkte}[$wertung] =
+			$vorheriger_fahrer->{wertungspunkte}[$wertung];
+		} elsif ($wp_idx < @$wertungspunkte &&
+			 $wertungspunkte->[$wp_idx] != 0) {
+		    $fahrer->{wertungspunkte}[$wertung] = $wertungspunkte->[$wp_idx];
+		}
+		$wp_idx++;
+		$vorheriger_fahrer = $fahrer;
 	    }
-	    $idx++;
-	    $vorheriger_fahrer = $fahrer;
 	}
     }
 }

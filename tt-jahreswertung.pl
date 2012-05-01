@@ -23,8 +23,19 @@
 # * In der Klasse 5 gibt es keine Jahreswertungspunkte.
 
 use open IO => ":locale";
+use utf8;
+
+use Getopt::Long;
 use Trialtool;
 use strict;
+
+my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+
+my $result = GetOptions("wertung=i" => sub { $wertung = $_[1]; });
+unless ($result) {
+    print "VERWENDUNG: $0 [--wertung=(1..4)]\n";
+    exit 1;
+}
 
 my $veranstaltungen;
 
@@ -44,42 +55,53 @@ foreach my $x (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen($cfg_name);
     $cfg->{gestartete_klassen} = gestartete_klassen($cfg);
     my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
-    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
-# Die Daten der letzten Veranstaltung enthalten alle Fahrer
-# Wir berechnen direkt dort die Gesamtpunkte.
-my ($letzte_cfg, $letzte_fahrer) =
-    @{$veranstaltungen->[@$veranstaltungen - 1]};
+my $gesamtpunkte;
 
 foreach my $veranstaltung (@$veranstaltungen) {
     my $fahrer_nach_startnummer = $veranstaltung->[1];
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	if (exists $fahrer->{wertungspunkte}) {
+	if (exists $fahrer->{wertungspunkte}[$wertung]) {
 	    my $startnummer = $fahrer->{startnummer};
-	    $letzte_fahrer->{$startnummer}{gesamtpunkte} +=
-		$fahrer->{wertungspunkte};
+	    my $klasse = $fahrer->{klasse};
+	    $gesamtpunkte->{$klasse}{$startnummer} +=
+		$fahrer->{wertungspunkte}[$wertung];
 	}
     }
+}
+
+# Converts a reference to a hash to a list of pairs:
+# {1 => "one", 2 => "two"}  =>  ([1, "one"], [2, "two"])
+sub hashref_to_pairs($) {
+    my ($hashref) = @_;
+    my (@list, $key, $value);
+
+    while (($key, $value) = each %$hashref) {
+	push @list, [ $key, $value ];
+    }
+    return @list;
 }
 
 sub gesamtwertung($$) {
     my ($a, $b) = @_;
 
-    return exists($b->{gesamtpunkte}) - exists($a->{gesamtpunkte})
-	if !exists($a->{gesamtpunkte}) || !exists($b->{gesamtpunkte});
-    return $b->{gesamtpunkte} <=> $a->{gesamtpunkte}
-	if $b->{gesamtpunkte} != $a->{gesamtpunkte};
-    return $a->{startnummer} <=> $b->{startnummer};
+    return $b->[1] <=> $a->[1]  # Gesamtpunkte
+	if $a->[1] != $b->[1];
+    return $a->[0] <=> $b->[0];  # Startnummer
 }
 
-print "ÖTSV und OSK Jahreswertung\n\n";
+my ($letzte_cfg, $letzte_fahrer) =
+    @{$veranstaltungen->[@$veranstaltungen - 1]};
 
-my $fahrer_nach_klassen = fahrer_nach_klassen($letzte_fahrer);
-foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
-    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
+print "$letzte_cfg->{wertungen}[$wertung]\n\n";
+
+foreach my $klasse (sort {$a <=> $b} keys %$gesamtpunkte) {
+    my $gesamtpunkte_in_klasse = $gesamtpunkte->{$klasse};
+
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
     printf " %2s  %3s  %-20.20s", "", "Nr.", "Name";
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
@@ -87,10 +109,12 @@ foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	printf "  %2s", $gestartet ? $n + 1 : "";
     }
     printf "  Ges\n";
-    $fahrer_in_klasse = [ sort gesamtwertung @$fahrer_in_klasse ];
+    my $fahrer_in_klasse = [
+	map { $letzte_fahrer->{$_->[0]} }
+	    sort gesamtwertung
+		 (hashref_to_pairs($gesamtpunkte_in_klasse)) ];
     for (my $idx = 0; $idx < @$fahrer_in_klasse; $idx++) {
 	my $fahrer = $fahrer_in_klasse->[$idx];
-	next unless exists $fahrer->{gesamtpunkte};
 	my $startnummer = $fahrer->{startnummer};
 	printf " %2s. %3u", $idx + 1, $startnummer;
 	printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
@@ -98,11 +122,12 @@ foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	    my $veranstaltung = $veranstaltungen->[$n];
 	    my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];
 	    my $fahrer = $veranstaltung->[1]{$startnummer};
-	    printf "  %2s", exists($fahrer->{wertungspunkte}) ?
-			    $fahrer->{wertungspunkte} :
+	    printf "  %2s", ($fahrer->{klasse} = $klasse &&
+			     exists($fahrer->{wertungspunkte}[$wertung])) ?
+			    $fahrer->{wertungspunkte}[$wertung] :
 			    $gestartet ? "-" : "";
 	}
-	printf "  %3s\n", $fahrer->{gesamtpunkte};
+	printf "  %3s\n", $gesamtpunkte_in_klasse->{$startnummer};
     }
     print "\n";
 }
