@@ -31,7 +31,7 @@ use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 
-my $result = GetOptions("wertung=i" => sub { $wertung = $_[1]; });
+my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; });
 unless ($result) {
     print "VERWENDUNG: $0 [--wertung=(1..4)]\n";
     exit 1;

@@ -19,6 +19,7 @@
 
 # TODO:
 # * UTF-8-Codierung im Dateinamen in der Datenbank ist kaputt
+# * Nur einen Dateinamen in der DB
 # * Logfile?
 # * Web-Auswertung: PHP?
 # * Zieldatenbank, user, kennwort konfigurierbar
@@ -27,7 +28,7 @@
 # * Filename globbing on Windows
 # * Only store filename without directories in veranstaltung; \ vs. /
 # * Ergebnisse in Editor-Programm darstellen (wordpad?)
-# Alle SQL-Statements tracen
+# * Alle SQL-Statements tracen
 
 use open IO => ":locale";
 use DBI;
