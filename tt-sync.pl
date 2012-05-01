@@ -23,18 +23,45 @@
 use DBI;
 use Trialtool;
 use Getopt::Long;
-use POSIX qw(strftime);
+use Scalar::Util qw(looks_like_number);
 use File::stat;
+use POSIX qw(strftime);
 use strict;
+
+sub traced_sql_value($) {
+    my ($_) = @_;
+
+    return "NULL"
+	unless defined $_;
+    return $_
+	if looks_like_number $_;
+    s/'/''/g;
+    return "'$_'";
+}
+
+my $trace_sql;
+my $traced_sql_statement;
+sub trace_sql_statement($) {
+    $traced_sql_statement = shift;
+    return $traced_sql_statement;
+}
+
+sub trace_sql_values(@) {
+    if ($trace_sql) {
+	my $_ = $traced_sql_statement;
+	s/\?/traced_sql_value shift @_/ge;
+	print "    $_\n";
+    }
+}
 
 my @tables;  # Liste der Tabellen in der Datenbank
 
 my @create_table_statements = split /;/, q{
 DROP TABLE IF EXISTS fahrer;
 CREATE TABLE fahrer (
-  id INT NOT NULL,
-  startnummer INT NOT NULL,
-  klasse INT NOT NULL,
+  id INT,
+  startnummer INT,
+  klasse INT NOT NULL,  -- Das koennte Probleme machen
   nachname VARCHAR(30),
   vorname VARCHAR(30),
   strasse VARCHAR(30),
@@ -69,16 +96,16 @@ CREATE TABLE fahrer (
 
 DROP TABLE IF EXISTS fahrer_wertung;
 CREATE TABLE fahrer_wertung (
-  id INT NOT NULL,
-  startnummer INT NOT NULL,
-  wertung INT NOT NULL,
+  id INT,
+  startnummer INT,
+  wertung INT,
   PRIMARY KEY (id, startnummer, wertung)
 );
 
 DROP TABLE IF EXISTS klasse;
 CREATE TABLE klasse (
-  id INT NOT NULL,
-  nummer INT NOT NULL,
+  id INT,
+  nummer INT,
   bezeichnung VARCHAR(60),
   jahreswertung BOOLEAN,
   PRIMARY KEY (id, nummer)
@@ -86,34 +113,34 @@ CREATE TABLE klasse (
 
 DROP TABLE IF EXISTS punkte;
 CREATE TABLE punkte (
-  id INT NOT NULL,
-  startnummer INT NOT NULL,
-  runde INT NOT NULL,
-  sektion INT NOT NULL,
+  id INT,
+  startnummer INT,
+  runde INT,
+  sektion INT,
   punkte INT NOT NULL,
   PRIMARY KEY (id, startnummer, runde, sektion)
 );
 
 DROP TABLE IF EXISTS runde;
 CREATE TABLE runde (
-  id INT NOT NULL,
-  startnummer INT NOT NULL,
-  runde INT NOT NULL,
+  id INT,
+  startnummer INT,
+  runde INT,
   punkte INT NOT NULL,
   PRIMARY KEY (id, startnummer, runde)
 );
 
 DROP TABLE IF EXISTS sektion;
 CREATE TABLE sektion (
-  id INT NOT NULL,
-  klasse INT NOT NULL,
-  sektion INT NOT NULL,
+  id INT,
+  klasse INT,
+  sektion INT,
   PRIMARY KEY (id, klasse, sektion)
 );
 
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
-  id INT NOT NULL,
+  id INT,
   dat_mtime DATETIME,
   cfg_mtime DATETIME,
   cfg_name VARCHAR(128),
@@ -123,8 +150,8 @@ CREATE TABLE veranstaltung (
 
 DROP TABLE IF EXISTS wertung;
 CREATE TABLE wertung (
-  id INT NOT NULL,
-  nummer INT NOT NULL,
+  id INT,
+  nummer INT,
   titel VARCHAR(70),
   subtitel VARCHAR(70),
   bezeichnung VARCHAR(20),
@@ -133,8 +160,8 @@ CREATE TABLE wertung (
 
 DROP TABLE IF EXISTS wertungspunkte;
 CREATE TABLE wertungspunkte (
-  id INT NOT NULL,
-  rang INT NOT NULL,
+  id INT,
+  rang INT,
   punkte INT NOT NULL,
   PRIMARY KEY (id, rang)
 );
@@ -377,13 +404,13 @@ sub tabelle_aktualisieren($$$$$) {
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
-	    $sth2 = $dbh->prepare(
+	    $sth2 = $dbh->prepare(trace_sql_statement(
 		"DELETE FROM $table " .
 		"WHERE id = ? AND " .
 		       join(" AND ", map { "$_ = ?" } @other_keys)
-	    );
+	    ));
 	}
-	print "DELETE in $table\n";
+	trace_sql_values ($id, @row);
 	$sth2->execute($id, @row);
     }
 
@@ -405,12 +432,12 @@ sub tabelle_aktualisieren($$$$$) {
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
 	    my @spaltennamen = @{$sth->{NAME_lc}};
-	    $sth2 = $dbh->prepare(
+	    $sth2 = $dbh->prepare(trace_sql_statement(
 		"INSERT INTO $table (" . join(", ", @spaltennamen) . ") " . 
 		"VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
-	    );
+	    ));
 	}
-	print "INSERT in $table\n";
+	trace_sql_values (@row);
 	$sth2->execute(@row);
     }
 
@@ -419,7 +446,8 @@ sub tabelle_aktualisieren($$$$$) {
 	my $old_nonkeys = join(", ", map { "old.$_" } @nonkeys);
 	my $new_nonkeys = join(", ", map { "new.$_" } @nonkeys);
 	my $all_nonkeys_equal = join(" AND ",
-	    map { "old.$_ COLLATE BINARY = new.$_ COLLATE BINARY" } @nonkeys);
+	    map { "((old.$_ COLLATE BINARY = new.$_ COLLATE BINARY) OR
+		    (old.$_ IS NULL AND new.$_ IS NULL))" } @nonkeys);
 	$sth = $tmp_dbh->prepare(qq{
 	    SELECT $new_nonkeys, $old_other_keys
 	    FROM (
@@ -439,13 +467,13 @@ sub tabelle_aktualisieren($$$$$) {
 	    unless ($sth2) {
 		my $nonkeys = join(", ", map { "$_ = ?" } @nonkeys);
 		my $other_keys = join(" AND ", map { "$_ = ?" } @other_keys);
-		$sth2 = $dbh->prepare(
+		$sth2 = $dbh->prepare(trace_sql_statement(
 		    "UPDATE $table " .
 		    "SET $nonkeys " .
 		    "WHERE $other_keys AND id = ?"
-		);
+		));
 	    }
-	    print "UPDATE in $table\n";
+	    trace_sql_values (@row, $id);
 	    $sth2->execute(@row, $id);
 	}
     }
@@ -471,6 +499,7 @@ sub veranstaltung_umnummerieren($$) {
     $sth->execute;
     my $old_id = $sth->fetchrow_array || 1;
     foreach my $table (@tables) {
+	next if $table eq "veranstaltung";
 	$dbh->do(qq{
 	    UPDATE $table
 	    SET id = ?
@@ -487,6 +516,7 @@ my $force;
 my $result = GetOptions("tabellen-erzeugen" => \$tabellen_erzeugen,
 			"poll:i" => \$poll_intervall,
 			"force" => \$force,
+			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db);
 unless ($result && ($tabellen_erzeugen || @ARGV)) {
     print "VERWENDUNG: $0 [optionen] {trialtool-datei} ...\n";
@@ -509,12 +539,12 @@ if (@ARGV) {
 			       { RaiseError => 1, AutoCommit => 1 })
 	or die "Could not create in-memory database: $DBI::errstr\n";
     tabellen_erzeugen $tmp_dbh;
-    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
-
     my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
     while (my @row = $sth->fetchrow_array) {
 	push @tables, $row[2];
     }
+
+    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 
     foreach my $x (trialtool_dateien @ARGV) {
 	my ($cfg_name, $dat_name) = @$x;
@@ -526,9 +556,11 @@ if (@ARGV) {
 	    my $cfg = cfg_datei_parsen($cfg_name);
 	    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
 	    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+	    $tmp_dbh->begin_work;
 	    $id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
 					 $dat_name, $dat_mtime,
 					 $fahrer_nach_startnummer, $cfg;
+	    $tmp_dbh->commit;
 	}
 	if ($veraendert || $force) {
 	    $dbh->begin_work;
@@ -549,15 +581,19 @@ if (@ARGV) {
 		my $cfg = cfg_datei_parsen($cfg_name);
 		my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
 		rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
+		$tmp_dbh->begin_work;
 		my $old_id = veranstaltung_umnummerieren $tmp_dbh, $id;
 		in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
 				       $dat_name, $dat_mtime,
 				       $fahrer_nach_startnummer, $cfg;
+		$tmp_dbh->commit;
 		$dbh->begin_work;
 		andere_tabellen_aktualisieren $tmp_dbh, $dbh, $id, $old_id;
 		veranstaltung_aktualisieren $dbh, $id, $cfg_mtime, $dat_mtime;
 		$dbh->commit;
+		$tmp_dbh->begin_work;
 		veranstaltung_loeschen $tmp_dbh, $old_id;
+		$tmp_dbh->commit;
 	    }
 	    sleep $poll_intervall;
 	}
