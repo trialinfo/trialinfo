@@ -1,8 +1,8 @@
 #! /usr/bin/perl -w
 
-# Lesen des Trialtool - Dateiformats
+# Trialtool: Lesen des Dateiformats
 
-# Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher.gmail.com>
+# Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free Software
@@ -30,6 +30,7 @@
 # * Wie speichert das Trialtool die Reihenfolge der Fahrer in den
 #   Ergebnislisten?
 # * Wo stehen die Einstellungen für den Bewertungsmodus?
+# * Die anderen Bewertungsmodi sind noch nicht implementiert ...
 
 use Parse::Binary::FixedFormat;
 use Encode qw(decode);
