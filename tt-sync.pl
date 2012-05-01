@@ -201,24 +201,18 @@ sub mtime($) {
     return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
 }
 
-sub veranstaltung_aktualisieren($$$$) {
-    my ($dbh, $id, $cfg_mtime, $dat_mtime) = @_;
-
-    my $sth = $dbh->prepare(qq{
-	UPDATE veranstaltung
-	SET cfg_mtime = ?, dat_mtime = ?
-	WHERE id = ?
-    });
-    $sth->execute($cfg_mtime, $dat_mtime, $id);
-}
-
 sub in_datenbank_schreiben($$$$$$$$) {
     my ($dbh, $id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime,
 	$fahrer_nach_startnummer, $cfg) = @_;
     my $sth;
 
     if ($id) {
-	veranstaltung_aktualisieren $dbh, $id, $cfg_mtime, $dat_mtime;
+	my $sth = $dbh->prepare(qq{
+	    UPDATE veranstaltung
+	    SET cfg_mtime = ?, dat_mtime = ?
+	    WHERE id = ?
+	});
+	$sth->execute($cfg_mtime, $dat_mtime, $id);
     } else {
 	$sth = $dbh->prepare(qq{
 	    SELECT MAX(id) + 1
@@ -517,11 +511,10 @@ sub tabelle_aktualisieren($$$$$) {
     }
 }
 
-sub andere_tabellen_aktualisieren {
+sub tabellen_aktualisieren {
     my ($tmp_dbh, $dbh, $id, $old_id) = @_;
 
     foreach my $table (@tables) {
-	next if $table eq "veranstaltung";
 	tabelle_aktualisieren $table, $tmp_dbh, $dbh, $id, $old_id;
     }
 }
@@ -626,8 +619,7 @@ if (@ARGV) {
 				       $fahrer_nach_startnummer, $cfg;
 		$tmp_dbh->commit;
 		$dbh->begin_work;
-		andere_tabellen_aktualisieren $tmp_dbh, $dbh, $id, $old_id;
-		veranstaltung_aktualisieren $dbh, $id, $cfg_mtime, $dat_mtime;
+		tabellen_aktualisieren $tmp_dbh, $dbh, $id, $old_id;
 		$dbh->commit;
 		$tmp_dbh->begin_work;
 		veranstaltung_loeschen $tmp_dbh, $old_id;
