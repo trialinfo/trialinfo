@@ -59,9 +59,9 @@ my @tables;  # Liste der Tabellen in der Datenbank
 my @create_table_statements = split /;/, q{
 DROP TABLE IF EXISTS fahrer;
 CREATE TABLE fahrer (
-  id INT,
+  id INT, -- veranstaltung
   startnummer INT,
-  klasse INT NOT NULL,  -- Das koennte Probleme machen
+  klasse INT NOT NULL,
   nachname VARCHAR(30),
   vorname VARCHAR(30),
   strasse VARCHAR(30),
@@ -96,7 +96,7 @@ CREATE TABLE fahrer (
 
 DROP TABLE IF EXISTS fahrer_wertung;
 CREATE TABLE fahrer_wertung (
-  id INT,
+  id INT, -- veranstaltung
   startnummer INT,
   wertung INT,
   PRIMARY KEY (id, startnummer, wertung)
@@ -104,7 +104,7 @@ CREATE TABLE fahrer_wertung (
 
 DROP TABLE IF EXISTS klasse;
 CREATE TABLE klasse (
-  id INT,
+  id INT, -- veranstaltung
   nummer INT,
   bezeichnung VARCHAR(60),
   jahreswertung BOOLEAN,
@@ -113,7 +113,7 @@ CREATE TABLE klasse (
 
 DROP TABLE IF EXISTS punkte;
 CREATE TABLE punkte (
-  id INT,
+  id INT, -- veranstaltung
   startnummer INT,
   runde INT,
   sektion INT,
@@ -123,7 +123,7 @@ CREATE TABLE punkte (
 
 DROP TABLE IF EXISTS runde;
 CREATE TABLE runde (
-  id INT,
+  id INT, -- veranstaltung
   startnummer INT,
   runde INT,
   punkte INT NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE runde (
 
 DROP TABLE IF EXISTS sektion;
 CREATE TABLE sektion (
-  id INT,
+  id INT, -- veranstaltung
   klasse INT,
   sektion INT,
   PRIMARY KEY (id, klasse, sektion)
@@ -140,7 +140,7 @@ CREATE TABLE sektion (
 
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
-  id INT,
+  id INT, -- veranstaltung
   dat_mtime DATETIME,
   cfg_mtime DATETIME,
   cfg_name VARCHAR(128),
@@ -150,7 +150,7 @@ CREATE TABLE veranstaltung (
 
 DROP TABLE IF EXISTS wertung;
 CREATE TABLE wertung (
-  id INT,
+  id INT, -- veranstaltung
   nummer INT,
   titel VARCHAR(70),
   subtitel VARCHAR(70),
@@ -160,7 +160,7 @@ CREATE TABLE wertung (
 
 DROP TABLE IF EXISTS wertungspunkte;
 CREATE TABLE wertungspunkte (
-  id INT,
+  id INT, -- veranstaltung
   rang INT,
   punkte INT NOT NULL,
   PRIMARY KEY (id, rang)
