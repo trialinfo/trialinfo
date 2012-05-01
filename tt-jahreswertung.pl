@@ -2,20 +2,13 @@
 
 #
 # TODO:
-# * UTF-8 Zeichencodierung fixen
-# * UTF-8-Codierung im Dateinamen in der Datenbank ist kaputt
-# * Jahreswertung implementieren
-#
 # * Lizenzfahrer bekommen (1-100) in den Klassen 1-10 keine Wertungspunkte =>
 #   überprüfen oder sogar erzwingen ...
 # * In der Klasse 5 gibt es keine Jahreswertungspunkte.
 
+use open IO => ":locale";
 use Trialtool;
 use strict;
-use utf8;
-
-# FIXME: Das ist böse ...
-binmode(STDOUT, ":utf8");
 
 my $veranstaltungen;
 

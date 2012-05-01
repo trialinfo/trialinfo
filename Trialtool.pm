@@ -32,6 +32,7 @@
 # * Wo stehen die Einstellungen für den Bewertungsmodus?
 
 use Parse::Binary::FixedFormat;
+use Encode qw(decode);
 use FileHandle;
 use strict;
 
@@ -93,15 +94,30 @@ my $fahrer_format = [
     "punkte_pro_sektion:S<:75",		# 6 = kein Ergebnis
 ];
 
+sub decode_strings($$) {
+    my ($data, $fmt) = @_;
+
+    for (my $n = 0; $n < @$fmt; $n++) {
+	if ($fmt->[$n] =~ /(.*):A[^:]*(:)?/) {
+	    if ($2) {
+		$data->{$1} = [ map { decode("windows-1252", $_) } @{ $data->{$1}} ];
+	    } else {
+		$data->{$1} = decode("windows-1252", $data->{$1});
+	    }
+	}
+    }
+}
+
 sub cfg_datei_parsen($) {
     my ($dateiname) = @_;
 
     my $fh = new FileHandle($dateiname);
-    binmode $fh, ":raw";
+    binmode $fh, ":bytes";
     my $cfg = do { local $/; <$fh> };
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
     $cfg = $cfg_parser->unformat($cfg);
     delete $cfg->{''};
+    decode_strings($cfg, $cfg_format);
     $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
     return $cfg;
 }
@@ -229,7 +245,7 @@ sub dat_datei_parsen($) {
     my ($dateiname) = @_;
 
     my $fh = new FileHandle($dateiname);
-    binmode $fh, ":raw";
+    binmode $fh, ":bytes";
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
 
@@ -240,6 +256,7 @@ sub dat_datei_parsen($) {
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
 	delete $fahrer->{''};
+	decode_strings($fahrer, $fahrer_format);
 	$fahrer->{startnummer} = $n + 1;
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});

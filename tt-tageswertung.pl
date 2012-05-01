@@ -1,10 +1,6 @@
 #! /usr/bin/perl -w
 
-#
-# TODO:
-# * UTF-8 Zeichencodierung fixen
-# * UTF-8-Codierung im Dateinamen in der Datenbank ist kaputt
-
+use open IO => ":locale";
 use Trialtool;
 use strict;
 
@@ -84,9 +80,6 @@ sub tageswertung($$) {
 	print "\n";
     }
 }
-
-# FIXME: Das ist böse ...
-binmode(STDOUT, ":utf8");
 
 foreach my $x (trialtool_dateien @ARGV) {
     my ($cfg_name, $dat_name) = @$x;

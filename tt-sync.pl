@@ -13,6 +13,7 @@
 # * Filename globbing on Windows
 # * Only store filename without directories in veranstaltung; \ vs. /
 
+use open IO => ":locale";
 use DBI;
 use Trialtool;
 use Getopt::Long;
