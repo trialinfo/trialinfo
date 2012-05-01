@@ -9,14 +9,7 @@
 # * Dateinamen zu einem VARBINARY machen (wegen Vergleichen)?
 # * Zieldatenbank, user, kennwort konfigurierbar
 # * Wenn Verbindung zu Zieldatenbank abbricht, wieder aufbauen
-# * Einigermaßen erträgliches Logging
-# * Es gibt keine Tabelle für "Fahrer in Wertung".
-# * Tracing der "remote" abgesetzten SQL-Befehle?
 # * Zusatzpunkte?
-#
-# FIXME: Irgendwie das Feld klasse.jahreswertung setzen ... oder das pro
-# fahrer machen und gleich die ganzen wertungen unterstützen?
-#
 # * Filename globbing on Windows
 # * Only store filename without directories in veranstaltung; \ vs. /
 
