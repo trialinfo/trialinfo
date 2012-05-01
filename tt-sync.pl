@@ -24,7 +24,6 @@
 # * Web-Auswertung: PHP?
 # * Zieldatenbank, user, kennwort konfigurierbar
 # * Wenn Verbindung zu Zieldatenbank abbricht, wieder aufbauen
-# * Zusatzpunkte?
 # * Filename globbing on Windows
 # * Only store filename without directories in veranstaltung; \ vs. /
 # * Ergebnisse in Editor-Programm darstellen (wordpad?)
@@ -99,6 +98,7 @@ CREATE TABLE fahrer (
   s2 INT,
   s3 INT,
   ausfall INT,
+  zusatzpunkte INT,
   punkte INT,
   rang INT,
   PRIMARY KEY (id, startnummer)
@@ -257,7 +257,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	startnummer klasse nachname vorname strasse wohnort plz club fahrzeug
 	telefon lizenznummer rahmennummer kennzeichen hubraum bemerkung land
 	startzeit zielzeit stechen nennungseingang papierabnahme runden ausfall
-	punkte rang
+	zusatzpunkte punkte rang
     );
     $sth = $dbh->prepare(sprintf qq{
 	INSERT INTO fahrer (id, %s, geburtsdatum, s0, s1, s2, s3)

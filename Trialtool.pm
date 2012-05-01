@@ -26,9 +26,6 @@
 # Die *.cfg - Dateien enthalten die Veranstaltungsdaten (siehe $cfg_format).
 #
 # TODO:
-# * Wie werden die Zusatzpunkte gespeichert?
-# * Wie speichert das Trialtool die Reihenfolge der Fahrer in den
-#   Ergebnislisten?
 # * Wo stehen die Einstellungen für den Bewertungsmodus?
 # * Die anderen Bewertungsmodi sind noch nicht implementiert ...
 
@@ -80,14 +77,13 @@ my $fahrer_format = [
     "stechen:S<",			# 0 = kein Stechen
     "papierabnahme:S<",
     ":A",				# ?
-    "runden:A5",		# Gefahrene Runden
-    ":A2",
-    ":A2",				# Zusatzpunkte (Codierung?)
+    "runden:A5",			# Gefahrene Runden
+    "zusatzpunkte:f",
     "punkte_pro_runde:S<:5",
     ":A60",				# ?
     "os_1s_2s_3s:S<:4",
-    ":A6",				# ?
-    ":S<",				# Punkte + Zusatzpunkte (Codierung?)
+    ":A4",				# ?
+    "punkte:f",
     "ausfall:S<",			# 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
 					# 5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
     "nennungseingang:S<",
@@ -138,16 +134,6 @@ sub punkte_aufteilen($) {
 	     [@$punkte[30..44]],
 	     [@$punkte[45..59]],
 	     [@$punkte[60..74]] ];
-}
-
-sub punkte_ausrechnen($) {
-    my ($fahrer) = @_;
-    my $punkte = 0;
-
-    foreach my $p (@{$fahrer->{punkte_pro_runde}}) {
-	$punkte += $p;
-    }
-    $fahrer->{punkte} = $punkte;
 }
 
 sub fahrer_nach_klassen($) {
@@ -265,7 +251,6 @@ sub dat_datei_parsen($) {
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
-	punkte_ausrechnen $fahrer;
 	delete $fahrer->{geburtsdatum}
 	    if $fahrer->{geburtsdatum} eq "01.01.1901";
 	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
