@@ -193,14 +193,6 @@ sub veranstaltung_loeschen($$) {
     }
 }
 
-sub mtime($) {
-    my ($dateiname) = @_;
-
-    my $stat = stat("$dateiname")
-	or die "$dateiname: $!\n";
-    return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
-}
-
 sub in_datenbank_schreiben($$$$$$$$) {
     my ($dbh, $id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime,
 	$fahrer_nach_startnummer, $cfg) = @_;
@@ -351,24 +343,32 @@ sub tabelle_kopieren ($$$$$) {
     }
 }
 
+sub mtime($) {
+    my ($dateiname) = @_;
+
+    my $stat = stat("$dateiname")
+	or die "$dateiname: $!\n";
+    return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
+}
+
 sub status($$$) {
     my ($dbh, $cfg_name, $dat_name) = @_;
     my $sth;
+    my @row;
 
     my $cfg_mtime = mtime($cfg_name);
     my $dat_mtime = mtime($dat_name);
 
     $sth = $dbh->prepare(qq{
-	SELECT id, cfg_mtime, dat_mtime
+	SELECT id, (cfg_mtime != ? OR dat_mtime != ?)
 	FROM veranstaltung
 	WHERE cfg_name = ? AND dat_name = ?
     });
-    $sth->execute($cfg_name, $dat_name);
-    if (my @row = $sth->fetchrow_array) {
-	return ($row[0], $row[1] ne $cfg_mtime ||
-			 $row[2] ne $dat_mtime);
+    $sth->execute($cfg_mtime, $dat_mtime, $cfg_name, $dat_name);
+    unless (@row = $sth->fetchrow_array) {
+	@row = (undef, 1);
     }
-    return (undef, 1);
+    return (@row, $cfg_mtime, $dat_mtime);
 }
 
 sub tabelle_aktualisieren($$$$$) {
@@ -579,11 +579,10 @@ if (@ARGV) {
 
     foreach my $x (trialtool_dateien @ARGV) {
 	my ($cfg_name, $dat_name) = @$x;
-	my ($id, $veraendert) = status($tmp_dbh, $cfg_name, $dat_name);
+	my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
+	    status($tmp_dbh, $cfg_name, $dat_name);
 
 	if ($veraendert || $poll_intervall || $force) {
-	    my $cfg_mtime = mtime($cfg_name);
-	    my $dat_mtime = mtime($dat_name);
 	    my $cfg = cfg_datei_parsen($cfg_name);
 	    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
 	    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, 1, $cfg;  # Wertung 1
@@ -604,9 +603,8 @@ if (@ARGV) {
     while ($poll_intervall) {
 	foreach my $x (trialtool_dateien @ARGV) {
 	    my ($cfg_name, $dat_name) = @$x;
-	    my $cfg_mtime = mtime($cfg_name);
-	    my $dat_mtime = mtime($dat_name);
-	    my ($id, $veraendert) = status($tmp_dbh, $cfg_name, $dat_name);
+	    my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
+		status($tmp_dbh, $cfg_name, $dat_name);
 
 	    if ($veraendert || $force) {
 		my $cfg = cfg_datei_parsen($cfg_name);
