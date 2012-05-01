@@ -26,6 +26,7 @@
 # * Zusatzpunkte?
 # * Filename globbing on Windows
 # * Only store filename without directories in veranstaltung; \ vs. /
+# * Ergebnisse in Editor-Programm darstellen (wordpad?)
 
 use open IO => ":locale";
 use DBI;
