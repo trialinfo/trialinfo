@@ -177,7 +177,7 @@ CREATE TABLE wertungspunkte (
 );
 };
 
-sub tabellen_erzeugen($) {
+sub create_tables($) {
     my ($dbh) = @_;
 
     foreach my $statement (@create_table_statements) {
@@ -186,10 +186,11 @@ sub tabellen_erzeugen($) {
     }
 }
 
-sub veranstaltung_loeschen($$) {
-    my ($dbh, $id) = @_;
+sub veranstaltung_loeschen($$$) {
+    my ($dbh, $id, $auch_in_veranstaltung) = @_;
 
     foreach my $table (@tables) {
+	next if $table eq "veranstaltung" && !$auch_in_veranstaltung;
 	$dbh->do("DELETE FROM $table WHERE id = ?", undef, $id);
     }
 }
@@ -199,27 +200,20 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	$fahrer_nach_startnummer, $cfg) = @_;
     my $sth;
 
-    if ($id) {
-	my $sth = $dbh->prepare(qq{
-	    UPDATE veranstaltung
-	    SET cfg_mtime = ?, dat_mtime = ?
-	    WHERE id = ?
-	});
-	$sth->execute($cfg_mtime, $dat_mtime, $id);
-    } else {
+    unless ($id) {
 	$sth = $dbh->prepare(qq{
 	    SELECT MAX(id) + 1
 	    FROM veranstaltung
 	});
 	$sth->execute;
 	$id = $sth->fetchrow_array || 1;
-	$sth = $dbh->prepare(qq{
-	    INSERT INTO veranstaltung (id, cfg_name, cfg_mtime,
-				       dat_name, dat_mtime)
-	    VALUES (?, ?, ?, ?, ?)
-	});
-	$sth->execute($id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime);
     }
+    $sth = $dbh->prepare(qq{
+	INSERT INTO veranstaltung (id, cfg_name, cfg_mtime,
+				   dat_name, dat_mtime)
+	VALUES (?, ?, ?, ?, ?)
+    });
+    $sth->execute($id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime);
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO wertung (id, nummer, titel, subtitel,
@@ -311,7 +305,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
     return $id;
 }
 
-sub tabelle_kopieren ($$$$$) {
+sub veranstaltungen_kopieren ($$$$$) {
     my ($tabelle, $von_dbh, $nach_dbh, $id, $ersetzen) = @_;
     my ($von_sth, $nach_sth);
     my ($filter, @filter) = ("", ());
@@ -374,7 +368,7 @@ sub status($$$) {
 }
 
 sub tabelle_aktualisieren($$$$$) {
-    my ($table, $tmp_dbh, $dbh, $id, $old_id) = @_;
+    my ($table, $tmp_dbh, $dbh, $id, $tmp_id) = @_;
     my ($sth, $sth2);
 
     my @keys = $tmp_dbh->primary_key(undef, undef, $table);
@@ -393,26 +387,34 @@ sub tabelle_aktualisieren($$$$$) {
 
     unless (@other_keys) {
 	$sth = $tmp_dbh->prepare(qq{
-	    SELECT COUNT(*)
-	    FROM $table
-	    WHERE id = ?
-	});
-    } else {
-	$sth = $tmp_dbh->prepare(qq{
-	    SELECT $old_other_keys
+	    SELECT new.id
 	    FROM (
-		SELECT $other_keys
+		SELECT 1 AS _
 		FROM $table
 		WHERE id = ?
 	    ) AS old LEFT JOIN (
-		SELECT $other_keys
+		SELECT id, 1 AS _
+		FROM $table
+		WHERE id = ?
+	    ) AS new USING (_)
+	    WHERE new._ IS NULL
+	});
+    } else {
+	$sth = $tmp_dbh->prepare(qq{
+	    SELECT $old_other_keys, new.id
+	    FROM (
+		SELECT $other_keys, 1 AS _
+		FROM $table
+		WHERE id = ?
+	    ) AS old LEFT JOIN (
+		SELECT id, $other_keys, 1 AS _
 		FROM $table
 		WHERE id = ?
 	    ) AS new USING ($other_keys)
-	    WHERE new.$other_keys[0] IS NULL
+	    WHERE new._ IS NULL
 	    });
     }
-    $sth->execute($old_id, $id);
+    $sth->execute($tmp_id, $id);
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
@@ -421,41 +423,51 @@ sub tabelle_aktualisieren($$$$$) {
 		join(" AND ", map { "$_ = ?" } (@other_keys, "id"))
 	    ));
 	}
-	trace_sql_values ($id, @row);
-	$sth2->execute(@row, $id);
+	trace_sql_values (@row);
+	$sth2->execute(@row);
     }
 
     unless (@other_keys) {
 	$sth = $tmp_dbh->prepare(qq{
-	    SELECT *
-	    FROM $table
-	    WHERE id = ?
+	    SELECT new.*
+	    FROM (
+		SELECT *, 1 AS _
+		FROM $table
+		WHERE id = ?
+	    ) AS new LEFT JOIN (
+		SELECT 1 AS _
+		FROM $table
+		WHERE id = ?
+	    ) AS old USING (_)
+	    WHERE old._ IS NULL
 	    });
     } else {
 	$sth = $tmp_dbh->prepare(qq{
 	    SELECT new.*
 	    FROM (
-		SELECT *
+		SELECT *, 1 AS _
 		FROM $table
 		WHERE id = ?
 	    ) AS new LEFT JOIN (
-		SELECT $other_keys
+		SELECT $other_keys, 1 AS _
 		FROM $table
 		WHERE id = ?
-	    ) AS old USING ($other_keys)
-	    WHERE old.$other_keys[0] IS NULL
+	    ) AS old USING (_, $other_keys)
+	    WHERE old._ IS NULL
 	    });
     }
-    $sth->execute($id, $old_id);
+    $sth->execute($id, $tmp_id);
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
 	    my @spaltennamen = @{$sth->{NAME_lc}};
+	    pop @spaltennamen;
 	    $sth2 = $dbh->prepare(trace_sql_statement(
 		"INSERT INTO $table (" . join(", ", @spaltennamen) . ") " . 
 		"VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
 	    ));
 	}
+	pop @row;
 	trace_sql_values (@row);
 	$sth2->execute(@row);
     }
@@ -496,7 +508,7 @@ sub tabelle_aktualisieren($$$$$) {
 		WHERE NOT ($all_nonkeys_equal)
 	    });
 	}
-	$sth->execute($old_id, $id);
+	$sth->execute($tmp_id, $id);
 	$sth2 = undef;
 	while (my @row = $sth->fetchrow_array) {
 	    unless ($sth2) {
@@ -514,10 +526,10 @@ sub tabelle_aktualisieren($$$$$) {
 }
 
 sub tabellen_aktualisieren {
-    my ($tmp_dbh, $dbh, $id, $old_id) = @_;
+    my ($tmp_dbh, $dbh, $id, $tmp_id) = @_;
 
     foreach my $table (@tables) {
-	tabelle_aktualisieren $table, $tmp_dbh, $dbh, $id, $old_id;
+	tabelle_aktualisieren $table, $tmp_dbh, $dbh, $id, $tmp_id;
     }
 }
 
@@ -530,28 +542,27 @@ sub veranstaltung_umnummerieren($$) {
 	FROM veranstaltung
     });
     $sth->execute;
-    my $old_id = $sth->fetchrow_array || 1;
+    my $tmp_id = $sth->fetchrow_array || 1;
     foreach my $table (@tables) {
-	next if $table eq "veranstaltung";
 	$dbh->do(qq{
 	    UPDATE $table
 	    SET id = ?
 	    WHERE id = ?
-	}, undef, $old_id, $id);
+	}, undef, $tmp_id, $id);
     }
-    return $old_id;
+    return $tmp_id;
 }
 
-my $tabellen_erzeugen;
+my $create_tables;
 my $temp_db = ':memory:';
 my $poll_intervall;  # Sekunden
 my $force;
-my $result = GetOptions("tabellen-erzeugen" => \$tabellen_erzeugen,
+my $result = GetOptions("create-tables" => \$create_tables,
 			"poll:i" => \$poll_intervall,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db);
-unless ($result && ($tabellen_erzeugen || @ARGV)) {
+unless ($result && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 [optionen] {trialtool-datei} ...\n";
     exit $result ? 0 : 1;
 }
@@ -563,69 +574,55 @@ if (defined $poll_intervall && $poll_intervall == 0) {
 my $dbh = DBI->connect('DBI:mysql:mydb', 'agruen', '76KILcxM',
 		       { RaiseError => 1, AutoCommit => 1 })
     or die "Could not connect to database: $DBI::errstr\n";
-if ($tabellen_erzeugen) {
-    tabellen_erzeugen $dbh;
+if ($create_tables) {
+    create_tables $dbh;
 }
 
 if (@ARGV) {
     my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
 			       { RaiseError => 1, AutoCommit => 1 })
 	or die "Could not create in-memory database: $DBI::errstr\n";
-    tabellen_erzeugen $tmp_dbh;
+    create_tables $tmp_dbh;
     my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
     while (my @row = $sth->fetchrow_array) {
 	push @tables, $row[2];
     }
-
-    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
-
-    foreach my $x (trialtool_dateien @ARGV) {
-	my ($cfg_name, $dat_name) = @$x;
-	my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
-	    status($tmp_dbh, $cfg_name, $dat_name);
-
-	if ($veraendert || $poll_intervall || $force) {
-	    my $cfg = cfg_datei_parsen($cfg_name);
-	    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
-	    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
-	    $tmp_dbh->begin_work;
-	    $id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
-					 $dat_name, $dat_mtime,
-					 $fahrer_nach_startnummer, $cfg;
-	    $tmp_dbh->commit;
-	}
-	if ($veraendert || $force) {
-	    $dbh->begin_work;
-	    foreach my $table (@tables) {
-		tabelle_kopieren $table, $tmp_dbh, $dbh, $id, 1;
-	    }
-	    $dbh->commit;
-	}
-    }
-    while ($poll_intervall) {
+    veranstaltungen_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
+    my $erster_check = 1;
+    my $erster_sync = $force;
+    while ($erster_check || $erster_sync || $poll_intervall) {
 	foreach my $x (trialtool_dateien @ARGV) {
 	    my ($cfg_name, $dat_name) = @$x;
 	    my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
 		status($tmp_dbh, $cfg_name, $dat_name);
 
-	    if ($veraendert || $force) {
+	    if ($erster_sync || $veraendert || $force) {
 		my $cfg = cfg_datei_parsen($cfg_name);
 		my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
 		rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 		$tmp_dbh->begin_work;
-		my $old_id = veranstaltung_umnummerieren $tmp_dbh, $id;
-		in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
+		my $tmp_id;
+		$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id
+		    if defined $id;
+		$id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
 				       $dat_name, $dat_mtime,
 				       $fahrer_nach_startnummer, $cfg;
+		$tmp_id = $id + 1
+		    unless defined $tmp_id;
 		$tmp_dbh->commit;
 		$dbh->begin_work;
-		tabellen_aktualisieren $tmp_dbh, $dbh, $id, $old_id;
+		veranstaltung_loeschen $dbh, $id, 0
+		    if $erster_sync;
+		tabellen_aktualisieren $tmp_dbh, $dbh, $id, $tmp_id;
 		$dbh->commit;
 		$tmp_dbh->begin_work;
-		veranstaltung_loeschen $tmp_dbh, $old_id;
+		veranstaltung_loeschen $tmp_dbh, $tmp_id, 1;
 		$tmp_dbh->commit;
 	    }
-	    sleep $poll_intervall;
 	}
+	$erster_sync = undef;
+	$erster_check = undef;
+	sleep $poll_intervall
+	    if defined $poll_intervall;
     }
 }
