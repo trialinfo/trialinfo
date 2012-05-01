@@ -116,10 +116,9 @@ unless ($result) {
     exit 1;
 }
 
-foreach my $x (trialtool_dateien @ARGV) {
-    my ($cfg_name, $dat_name) = @$x;
-    my $cfg = cfg_datei_parsen($cfg_name);
-    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
+foreach my $name (trialtool_dateien @ARGV) {
+    my $cfg = cfg_datei_parsen("$name.cfg");
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     tageswertung $cfg, $fahrer_nach_startnummer;
 }

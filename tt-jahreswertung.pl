@@ -50,11 +50,10 @@ sub gestartete_klassen($) {
     return $gestartet;
 }
 
-foreach my $x (trialtool_dateien @ARGV) {
-    my ($cfg_name, $dat_name) = @$x;
-    my $cfg = cfg_datei_parsen($cfg_name);
+foreach my $name (trialtool_dateien @ARGV) {
+    my $cfg = cfg_datei_parsen("$name.cfg");
     $cfg->{gestartete_klassen} = gestartete_klassen($cfg);
-    my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }

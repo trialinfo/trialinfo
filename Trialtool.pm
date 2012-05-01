@@ -272,30 +272,22 @@ sub dat_datei_parsen($) {
 }
 
 sub trialtool_dateien(@) {
-    my (%cfg, %dat);
+    my (%name);
 
     foreach my $arg (@_) {
-	if ($arg =~ /^(.*)\.cfg$/i) {
-	    $cfg{$1} = $arg;
-	} elsif ($arg =~ /^(.*)\.dat$/i) {
-	    $dat{$1} = $arg;
+	if ($arg =~ /^(.*)\.(cfg|dat)$/i) {
+	    $name{$1} = 1;
 	} else {
-	    $dat{$arg} = "$arg.dat";
+	    $name{$arg} = 1;
 	}
     }
-    foreach my $arg (keys %cfg) {
-	$dat{$arg} = "$arg.dat"
-	    unless exists $dat{$arg};
+    foreach my $name (keys %name) {
+	die "Datei $name.cfg existiert nicht\n"
+	    unless -e "$name.cfg";
+	die "Datei $name.dat existiert nicht\n"
+	    unless -e "$name.dat";
     }
-    foreach my $arg (keys %dat) {
-	$cfg{$arg} = "$arg.cfg"
-	    unless exists $cfg{$arg};
-    }
-    for my $file (values %cfg, values %dat) {
-	die "Datei $file existiert nicht\n"
-	    unless -e $file;
-    }
-    return map { [$cfg{$_}, $dat{$_}] } sort keys %cfg;
+    return keys %name;
 }
 
 1;

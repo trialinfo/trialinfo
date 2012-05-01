@@ -19,13 +19,8 @@
 
 # TODO:
 # * UTF-8-Codierung im Dateinamen in der Datenbank ist kaputt
-# * Nur einen Dateinamen in der DB
-# * Logfile?
 # * Web-Auswertung: PHP?
-# * Zieldatenbank, user, kennwort konfigurierbar
-# * Wenn Verbindung zu Zieldatenbank abbricht, wieder aufbauen
 # * Filename globbing on Windows
-# * Only store filename without directories in veranstaltung; \ vs. /
 # * Ergebnisse in Editor-Programm darstellen (wordpad?)
 # * Alle SQL-Statements tracen
 
@@ -34,6 +29,7 @@ use DBI;
 use Trialtool;
 use Getopt::Long;
 use Scalar::Util qw(looks_like_number);
+use File::Basename;
 use File::stat;
 use POSIX qw(strftime);
 use strict;
@@ -154,8 +150,7 @@ CREATE TABLE veranstaltung (
   id INT, -- veranstaltung
   dat_mtime DATETIME,
   cfg_mtime DATETIME,
-  cfg_name VARCHAR(128),
-  dat_name VARCHAR(128),
+  name VARCHAR(128),
   PRIMARY KEY (id)
 );
 
@@ -196,9 +191,9 @@ sub veranstaltung_loeschen($$$) {
     }
 }
 
-sub in_datenbank_schreiben($$$$$$$$) {
-    my ($dbh, $id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime,
-	$fahrer_nach_startnummer, $cfg) = @_;
+sub in_datenbank_schreiben($$$$$$$) {
+    my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
+	$cfg) = @_;
     my $sth;
 
     unless ($id) {
@@ -210,11 +205,10 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	$id = $sth->fetchrow_array || 1;
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO veranstaltung (id, cfg_name, cfg_mtime,
-				   dat_name, dat_mtime)
-	VALUES (?, ?, ?, ?, ?)
+	INSERT INTO veranstaltung (id, name, cfg_mtime, dat_mtime)
+	VALUES (?, ?, ?, ?)
     });
-    $sth->execute($id, $cfg_name, $cfg_mtime, $dat_name, $dat_mtime);
+    $sth->execute($id, $basename, $cfg_mtime, $dat_mtime);
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO wertung (id, nummer, titel, subtitel,
@@ -348,24 +342,25 @@ sub mtime($) {
     return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
 }
 
-sub status($$$) {
-    my ($dbh, $cfg_name, $dat_name) = @_;
+sub status($$) {
+    my ($dbh, $name) = @_;
+    my $basename = basename($name);
     my $sth;
     my @row;
 
-    my $cfg_mtime = mtime($cfg_name);
-    my $dat_mtime = mtime($dat_name);
+    my $cfg_mtime = mtime("$name.cfg");
+    my $dat_mtime = mtime("$name.dat");
 
     $sth = $dbh->prepare(qq{
 	SELECT id, (cfg_mtime != ? OR dat_mtime != ?)
 	FROM veranstaltung
-	WHERE cfg_name = ? AND dat_name = ?
+	WHERE name = ?
     });
-    $sth->execute($cfg_mtime, $dat_mtime, $cfg_name, $dat_name);
+    $sth->execute($cfg_mtime, $dat_mtime, $basename);
     unless (@row = $sth->fetchrow_array) {
 	@row = (undef, 1);
     }
-    return (@row, $cfg_mtime, $dat_mtime);
+    return (@row, $basename, $cfg_mtime, $dat_mtime);
 }
 
 sub tabelle_aktualisieren($$$$$) {
@@ -607,24 +602,23 @@ do {
 	    veranstaltungen_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    my $erster_check = 1;
 	    while ($erster_check || $erster_sync || $poll_interval) {
-		foreach my $x (trialtool_dateien @ARGV) {
-		    my ($cfg_name, $dat_name) = @$x;
-		    my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
-			status($tmp_dbh, $cfg_name, $dat_name);
+		foreach my $name (trialtool_dateien @ARGV) {
+		    my ($id, $veraendert, $basename, $cfg_mtime, $dat_mtime) =
+			status($tmp_dbh, $name);
 
 		    $veraendert ||= $force;
 
 		    if ($erster_sync || $veraendert) {
-			my $cfg = cfg_datei_parsen($cfg_name);
-			my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
+			my $cfg = cfg_datei_parsen("$name.cfg");
+			my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 			$tmp_dbh->begin_work;
 			my $tmp_id;
-			$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id  # unnötig wenn $erster_sync?
+			$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id
 			    if defined $id;
-			$id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
-					       $dat_name, $dat_mtime,
-					       $fahrer_nach_startnummer, $cfg;
+			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
+						     $cfg_mtime, $dat_mtime,
+						     $fahrer_nach_startnummer, $cfg;
 			$tmp_id = $id + 1
 			    unless defined $tmp_id;
 			$tmp_dbh->commit;
