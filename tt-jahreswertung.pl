@@ -113,10 +113,24 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtpunkte) {
 	map { $letzte_fahrer->{$_->[0]} }
 	    sort gesamtwertung
 		 (hashref_to_pairs($gesamtpunkte_in_klasse)) ];
-    for (my $idx = 0; $idx < @$fahrer_in_klasse; $idx++) {
-	my $fahrer = $fahrer_in_klasse->[$idx];
+
+    my $letzter_fahrer;
+    for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
+	my $fahrer = $fahrer_in_klasse->[$n];
 	my $startnummer = $fahrer->{startnummer};
-	printf " %2s. %3u", $idx + 1, $startnummer;
+	if ($letzter_fahrer &&
+	    $gesamtpunkte_in_klasse->{$fahrer->{startnummer}} ==
+	    $gesamtpunkte_in_klasse->{$letzter_fahrer->{startnummer}}) {
+	    $fahrer->{rang} = $letzter_fahrer->{rang};
+	} else {
+	    $fahrer->{rang} = $n + 1;
+	}
+	$letzter_fahrer = $fahrer;
+    }
+
+    foreach my $fahrer (@$fahrer_in_klasse) {
+	my $startnummer = $fahrer->{startnummer};
+	printf " %2s. %3u", $fahrer->{rang}, $startnummer;
 	printf "  %-20.20s", $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	    my $veranstaltung = $veranstaltungen->[$n];
