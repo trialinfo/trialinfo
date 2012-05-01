@@ -402,7 +402,7 @@ sub tabelle_aktualisieren($$$$$) {
 	});
     } else {
 	$sth = $tmp_dbh->prepare(qq{
-	    SELECT $old_other_keys, new.id
+	    SELECT $old_other_keys
 	    FROM (
 		SELECT $other_keys, 1 AS _
 		FROM $table
@@ -424,8 +424,8 @@ sub tabelle_aktualisieren($$$$$) {
 		join(" AND ", map { "$_ = ?" } (@other_keys, "id"))
 	    ));
 	}
-	trace_sql_values (@row);
-	$sth2->execute(@row);
+	trace_sql_values (@row, $id);
+	$sth2->execute(@row, $id);
     }
 
     unless (@other_keys) {
@@ -515,7 +515,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    unless ($sth2) {
 		$sth2 = $dbh->prepare(trace_sql_statement(
 		    "UPDATE $table " .
-		    "SET " . join(", ", map { "$_ = ?" } @nonkeys) .
+		    "SET " . join(", ", map { "$_ = ?" } @nonkeys) . " " .
 		    "WHERE " .  join(" AND ",
 				     map { "$_ = ?" } (@other_keys, "id"))
 		));
@@ -554,12 +554,20 @@ sub veranstaltung_umnummerieren($$) {
     return $tmp_id;
 }
 
+my $db;
+my $username;
+my $password;
 my $create_tables;
 my $temp_db = ':memory:';
-my $poll_intervall;  # Sekunden
+my $poll_interval;  # Sekunden
+my $reconnect_interval;  # Sekunden
 my $force;
-my $result = GetOptions("create-tables" => \$create_tables,
-			"poll:i" => \$poll_intervall,
+my $result = GetOptions("db=s" => \$db,
+			"username=s" => \$username,
+			"password=s" => \$password,
+			"create-tables" => \$create_tables,
+			"poll:i" => \$poll_interval,
+			"reconnect:i" => \$reconnect_interval,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db);
@@ -567,63 +575,85 @@ unless ($result && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 [optionen] {trialtool-datei} ...\n";
     exit $result ? 0 : 1;
 }
-if (defined $poll_intervall && $poll_intervall == 0) {
-    $poll_intervall = 30;
+if (defined $poll_interval && $poll_interval == 0) {
+    $poll_interval = 30;
+}
+if (defined $reconnect_interval && $reconnect_interval == 0) {
+    $reconnect_interval = $poll_interval;
 }
 
-# 'DBI:mysql:databasename;host=db.example.com'
-my $dbh = DBI->connect('DBI:mysql:mydb', 'agruen', '76KILcxM',
-		       { RaiseError => 1, AutoCommit => 1 })
-    or die "Could not connect to database: $DBI::errstr\n";
-if ($create_tables) {
-    create_tables $dbh;
-}
+my $erster_sync = $force;
 
-if (@ARGV) {
-    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
+do {
+    eval {
+	# 'DBI:mysql:databasename;host=db.example.com'
+	my $dbh = DBI->connect("DBI:$db", $username, $password,
 			       { RaiseError => 1, AutoCommit => 1 })
-	or die "Could not create in-memory database: $DBI::errstr\n";
-    create_tables $tmp_dbh;
-    my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
-    while (my @row = $sth->fetchrow_array) {
-	push @tables, $row[2];
-    }
-    veranstaltungen_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
-    my $erster_check = 1;
-    my $erster_sync = $force;
-    while ($erster_check || $erster_sync || $poll_intervall) {
-	foreach my $x (trialtool_dateien @ARGV) {
-	    my ($cfg_name, $dat_name) = @$x;
-	    my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
-		status($tmp_dbh, $cfg_name, $dat_name);
+	    or die "Could not connect to database: $DBI::errstr\n";
+	if ($create_tables) {
+	    create_tables $dbh;
+	}
+	print "Connected to $db ...\n";
 
-	    if ($erster_sync || $veraendert || $force) {
-		my $cfg = cfg_datei_parsen($cfg_name);
-		my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
-		rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
-		$tmp_dbh->begin_work;
-		my $tmp_id;
-		$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id
-		    if defined $id;
-		$id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
-				       $dat_name, $dat_mtime,
-				       $fahrer_nach_startnummer, $cfg;
-		$tmp_id = $id + 1
-		    unless defined $tmp_id;
-		$tmp_dbh->commit;
-		$dbh->begin_work;
-		veranstaltung_loeschen $dbh, $id, 0
-		    if $erster_sync;
-		tabellen_aktualisieren $tmp_dbh, $dbh, $id, $tmp_id;
-		$dbh->commit;
-		$tmp_dbh->begin_work;
-		veranstaltung_loeschen $tmp_dbh, $tmp_id, 1;
-		$tmp_dbh->commit;
+	if (@ARGV) {
+	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
+				       { RaiseError => 1, AutoCommit => 1 })
+		or die "Could not create in-memory database: $DBI::errstr\n";
+	    create_tables $tmp_dbh;
+	    my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
+	    while (my @row = $sth->fetchrow_array) {
+		push @tables, $row[2];
+	    }
+	    veranstaltungen_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
+	    my $erster_check = 1;
+	    while ($erster_check || $erster_sync || $poll_interval) {
+		foreach my $x (trialtool_dateien @ARGV) {
+		    my ($cfg_name, $dat_name) = @$x;
+		    my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
+			status($tmp_dbh, $cfg_name, $dat_name);
+
+		    $veraendert ||= $force;
+
+		    if ($erster_sync || $veraendert) {
+			my $cfg = cfg_datei_parsen($cfg_name);
+			my $fahrer_nach_startnummer = dat_datei_parsen($dat_name);
+			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
+			$tmp_dbh->begin_work;
+			my $tmp_id;
+			$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id  # unnötig wenn $erster_sync?
+			    if defined $id;
+			$id = in_datenbank_schreiben $tmp_dbh, $id, $cfg_name, $cfg_mtime,
+					       $dat_name, $dat_mtime,
+					       $fahrer_nach_startnummer, $cfg;
+			$tmp_id = $id + 1
+			    unless defined $tmp_id;
+			$tmp_dbh->commit;
+			if ($veraendert) {
+			    $dbh->begin_work;
+			    veranstaltung_loeschen $dbh, $id, 0
+				if $erster_check || $erster_sync;
+			    tabellen_aktualisieren $tmp_dbh, $dbh, $id, $tmp_id;
+			    $dbh->commit;
+			}
+			$tmp_dbh->begin_work;
+			veranstaltung_loeschen $tmp_dbh, $tmp_id, 1;
+			$tmp_dbh->commit;
+		    }
+		}
+
+		$erster_sync = undef;
+		$erster_check = undef;
+		sleep $poll_interval
+		    if defined $poll_interval;
 	    }
 	}
-	$erster_sync = undef;
-	$erster_check = undef;
-	sleep $poll_intervall
-	    if defined $poll_intervall;
+    };
+    if ($@) {
+	warn $@;
     }
-}
+    if ($reconnect_interval) {
+	print "Waiting for $reconnect_interval seconds...\n";
+	sleep $reconnect_interval;
+	print "\n";
+    }
+} while ($reconnect_interval);
