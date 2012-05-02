@@ -30,10 +30,12 @@ use Trialtool;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $streich = 0;  # Streichresultate
 
-my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; });
+my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
+			"streich=i" => \$streich );
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N]\n";
     exit 1;
 }
 
@@ -59,6 +61,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 }
 
 my $gesamtpunkte;
+my ($letzte_cfg, $letzte_fahrer) =
+    @{$veranstaltungen->[@$veranstaltungen - 1]};
 
 foreach my $veranstaltung (@$veranstaltungen) {
     my $fahrer_nach_startnummer = $veranstaltung->[1];
@@ -69,65 +73,81 @@ foreach my $veranstaltung (@$veranstaltungen) {
 	    my $klasse = $fahrer->{klasse};
 	    $gesamtpunkte->{$klasse}{$startnummer} +=
 		$fahrer->{wertungspunkte}[$wertung];
+	    push @{$letzte_fahrer->{$startnummer}{wp}},
+		$fahrer->{wertungspunkte}[$wertung];
 	}
     }
 }
 
-# Converts a reference to a hash to a list of pairs:
-# {1 => "one", 2 => "two"}  =>  ([1, "one"], [2, "two"])
-sub hashref_to_pairs($) {
-    my ($hashref) = @_;
-    my (@list, $key, $value);
+$letzte_fahrer = { map { ( $_->{startnummer}, $_ ) }
+			grep { exists $_->{wp} }
+			     values %$letzte_fahrer };
 
-    while (($key, $value) = each %$hashref) {
-	push @list, [ $key, $value ];
+foreach my $fahrer (values %$letzte_fahrer) {
+    my $wp = $fahrer->{wp};
+    my $n = 0;
+
+    if ($streich) {
+	$fahrer->{streich} = 0;
+	$wp = [ sort { $a <=> $b } @$wp ];
+	for (; $n < $streich && $n < @$wp; $n++) {
+	    $fahrer->{streich} += $wp->[$n];
+	}
     }
-    return @list;
+    $fahrer->{gesamt} = 0;
+    for (; $n < @$wp; $n++) {
+	$fahrer->{gesamt} += $wp->[$n];
+    }
 }
 
-sub gesamtwertung($$) {
-    my ($a, $b) = @_;
-
-    return $b->[1] <=> $a->[1]  # Gesamtpunkte
-	if $a->[1] != $b->[1];
-    return $a->[0] <=> $b->[0];  # Startnummer
+if ($streich) {
+    $letzte_fahrer = { map { ( $_->{startnummer}, $_ ) }
+			    grep { $_->{gesamt} > 0 }
+				 values %$letzte_fahrer };
 }
 
-my ($letzte_cfg, $letzte_fahrer) =
-    @{$veranstaltungen->[@$veranstaltungen - 1]};
+sub gesamtwertung {
+    return $b->{gesamt} <=> $a->{gesamt}
+	if $a->{gesamt} != $b->{gesamt};
+    return $a->{startnummer} <=> $b->{startnummer};
+}
 
 my $namen = 0;
-foreach my $fahrer (map { $letzte_fahrer->{$_} }
-			map { keys $_ } values %$gesamtpunkte) {
+foreach my $fahrer (values %$letzte_fahrer) {
     my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
     $namen = $n
 	if $n > $namen;
 }
 
-print "$letzte_cfg->{wertungen}[$wertung]\n\n";
+print "$letzte_cfg->{wertungen}[$wertung]\n";
+if ($streich) {
+    if ($streich == 1) {
+	print "Mit einem Streichresultat\n";
+    } else {
+	print "Mit $streich Streichresultaten\n";
+    }
+}
+print "\n";
 
-foreach my $klasse (sort {$a <=> $b} keys %$gesamtpunkte) {
-    my $gesamtpunkte_in_klasse = $gesamtpunkte->{$klasse};
-
+my $fahrer_nach_klassen = fahrer_nach_klassen($letzte_fahrer);
+foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
     printf " %2s  %3s  %-*.*s", "", "Nr.", $namen, $namen, "Name";
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $gestartet = $veranstaltungen->[$n][0]{gestartete_klassen}[$klasse - 1];
 	printf "  %2s", $gestartet ? $n + 1 : "";
     }
+    printf "  Str"
+	if $streich;
     printf "  Ges\n";
-    my $fahrer_in_klasse = [
-	map { $letzte_fahrer->{$_->[0]} }
-	    sort gesamtwertung
-		 (hashref_to_pairs($gesamtpunkte_in_klasse)) ];
+    my $fahrer_in_klasse = [ sort gesamtwertung @{$fahrer_nach_klassen->{$klasse}} ];
 
     my $letzter_fahrer;
     for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
 	my $fahrer = $fahrer_in_klasse->[$n];
 	my $startnummer = $fahrer->{startnummer};
 	if ($letzter_fahrer &&
-	    $gesamtpunkte_in_klasse->{$fahrer->{startnummer}} ==
-	    $gesamtpunkte_in_klasse->{$letzter_fahrer->{startnummer}}) {
+	    $fahrer->{gesamt} == $letzter_fahrer->{gesamt}) {
 	    $fahrer->{rang} = $letzter_fahrer->{rang};
 	} else {
 	    $fahrer->{rang} = $n + 1;
@@ -148,7 +168,9 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtpunkte) {
 			    $fahrer->{wertungspunkte}[$wertung] :
 			    $gestartet ? "-" : "";
 	}
-	printf "  %3s\n", $gesamtpunkte_in_klasse->{$startnummer};
+	printf "  %3s", $fahrer->{streich}
+	    if $streich;
+	printf "  %3s\n", $fahrer->{gesamt};
     }
     print "\n";
 }

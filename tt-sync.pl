@@ -581,7 +581,7 @@ my $erster_sync = $force;
 
 do {
     eval {
-	# 'DBI:mysql:databasename;host=db.example.com'
+	# 'DBI:mysql:databasename;host=db.example.com;mysql_enable_utf8=1'
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
 			       { RaiseError => 1, AutoCommit => 1 })
 	    or die "Could not connect to database: $DBI::errstr\n";
