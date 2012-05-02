@@ -60,10 +60,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
-my $gesamtpunkte;
-my ($letzte_cfg, $letzte_fahrer) =
-    @{$veranstaltungen->[@$veranstaltungen - 1]};
-
+my $gesamtwertung;
 foreach my $veranstaltung (@$veranstaltungen) {
     my $fahrer_nach_startnummer = $veranstaltung->[1];
 
@@ -71,49 +68,53 @@ foreach my $veranstaltung (@$veranstaltungen) {
 	if (exists $fahrer->{wertungspunkte}[$wertung]) {
 	    my $startnummer = $fahrer->{startnummer};
 	    my $klasse = $fahrer->{klasse};
-	    $gesamtpunkte->{$klasse}{$startnummer} +=
-		$fahrer->{wertungspunkte}[$wertung];
-	    push @{$letzte_fahrer->{$startnummer}{wp}},
+	    push @{$gesamtwertung->{$klasse}{$startnummer}{wertungspunkte}},
 		$fahrer->{wertungspunkte}[$wertung];
 	}
     }
 }
 
-$letzte_fahrer = { map { ( $_->{startnummer}, $_ ) }
-			grep { exists $_->{wp} }
-			     values %$letzte_fahrer };
-
-foreach my $fahrer (values %$letzte_fahrer) {
-    my $wp = $fahrer->{wp};
-    my $n = 0;
-
-    if ($streich) {
-	$fahrer->{streich} = 0;
-	$wp = [ sort { $a <=> $b } @$wp ];
-	for (; $n < $streich && $n < @$wp; $n++) {
-	    $fahrer->{streich} += $wp->[$n];
+foreach my $klasse (keys %$gesamtwertung) {
+    foreach my $startnummer (keys $gesamtwertung->{$klasse}) {
+	my $fahrer = $gesamtwertung->{$klasse}{$startnummer};
+	$gesamtwertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
+	my $wertungspunkte = $fahrer->{wertungspunkte};
+	my $n = 0;
+	if ($streich) {
+	    $fahrer->{streich} = 0;
+	    $wertungspunkte = [ sort { $a <=> $b }
+				     @$wertungspunkte ];
+	    for (; $n < $streich && $n < @$wertungspunkte; $n++) {
+		$fahrer->{streich} += $wertungspunkte->[$n];
+	    }
 	}
-    }
-    $fahrer->{gesamt} = 0;
-    for (; $n < @$wp; $n++) {
-	$fahrer->{gesamt} += $wp->[$n];
+	$fahrer->{gesamt} = 0;
+	for (; $n < @$wertungspunkte; $n++) {
+	    $fahrer->{gesamt} += $wertungspunkte->[$n];
+	}
+
+	delete $gesamtwertung->{$klasse}{$startnummer}
+	    unless $fahrer->{gesamt} > 0;
     }
 }
 
-if ($streich) {
-    $letzte_fahrer = { map { ( $_->{startnummer}, $_ ) }
-			    grep { $_->{gesamt} > 0 }
-				 values %$letzte_fahrer };
+foreach my $klasse (keys %$gesamtwertung) {
+    delete $gesamtwertung->{$klasse}
+	unless %{$gesamtwertung->{$klasse}};
 }
 
-sub gesamtwertung {
+sub wertung {
     return $b->{gesamt} <=> $a->{gesamt}
 	if $a->{gesamt} != $b->{gesamt};
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
+my ($letzte_cfg, $letzte_fahrer) =
+    @{$veranstaltungen->[@$veranstaltungen - 1]};
+
 my $namen = 0;
-foreach my $fahrer (values %$letzte_fahrer) {
+foreach my $fahrer (map { $letzte_fahrer->{$_} }
+			map { keys $_ } values %$gesamtwertung) {
     my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
     $namen = $n
 	if $n > $namen;
@@ -122,15 +123,15 @@ foreach my $fahrer (values %$letzte_fahrer) {
 print "$letzte_cfg->{wertungen}[$wertung]\n";
 if ($streich) {
     if ($streich == 1) {
-	print "Mit einem Streichresultat\n";
+	print "Mit 1 Streichresultat\n";
     } else {
 	print "Mit $streich Streichresultaten\n";
     }
 }
 print "\n";
 
-my $fahrer_nach_klassen = fahrer_nach_klassen($letzte_fahrer);
-foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
+foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
+    my $klassenwertung = $gesamtwertung->{$klasse};
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
     printf " %2s  %3s  %-*.*s", "", "Nr.", $namen, $namen, "Name";
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
@@ -140,24 +141,30 @@ foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
     printf "  Str"
 	if $streich;
     printf "  Ges\n";
-    my $fahrer_in_klasse = [ sort gesamtwertung @{$fahrer_nach_klassen->{$klasse}} ];
+
+    my $fahrer_in_klasse = [
+	map { $letzte_fahrer->{$_->{startnummer}} }
+	    (sort wertung (values %$klassenwertung)) ];
 
     my $letzter_fahrer;
     for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
 	my $fahrer = $fahrer_in_klasse->[$n];
 	my $startnummer = $fahrer->{startnummer};
+	    
 	if ($letzter_fahrer &&
-	    $fahrer->{gesamt} == $letzter_fahrer->{gesamt}) {
-	    $fahrer->{rang} = $letzter_fahrer->{rang};
+	    $klassenwertung->{$startnummer}{gesamt} ==
+	    $klassenwertung->{$letzter_fahrer->{startnummer}}->{gesamt}) {
+	    $klassenwertung->{$startnummer}{rang} =
+		$klassenwertung->{$letzter_fahrer->{startnummer}}->{rang};
 	} else {
-	    $fahrer->{rang} = $n + 1;
+	    $klassenwertung->{$startnummer}{rang} = $n + 1;
 	}
 	$letzter_fahrer = $fahrer;
     }
 
     foreach my $fahrer (@$fahrer_in_klasse) {
 	my $startnummer = $fahrer->{startnummer};
-	printf " %2s. %3u", $fahrer->{rang}, $startnummer;
+	printf " %2s. %3u", $klassenwertung->{$startnummer}{rang}, $startnummer;
 	printf "  %-*.*s", $namen, $namen, $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	    my $veranstaltung = $veranstaltungen->[$n];
@@ -168,9 +175,9 @@ foreach my $klasse (sort {$a <=> $b} keys $fahrer_nach_klassen) {
 			    $fahrer->{wertungspunkte}[$wertung] :
 			    $gestartet ? "-" : "";
 	}
-	printf "  %3s", $fahrer->{streich}
+	printf "  %3s", $klassenwertung->{$startnummer}{streich}
 	    if $streich;
-	printf "  %3s\n", $fahrer->{gesamt};
+	printf "  %3s\n", $klassenwertung->{$startnummer}{gesamt};
     }
     print "\n";
 }
