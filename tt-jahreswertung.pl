@@ -25,8 +25,10 @@
 use open IO => ":locale";
 use utf8;
 
+use List::Util qw(max);
 use Getopt::Long;
 use Trialtool;
+use RenderTable;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
@@ -112,14 +114,6 @@ sub wertung {
 my ($letzte_cfg, $letzte_fahrer) =
     @{$veranstaltungen->[@$veranstaltungen - 1]};
 
-my $namen = 0;
-foreach my $fahrer (map { $letzte_fahrer->{$_} }
-			map { keys $_ } values %$gesamtwertung) {
-    my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
-    $namen = $n
-	if $n > $namen;
-}
-
 print "$letzte_cfg->{wertungen}[$wertung]\n";
 if ($streich) {
     if ($streich == 1) {
@@ -130,17 +124,32 @@ if ($streich) {
 }
 print "\n";
 
+my $namenlaenge = 0;
+foreach my $fahrer (map { $letzte_fahrer->{$_} }
+			map { keys $_ } values %$gesamtwertung) {
+    my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
+    $namenlaenge = max($n, $namenlaenge);
+}
+
 foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
     my $klassenwertung = $gesamtwertung->{$klasse};
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
-    printf " %2s  %3s  %-*.*s", "", "Nr.", $namen, $namen, "Name";
+    my ($header, $body, $format);
+
+    push @$format, "r4", "r3", "l$namenlaenge";
+    push @$header, "", "Nr.", "Name";
+
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $gestartet = $veranstaltungen->[$n][0]{gestartete_klassen}[$klasse - 1];
-	printf "  %2s", $gestartet ? $n + 1 : "";
+	push @$format, "r2";
+	push @$header,  $gestartet ? $n + 1 : "";
     }
-    printf "  Str"
-	if $streich;
-    printf "  Ges\n";
+    if ($streich) {
+	push @$format, "r3";
+	push @$header, "Str";
+    }
+    push @$format, "r3";
+    push @$header, "Ges";
 
     my $fahrer_in_klasse = [
 	map { $letzte_fahrer->{$_->{startnummer}} }
@@ -150,7 +159,7 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
     for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
 	my $fahrer = $fahrer_in_klasse->[$n];
 	my $startnummer = $fahrer->{startnummer};
-	    
+
 	if ($letzter_fahrer &&
 	    $klassenwertung->{$startnummer}{gesamt} ==
 	    $klassenwertung->{$letzter_fahrer->{startnummer}}->{gesamt}) {
@@ -164,29 +173,37 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
 
     foreach my $fahrer (@$fahrer_in_klasse) {
 	my $startnummer = $fahrer->{startnummer};
-	printf " %2s. %3u", $klassenwertung->{$startnummer}{rang}, $startnummer;
-	printf "  %-*.*s", $namen, $namen, $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	my $row;
+	push @$row, "$klassenwertung->{$startnummer}{rang}.", $startnummer,
+		   $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	    my $veranstaltung = $veranstaltungen->[$n];
 	    my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];
 	    my $fahrer = $veranstaltung->[1]{$startnummer};
-	    printf "  %2s", ($fahrer->{klasse} = $klasse &&
-			     exists($fahrer->{wertungspunkte}[$wertung])) ?
-			    $fahrer->{wertungspunkte}[$wertung] :
-			    $gestartet ? "-" : "";
+	    push @$row, ($fahrer->{klasse} = $klasse &&
+			 exists($fahrer->{wertungspunkte}[$wertung])) ?
+			$fahrer->{wertungspunkte}[$wertung] :
+			$gestartet ? "-" : "";
 	}
-	printf "  %3s", $klassenwertung->{$startnummer}{streich}
+	push @$row, $klassenwertung->{$startnummer}{streich}
 	    if $streich;
-	printf "  %3s\n", $klassenwertung->{$startnummer}{gesamt};
+	push @$row, $klassenwertung->{$startnummer}{gesamt};
+	push @$body, $row;
     }
+    render_table $header, $body, $format;
     print "\n";
 }
 
+
 print "Veranstaltungen:\n";
+my ($body, $format);
+push @$format, "r4", "l";
 for (my $n = 0; $n < @$veranstaltungen; $n++) {
     my $cfg = $veranstaltungen->[$n][0];
-    printf "  %2s  %s: %s\n", $n + 1, $cfg->{titel}[0],  $cfg->{subtitel}[0];
+
+    push @$body, [ $n + 1, "$cfg->{titel}[0]: $cfg->{subtitel}[0]" ];
 }
+render_table undef, $body, $format;
 print "\n";
 
 # use Data::Dumper;

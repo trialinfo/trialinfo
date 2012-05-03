@@ -17,11 +17,19 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
+# TODO:
+# * Wie lassen sich die "Ausfall"-Texte im Tabellencode unterstützen?
+#   (Sie gehen über mehrere Spalten.)
+# * Bekommt man das (einklammern) von Fahrern außer Konkurrenz irgendwie
+#   hin?  Das macht natürlich nur im Textmodus Sinn.
+
 use open IO => ":locale";
 use utf8;
 
+use List::Util qw(max);
 use Getopt::Long;
 use Trialtool;
+use RenderTable;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
@@ -46,11 +54,10 @@ sub tageswertung($$) {
 	6 => "nicht gestartet, entschuldigt"
     };
 
-    my $namen = 0;
+    my $namenlaenge = 0;
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
-	$namen = $n
-	    if $n > $namen;
+	$namenlaenge = max($n, $namenlaenge);
     }
 
     print "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]\n";
@@ -61,6 +68,7 @@ sub tageswertung($$) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 	my $idx = $klasse - 1;
 	my $runden = $cfg->{runden}[$idx];
+	my ($header, $body, $format);
 
 	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
 				     $_->{papierabnahme}) ?
@@ -68,44 +76,47 @@ sub tageswertung($$) {
 	next unless @$fahrer_in_klasse > 0;
 
 	printf "$cfg->{klassen}[$idx]\n";
-	printf "     Nr.  %-*.*s", $namen, $namen, "Name";
+	push @$format, "r4", "r3", "l$namenlaenge";
+	push @$header, "", "Nr.", "Name";
 	for (my $n = 0; $n < $runden; $n++) {
-	   print "  R", $n + 1;
+	    push @$format, "r2";
+	    push @$header, "R" . ($n + 1);
 	}
-	print "  ZP  0S  1S  2S  3S  Ges  WP\n";
+	push @$format, "r2", "r2", "r2", "r2", "r2", "r3", "r3";
+	push @$header, "ZP", "0S", "1S", "2S", "3S", "Ges", "WP";
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 	foreach my $fahrer (@$fahrer_in_klasse) {
+	    my $row;
 	    if ($fahrer->{runden} == $runden &&  !$fahrer->{ausfall}) {
-		printf " %2u.", $fahrer->{rang};
+		push @$row, "$fahrer->{rang}.";
 	    } else {
-		printf "    ";
+		push @$row, "";
 	    }
-	    printf "%s%3u", ($fahrer->{ausfall} == 4 ? "(" : " "), $fahrer->{startnummer};
-	    printf "  %-*.*s", $namen, $namen, $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	    push @$row, $fahrer->{startnummer};
+	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
-		    printf "  %2u", $fahrer->{punkte_pro_runde}[$n];
+		    push @$row, $fahrer->{punkte_pro_runde}[$n];
 		} else {
-		    print "   -";
+		    push @$row, "-";
 		}
 	    }
-	    printf "  %2s", $fahrer->{zusatzpunkte} || "";
-	    if ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
-		print "  $ausfall->{$fahrer->{ausfall}}";
+	    push @$row, $fahrer->{zusatzpunkte} || "";
+	    if ($fahrer->{ausfall} != 0) {
+		push @$row, $ausfall->{$fahrer->{ausfall}};
 	    } elsif ($fahrer->{runden} > 0) {
 		for (my $n = 0; $n < 4; $n++) {
-		    printf "  %2u", $fahrer->{os_1s_2s_3s}[$n];
+		    push @$row, $fahrer->{os_1s_2s_3s}[$n];
 		}
-		printf "  %3u", $fahrer->{punkte};
+		push @$row, $fahrer->{punkte};
 		if (exists $fahrer->{wertungspunkte}[$wertung]) {
-		    printf "  %2u", $fahrer->{wertungspunkte}[$wertung];
-		} elsif ($fahrer->{ausfall} == 4) {
-			print ")";
+		    push @$row, $fahrer->{wertungspunkte}[$wertung];
 		}
 	    }
-	    print "\n";
+	    push @$body, $row;
 	}
+	render_table $header, $body, $format;
 	print "\n";
     }
 }

@@ -1,5 +1,3 @@
-#! /usr/bin/perl -w
-
 # Trialtool: Lesen des Dateiformats
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
@@ -24,6 +22,13 @@
 # Startnummer.  Danach folgen die den Fahrern zugeordneten Helfer.
 #
 # Die *.cfg - Dateien enthalten die Veranstaltungsdaten (siehe $cfg_format).
+
+package Trialtool;
+
+require Exporter;
+@ISA = qw(Exporter);
+@EXPORT = qw(cfg_datei_parsen dat_datei_parsen fahrer_nach_klassen
+	     rang_und_wertungspunkte_berechnen trialtool_dateien);
 
 use Parse::Binary::FixedFormat;
 use Encode qw(decode);
