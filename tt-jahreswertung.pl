@@ -18,7 +18,10 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
-# * Lizenzfahrer bekommen (1-100) in den Klassen 1-10 keine Wertungspunkte =>
+# * Filename globbing on Windows
+# * Ergebnisse in Editor-Programm darstellen (wordpad?)
+#
+# * Lizenzfahrer (1-100) bekommen in den Klassen 1-10 keine Wertungspunkte =>
 #   überprüfen oder sogar erzwingen ...
 # * In der Klasse 5 gibt es keine Jahreswertungspunkte.
 

@@ -18,6 +18,13 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
+# * Filename globbing on Windows
+# * Ergebnisse in Editor-Programm darstellen (wordpad?)
+#
+# * Lizenzfahrer (1-100) bekommen in den Klassen 1-10 keine Wertungspunkte =>
+#   überprüfen oder sogar erzwingen ...
+# * In der Klasse 5 gibt es keine Jahreswertungspunkte.
+#
 # * Wie lassen sich die "Ausfall"-Texte im Tabellencode unterstützen?
 #   (Sie gehen über mehrere Spalten.)
 # * Bekommt man das (einklammern) von Fahrern außer Konkurrenz irgendwie

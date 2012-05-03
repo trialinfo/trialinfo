@@ -18,10 +18,8 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
-# * UTF-8-Codierung im Dateinamen in der Datenbank ist kaputt
 # * Web-Auswertung: PHP?
 # * Filename globbing on Windows
-# * Ergebnisse in Editor-Programm darstellen (wordpad?)
 # * Alle SQL-Statements tracen
 
 use open IO => ":locale";
@@ -62,7 +60,7 @@ sub trace_sql_values(@) {
 
 my @tables;  # Liste der Tabellen in der Datenbank
 
-my @create_table_statements = split /;/, q{
+my @create_veranstaltung_tables = split /;/, q{
 DROP TABLE IF EXISTS fahrer;
 CREATE TABLE fahrer (
   id INT, -- veranstaltung
@@ -150,7 +148,8 @@ CREATE TABLE veranstaltung (
   id INT, -- veranstaltung
   dat_mtime DATETIME,
   cfg_mtime DATETIME,
-  name VARCHAR(128),
+  dateiname VARCHAR(128),
+  serie INT,
   PRIMARY KEY (id)
 );
 
@@ -173,10 +172,29 @@ CREATE TABLE wertungspunkte (
 );
 };
 
-sub create_tables($) {
-    my ($dbh) = @_;
+my @create_jahreswertung_tables = split /;/, q{
+DROP TABLE IF EXISTS jahreswertung;
+CREATE TABLE jahreswertung (
+  serie INT,
+  wertung INT,
+  streichresultate INT,
+  PRIMARY KEY (serie)
+);
 
-    foreach my $statement (@create_table_statements) {
+DROP TABLE IF EXISTS jahreswertung_punkte;
+CREATE TABLE jahreswertung_punkte (
+  id INT, -- veranstaltung
+  startnummer INT,
+  streichpunkte INT,
+  punkte INT,
+  PRIMARY KEY (id, startnummer)
+);
+};
+
+sub sql_ausfuehren($@) {
+    my ($dbh, @sql) = @_;
+
+    foreach my $statement (@sql) {
 	next if $statement =~ /^\s*$/;
 	$dbh->do($statement);
     }
@@ -205,7 +223,7 @@ sub in_datenbank_schreiben($$$$$$$) {
 	$id = $sth->fetchrow_array || 1;
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO veranstaltung (id, name, cfg_mtime, dat_mtime)
+	INSERT INTO veranstaltung (id, dateiname, cfg_mtime, dat_mtime)
 	VALUES (?, ?, ?, ?)
     });
     $sth->execute($id, $basename, $cfg_mtime, $dat_mtime);
@@ -343,18 +361,18 @@ sub mtime($) {
 }
 
 sub status($$) {
-    my ($dbh, $name) = @_;
-    my $basename = basename($name);
+    my ($dbh, $dateiname) = @_;
+    my $basename = basename($dateiname);
     my $sth;
     my @row;
 
-    my $cfg_mtime = mtime("$name.cfg");
-    my $dat_mtime = mtime("$name.dat");
+    my $cfg_mtime = mtime("$dateiname.cfg");
+    my $dat_mtime = mtime("$dateiname.dat");
 
     $sth = $dbh->prepare(qq{
 	SELECT id, (cfg_mtime != ? OR dat_mtime != ?)
 	FROM veranstaltung
-	WHERE name = ?
+	WHERE dateiname = ?
     });
     $sth->execute($cfg_mtime, $dat_mtime, $basename);
     unless (@row = $sth->fetchrow_array) {
@@ -586,7 +604,7 @@ do {
 			       { RaiseError => 1, AutoCommit => 1 })
 	    or die "Could not connect to database: $DBI::errstr\n";
 	if ($create_tables) {
-	    create_tables $dbh;
+	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
 	}
 	print "Connected to $db ...\n";
 
@@ -594,7 +612,7 @@ do {
 	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
 				       { RaiseError => 1, AutoCommit => 1 })
 		or die "Could not create in-memory database: $DBI::errstr\n";
-	    create_tables $tmp_dbh;
+	    sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
 	    my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
 	    while (my @row = $sth->fetchrow_array) {
 		push @tables, $row[2];
@@ -602,15 +620,15 @@ do {
 	    veranstaltungen_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    my $erster_check = 1;
 	    while ($erster_check || $erster_sync || $poll_interval) {
-		foreach my $name (trialtool_dateien @ARGV) {
+		foreach my $dateiname (trialtool_dateien @ARGV) {
 		    my ($id, $veraendert, $basename, $cfg_mtime, $dat_mtime) =
-			status($tmp_dbh, $name);
+			status($tmp_dbh, $dateiname);
 
 		    $veraendert ||= $force;
 
 		    if ($erster_sync || $veraendert) {
-			my $cfg = cfg_datei_parsen("$name.cfg");
-			my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
+			my $cfg = cfg_datei_parsen("$dateiname.cfg");
+			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat");
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 			$tmp_dbh->begin_work;
 			my $tmp_id;
