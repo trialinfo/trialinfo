@@ -103,7 +103,7 @@ CREATE TABLE fahrer_wertung (
   id INT, -- veranstaltung
   startnummer INT,
   wertung INT,
-  wertungspunkte INT,
+  wertungspunkte INT NOT NULL,
   PRIMARY KEY (id, startnummer, wertung)
 );
 
@@ -180,14 +180,14 @@ CREATE TABLE jahreswertung (
   streichresultate INT,
   PRIMARY KEY (serie)
 );
+INSERT INTO jahreswertung (serie, wertung, streichresultate)
+VALUES (1, 1, 0);
 
-DROP TABLE IF EXISTS jahreswertung_punkte;
-CREATE TABLE jahreswertung_punkte (
+DROP TABLE IF EXISTS jahreswertung_veranstaltung;
+CREATE TABLE jahreswertung_veranstaltung (
+  serie INT,
   id INT, -- veranstaltung
-  startnummer INT,
-  streichpunkte INT,
-  punkte INT,
-  PRIMARY KEY (id, startnummer)
+  PRIMARY KEY (serie, id)
 );
 };
 
@@ -572,6 +572,15 @@ sub veranstaltung_umnummerieren($$) {
     return $tmp_id;
 }
 
+sub in_jahreswertung_eintragen($$) {
+    my ($dbh, $id) = @_;
+
+    my $sth = $dbh->do(q{
+	INSERT INTO jahreswertung_veranstaltung(serie, id)
+	VALUES (1, ?)
+    }, undef, $id);
+}
+
 my $db;
 my $username;
 my $password;
@@ -610,6 +619,7 @@ do {
 	    or die "Could not connect to database: $DBI::errstr\n";
 	if ($create_tables) {
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
+	    sql_ausfuehren $dbh, @create_jahreswertung_tables;
 	}
 	print "Connected to $db ...\n";
 
@@ -642,18 +652,20 @@ do {
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer, $cfg;
-			$tmp_id = $id + 1
+			in_jahreswertung_eintragen $dbh, $id
 			    unless defined $tmp_id;
 			$tmp_dbh->commit;
 			if ($veraendert) {
 			    $dbh->begin_work;
 			    veranstaltung_loeschen $dbh, $id, 0
 				if $erster_check || $erster_sync;
-			    tabellen_aktualisieren $tmp_dbh, $dbh, $id, $tmp_id;
+			    tabellen_aktualisieren $tmp_dbh, $dbh, $id,
+				defined $tmp_id ? $tmp_id : $id + 1;
 			    $dbh->commit;
 			}
 			$tmp_dbh->begin_work;
-			veranstaltung_loeschen $tmp_dbh, $tmp_id, 1;
+			veranstaltung_loeschen $tmp_dbh, $tmp_id, 1
+			    if defined $tmp_id;
 			$tmp_dbh->commit;
 		    }
 		}
