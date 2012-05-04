@@ -38,99 +38,10 @@ use List::Util qw(max);
 use Getopt::Long;
 use Trialtool;
 use RenderOutput;
+use Wertungen;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
-
-sub rang_wenn_definiert($$) {
-    my ($a, $b) = @_;
-
-    return exists($b->{rang}) - exists($a->{rang})
-	if !exists($a->{rang}) || !exists($b->{rang});
-    return $a->{rang} <=> $b->{rang}
-	if $a->{rang} != $b->{rang};
-    return $a->{startnummer} <=> $b->{startnummer};
-}
-
-sub tageswertung($$) {
-    my ($cfg, $fahrer_nach_startnummer) = @_;
-
-    my $ausfall = {
-	0 => "",
-	3 => "ausgefallen",
-	4 => "aus der wertung",
-	5 => "nicht gestartet",
-	6 => "nicht gestartet, entschuldigt"
-    };
-
-    # Wir wollen, dass alle Tabellen gleich breit sind.
-    my $namenlaenge = 0;
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
-	$namenlaenge = max($n, $namenlaenge);
-    }
-
-    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
-    doc_h2 doc_text "$cfg->{titel}[0]\n$cfg->{subtitel}[0]";
-
-    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
-    foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
-	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	my $idx = $klasse - 1;
-	my $runden = $cfg->{runden}[$idx];
-	my ($header, $body, $format);
-
-	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
-				     $_->{papierabnahme}) ?
-				     $_ : () } @$fahrer_in_klasse ];
-	next unless @$fahrer_in_klasse > 0;
-
-	doc_h3 "$cfg->{klassen}[$idx]";
-	push @$format, "r4", "r3", "l$namenlaenge";
-	push @$header, "", "Nr.", "Name";
-	for (my $n = 0; $n < $runden; $n++) {
-	    push @$format, "r2";
-	    push @$header, "R" . ($n + 1);
-	}
-	push @$format, "r2", "r2", "r2", "r2", "r2", "r3", "r3";
-	push @$header, "ZP", "0S", "1S", "2S", "3S", "Ges", "WP";
-
-	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
-	foreach my $fahrer (@$fahrer_in_klasse) {
-	    my $row;
-	    if ($fahrer->{runden} == $runden &&  !$fahrer->{ausfall}) {
-		push @$row, "$fahrer->{rang}.";
-	    } else {
-		push @$row, "";
-	    }
-	    push @$row, $fahrer->{startnummer};
-	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
-	    for (my $n = 0; $n < $runden; $n++) {
-		if ($fahrer->{runden} > $n) {
-		    push @$row, $fahrer->{punkte_pro_runde}[$n];
-		} else {
-		    push @$row, "-";
-		}
-	    }
-	    push @$row, $fahrer->{zusatzpunkte} || "";
-	    if ($fahrer->{ausfall} != 0 || $fahrer->{runden} == 0) {
-		push @$row, [ $ausfall->{$fahrer->{ausfall}}, "c5" ], "";
-	    } elsif ($fahrer->{runden} > 0) {
-		for (my $n = 0; $n < 4; $n++) {
-		    push @$row, $fahrer->{os_1s_2s_3s}[$n];
-		}
-		push @$row, $fahrer->{punkte};
-		if (exists $fahrer->{wertungspunkte}[$wertung]) {
-		    push @$row, $fahrer->{wertungspunkte}[$wertung];
-		} else {
-		    push @$row, "";
-		}
-	    }
-	    push @$body, $row;
-	}
-	doc_table $header, $body, $format;
-    }
-}
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"html" => \$RenderOutput::html);
@@ -144,10 +55,9 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
-    tageswertung $cfg, $fahrer_nach_startnummer;
+
+    doc_h1 "Tageswertung mit Punkten für die Jahreswertung";
+    doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
+    tageswertung $cfg, $fahrer_nach_startnummer, $wertung;
 }
 doc_end;
-
-# use Data::Dumper;
-# print Dumper($cfg);
-# print Dumper($fahrer_nach_startnummer);

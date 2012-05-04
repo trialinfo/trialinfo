@@ -31,6 +31,7 @@ use utf8;
 use List::Util qw(max);
 use Getopt::Long;
 use Trialtool;
+use Wertungen;
 use RenderOutput;
 use strict;
 
@@ -91,8 +92,8 @@ sub wertung {
 my ($letzte_cfg, $letzte_fahrer) =
     @{$veranstaltungen->[@$veranstaltungen - 1]};
 
-doc_begin "Österreichischer Trialsport_Verband";
-doc_h1 "$letzte_cfg->{wertungen}[$wertung]";
+doc_begin "Österreichischer Trialsport-Verband";
+doc_h1 "Jahreswertung"; #$letzte_cfg->{wertungen}[$wertung]
 if ($streichresultate) {
     if ($streichresultate == 1) {
 	print "Mit 1 Streichresultat\n";

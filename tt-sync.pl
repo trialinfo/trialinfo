@@ -25,6 +25,7 @@
 use open IO => ":locale";
 use DBI;
 use Trialtool;
+use Wertungen;
 use Getopt::Long;
 use Scalar::Util qw(looks_like_number);
 use File::Basename;
@@ -110,10 +111,10 @@ CREATE TABLE fahrer_wertung (
 DROP TABLE IF EXISTS klasse;
 CREATE TABLE klasse (
   id INT, -- veranstaltung
-  nummer INT,
+  klasse INT,
+  runden INT,
   bezeichnung VARCHAR(60),
-  jahreswertung BOOLEAN,
-  PRIMARY KEY (id, nummer)
+  PRIMARY KEY (id, klasse)
 );
 
 DROP TABLE IF EXISTS punkte;
@@ -156,11 +157,11 @@ CREATE TABLE veranstaltung (
 DROP TABLE IF EXISTS wertung;
 CREATE TABLE wertung (
   id INT, -- veranstaltung
-  nummer INT,
+  wertung INT,
   titel VARCHAR(70),
   subtitel VARCHAR(70),
   bezeichnung VARCHAR(20),
-  PRIMARY KEY (id, nummer)
+  PRIMARY KEY (id, wertung)
 );
 
 DROP TABLE IF EXISTS wertungspunkte;
@@ -172,23 +173,67 @@ CREATE TABLE wertungspunkte (
 );
 };
 
-my @create_jahreswertung_tables = split /;/, q{
-DROP TABLE IF EXISTS jahreswertung;
-CREATE TABLE jahreswertung (
-  serie INT,
-  wertung INT,
-  streichresultate INT,
-  PRIMARY KEY (serie)
+my @create_reihen_tables = split /;/, q{
+DROP TABLE IF EXISTS vareihe;
+-- Veranstaltungsreihe
+CREATE TABLE vareihe (
+  vareihe INT,
+  wertung INT, -- Wertung im Trialtool
+  PRIMARY KEY (vareihe)
 );
-INSERT INTO jahreswertung (serie, wertung, streichresultate)
-VALUES (1, 1, 0);
 
-DROP TABLE IF EXISTS jahreswertung_veranstaltung;
-CREATE TABLE jahreswertung_veranstaltung (
-  serie INT,
+DROP TABLE IF EXISTS vareihe_veranstaltung;
+CREATE TABLE vareihe_veranstaltung (
+  vareihe INT,
   id INT, -- veranstaltung
-  PRIMARY KEY (serie, id)
+  PRIMARY KEY (vareihe, id)
 );
+
+-- Wertungsreihe
+DROP TABLE IF EXISTS wereihe;
+CREATE TABLE wereihe (
+  wereihe INT,
+  vareihe INT,
+  bezeichnung VARCHAR(40),
+  streichresultate INT,
+  PRIMARY KEY (wereihe)
+);
+
+DROP TABLE IF EXISTS wereihe_klasse;
+CREATE TABLE wereihe_klasse (
+  wereihe INT,
+  klasse INT,
+  PRIMARY KEY (wereihe, klasse)
+);
+
+INSERT INTO vareihe (vareihe, wertung)
+VALUES (1, 1);
+
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, streichresultate)
+    VALUES (1, 1, "ÖTSV Cup 2012", 0);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 1);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 2);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 3);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 4);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 5);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 6);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (1, 7);
+
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, streichresultate)
+    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 0);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (2, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (2, 12);
+INSERT INTO wereihe_klasse (wereihe, klasse)
+    VALUES (2, 13);
 };
 
 sub sql_ausfuehren($@) {
@@ -229,7 +274,7 @@ sub in_datenbank_schreiben($$$$$$$) {
     $sth->execute($id, $basename, $cfg_mtime, $dat_mtime);
 
     $sth = $dbh->prepare(qq{
-	INSERT INTO wertung (id, nummer, titel, subtitel,
+	INSERT INTO wertung (id, wertung, titel, subtitel,
 			     bezeichnung)
 	VALUES (?, ?, ?, ?, ?)
     });
@@ -257,12 +302,12 @@ sub in_datenbank_schreiben($$$$$$$) {
 	}
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO klasse (id, nummer, bezeichnung)
-	VALUES (?, ?, ?)
+	INSERT INTO klasse (id, klasse, runden, bezeichnung)
+	VALUES (?, ?, ?, ?)
     });
     for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
 	next if $cfg->{klassen}[$n] eq "";
-	$sth->execute($id, $n + 1, $cfg->{klassen}[$n]);
+	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n]);
     }
 
     my @felder = qw(
@@ -572,11 +617,11 @@ sub veranstaltung_umnummerieren($$) {
     return $tmp_id;
 }
 
-sub in_jahreswertung_eintragen($$) {
+sub in_veranstaltungsreihe_eintragen($$) {
     my ($dbh, $id) = @_;
 
     my $sth = $dbh->do(q{
-	INSERT INTO jahreswertung_veranstaltung(serie, id)
+	INSERT INTO vareihe_veranstaltung(vareihe, id)
 	VALUES (1, ?)
     }, undef, $id);
 }
@@ -619,7 +664,7 @@ do {
 	    or die "Could not connect to database: $DBI::errstr\n";
 	if ($create_tables) {
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
-	    sql_ausfuehren $dbh, @create_jahreswertung_tables;
+	    sql_ausfuehren $dbh, @create_reihen_tables;
 	}
 	print "Connected to $db ...\n";
 
@@ -652,7 +697,7 @@ do {
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer, $cfg;
-			in_jahreswertung_eintragen $dbh, $id
+			in_veranstaltungsreihe_eintragen $dbh, $id
 			    unless defined $tmp_id;
 			$tmp_dbh->commit;
 			if ($veraendert) {
@@ -715,17 +760,17 @@ FROM
 		WHERE
 		    startnummer = fahrer_wertung.startnummer AND
 		    klasse = fahrer.klasse AND
-		    wertung = jahreswertung.wertung
+		    wertung = veranstaltungsreihe.wertung
 		ORDER BY
 		    wertungspunkte
-		LIMIT jahreswertung.streichresultate
+		LIMIT veranstaltungsreihe.streichresultate
 		) AS _
 	    ) AS streichpunkte,
 	    SUM(wertungspunkte) AS punkte
 	FROM
-	    jahreswertung
+	    veranstaltungsreihe
 	JOIN
-	    jahreswertung_veranstaltung
+	    veranstaltungsreihe_veranstaltung
 	    USING (serie)
 	JOIN
 	    fahrer_wertung
