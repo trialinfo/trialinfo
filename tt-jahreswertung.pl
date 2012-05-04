@@ -31,14 +31,15 @@ use utf8;
 use List::Util qw(max);
 use Getopt::Long;
 use Trialtool;
-use RenderTable;
+use RenderOutput;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $streichresultate = 0;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"streich=i" => \$streichresultate );
+			"streich=i" => \$streichresultate,
+			"html" => \$RenderOutput::html);
 unless ($result) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N]\n";
     exit 1;
@@ -90,7 +91,8 @@ sub wertung {
 my ($letzte_cfg, $letzte_fahrer) =
     @{$veranstaltungen->[@$veranstaltungen - 1]};
 
-print "$letzte_cfg->{wertungen}[$wertung]\n";
+doc_begin "Österreichischer Trialsport_Verband";
+doc_h1 "$letzte_cfg->{wertungen}[$wertung]";
 if ($streichresultate) {
     if ($streichresultate == 1) {
 	print "Mit 1 Streichresultat\n";
@@ -98,8 +100,8 @@ if ($streichresultate) {
 	print "Mit $streichresultate Streichresultaten\n";
     }
 }
-print "\n";
 
+# Wir wollen, dass alle Tabellen gleich breit sind.
 my $namenlaenge = 0;
 foreach my $fahrer (map { $letzte_fahrer->{$_} }
 			map { keys $_ } values %$jahreswertung) {
@@ -109,7 +111,7 @@ foreach my $fahrer (map { $letzte_fahrer->{$_} }
 
 foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
     my $klassenwertung = $jahreswertung->{$klasse};
-    printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
+    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
     my ($header, $body, $format);
 
     push @$format, "r4", "r3", "l$namenlaenge";
@@ -166,12 +168,11 @@ foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
 	push @$row, $klassenwertung->{$startnummer}{gesamtpunkte};
 	push @$body, $row;
     }
-    render_table $header, $body, $format;
-    print "\n";
+    doc_table $header, $body, $format;
 }
 
 
-print "Veranstaltungen:\n";
+doc_h3 "Veranstaltungen:";
 my ($body, $format);
 push @$format, "r4", "l";
 for (my $n = 0; $n < @$veranstaltungen; $n++) {
@@ -179,8 +180,8 @@ for (my $n = 0; $n < @$veranstaltungen; $n++) {
 
     push @$body, [ $n + 1, "$cfg->{titel}[0]: $cfg->{subtitel}[0]" ];
 }
-render_table undef, $body, $format;
-print "\n";
+doc_table ["", "Name"], $body, $format;
+doc_end;
 
 # use Data::Dumper;
 # print Dumper($cfg);
