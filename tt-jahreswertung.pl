@@ -35,10 +35,10 @@ use RenderTable;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
-my $streich = 0;  # Streichresultate
+my $streichresultate = 0;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"streich=i" => \$streich );
+			"streich=i" => \$streichresultate );
 unless ($result) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N]\n";
     exit 1;
@@ -65,7 +65,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
-my $gesamtwertung;
+my $jahreswertung;
 foreach my $veranstaltung (@$veranstaltungen) {
     my $fahrer_nach_startnummer = $veranstaltung->[1];
 
@@ -73,44 +73,17 @@ foreach my $veranstaltung (@$veranstaltungen) {
 	if (exists $fahrer->{wertungspunkte}[$wertung]) {
 	    my $startnummer = $fahrer->{startnummer};
 	    my $klasse = $fahrer->{klasse};
-	    push @{$gesamtwertung->{$klasse}{$startnummer}{wertungspunkte}},
+	    push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		$fahrer->{wertungspunkte}[$wertung];
 	}
     }
 }
 
-foreach my $klasse (keys %$gesamtwertung) {
-    foreach my $startnummer (keys $gesamtwertung->{$klasse}) {
-	my $fahrer = $gesamtwertung->{$klasse}{$startnummer};
-	$gesamtwertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
-	my $wertungspunkte = $fahrer->{wertungspunkte};
-	my $n = 0;
-	if ($streich) {
-	    $fahrer->{streich} = 0;
-	    $wertungspunkte = [ sort { $a <=> $b }
-				     @$wertungspunkte ];
-	    for (; $n < $streich && $n < @$wertungspunkte; $n++) {
-		$fahrer->{streich} += $wertungspunkte->[$n];
-	    }
-	}
-	$fahrer->{gesamt} = 0;
-	for (; $n < @$wertungspunkte; $n++) {
-	    $fahrer->{gesamt} += $wertungspunkte->[$n];
-	}
-
-	delete $gesamtwertung->{$klasse}{$startnummer}
-	    unless $fahrer->{gesamt} > 0;
-    }
-}
-
-foreach my $klasse (keys %$gesamtwertung) {
-    delete $gesamtwertung->{$klasse}
-	unless %{$gesamtwertung->{$klasse}};
-}
+jahreswertung_berechnen $jahreswertung, $streichresultate;
 
 sub wertung {
-    return $b->{gesamt} <=> $a->{gesamt}
-	if $a->{gesamt} != $b->{gesamt};
+    return $b->{gesamtpunkte} <=> $a->{gesamtpunkte}
+	if $a->{gesamtpunkte} != $b->{gesamtpunkte};
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
@@ -118,24 +91,24 @@ my ($letzte_cfg, $letzte_fahrer) =
     @{$veranstaltungen->[@$veranstaltungen - 1]};
 
 print "$letzte_cfg->{wertungen}[$wertung]\n";
-if ($streich) {
-    if ($streich == 1) {
+if ($streichresultate) {
+    if ($streichresultate == 1) {
 	print "Mit 1 Streichresultat\n";
     } else {
-	print "Mit $streich Streichresultaten\n";
+	print "Mit $streichresultate Streichresultaten\n";
     }
 }
 print "\n";
 
 my $namenlaenge = 0;
 foreach my $fahrer (map { $letzte_fahrer->{$_} }
-			map { keys $_ } values %$gesamtwertung) {
+			map { keys $_ } values %$jahreswertung) {
     my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
     $namenlaenge = max($n, $namenlaenge);
 }
 
-foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
-    my $klassenwertung = $gesamtwertung->{$klasse};
+foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
+    my $klassenwertung = $jahreswertung->{$klasse};
     printf "$letzte_cfg->{klassen}[$klasse - 1]\n";
     my ($header, $body, $format);
 
@@ -147,7 +120,7 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
 	push @$format, "r2";
 	push @$header,  $gestartet ? $n + 1 : "";
     }
-    if ($streich) {
+    if ($streichresultate) {
 	push @$format, "r3";
 	push @$header, "Str";
     }
@@ -164,8 +137,8 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
 	my $startnummer = $fahrer->{startnummer};
 
 	if ($letzter_fahrer &&
-	    $klassenwertung->{$startnummer}{gesamt} ==
-	    $klassenwertung->{$letzter_fahrer->{startnummer}}->{gesamt}) {
+	    $klassenwertung->{$startnummer}{gesamtpunkte} ==
+	    $klassenwertung->{$letzter_fahrer->{startnummer}}->{gesamtpunkte}) {
 	    $klassenwertung->{$startnummer}{rang} =
 		$klassenwertung->{$letzter_fahrer->{startnummer}}->{rang};
 	} else {
@@ -188,9 +161,9 @@ foreach my $klasse (sort {$a <=> $b} keys %$gesamtwertung) {
 			$fahrer->{wertungspunkte}[$wertung] :
 			$gestartet ? "-" : "";
 	}
-	push @$row, $klassenwertung->{$startnummer}{streich}
-	    if $streich;
-	push @$row, $klassenwertung->{$startnummer}{gesamt};
+	push @$row, $klassenwertung->{$startnummer}{streichpunkte}
+	    if $streichresultate;
+	push @$row, $klassenwertung->{$startnummer}{gesamtpunkte};
 	push @$body, $row;
     }
     render_table $header, $body, $format;

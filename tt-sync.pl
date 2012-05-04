@@ -146,8 +146,8 @@ CREATE TABLE sektion (
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
   id INT, -- veranstaltung
-  dat_mtime DATETIME,
-  cfg_mtime DATETIME,
+  dat_mtime TIMESTAMP,
+  cfg_mtime TIMESTAMP,
   dateiname VARCHAR(128),
   serie INT,
   PRIMARY KEY (id)
@@ -293,6 +293,11 @@ sub in_datenbank_schreiben($$$$$$$) {
 	$geburtsdatum = "$3-$2-$1"
 	    if (exists $fahrer->{geburtsdatum} &&
 		$fahrer->{geburtsdatum} =~ /^(\d\d)\.(\d\d)\.(\d\d\d\d)$/);
+	$fahrer->{startzeit} = "$1:$2"
+	    if $fahrer->{startzeit} =~ /^(\d\d)\.(\d\d)$/;
+	$fahrer->{zielzeit} = "$1:$2"
+	    if $fahrer->{zielzeit} =~ /^(\d\d)\.(\d\d)$/;
+
 	$sth->execute($id, (map { $fahrer->{$_} } @felder), $geburtsdatum,
 		      $fahrer->{os_1s_2s_3s}[0], $fahrer->{os_1s_2s_3s}[1],
 		      $fahrer->{os_1s_2s_3s}[2], $fahrer->{os_1s_2s_3s}[3]);
@@ -310,7 +315,7 @@ sub in_datenbank_schreiben($$$$$$$) {
 	   }
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
-	    next unless $fahrer->{wertungen}[$n];
+	    next unless exists $fahrer->{wertungspunkte}[$n];
 	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1,
 			   $fahrer->{wertungspunkte}[$n] || 0);
 	}
@@ -341,7 +346,7 @@ sub veranstaltungen_kopieren ($$$$$) {
     if (@zeile = $von_sth->fetchrow_array) {
 	my @spaltennamen = @{$von_sth->{NAME_lc}};
 	$nach_sth = $nach_dbh->prepare(
-	    "INSERT INTO $tabelle (" . join(", ", @spaltennamen) . ") " . 
+	    "INSERT INTO $tabelle (" . join(", ", @spaltennamen) . ") " .
 	    "VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
 	);
 	for (;;) {
@@ -477,7 +482,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    my @spaltennamen = @{$sth->{NAME_lc}};
 	    pop @spaltennamen;
 	    $sth2 = $dbh->prepare(trace_sql_statement(
-		"INSERT INTO $table (" . join(", ", @spaltennamen) . ") " . 
+		"INSERT INTO $table (" . join(", ", @spaltennamen) . ") " .
 		"VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
 	    ));
 	}
@@ -669,3 +674,57 @@ do {
 	print "\n";
     }
 } while ($reconnect_interval);
+
+<<EOF
+
+In Postgresql liefert dieses Statement die Jahreswertung.  Mysql kann die
+Subquery, die die Streichpunkte ausrechnet, leider nicht.
+
+SELECT
+    serie, klasse, startnummer, streichpunkte, gesamtpunkte,
+    rank() OVER (PARTITION BY klasse ORDER BY gesamtpunkte DESC) AS rang
+FROM
+    (
+    SELECT
+	serie, klasse, startnummer, streichpunkte,
+	punkte - streichpunkte AS gesamtpunkte
+    FROM
+	(
+	SELECT
+	    serie, klasse, startnummer,
+	    (
+	    SELECT COALESCE(SUM(wertungspunkte), 0)
+	    FROM
+		(
+		SELECT wertungspunkte
+		FROM fahrer_wertung as _
+		JOIN fahrer
+		    USING (id, startnummer)
+		WHERE
+		    startnummer = fahrer_wertung.startnummer AND
+		    klasse = fahrer.klasse AND
+		    wertung = jahreswertung.wertung
+		ORDER BY
+		    wertungspunkte
+		LIMIT jahreswertung.streichresultate
+		) AS _
+	    ) AS streichpunkte,
+	    SUM(wertungspunkte) AS punkte
+	FROM
+	    jahreswertung
+	JOIN
+	    jahreswertung_veranstaltung
+	    USING (serie)
+	JOIN
+	    fahrer_wertung
+	    USING (id, wertung)
+	JOIN
+	    fahrer
+	    USING (id, startnummer)
+	GROUP BY serie, klasse, startnummer
+	) AS _
+    ) AS _
+WHERE
+    gesamtpunkte > 0;
+
+EOF

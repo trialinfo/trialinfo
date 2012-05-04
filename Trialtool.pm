@@ -28,7 +28,8 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen dat_datei_parsen fahrer_nach_klassen
-	     rang_und_wertungspunkte_berechnen trialtool_dateien);
+	     rang_und_wertungspunkte_berechnen jahreswertung_berechnen
+	     trialtool_dateien);
 
 use Parse::Binary::FixedFormat;
 use Encode qw(decode);
@@ -245,6 +246,37 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		$vorheriger_fahrer = $fahrer;
 	    }
 	}
+    }
+}
+
+sub jahreswertung_berechnen($$) {
+    my ($jahreswertung, $streichresultate) = @_;
+
+    foreach my $klasse (keys %$jahreswertung) {
+	foreach my $startnummer (keys $jahreswertung->{$klasse}) {
+	    my $fahrer = $jahreswertung->{$klasse}{$startnummer};
+	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
+	    my $wertungspunkte = $fahrer->{wertungspunkte};
+	    my $n = 0;
+	    if ($streichresultate) {
+		$fahrer->{streichpunkte} = 0;
+		$wertungspunkte = [ sort { $a <=> $b }
+					 @$wertungspunkte ];
+		for (; $n < $streichresultate && $n < @$wertungspunkte; $n++) {
+		    $fahrer->{streichpunkte} += $wertungspunkte->[$n];
+		}
+	    }
+	    $fahrer->{gesamtpunkte} = 0;
+	    for (; $n < @$wertungspunkte; $n++) {
+		$fahrer->{gesamtpunkte} += $wertungspunkte->[$n];
+	    }
+
+	    delete $jahreswertung->{$klasse}{$startnummer}
+		unless $fahrer->{gesamtpunkte} > 0;
+	}
+
+	delete $jahreswertung->{$klasse}
+	    unless %{$jahreswertung->{$klasse}};
     }
 }
 
