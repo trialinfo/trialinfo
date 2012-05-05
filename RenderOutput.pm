@@ -51,9 +51,9 @@ sub render_text_table($$$) {
 
     foreach my $row ((defined $header ? $header : (), @$body)) {
 	if (ref $row->[0]) {
-	    printf "%*s", $width->[0], $row->[0][0];
+	    printf " %*s", $width->[0], $row->[0][0];
 	} else {
-	    printf "%*s", $width->[0], $row->[0];
+	    printf " %*s", $width->[0], $row->[0];
 	}
 	for (my $n = 1; $n < @$row; $n++) {
 	    if (ref  $row->[$n]) {
@@ -81,7 +81,7 @@ sub html_col_format($) {
 
     $format =~ /^(l|c|r)?(\d*)$/
 	or die "Format specifier $format not understood\n";
-    return $2 ? sprintf " style=\"width:%.1fem\"", (2 + $2 * (1 - exp(-$2 / 40))) : "";
+    return $2 ? sprintf " style=\"width:%.1fem\"", $2 * 0.8 * (0.3 + 0.7 * exp(-$2 / 40)) : "";
 }
 
 sub html_cell_format($) {

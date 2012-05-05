@@ -115,7 +115,7 @@ foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
     doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
     my ($header, $body, $format);
 
-    push @$format, "r4", "r3", "l$namenlaenge";
+    push @$format, "r3", "r3", "l$namenlaenge";
     push @$header, "", "Nr.", "Name";
 
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
@@ -175,7 +175,7 @@ foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
 
 doc_h3 "Veranstaltungen:";
 my ($body, $format);
-push @$format, "r4", "l";
+push @$format, "r3", "l";
 for (my $n = 0; $n < @$veranstaltungen; $n++) {
     my $cfg = $veranstaltungen->[$n][0];
 

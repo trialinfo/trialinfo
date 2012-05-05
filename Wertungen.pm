@@ -157,13 +157,13 @@ sub tageswertung($$$) {
 	next unless @$fahrer_in_klasse > 0;
 
 	doc_h3 "$cfg->{klassen}[$idx]";
-	push @$format, "r4", "r3", "l$namenlaenge";
+	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, "", "Nr.", "Name";
 	for (my $n = 0; $n < $runden; $n++) {
 	    push @$format, "r2";
 	    push @$header, "R" . ($n + 1);
 	}
-	push @$format, "r2", "r2", "r2", "r2", "r2", "r3", "r3";
+	push @$format, "r2", "r2", "r2", "r2", "r2", "r3", "r2";
 	push @$header, "ZP", "0S", "1S", "2S", "3S", "Ges", "WP";
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
