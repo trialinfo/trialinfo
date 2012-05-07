@@ -225,8 +225,8 @@ sub jahreswertung_berechnen($$) {
 		$fahrer->{gesamtpunkte} += $wertungspunkte->[$n];
 	    }
 
-	    delete $jahreswertung->{$klasse}{$startnummer}
-		unless $fahrer->{gesamtpunkte} > 0;
+	    #delete $jahreswertung->{$klasse}{$startnummer}
+	    #	unless $fahrer->{gesamtpunkte} > 0;
 	}
 
 	delete $jahreswertung->{$klasse}

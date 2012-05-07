@@ -27,7 +27,7 @@ package Trialtool;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_datei_parsen dat_datei_parsen trialtool_dateien);
+@EXPORT = qw(cfg_datei_parsen dat_datei_parsen trialtool_dateien gestartete_klassen);
 
 use Parse::Binary::FixedFormat;
 use Encode qw(decode);
@@ -184,6 +184,17 @@ sub trialtool_dateien(@) {
 	    unless -e "$name.dat";
     }
     return keys %name;
+}
+
+sub gestartete_klassen($) {
+    my ($cfg) = @_;
+
+    my $sektionen = $cfg->{sektionen};
+    my $gestartet;
+    for (my $n = 0; $n < @$sektionen; $n++) {
+	push @$gestartet, (index $sektionen->[$n], "J") != -1;
+    }
+    return $gestartet;
 }
 
 1;

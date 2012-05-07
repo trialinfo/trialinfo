@@ -81,7 +81,7 @@ sub html_col_format($) {
 
     $format =~ /^(l|c|r)?(\d*)$/
 	or die "Format specifier $format not understood\n";
-    return $2 ? sprintf " style=\"width:%.1fem\"", $2 * 0.8 * (0.3 + 0.7 * exp(-$2 / 40)) : "";
+    return $2 ? sprintf " style=\"width:%.1fem\"", $2 * 0.9 * (0.4 + 0.6 * exp(-$2 / 40)) : "";
 }
 
 sub html_cell_format($) {

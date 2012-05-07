@@ -20,10 +20,6 @@
 # TODO:
 # * Filename globbing on Windows
 # * Ergebnisse in Editor-Programm darstellen (wordpad?)
-#
-# * Lizenzfahrer (1-100) bekommen in den Klassen 1-10 keine Wertungspunkte =>
-#   überprüfen oder sogar erzwingen ...
-# * In der Klasse 5 gibt es keine Jahreswertungspunkte.
 
 use open IO => ":locale";
 use utf8;
@@ -47,17 +43,6 @@ unless ($result) {
 }
 
 my $veranstaltungen;
-
-sub gestartete_klassen($) {
-    my ($cfg) = @_;
-
-    my $sektionen = $cfg->{sektionen};
-    my $gestartet;
-    for (my $n = 0; $n < @$sektionen; $n++) {
-	push @$gestartet, (index $sektionen->[$n], "J") != -1;
-    }
-    return $gestartet;
-}
 
 foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
@@ -166,7 +151,8 @@ foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
 	}
 	push @$row, $klassenwertung->{$startnummer}{streichpunkte}
 	    if $streichresultate;
-	push @$row, $klassenwertung->{$startnummer}{gesamtpunkte};
+	my $gesamtpunkte = $klassenwertung->{$startnummer}{gesamtpunkte};
+	push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	push @$body, $row;
     }
     doc_table $header, $body, $format;
