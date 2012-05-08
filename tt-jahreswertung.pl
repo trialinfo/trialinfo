@@ -167,7 +167,7 @@ for (my $n = 0; $n < @$veranstaltungen; $n++) {
 
     push @$body, [ $n + 1, "$cfg->{titel}[0]: $cfg->{subtitel}[0]" ];
 }
-doc_table ["", "Name"], $body, $format;
+doc_table ["Nr.", "Name"], $body, $format;
 doc_end;
 
 # use Data::Dumper;

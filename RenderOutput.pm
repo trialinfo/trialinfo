@@ -121,7 +121,7 @@ sub render_html_table($$$) {
     }
     foreach my $row (@$body) {
 	if (@$row) {
-	    print "<tr" . ( ++$r % 2 ? ' class="alt"' : '') . ">";
+	    print "<tr" . ( $r++ % 2 ? ' class="alt"' : '') . ">";
 	    for (my $n = 0; $n < @$row; $n++) {
 		if (ref $row->[$n]) {
 		    print "<td " . html_cell_format($row->[$n][1]) . ">" .
@@ -132,7 +132,6 @@ sub render_html_table($$$) {
 		}
 	    }
 	    print "</tr>\n";
-	    print "\n";
 	}
     }
     print "</table>\n";
