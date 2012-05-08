@@ -327,9 +327,12 @@ sub jahreswertung($$$) {
 
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $startnummer = $fahrer->{startnummer};
+	    my $fahrerwertung = $klassenwertung->{$startnummer};
+	    my $gesamtpunkte = $fahrerwertung->{gesamtpunkte};
 	    my $row;
-	    push @$row, "$klassenwertung->{$startnummer}{rang}.", $startnummer,
-		       $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	    push @$row, $gesamtpunkte ? "$fahrerwertung->{rang}." : "";
+	    push @$row, $startnummer,
+			$fahrer->{nachname} . ", " . $fahrer->{vorname};
 	    for (my $n = 0; $n < @$veranstaltungen; $n++) {
 		my $veranstaltung = $veranstaltungen->[$n];
 		my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];
@@ -339,9 +342,8 @@ sub jahreswertung($$$) {
 			    $fahrer->{wertungspunkte}[$wertung] :
 			    $gestartet ? "-" : "";
 	    }
-	    push @$row, $klassenwertung->{$startnummer}{streichpunkte}
+	    push @$row, $fahrerwertung->{streichpunkte}
 		if $streichresultate;
-	    my $gesamtpunkte = $klassenwertung->{$startnummer}{gesamtpunkte};
 	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	    push @$body, $row;
 	}

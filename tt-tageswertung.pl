@@ -46,7 +46,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
-    doc_h1 "Tageswertung mit Punkten für die Jahreswertung";
+    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
     tageswertung $cfg, $fahrer_nach_startnummer, $wertung;
 }
