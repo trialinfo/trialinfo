@@ -24,7 +24,6 @@
 use open IO => ":locale";
 use utf8;
 
-use List::Util qw(max);
 use Getopt::Long;
 use Trialtool;
 use Wertungen;
@@ -46,128 +45,13 @@ my $veranstaltungen;
 
 foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
-    $cfg->{gestartete_klassen} = gestartete_klassen($cfg);
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
-my $jahreswertung;
-foreach my $veranstaltung (@$veranstaltungen) {
-    my $fahrer_nach_startnummer = $veranstaltung->[1];
-
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	if (exists $fahrer->{wertungspunkte}[$wertung]) {
-	    my $startnummer = $fahrer->{startnummer};
-	    my $klasse = $fahrer->{klasse};
-	    push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
-		$fahrer->{wertungspunkte}[$wertung];
-	}
-    }
-}
-
-jahreswertung_berechnen $jahreswertung, $streichresultate;
-
-sub wertung {
-    return $b->{gesamtpunkte} <=> $a->{gesamtpunkte}
-	if $a->{gesamtpunkte} != $b->{gesamtpunkte};
-    return $a->{startnummer} <=> $b->{startnummer};
-}
-
-my ($letzte_cfg, $letzte_fahrer) =
-    @{$veranstaltungen->[@$veranstaltungen - 1]};
-
 doc_begin "Österreichischer Trialsport-Verband";
-doc_h1 "Jahreswertung"; #$letzte_cfg->{wertungen}[$wertung]
-if ($streichresultate) {
-    if ($streichresultate == 1) {
-	print "Mit 1 Streichresultat\n";
-    } else {
-	print "Mit $streichresultate Streichresultaten\n";
-    }
-}
-
-# Wir wollen, dass alle Tabellen gleich breit sind.
-my $namenlaenge = 0;
-foreach my $fahrer (map { $letzte_fahrer->{$_} }
-			map { keys $_ } values %$jahreswertung) {
-    my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
-    $namenlaenge = max($n, $namenlaenge);
-}
-
-foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
-    my $klassenwertung = $jahreswertung->{$klasse};
-    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
-    my ($header, $body, $format);
-
-    push @$format, "r3", "r3", "l$namenlaenge";
-    push @$header, "", "Nr.", "Name";
-
-    for (my $n = 0; $n < @$veranstaltungen; $n++) {
-	my $gestartet = $veranstaltungen->[$n][0]{gestartete_klassen}[$klasse - 1];
-	push @$format, "r2";
-	push @$header,  $gestartet ? $n + 1 : "";
-    }
-    if ($streichresultate) {
-	push @$format, "r3";
-	push @$header, "Str";
-    }
-    push @$format, "r3";
-    push @$header, "Ges";
-
-    my $fahrer_in_klasse = [
-	map { $letzte_fahrer->{$_->{startnummer}} }
-	    (sort wertung (values %$klassenwertung)) ];
-
-    my $letzter_fahrer;
-    for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
-	my $fahrer = $fahrer_in_klasse->[$n];
-	my $startnummer = $fahrer->{startnummer};
-
-	if ($letzter_fahrer &&
-	    $klassenwertung->{$startnummer}{gesamtpunkte} ==
-	    $klassenwertung->{$letzter_fahrer->{startnummer}}->{gesamtpunkte}) {
-	    $klassenwertung->{$startnummer}{rang} =
-		$klassenwertung->{$letzter_fahrer->{startnummer}}->{rang};
-	} else {
-	    $klassenwertung->{$startnummer}{rang} = $n + 1;
-	}
-	$letzter_fahrer = $fahrer;
-    }
-
-    foreach my $fahrer (@$fahrer_in_klasse) {
-	my $startnummer = $fahrer->{startnummer};
-	my $row;
-	push @$row, "$klassenwertung->{$startnummer}{rang}.", $startnummer,
-		   $fahrer->{nachname} . ", " . $fahrer->{vorname};
-	for (my $n = 0; $n < @$veranstaltungen; $n++) {
-	    my $veranstaltung = $veranstaltungen->[$n];
-	    my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];
-	    my $fahrer = $veranstaltung->[1]{$startnummer};
-	    push @$row, ($fahrer->{klasse} = $klasse &&
-			 exists($fahrer->{wertungspunkte}[$wertung])) ?
-			$fahrer->{wertungspunkte}[$wertung] :
-			$gestartet ? "-" : "";
-	}
-	push @$row, $klassenwertung->{$startnummer}{streichpunkte}
-	    if $streichresultate;
-	my $gesamtpunkte = $klassenwertung->{$startnummer}{gesamtpunkte};
-	push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
-	push @$body, $row;
-    }
-    doc_table $header, $body, $format;
-}
-
-
-doc_h3 "Veranstaltungen:";
-my ($body, $format);
-push @$format, "r3", "l";
-for (my $n = 0; $n < @$veranstaltungen; $n++) {
-    my $cfg = $veranstaltungen->[$n][0];
-
-    push @$body, [ $n + 1, "$cfg->{titel}[0]: $cfg->{subtitel}[0]" ];
-}
-doc_table ["Nr.", "Name"], $body, $format;
+jahreswertung $veranstaltungen, $wertung, $streichresultate;
 doc_end;
 
 # use Data::Dumper;
