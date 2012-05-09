@@ -246,29 +246,33 @@ sub jahreswertung($$$) {
 
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $cfg = $veranstaltung->[0];
-	$cfg->{gestartete_klassen} = gestartete_klassen($cfg);
+	foreach my $fahrer (values $veranstaltung->[1]) {
+	    $cfg->{gestartete_klassen}[$fahrer->{klasse} - 1] = 1
+		if exists $fahrer->{klasse};
+	}
     }
+
+    my $alle_fahrer;
 
     my $jahreswertung;
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $fahrer_nach_startnummer = $veranstaltung->[1];
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	    my $startnummer = $fahrer->{startnummer};
 	    if (exists $fahrer->{wertungspunkte}[$wertung]) {
-		my $startnummer = $fahrer->{startnummer};
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		    $fahrer->{wertungspunkte}[$wertung];
 	    }
+	    $alle_fahrer->{$startnummer} = $fahrer;
 	}
     }
 
-    my ($letzte_cfg, $letzte_fahrer) =
-	@{$veranstaltungen->[@$veranstaltungen - 1]};
+    my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
     jahreswertung_berechnen $jahreswertung, $streichresultate;
 
-    doc_h1 $letzte_cfg->{wertungen}[$wertung];
     if ($streichresultate) {
 	if ($streichresultate == 1) {
 	    doc_h2 "Mit 1 Streichresultat";
@@ -279,7 +283,7 @@ sub jahreswertung($$$) {
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
-    foreach my $fahrer (map { $letzte_fahrer->{$_} }
+    foreach my $fahrer (map { $alle_fahrer->{$_} }
 			    map { keys $_ } values %$jahreswertung) {
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
 	$namenlaenge = max($n, $namenlaenge);
@@ -306,7 +310,7 @@ sub jahreswertung($$$) {
 	push @$header, "Ges";
 
 	my $fahrer_in_klasse = [
-	    map { $letzte_fahrer->{$_->{startnummer}} }
+	    map { $alle_fahrer->{$_->{startnummer}} }
 		(sort jahreswertung_cmp (values %$klassenwertung)) ];
 
 	my $letzter_fahrer;
@@ -332,7 +336,8 @@ sub jahreswertung($$$) {
 	    my $row;
 	    push @$row, $gesamtpunkte ? "$fahrerwertung->{rang}." : "";
 	    push @$row, $startnummer,
-			$fahrer->{nachname} . ", " . $fahrer->{vorname};
+			$alle_fahrer->{$startnummer}{nachname} . ", " .
+			$alle_fahrer->{$startnummer}{vorname};
 	    for (my $n = 0; $n < @$veranstaltungen; $n++) {
 		my $veranstaltung = $veranstaltungen->[$n];
 		my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];
@@ -355,7 +360,7 @@ sub jahreswertung($$$) {
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $cfg = $veranstaltungen->[$n][0];
 
-	push @$body, [ $n + 1, "$cfg->{titel}[0]: $cfg->{subtitel}[0]" ];
+	push @$body, [ $n + 1, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
     }
     doc_table ["Nr.", "Name"], $body, ["r3", "l"];
 }

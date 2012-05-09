@@ -50,7 +50,10 @@ foreach my $name (trialtool_dateien @ARGV) {
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
+my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
+
 doc_begin "Österreichischer Trialsport-Verband";
+doc_h1 $letzte_cfg->{wertungen}[$wertung];
 jahreswertung $veranstaltungen, $wertung, $streichresultate;
 doc_end;
 

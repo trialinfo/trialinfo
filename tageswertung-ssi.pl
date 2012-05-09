@@ -1,5 +1,6 @@
 #! /usr/bin/perl -w
 
+use CGI;
 use DBI;
 use RenderOutput;
 use Wertungen qw(tageswertung);
@@ -12,16 +13,19 @@ my $password = '3tAw4oSs';
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
-# Parameter
-# FIXME: Über CGI holen!
-my $id = 2; # veranstaltung
-my $wereihe = 2; # wertungsreihe
+my $q = CGI->new;
+my $id = $q->param('id'); # veranstaltung
+my $wereihe = $q->param('wertungsreihe');
+
+# FIXME: Vernünftiges Verhalten, wenn $id oder $wereihe nicht gefunden
 
 my $bezeichnung;
 my $wertung;
 my $cfg;
 my $fahrer_nach_startnummer;
 my $sth;
+
+print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
     SELECT bezeichnung
@@ -30,6 +34,11 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($wereihe);
 ($bezeichnung) = $sth->fetchrow_array;
+
+unless (defined $bezeichnung) {
+    doc_h1 "Wertungsreihe nicht gefunden.";
+    exit;
+}
 
 $sth = $dbh->prepare(q{
     SELECT wertung, titel
@@ -43,6 +52,11 @@ $sth->execute($id, $wereihe);
 if (my @row = $sth->fetchrow_array) {
     $wertung = $row[0] - 1;
     $cfg->{titel}[$wertung] = $row[1];
+}
+
+unless (defined $cfg) {
+    doc_h1 "Veranstaltung nicht gefunden.";
+    exit;
 }
 
 $sth = $dbh->prepare(q{
@@ -101,8 +115,6 @@ $RenderOutput::html = 1;
 
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
-
-print "Content-type: text/html; charset=utf-8\n\n";
 
 doc_h1 "$bezeichnung";
 doc_h2 doc_text "$cfg->{titel}[$wertung]";
