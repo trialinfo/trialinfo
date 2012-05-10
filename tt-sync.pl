@@ -178,7 +178,6 @@ DROP TABLE IF EXISTS vareihe;
 -- Veranstaltungsreihe
 CREATE TABLE vareihe (
   vareihe INT,
-  wertung INT, -- Wertung im Trialtool
   PRIMARY KEY (vareihe)
 );
 
@@ -194,6 +193,7 @@ DROP TABLE IF EXISTS wereihe;
 CREATE TABLE wereihe (
   wereihe INT,
   vareihe INT,
+  wertung INT, -- Wertung im Trialtool
   bezeichnung VARCHAR(40),
   streichresultate INT,
   PRIMARY KEY (wereihe)
@@ -206,11 +206,11 @@ CREATE TABLE wereihe_klasse (
   PRIMARY KEY (wereihe, klasse)
 );
 
-INSERT INTO vareihe (vareihe, wertung)
-VALUES (1, 1);
+INSERT INTO vareihe (vareihe)
+VALUES (1);
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, streichresultate)
-    VALUES (1, 1, "ÖTSV Cup 2012", 0);
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, streichresultate)
+    VALUES (1, 1, "ÖTSV Cup 2012", 1, 0);
 INSERT INTO wereihe_klasse (wereihe, klasse)
     VALUES (1, 1);
 INSERT INTO wereihe_klasse (wereihe, klasse)
@@ -226,8 +226,8 @@ INSERT INTO wereihe_klasse (wereihe, klasse)
 INSERT INTO wereihe_klasse (wereihe, klasse)
     VALUES (1, 7);
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, streichresultate)
-    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 0);
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, streichresultate)
+    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1, 0);
 INSERT INTO wereihe_klasse (wereihe, klasse)
     VALUES (2, 11);
 INSERT INTO wereihe_klasse (wereihe, klasse)

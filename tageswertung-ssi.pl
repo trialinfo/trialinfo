@@ -44,8 +44,7 @@ $sth = $dbh->prepare(q{
     SELECT wertung, titel
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
-    JOIN vareihe USING (vareihe, wertung)
-    JOIN wereihe USING (vareihe)
+    JOIN wereihe USING (vareihe, wertung)
     WHERE id = ? AND wereihe = ?
 });
 $sth->execute($id, $wereihe);
@@ -79,9 +78,8 @@ $sth = $dbh->prepare(q{
     FROM fahrer
     JOIN fahrer_wertung USING (id, startnummer)
     JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe)
+    JOIN wereihe USING (vareihe, wertung)
     JOIN wereihe_klasse USING (wereihe, klasse)
-    JOIN vareihe USING (vareihe, wertung)
     WHERE id = ? AND wereihe = ?
 });
 $sth->execute($id, $wereihe);
