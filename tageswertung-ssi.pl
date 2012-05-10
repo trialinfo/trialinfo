@@ -75,11 +75,10 @@ $sth = $dbh->prepare(q{
     SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
 	   s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
 	   papierabnahme
-    FROM fahrer
-    JOIN fahrer_wertung USING (id, startnummer)
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe, wertung)
-    JOIN wereihe_klasse USING (wereihe, klasse)
+    FROM wereihe_klasse
+    JOIN fahrer USING (klasse)
+    JOIN wereihe USING (wereihe)
+    LEFT JOIN fahrer_wertung USING (id, startnummer, wertung)
     WHERE id = ? AND wereihe = ?
 });
 $sth->execute($id, $wereihe);
@@ -87,10 +86,11 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $startnummer = $fahrer->{startnummer};
     $fahrer->{os_1s_2s_3s} = [ $fahrer->{s0}, $fahrer->{s1},
 			       $fahrer->{s2}, $fahrer->{s3} ];
-    my $w;
-    $w->[$wertung] = $fahrer->{wertungspunkte};
-    $fahrer->{wertungspunkte} = $w;
     map { delete $fahrer->{$_} } qw(s0 s1 s2 s3);
+    my $w = [];
+    $w->[$wertung] = $fahrer->{wertungspunkte}
+	if defined $fahrer->{wertungspunkte};
+    $fahrer->{wertungspunkte} = $w;
     $fahrer_nach_startnummer->{$startnummer} = $fahrer;
 }
 
