@@ -6,6 +6,8 @@ use RenderOutput;
 use Wertungen qw(jahreswertung);
 use strict;
 
+$RenderOutput::html = 1;
+
 my $database = 'mysql:mydb;mysql_enable_utf8=1';
 my $username = 'auswertung';
 my $password = '3tAw4oSs';
@@ -110,8 +112,6 @@ $sth->execute($letzte_cfg->{id}, $wertung + 1);
 if (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{wertungen}[$wertung] = $row[0];
 }
-
-$RenderOutput::html = 1;
 
 doc_h1 "$bezeichnung";
 if ($streichresultate) {

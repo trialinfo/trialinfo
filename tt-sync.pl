@@ -114,6 +114,7 @@ CREATE TABLE klasse (
   klasse INT,
   runden INT,
   bezeichnung VARCHAR(60),
+  gestartet BOOLEAN,
   PRIMARY KEY (id, klasse)
 );
 
@@ -302,12 +303,14 @@ sub in_datenbank_schreiben($$$$$$$) {
 	}
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO klasse (id, klasse, runden, bezeichnung)
-	VALUES (?, ?, ?, ?)
+	INSERT INTO klasse (id, klasse, runden, bezeichnung, gestartet)
+	VALUES (?, ?, ?, ?, ?)
     });
+    my $gestartete_klassen = gestartete_klassen($cfg);
     for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
 	next if $cfg->{klassen}[$n] eq "";
-	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n]);
+	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n],
+		      $gestartete_klassen->[$n]);
     }
 
     my @felder = qw(

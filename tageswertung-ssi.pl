@@ -6,6 +6,8 @@ use RenderOutput;
 use Wertungen qw(tageswertung);
 use strict;
 
+$RenderOutput::html = 1;
+
 my $database = 'mysql:mydb;mysql_enable_utf8=1';
 my $username = 'auswertung';
 my $password = '3tAw4oSs';
@@ -108,8 +110,6 @@ while (my @row = $sth->fetchrow_array) {
     my $fahrer = $fahrer_nach_startnummer->{$row[0]};
     $fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
 }
-
-$RenderOutput::html = 1;
 
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
