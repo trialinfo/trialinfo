@@ -27,7 +27,7 @@ my $sth = $dbh->prepare(q{
 $sth->execute;
 while (my @row =  $sth->fetchrow_array) {
     my ($wereihe, $bezeichnung) = @row;
-    doc_h1 $bezeichnung;
+    doc_h2 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
 	SELECT id, titel
 	FROM wereihe
@@ -42,14 +42,19 @@ while (my @row =  $sth->fetchrow_array) {
 	ORDER BY id;
     });
     $sth2->execute($wereihe);
+    print "<p>\n";
     while (my@row = $sth2->fetchrow_array) {
 	my ($id, $titel) = @row;
-	print "<a href=\"jahreswertung.shtml?wertungsreihe=$wereihe&id=$id\">$titel</a><br>\n";
+	print "<a href=\"tageswertung.shtml?wertungsreihe=$wereihe&id=$id\">$titel</a><br>\n";
     }
+    print "</p>\n";
+    print "<p>\n";
+    print "<a href=\"jahreswertung.shtml?wertungsreihe=$wereihe\">Jahreswertung</a><br>\n";
+    print "</p>\n";
     print "\n";
 }
 
 #} else {
-#    doc_h1 "Keine Wertungsreihen gefunden.\n";
+#    doc_h2 "Keine Wertungsreihen gefunden.\n";
 #    exit;
 #}

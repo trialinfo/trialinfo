@@ -114,11 +114,12 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 doc_h1 "$bezeichnung";
-if ($streichresultate) {
-    if ($streichresultate == 1) {
-	doc_h2 "Mit $streichresultate Streichresultat";
-    } else {
-	doc_h2 "Mit $streichresultate Streichresultaten";
-    }
-}
+my $s = ($streichresultate == 0) ?
+	"Kein Streichresultat" :
+	($streichresultate == 1) ?
+	    "$streichresultate Streichresultat" :
+	    "$streichresultate Streichresultate";
+
+doc_h2 doc_text "Jahreswertung ($s)";
+
 jahreswertung $veranstaltungen, $wertung, $streichresultate;
