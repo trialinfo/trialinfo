@@ -5,7 +5,6 @@ require Exporter;
 @EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung);
 
 use List::Util qw(max);
-use Trialtool qw(gestartete_klassen);
 use RenderOutput;
 use strict;
 
@@ -258,8 +257,8 @@ sub jahreswertung($$$) {
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values $veranstaltung->[1]) {
-	    $cfg->{gestartete_klassen}[$fahrer->{klasse} - 1] = 1
-		if exists $fahrer->{klasse};
+	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
+		if exists $fahrer->{wertungspunkte};
 	}
     }
 
@@ -301,9 +300,11 @@ sub jahreswertung($$$) {
 	push @$header, "", "Nr.", "Name";
 
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
-	    my $gestartet = $veranstaltungen->[$n][0]{gestartete_klassen}[$klasse - 1];
-	    push @$format, "r2";
-	    push @$header,  $gestartet ? $n + 1 : "";
+	    my $gewertet = $veranstaltungen->[$n][0]{gewertet}[$klasse - 1];
+	    if ($gewertet) {
+		push @$format, "r2";
+		push @$header,  $gewertet ? $n + 1 : "";
+	    }
 	}
 	if (streichresultate($klasse, $streichresultate)) {
 	    push @$format, "r3";
@@ -343,12 +344,14 @@ sub jahreswertung($$$) {
 			$alle_fahrer->{$startnummer}{vorname};
 	    for (my $n = 0; $n < @$veranstaltungen; $n++) {
 		my $veranstaltung = $veranstaltungen->[$n];
-		my $gestartet = $veranstaltung->[0]{gestartete_klassen}[$klasse - 1];
+		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
-		push @$row, ($fahrer->{klasse} = $klasse &&
-			     exists($fahrer->{wertungspunkte}[$wertung])) ?
-			    $fahrer->{wertungspunkte}[$wertung] :
-			    $gestartet ? "-" : "";
+		if ($gewertet) {
+		    push @$row, ($fahrer->{klasse} = $klasse &&
+				 exists($fahrer->{wertungspunkte}[$wertung])) ?
+				$fahrer->{wertungspunkte}[$wertung] :
+				$gewertet ? "-" : "";
+		}
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
 		if streichresultate($klasse, $streichresultate);
