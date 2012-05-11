@@ -196,7 +196,6 @@ CREATE TABLE wereihe (
   vareihe INT,
   wertung INT, -- Wertung im Trialtool
   bezeichnung VARCHAR(40),
-  streichresultate INT,
   PRIMARY KEY (wereihe)
 );
 
@@ -204,37 +203,38 @@ DROP TABLE IF EXISTS wereihe_klasse;
 CREATE TABLE wereihe_klasse (
   wereihe INT,
   klasse INT,
+  streichresultate INT,
   PRIMARY KEY (wereihe, klasse)
 );
 
 INSERT INTO vareihe (vareihe)
 VALUES (1);
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, streichresultate)
-    VALUES (1, 1, "ÖTSV Cup 2012", 1, 0);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 1);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 2);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 3);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 5);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 6);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (1, 7);
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
+    VALUES (1, 1, "ÖTSV Cup 2012", 1);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 1, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 2, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 3, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 4, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 5, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 6, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (1, 7, 0);
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, streichresultate)
-    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1, 0);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (2, 11);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (2, 12);
-INSERT INTO wereihe_klasse (wereihe, klasse)
-    VALUES (2, 13);
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
+    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (2, 11, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (2, 12, 0);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
+    VALUES (2, 13, 0);
 };
 
 sub sql_ausfuehren($@) {

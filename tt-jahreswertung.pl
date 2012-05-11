@@ -31,16 +31,17 @@ use RenderOutput;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
-my $streichresultate = 0;
+my $streichresultate = [];
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"streich=i" => \$streichresultate,
+			"streich=s@" => \@$streichresultate,
 			"html" => \$RenderOutput::html);
 unless ($result) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N]\n";
     exit 1;
 }
 
+$streichresultate = [ map { split /,/, $_ } @$streichresultate ];
 my $veranstaltungen;
 
 foreach my $name (trialtool_dateien @ARGV) {
@@ -54,13 +55,6 @@ my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 doc_begin "Österreichischer Trialsport-Verband";
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
-if ($streichresultate) {
-    if ($streichresultate == 1) {
-	doc_h2 "Mit 1 Streichresultat";
-    } else {
-	doc_h2 "Mit $streichresultate Streichresultaten";
-    }
-}
 jahreswertung $veranstaltungen, $wertung, $streichresultate;
 doc_end;
 

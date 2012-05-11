@@ -204,6 +204,16 @@ sub tageswertung($$$) {
     }
 }
 
+sub streichresultate($$) {
+    my ($klasse, $streichresultate) = @_;
+
+    for (my $n = $klasse - 1; $n >= 0; $n--) {
+	return $streichresultate->[$n]
+	    if defined $streichresultate->[$n];
+    }
+    return 0;
+}
+
 sub jahreswertung_berechnen($$) {
     my ($jahreswertung, $streichresultate) = @_;
 
@@ -213,11 +223,12 @@ sub jahreswertung_berechnen($$) {
 	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
 	    my $wertungspunkte = $fahrer->{wertungspunkte};
 	    my $n = 0;
-	    if ($streichresultate) {
+	    my $sr = streichresultate($klasse, $streichresultate);
+	    if ($sr) {
 		$fahrer->{streichpunkte} = 0;
 		$wertungspunkte = [ sort { $a <=> $b }
 					 @$wertungspunkte ];
-		for (; $n < $streichresultate && $n < @$wertungspunkte; $n++) {
+		for (; $n < $sr && $n < @$wertungspunkte; $n++) {
 		    $fahrer->{streichpunkte} += $wertungspunkte->[$n];
 		}
 	    }
@@ -294,7 +305,7 @@ sub jahreswertung($$$) {
 	    push @$format, "r2";
 	    push @$header,  $gestartet ? $n + 1 : "";
 	}
-	if ($streichresultate) {
+	if (streichresultate($klasse, $streichresultate)) {
 	    push @$format, "r3";
 	    push @$header, "Str";
 	}
@@ -340,7 +351,7 @@ sub jahreswertung($$$) {
 			    $gestartet ? "-" : "";
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
-		if $streichresultate;
+		if streichresultate($klasse, $streichresultate);
 	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	    push @$body, $row;
 	}

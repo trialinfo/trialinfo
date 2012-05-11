@@ -28,16 +28,26 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT vareihe, bezeichnung, streichresultate
+    SELECT vareihe, bezeichnung
     FROM wereihe
     WHERE wereihe = ?
 });
 $sth->execute($wereihe);
 if (my @row =  $sth->fetchrow_array) {
-    ($vareihe, $bezeichnung, $streichresultate) = @row;
+    ($vareihe, $bezeichnung) = @row;
 } else {
     doc_h1 "Wertungsreihe nicht gefunden.\n";
     exit;
+}
+
+$sth = $dbh->prepare(q{
+    SELECT klasse, streichresultate
+    FROM wereihe_klasse
+    WHERE wereihe = ?
+});
+$sth->execute($wereihe);
+while (my @row = $sth->fetchrow_array) {
+    $streichresultate->[$row[0] - 1] = $row[1];
 }
 
 $sth = $dbh->prepare(q{
@@ -114,12 +124,5 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 doc_h1 "$bezeichnung";
-my $s = ($streichresultate == 0) ?
-	"Kein Streichresultat" :
-	($streichresultate == 1) ?
-	    "$streichresultate Streichresultat" :
-	    "$streichresultate Streichresultate";
-
-doc_h2 doc_text "Jahreswertung ($s)";
-
+doc_h2 "Jahreswertung";
 jahreswertung $veranstaltungen, $wertung, $streichresultate;
