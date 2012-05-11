@@ -54,6 +54,13 @@ my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 doc_begin "Österreichischer Trialsport-Verband";
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
+if ($streichresultate) {
+    if ($streichresultate == 1) {
+	doc_h2 "Mit 1 Streichresultat";
+    } else {
+	doc_h2 "Mit $streichresultate Streichresultaten";
+    }
+}
 jahreswertung $veranstaltungen, $wertung, $streichresultate;
 doc_end;
 

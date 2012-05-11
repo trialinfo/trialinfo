@@ -273,14 +273,6 @@ sub jahreswertung($$$) {
 
     jahreswertung_berechnen $jahreswertung, $streichresultate;
 
-    if ($streichresultate) {
-	if ($streichresultate == 1) {
-	    doc_h2 "Mit 1 Streichresultat";
-	} else {
-	    doc_h2 "Mit $streichresultate Streichresultaten";
-	}
-    }
-
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
     foreach my $fahrer (map { $alle_fahrer->{$_} }
