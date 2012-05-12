@@ -20,7 +20,6 @@
 # TODO:
 # * Filename globbing on Windows
 # * Ergebnisse in Editor-Programm darstellen (wordpad?)
-# * HTML-Code über Template
 
 use open IO => ":locale";
 use utf8;

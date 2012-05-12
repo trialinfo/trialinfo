@@ -18,7 +18,6 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
-# * Web-Auswertung: PHP?
 # * Filename globbing on Windows
 # * Alle SQL-Statements tracen
 

@@ -19,8 +19,6 @@ my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $wereihe = $q->param('wertungsreihe');
 
-# FIXME: Vernünftiges Verhalten, wenn $id oder $wereihe nicht gefunden
-
 my $bezeichnung;
 my $wertung;
 my $cfg;
