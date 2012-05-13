@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl -w -I..
 
 use CGI;
 use DBI;
@@ -19,6 +19,7 @@ my $q = CGI->new;
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
+doc_h1 "Veranstaltungsergebnisse";
 my $sth = $dbh->prepare(q{
     SELECT wereihe, bezeichnung
     FROM wereihe
@@ -54,7 +55,17 @@ while (my @row =  $sth->fetchrow_array) {
     print "\n";
 }
 
-#} else {
-#    doc_h2 "Keine Wertungsreihen gefunden.\n";
-#    exit;
-#}
+doc_h1 "Punktestatistiken";
+my $sth = $dbh->prepare(q{
+    SELECT DISTINCT id, titel
+    FROM veranstaltung
+    JOIN wertung USING (id)
+    JOIN vareihe_veranstaltung USING (id)
+    JOIN wereihe USING (vareihe, wertung)
+    ORDER BY id;
+});
+$sth->execute;
+while (my @row =  $sth->fetchrow_array) {
+    my ($id, $titel) = @row;
+    print "<a href=\"statistik.shtml?id=$id\">$titel</a><br>\n";
+}

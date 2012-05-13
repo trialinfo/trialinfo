@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl -w -I..
 
 use CGI;
 use DBI;
@@ -113,5 +113,5 @@ while (my @row = $sth->fetchrow_array) {
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
 doc_h1 "$bezeichnung";
-doc_h2 doc_text "$cfg->{titel}[$wertung]";
+doc_h2 doc_text "Tageswertung $cfg->{titel}[$wertung]";
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung;

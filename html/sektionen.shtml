@@ -6,6 +6,6 @@
 </head>
 <body>
 <!--#set var="which" value="$QUERY_STRING" -->
-<!--#include virtual="/cgi-bin/tt-sync/tageswertung-ssi.pl?$which" -->
+<!--#include virtual="/cgi-bin/ergebnisse/sektionen-ssi.pl?$which" -->
 </body>
 </html>

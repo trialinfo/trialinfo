@@ -199,7 +199,7 @@ sub tageswertung($$$) {
 	    }
 	    push @$body, $row;
 	}
-	doc_table $header, $body, $format;
+	doc_table $header, $body, undef, $format;
     }
 }
 
@@ -358,7 +358,7 @@ sub jahreswertung($$$) {
 	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	    push @$body, $row;
 	}
-	doc_table $header, $body, $format;
+	doc_table $header, $body, undef, $format;
     }
 
     doc_h3 "Veranstaltungen:";
@@ -368,5 +368,5 @@ sub jahreswertung($$$) {
 
 	push @$body, [ $n + 1, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
     }
-    doc_table ["Nr.", "Name"], $body, ["r3", "l"];
+    doc_table ["Nr.", "Name"], $body, undef, ["r3", "l"];
 }

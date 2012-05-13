@@ -5,7 +5,6 @@
 <link rel="stylesheet" type="text/css" href="ergebnisse.css" />
 </head>
 <body>
-<h1>Veranstaltungsergebnisse</h1>
-<!--#include virtual="/cgi-bin/tt-sync/index-ssi.pl" -->
+<!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
 </body>
 </html>

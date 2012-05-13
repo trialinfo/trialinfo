@@ -26,12 +26,14 @@ require Exporter;
 use List::Util qw(max);
 use strict;
 
-sub render_text_table($$$) {
-    my ($header, $body, $format) = @_;
+sub render_text_table($$$$) {
+    my ($header, $body, $footer, $format) = @_;
     my $f;
     my $width;
 
-    foreach my $row ((defined $header ? $header : (), @$body)) {
+    foreach my $row ((defined $header ? $header : (),
+		      @$body,
+		      defined $footer ? $footer : ())) {
 	for (my $n = 0; $n < @$row; $n++) {
 	    my $w = length $row->[$n];
 	    $width->[$n] = 0
@@ -49,7 +51,9 @@ sub render_text_table($$$) {
 	    if $1 eq "l";
     }
 
-    foreach my $row ((defined $header ? $header : (), @$body)) {
+    foreach my $row ((defined $header ? $header : (),
+		      @$body,
+		      defined $footer ? $footer : ())) {
 	if (ref $row->[0]) {
 	    printf " %*s", $width->[0], $row->[0][0];
 	} else {
@@ -95,8 +99,8 @@ sub html_cell_format($) {
 	   ($2 ? " colspan=\"$2\"" : "");
 }
 
-sub render_html_table($$$) {
-    my ($header, $body, $format) = @_;
+sub render_html_table($$$$) {
+    my ($header, $body, $footer, $format) = @_;
     my $f;
     my $r;
 
@@ -107,6 +111,7 @@ sub render_html_table($$$) {
     }
     print "</colgroup>\n";
     if ($header) {
+	#print "<thead>\n";
 	print "<tr>";
 	for (my $n = 0; $n < @$header; $n++) {
 	    if (ref $header->[$n]) {
@@ -118,7 +123,9 @@ sub render_html_table($$$) {
 	    }
 	}
 	print "</tr>\n";
+	#print "</thead>\n";
     }
+    #print "<tbody>\n";
     foreach my $row (@$body) {
 	if (@$row) {
 	    print "<tr" . ( $r++ % 2 ? ' class="alt"' : '') . ">";
@@ -133,6 +140,22 @@ sub render_html_table($$$) {
 	    }
 	    print "</tr>\n";
 	}
+    }
+    #print "</tbody>\n";
+    if ($footer) {
+	#print "<tfoot>\n";
+	print "<tr class=\"footer\">";
+	for (my $n = 0; $n < @$footer; $n++) {
+	    if (ref $footer->[$n]) {
+		print "<td" . html_cell_format($footer->[$n][1]) . ">" .
+		      $footer->[$n][0] . "</td>";
+	    } else {
+		print "<td" . html_column_format($format->[$n]) . ">" .
+		      $footer->[$n] . "</td>"
+	    }
+	}
+	print "</tr>\n";
+	#print "</tfoot>\n";
     }
     print "</table>\n";
 }
@@ -216,12 +239,12 @@ sub doc_h3($) {
    }
 }
 
-sub doc_table($$$) {
-    my ($header, $body, $format) = @_;
+sub doc_table($$$$) {
+    my ($header, $body, $footer, $format) = @_;
     if ($html) {
-	render_html_table $header, $body, $format;
+	render_html_table $header, $body, $footer, $format;
     } else {
-	render_text_table $header, $body, $format;
+	render_text_table $header, $body, $footer, $format;
     }
 }
 
