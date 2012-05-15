@@ -84,7 +84,10 @@ my $fahrer_format = [
     "zusatzpunkte:f",
     "punkte_pro_runde:S<:5",
     ":A60",				# ?
-    "os_1s_2s_3s:S<:4",
+    "s0:S<",				# 0er
+    "s1:S<",				# 1er
+    "s2:S<",				# 2er
+    "s3:S<",				# 3er
     ":A4",				# ?
     "punkte:f",
     "ausfall:S<",			# 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,

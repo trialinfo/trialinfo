@@ -29,17 +29,15 @@ sub rang_vergleich($$$) {
 	if  $a->{stechen} != $b->{stechen};
 
     # Abfallend nach 0ern, 1ern, 2ern, 3ern
-    my $ax = $a->{os_1s_2s_3s};
-    my $bx = $b->{os_1s_2s_3s};
-    for (my $n = 0; $n < @$ax; $n++) {
-	return $bx->[$n] <=> $ax->[$n]
-	    if $ax->[$n] != $bx->[$n];
+    for (my $n = 0; $n < 4; $n++) {
+	return $b->{"s$n"} <=> $a->{"s$n"}
+	    if $a->{"s$n"} != $b->{"s$n"};
     }
 
     # Aufsteigend nach der besten Runde?
     if ($cfg->{wertungsmodus} != 0) {
-	$ax = $a->{punkte_pro_runde};
-	$bx = $b->{punkte_pro_runde};
+	my $ax = $a->{punkte_pro_runde};
+	my $bx = $b->{punkte_pro_runde};
 	if ($cfg->{wertungsmodus} == 1) {
 	    for (my $n = 0; $n < @$ax; $n++) {
 		return $ax->[$n] <=> $bx->[$n]
@@ -210,7 +208,7 @@ sub tageswertung($$$$) {
 		push @$row, [ $ausfall->{$fahrer->{ausfall}}, "c5" ], "";
 	    } elsif ($fahrer->{runden} > 0) {
 		for (my $n = 0; $n < 4; $n++) {
-		    push @$row, $fahrer->{os_1s_2s_3s}[$n];
+		    push @$row, $fahrer->{"s$n"};
 		}
 		push @$row, $fahrer->{punkte};
 		if (exists $fahrer->{wertungspunkte}[$wertung]) {

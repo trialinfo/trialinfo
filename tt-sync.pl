@@ -346,8 +346,7 @@ sub in_datenbank_schreiben($$$$$$$) {
 	    if $fahrer->{zielzeit} =~ /^(\d\d)\.(\d\d)$/;
 
 	$sth->execute($id, (map { $fahrer->{$_} } @felder), $geburtsdatum,
-		      $fahrer->{os_1s_2s_3s}[0], $fahrer->{os_1s_2s_3s}[1],
-		      $fahrer->{os_1s_2s_3s}[2], $fahrer->{os_1s_2s_3s}[3]);
+		      $fahrer->{s0}, $fahrer->{s1}, $fahrer->{s2}, $fahrer->{s3});
 
 	for (my $m = 0; $m < @{$fahrer->{punkte_pro_sektion}}; $m++) {
 	    my $punkte = $fahrer->{punkte_pro_sektion}[$m];

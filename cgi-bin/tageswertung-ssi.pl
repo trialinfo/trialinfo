@@ -88,9 +88,6 @@ $sth = $dbh->prepare(q{
 $sth->execute($id, $wereihe);
 while (my $fahrer = $sth->fetchrow_hashref) {
     my $startnummer = $fahrer->{startnummer};
-    $fahrer->{os_1s_2s_3s} = [ $fahrer->{s0}, $fahrer->{s1},
-			       $fahrer->{s2}, $fahrer->{s3} ];
-    map { delete $fahrer->{$_} } qw(s0 s1 s2 s3);
     my $w = [];
     $w->[$wertung] = $fahrer->{wertungspunkte}
 	if defined $fahrer->{wertungspunkte};
