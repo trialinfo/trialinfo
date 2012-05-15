@@ -31,13 +31,20 @@ use RenderOutput;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $spalten;
 my $streichresultate = [];
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"streich=s@" => \@$streichresultate,
-			"html" => \$RenderOutput::html);
+			"html" => \$RenderOutput::html,
+
+			"club" => sub { push @$spalten, $_[0] },
+			"fahrzeug" => sub { push @$spalten, $_[0] },
+			"geburtsdatum" => sub { push @$spalten, $_[0] },
+			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N] [--html]\n" .
+	  "\t[--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
     exit 1;
 }
 
@@ -55,7 +62,7 @@ my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 doc_begin "Österreichischer Trialsport-Verband";
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
-jahreswertung $veranstaltungen, $wertung, $streichresultate;
+jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;
 doc_end;
 
 # use Data::Dumper;

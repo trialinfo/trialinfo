@@ -13,7 +13,7 @@ my $username = 'auswertung';
 my $password = '3tAw4oSs';
 
 # club fahrzeug lizenznummer geburtsdatum
-my $spalten = undef; # [ 'fahrzeug' ];
+my $spalten = undef; # [ 'fahrzeug' ]
 
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";

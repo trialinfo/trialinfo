@@ -12,6 +12,9 @@ my $database = 'mysql:mydb;mysql_enable_utf8=1';
 my $username = 'auswertung';
 my $password = '3tAw4oSs';
 
+# club fahrzeug lizenznummer geburtsdatum
+my $spalten = undef; # [ 'fahrzeug' ]
+
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
@@ -71,6 +74,7 @@ while (my @row = $sth->fetchrow_array) {
 
 $sth = $dbh->prepare(q{
     SELECT id, klasse, startnummer, vorname, nachname, wertungspunkte
+    } . ( $spalten ? ", " . join(", ", @$spalten) : "") . q{
     FROM fahrer_wertung
     JOIN fahrer USING (id, startnummer)
     JOIN vareihe_veranstaltung USING (id)
@@ -79,14 +83,12 @@ $sth = $dbh->prepare(q{
     WHERE wereihe = ?;
 });
 $sth->execute($wereihe);
-while (my @row = $sth->fetchrow_array) {
-    my $fahrer;
-    my $id = $row[0];
-    $fahrer->{klasse} = $row[1];
-    $fahrer->{startnummer} = $row[2];
-    $fahrer->{vorname} = $row[3];
-    $fahrer->{nachname} = $row[4];
-    $fahrer->{wertungspunkte}[$wertung] = $row[5];
+while (my $fahrer = $sth->fetchrow_hashref) {
+    my $id = $fahrer->{id};
+    delete $fahrer->{id};
+    my $wertungspunkte = $fahrer->{wertungspunkte};
+    $fahrer->{wertungspunkte} = [];
+    $fahrer->{wertungspunkte}[$wertung] = $wertungspunkte;
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
 }
@@ -125,4 +127,4 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung $veranstaltungen, $wertung, $streichresultate;
+jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;

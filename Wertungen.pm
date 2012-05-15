@@ -195,7 +195,8 @@ sub tageswertung($$$$) {
 	    push @$row, $fahrer->{startnummer};
 	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	    foreach my $spalte (@$spalten) {
-		push @$row, $fahrer->{$spalte};
+		push @$row, defined $fahrer->{$spalte} ?
+			    $fahrer->{$spalte} : "";
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
@@ -272,8 +273,8 @@ sub jahreswertung_cmp {
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
-sub jahreswertung($$$) {
-    my ($veranstaltungen, $wertung, $streichresultate) = @_;
+sub jahreswertung($$$$) {
+    my ($veranstaltungen, $wertung, $streichresultate, $spalten) = @_;
 
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $cfg = $veranstaltung->[0];
@@ -319,7 +320,10 @@ sub jahreswertung($$$) {
 
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, "", "Nr.", "Name";
-
+	foreach my $spalte (@$spalten) {
+	    push @$format, "l";
+	    push @$header, spaltentitel($spalte);
+	}
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	    my $gewertet = $veranstaltungen->[$n][0]{gewertet}[$klasse - 1];
 	    if ($gewertet) {
@@ -363,6 +367,10 @@ sub jahreswertung($$$) {
 	    push @$row, $startnummer,
 			$alle_fahrer->{$startnummer}{nachname} . ", " .
 			$alle_fahrer->{$startnummer}{vorname};
+	    foreach my $spalte (@$spalten) {
+		push @$row, defined $fahrer->{$spalte} ?
+			    $fahrer->{$spalte} : "";
+	    }
 	    for (my $n = 0; $n < @$veranstaltungen; $n++) {
 		my $veranstaltung = $veranstaltungen->[$n];
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
