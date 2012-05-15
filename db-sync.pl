@@ -644,8 +644,10 @@ my $result = GetOptions("db=s" => \$db,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db);
-unless ($result && ($create_tables || @ARGV)) {
-    print "VERWENDUNG: $0 [optionen] {trialtool-datei} ...\n";
+unless ($result && $db && ($create_tables || @ARGV)) {
+    print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
+	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force] [--trace-sql]\n" .
+	  "\t{trialtool-datei} ...\n";
     exit $result ? 0 : 1;
 }
 if (defined $poll_interval && $poll_interval == 0) {
