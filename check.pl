@@ -17,9 +17,6 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
-# TODO:
-# * Filename globbing on Windows
-
 use open IO => ":locale";
 use utf8;
 
@@ -52,6 +49,10 @@ if ($display_with) {
 	or die "$!\n";
     STDOUT->fdopen($tempfh, "w")
 	or die "$tempname: $!\n";
+}
+
+if ($^O =~ /win/i) {
+    @ARGV = map { glob } @ARGV;
 }
 
 foreach my $name (trialtool_dateien @ARGV) {

@@ -18,8 +18,7 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
-# * Filename globbing on Windows
-# * Ergebnisse in Editor-Programm darstellen (wordpad?)
+# * Ergebnisse in Editor-Programm darstellen (notepad?)
 
 use open IO => ":locale";
 use utf8;
@@ -50,6 +49,10 @@ unless ($result) {
 
 $streichresultate = [ map { split /,/, $_ } @$streichresultate ];
 my $veranstaltungen;
+
+if ($^O =~ /win/i) {
+    @ARGV = map { glob } @ARGV;
+}
 
 foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");

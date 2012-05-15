@@ -18,8 +18,7 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
-# * Filename globbing on Windows
-# * Ergebnisse in Editor-Programm darstellen (wordpad?)
+# * Ergebnisse in Editor-Programm darstellen (notepad?)
 
 use open IO => ":locale";
 use utf8;
@@ -46,6 +45,11 @@ unless ($result) {
 }
 
 doc_begin "Österreichischer Trialsport-Verband";
+
+if ($^O =~ /win/i) {
+    @ARGV = map { glob } @ARGV;
+}
+
 foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");

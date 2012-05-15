@@ -18,7 +18,6 @@
 # <http://www.gnu.org/licenses/>.
 
 # TODO:
-# * Filename globbing on Windows
 # * Alle SQL-Statements tracen
 
 use open IO => ":locale";
@@ -644,6 +643,11 @@ my $result = GetOptions("db=s" => \$db,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db);
+
+if ($^O =~ /win/i) {
+    @ARGV = map { glob } @ARGV;
+}
+
 unless ($result && $db && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
 	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force] [--trace-sql]\n" .
