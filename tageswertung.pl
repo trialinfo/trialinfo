@@ -29,6 +29,7 @@ use RenderOutput;
 use Wertungen;
 use strict;
 
+my $shtml = "html/tageswertung.shtml";
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 
@@ -44,7 +45,16 @@ unless ($result) {
     exit 1;
 }
 
-doc_begin "Österreichischer Trialsport-Verband";
+my %FH;
+if ($RenderOutput::html) {
+    open FH, $shtml
+	or die "$shtml: $!\n";
+    while (<FH>) {
+	last if (/<!--#include.*?-->/);
+	s/<!--.*?-->//g;
+	print;
+    }
+}
 
 if ($^O =~ /win/i) {
     @ARGV = map { glob } @ARGV;
@@ -59,4 +69,10 @@ foreach my $name (trialtool_dateien @ARGV) {
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
     tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten;
 }
-doc_end;
+
+if ($RenderOutput::html) {
+    while (<FH>) {
+	s/<!--.*?-->//g;
+	print;
+    }
+}

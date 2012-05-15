@@ -21,7 +21,7 @@ our $html;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(render_text_table render_html_table
-	     doc_begin doc_h1 doc_h2 doc_h3 doc_table doc_end doc_text);
+	     doc_h1 doc_h2 doc_h3 doc_table doc_text);
 
 use List::Util qw(max);
 use strict;
@@ -160,50 +160,6 @@ sub render_html_table($$$$) {
     print "</table>\n";
 }
 
-sub doc_begin($) {
-    my ($title) = @_;
-    if ($html) {
-	print <<EOF
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<title>$title</title>
-<style type="text/css">
-h1,h2,h3,p
-{
-font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
-}
-#wertung
-{
-font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
-border-collapse:collapse;
-}
-#wertung td, #wertung th
-{
-font-size:1em;
-border:1px solid #98bf21;
-padding:3px 7px 2px 7px;
-}
-#wertung th
-{
-font-size:1.1em;
-padding-top:5px;
-padding-bottom:4px;
-background-color:#A7C942;
-color:#ffffff;
-}
-#wertung tr.alt td
-{
-color:#000000;
-background-color:#EAF2D3;
-}
-</style>
-</head>
-<body>
-EOF
-    }
-}
-
 sub doc_text($) {
     my ($text) = @_;
     if ($html) {
@@ -245,15 +201,6 @@ sub doc_table($$$$) {
 	render_html_table $header, $body, $footer, $format;
     } else {
 	render_text_table $header, $body, $footer, $format;
-    }
-}
-
-sub doc_end() {
-    if ($html) {
-	print <<EOF
-</body>
-</html>
-EOF
     }
 }
 

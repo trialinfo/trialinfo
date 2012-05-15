@@ -29,6 +29,7 @@ use Wertungen;
 use RenderOutput;
 use strict;
 
+my $shtml = "html/jahreswertung.shtml";
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 my $streichresultate = [];
@@ -63,11 +64,23 @@ foreach my $name (trialtool_dateien @ARGV) {
 
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
-doc_begin "Österreichischer Trialsport-Verband";
+my %FH;
+if ($RenderOutput::html) {
+    open FH, $shtml
+	or die "$shtml: $!\n";
+    while (<FH>) {
+	last if (/<!--#include.*?-->/);
+	s/<!--.*?-->//g;
+	print;
+    }
+}
+
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
 jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;
-doc_end;
 
-# use Data::Dumper;
-# print Dumper($cfg);
-# print Dumper($fahrer_nach_startnummer);
+if ($RenderOutput::html) {
+    while (<FH>) {
+	s/<!--.*?-->//g;
+	print;
+    }
+}
