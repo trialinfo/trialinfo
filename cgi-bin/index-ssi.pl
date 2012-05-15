@@ -65,7 +65,9 @@ my $sth = $dbh->prepare(q{
     ORDER BY id;
 });
 $sth->execute;
+print "<p>\n";
 while (my @row =  $sth->fetchrow_array) {
     my ($id, $titel) = @row;
     print "<a href=\"statistik.shtml?id=$id\">$titel</a><br>\n";
 }
+print "</p>\n";
