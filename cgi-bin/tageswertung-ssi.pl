@@ -12,6 +12,9 @@ my $database = 'mysql:mydb;mysql_enable_utf8=1';
 my $username = 'auswertung';
 my $password = '3tAw4oSs';
 
+# club fahrzeug lizenznummer geburtsdatum
+my $spalten = undef; # [ 'fahrzeug' ];
+
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
@@ -73,6 +76,7 @@ while (my @row = $sth->fetchrow_array) {
 
 $sth = $dbh->prepare(q{
     SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
+           } . ( $spalten ? join(", ", @$spalten) . ", " : "") . q{
 	   s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
 	   papierabnahme
     FROM wereihe_klasse
@@ -114,4 +118,4 @@ while (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 doc_text "Tageswertung $cfg->{titel}[$wertung]";
-tageswertung $cfg, $fahrer_nach_startnummer, $wertung;
+tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten;

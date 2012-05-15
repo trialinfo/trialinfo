@@ -31,11 +31,17 @@ use Wertungen;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $spalten;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"html" => \$RenderOutput::html);
+			"html" => \$RenderOutput::html,
+
+			"club" => sub { push @$spalten, $_[0] },
+			"fahrzeug" => sub { push @$spalten, $_[0] },
+			"geburtsdatum" => sub { push @$spalten, $_[0] },
+			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
     exit 1;
 }
 
@@ -47,6 +53,6 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
-    tageswertung $cfg, $fahrer_nach_startnummer, $wertung;
+    tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten;
 }
 doc_end;

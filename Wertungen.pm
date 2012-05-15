@@ -126,8 +126,22 @@ sub rang_wenn_definiert($$) {
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
-sub tageswertung($$$) {
-    my ($cfg, $fahrer_nach_startnummer, $wertung) = @_;
+sub spaltentitel($) {
+    my ($feld) = @_;
+
+    my $titel = {
+	"geburtsdatum" => "Geb.datum",
+	"lizenznummer" => "Lizenz",
+    };
+    if (exists $titel->{$feld}) {
+	return $titel->{$feld};
+    } else {
+	return ucfirst $feld;
+    }
+}
+
+sub tageswertung($$$$) {
+    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten) = @_;
 
     my $ausfall = {
 	0 => "",
@@ -159,6 +173,10 @@ sub tageswertung($$$) {
 	doc_h3 "$cfg->{klassen}[$idx]";
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, "", "Nr.", "Name";
+	foreach my $spalte (@$spalten) {
+	    push @$format, "l";
+	    push @$header, spaltentitel($spalte);
+	}
 	for (my $n = 0; $n < $runden; $n++) {
 	    push @$format, "r2";
 	    push @$header, "R" . ($n + 1);
@@ -176,6 +194,9 @@ sub tageswertung($$$) {
 	    }
 	    push @$row, $fahrer->{startnummer};
 	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	    foreach my $spalte (@$spalten) {
+		push @$row, $fahrer->{$spalte};
+	    }
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
 		    push @$row, $fahrer->{punkte_pro_runde}[$n];
