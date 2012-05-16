@@ -77,7 +77,7 @@ sub html_column_format($) {
 	or die "Format specifier $format not understood\n";
     return (($1 eq "l") ? " align=\"left\"" :
 	    ($1 eq "r") ? " align=\"right\"" :
-			  " align=\center\"");
+			  " align=\"center\"");
 }
 
 sub html_col_format($) {
