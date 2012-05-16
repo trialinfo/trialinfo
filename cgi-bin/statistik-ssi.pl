@@ -33,11 +33,10 @@ my $dbh = DBI->connect("DBI:$database", $username, $password)
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $nach_sektionen = defined $q->param('nach_sektionen');
+my $bewertung = defined $q->param('bewertung');
 
 sub x($) {
     my ($punkte) = @_;
-
-    #print STDERR "**", join(" ", @$punkte), "**\n";
 
     my @x = (0, 0, 0, 0, undef, 0);
     my $y = 0;
@@ -52,8 +51,19 @@ sub x($) {
 	$n = 0;
     }
 
+    my @schwierigkeit;
+    if ($bewertung) {
+	if ($x[0] > ($x[1] + $x[2] + $x[3] + $x[5]) * 3) {
+	    push @schwierigkeit, "↓";
+	} elsif ($x[0] + $x[1] + $x[2] + $x[3] < $x[5]) {
+	    push @schwierigkeit, "↑";
+	} else {
+	    push @schwierigkeit, "";
+	}
+    }
+
     return ($x[0], $x[1], $x[2], $x[3], $x[5],
-	    sprintf("%.1f", $y * $n));
+	    sprintf("%.1f%s", $y * $n), @schwierigkeit);
 }
 
 my $wertung = 0;
@@ -105,6 +115,10 @@ if ($nach_sektionen) {
     doc_h2 $titel;
     my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
     my $header = [ qw(Sektion 0 1 2 3 5 ⌀) ];
+    if ($bewertung) {
+	push $format, "c";
+	push $header, "↑↓";
+    }
     foreach my $n (sort { $a <=> $b } keys $klassen) {
 	my $klasse = $klassen->{$n};
 	my $alle_punkte;
@@ -126,6 +140,10 @@ if ($nach_sektionen) {
     doc_h2 $titel;
     my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
     my $header = [ qw(Klasse 0 1 2 3 5 ⌀) ];
+    if ($bewertung) {
+	push $format, "c";
+	push $header, "↑↓";
+    }
     my $body;
     my $alle_punkte;
     foreach my $n (sort { $a <=> $b } keys $klassen) {
