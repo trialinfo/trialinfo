@@ -83,7 +83,7 @@ $sth->execute($id, $wertung + 1);
 if (my @row = $sth->fetchrow_array) {
     $titel = $row[0];
 } else {
-    doc_h1 "Veranstaltung nicht gefunden.";
+    doc_h2 "Veranstaltung nicht gefunden.";
     exit;
 }
 
@@ -111,8 +111,7 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 if ($nach_sektionen) {
-    doc_h1 "Punktestatistik nach Sektionen";
-    doc_h2 $titel;
+    doc_h2 "Punktestatistik – $titel";
     my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
     my $header = [ qw(Sektion 0 1 2 3 5 ⌀) ];
     if ($bewertung) {
@@ -136,8 +135,7 @@ if ($nach_sektionen) {
 	doc_table $header, $body, $footer, $format;
     }
 } else {
-    doc_h1 "Punktestatistik";
-    doc_h2 $titel;
+    doc_h2 "Punktestatistik – $titel";
     my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
     my $header = [ qw(Klasse 0 1 2 3 5 ⌀) ];
     if ($bewertung) {

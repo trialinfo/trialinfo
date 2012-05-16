@@ -54,7 +54,7 @@ $sth->execute($wereihe);
 if (my @row =  $sth->fetchrow_array) {
     ($vareihe, $bezeichnung) = @row;
 } else {
-    doc_h1 "Wertungsreihe nicht gefunden.\n";
+    doc_h2 "Wertungsreihe nicht gefunden.\n";
     exit;
 }
 
@@ -140,6 +140,5 @@ if (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{wertungen}[$wertung] = $row[0];
 }
 
-doc_h1 "$bezeichnung";
-doc_h2 "Jahreswertung";
+doc_h2 "$bezeichnung";
 jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;

@@ -54,7 +54,7 @@ $sth->execute($wereihe);
 ($bezeichnung) = $sth->fetchrow_array;
 
 unless (defined $bezeichnung) {
-    doc_h1 "Wertungsreihe nicht gefunden.";
+    doc_h2 "Wertungsreihe nicht gefunden.";
     exit;
 }
 
@@ -72,7 +72,7 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 unless (defined $cfg) {
-    doc_h1 "Veranstaltung nicht gefunden.";
+    doc_h2 "Veranstaltung nicht gefunden.";
     exit;
 }
 
@@ -128,6 +128,5 @@ while (my @row = $sth->fetchrow_array) {
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
-doc_h1 "$bezeichnung";
-doc_h2 doc_text "Tageswertung $cfg->{titel}[$wertung]";
+doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten;

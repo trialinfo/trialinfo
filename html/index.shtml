@@ -6,6 +6,8 @@
 <link rel="stylesheet" type="text/css" href="ergebnisse.css" />
 </head>
 <body>
+<h1>Österreichischer Trialsport-Verband</h1>
 <!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
+<p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" /></a></p>
 </body>
 </html>

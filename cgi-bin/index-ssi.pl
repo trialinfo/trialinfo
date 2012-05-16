@@ -34,7 +34,7 @@ my $q = CGI->new;
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
-doc_h1 "Veranstaltungsergebnisse";
+doc_h2 "Veranstaltungsergebnisse";
 my $sth = $dbh->prepare(q{
     SELECT wereihe, bezeichnung
     FROM wereihe
@@ -43,7 +43,7 @@ my $sth = $dbh->prepare(q{
 $sth->execute;
 while (my @row =  $sth->fetchrow_array) {
     my ($wereihe, $bezeichnung) = @row;
-    doc_h2 $bezeichnung;
+    doc_h3 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
 	SELECT id, titel
 	FROM wereihe
@@ -70,7 +70,7 @@ while (my @row =  $sth->fetchrow_array) {
     print "\n";
 }
 
-doc_h1 "Punktestatistiken";
+doc_h2 "Punktestatistiken";
 my $sth = $dbh->prepare(q{
     SELECT DISTINCT id, titel
     FROM veranstaltung
