@@ -19,6 +19,7 @@
 
 # TODO:
 # * Alle SQL-Statements tracen
+# * Logfile
 
 use open IO => ":locale";
 use DBI;
@@ -146,10 +147,9 @@ CREATE TABLE sektion (
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
   id INT, -- veranstaltung
-  dat_mtime TIMESTAMP,
-  cfg_mtime TIMESTAMP,
+  dat_mtime TIMESTAMP NULL,
+  cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
-  serie INT,
   PRIMARY KEY (id)
 );
 
@@ -191,8 +191,8 @@ CREATE TABLE vareihe_veranstaltung (
 DROP TABLE IF EXISTS wereihe;
 CREATE TABLE wereihe (
   wereihe INT,
-  vareihe INT,
-  wertung INT, -- Wertung im Trialtool
+  vareihe INT NOT NULL,
+  wertung INT NOT NULL, -- Wertung im Trialtool
   bezeichnung VARCHAR(40),
   PRIMARY KEY (wereihe)
 );

@@ -30,7 +30,7 @@ my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $display_with;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"with=s" => \$display_with);
+			"anzeige-mit=s" => \$display_with);
 
 unless ($result && @ARGV) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] {trialtool-datei} ...\n";
