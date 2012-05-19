@@ -21,7 +21,7 @@ Möglichkeiten:
    Jahreswertung, oder als Punktestatistik.  Die dabei generierten Seiten sind
    recht leicht und flexibel anpassbar.
 
- * Konsistenzprüfung der Daten für den Österreichischen Trialsport-Verband:
+ * Konsistenzprüfung der Daten für den Österreichischen Trialsport-Verband.
 
 Diese Erweiterungen sind unabhängig vom Trialtool selbst; das Trialtool muss
 nicht angepasst werden.
@@ -45,6 +45,10 @@ Installation
 ------------
 
 Keine spezielle Installation erforderlich.
+
+
+Datenbank - Konfiguration
+-------------------------
 
 
 Web Server - Konfiguration
@@ -90,6 +94,7 @@ Beispiele zur Verwendung
  HTML in eine Datei:
 
     tageswertung.pl "2012-04-22 Steinbach ÖTSV + OSK.cfg"
+
     tageswertung.pl --html "2012-04-22 Steinbach ÖTSV + OSK.cfg" \
 	> tageswertung.html
 
@@ -97,6 +102,7 @@ Beispiele zur Verwendung
  Jahreswertung für alle Veranstaltungen in 2012:
 
     jahreswertung.pl 2012-*
+
     jahreswertung.pl --html 2012-* > jahreswertung.html
 
 
