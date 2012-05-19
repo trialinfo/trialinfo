@@ -33,7 +33,7 @@ my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"anzeige-mit=s" => \$display_with);
 
 unless ($result && @ARGV) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] {trialtool-datei} ...\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] {datei|verzeichnis} ...\n";
     exit 1;
 }
 

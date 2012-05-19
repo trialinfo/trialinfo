@@ -170,11 +170,30 @@ sub dat_datei_parsen($) {
     return $fahrer_nach_startnummern;
 }
 
+# Nimmt eine Liste von Datei- / Verzeichnisnamen aus Argument, und liefert eine
+# Liste von Dateinamen ohne Erweiterung.  Es wird überprüft, ob die dazugehörige
+# *.cfg und *.dat - Datei existiert.
+#
+#  - Wenn "Dateiname" mit oder ohne Erweiterung *.cfg oder *.dat angegeben
+#    wird, ergibt das "Dateiname".
+#
+#  - Wenn ein Verzeichnisname angegeben wird, wird angenommen, dass das
+#    Verzeichnis das TrialTool enthält.  Es wird der Dateiname der aktuellen
+#    Veranstaltung zurückgegeben.
+#
 sub trialtool_dateien(@) {
     my (%name);
 
     foreach my $arg (@_) {
-	if ($arg =~ /^(.*)\.(cfg|dat)$/i) {
+	if (-d $arg) {
+	    my $fh = new FileHandle("$arg/trialtool.ini")
+		or die "$arg/trialtool.ini: $!\n";
+	    binmode $fh, ":bytes";
+	    my $arg2 = do { local $/; <$fh> };
+	    $arg2 =~ s/\r\n$//s;
+	    $arg2 = decode("windows-1252", $arg2);
+	    $name{"$arg/$arg2"} = 1;
+	} elsif ($arg =~ /^(.*)\.(cfg|dat)$/i) {
 	    $name{$1} = 1;
 	} else {
 	    $name{$arg} = 1;

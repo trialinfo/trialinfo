@@ -651,7 +651,7 @@ if ($^O =~ /win/i) {
 unless ($result && $db && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
 	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force] [--trace-sql]\n" .
-	  "\t{trialtool-datei} ...\n";
+	  "\t{datei|verzeichnis} ...\n";
     exit $result ? 0 : 1;
 }
 if (defined $poll_interval && $poll_interval == 0) {
