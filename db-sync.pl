@@ -27,6 +27,7 @@ use Trialtool;
 use Wertungen;
 use Getopt::Long;
 use Scalar::Util qw(looks_like_number);
+use File::Glob ':glob';
 use File::Basename;
 use File::stat;
 use POSIX qw(strftime);
@@ -645,7 +646,7 @@ my $result = GetOptions("db=s" => \$db,
 			"temp-db=s" => \$temp_db);
 
 if ($^O =~ /win/i) {
-    @ARGV = map { glob } @ARGV;
+    @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
 
 unless ($result && $db && ($create_tables || @ARGV)) {

@@ -20,6 +20,7 @@
 use open IO => ":locale";
 use utf8;
 
+use File::Glob ':glob';
 use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
@@ -52,7 +53,7 @@ if ($display_with) {
 }
 
 if ($^O =~ /win/i) {
-    @ARGV = map { glob } @ARGV;
+    @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
 
 foreach my $name (trialtool_dateien @ARGV) {

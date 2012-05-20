@@ -23,6 +23,7 @@
 use open IO => ":locale";
 use utf8;
 
+use File::Glob ':glob';
 use Getopt::Long;
 use Trialtool;
 use Wertungen;
@@ -52,7 +53,7 @@ $streichresultate = [ map { split /,/, $_ } @$streichresultate ];
 my $veranstaltungen;
 
 if ($^O =~ /win/i) {
-    @ARGV = map { glob } @ARGV;
+    @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
 
 foreach my $name (trialtool_dateien @ARGV) {
