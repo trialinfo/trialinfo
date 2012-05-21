@@ -18,6 +18,7 @@
 # <http://www.gnu.org/licenses/>.
 
 use open IO => ":locale";
+#use open IO => ":encoding(windows-1252)";
 use utf8;
 
 use File::Glob ':glob';

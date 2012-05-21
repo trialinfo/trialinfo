@@ -190,7 +190,7 @@ sub trialtool_dateien(@) {
 		or die "$arg/trialtool.ini: $!\n";
 	    binmode $fh, ":bytes";
 	    my $arg2 = do { local $/; <$fh> };
-	    $arg2 =~ s/\r\n$//s;
+	    $arg2 =~ s/\r?\n$//s;
 	    $arg2 = decode("windows-1252", $arg2);
 	    $name{"$arg/$arg2"} = 1;
 	} elsif ($arg =~ /^(.*)\.(cfg|dat)$/i) {
