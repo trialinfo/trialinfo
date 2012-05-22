@@ -205,7 +205,7 @@ sub trialtool_dateien(@) {
 	die "Datei $name.dat existiert nicht\n"
 	    unless -e "$name.dat";
     }
-    return keys %name;
+    return sort keys %name;
 }
 
 sub gestartete_klassen($) {
