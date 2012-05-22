@@ -24,6 +24,7 @@ use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
 use Encode::Locale qw(decode_argv);
+use Time::localtime;
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
@@ -49,6 +50,16 @@ sub lizenzfahrer($) {
     my ($fahrer) = @_;
 
     return $fahrer->{startnummer} < 100;
+}
+
+sub alter($) {
+    my ($fahrer) = @_;
+
+    return undef
+	unless exists $fahrer->{geburtsdatum} &&
+	       $fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
+
+    return (localtime->year() + 1900) - $3 - 1;
 }
 
 my ($tempfh, $tempname);
@@ -106,6 +117,12 @@ foreach my $name (trialtool_dateien @ARGV) {
 	$klassen_adjw = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1];
 	$klassen_fuer_lizenzfahrer = $otsv_klassen;
     }
+    my $alter_minmax = {
+	 3 => [ undef, 44 ],
+	11 => [ 14 ],
+	12 => [ 12, 18 ],
+	13 => [ 10, 16 ],
+    };
 
     for (my $n = 0; $n < @$gestartete_klassen || $n < @$startende_klassen; $n++) {
 	if (!$gestartete_klassen->[$n] != !$startende_klassen->[$n]) {
@@ -272,6 +289,35 @@ foreach my $name (trialtool_dateien @ARGV) {
     if ($fehler) {
 	print "=> Bitte aktivieren Sie das $cfg->{wertungen}[$wertung]-" .
 	      "Häkchen oder korrigieren Sie die Klasse dieser Fahrer.\n\n";
+	$fehler = 0;
+    }
+
+    foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	my $klasse = $fahrer->{klasse};
+
+	my $alter = alter($fahrer);
+	unless ($alter) {
+	    print "Warnung: Geburtsdatum von Fahrer $startnummer " .
+		  "$fahrer->{nachname} $fahrer->{vorname} " .
+		  "fehlt.\n";
+	    $fehler++;
+	    next;
+	}
+	next unless exists $alter_minmax->{$klasse};
+	my ($min, $max) = @{$alter_minmax->{$klasse}};
+	if ((defined $min && $alter < $min) ||
+	    (defined $max && $alter > $max)) {
+	    print "Fehler: Fahrer $startnummer " .
+		  "$fahrer->{nachname} $fahrer->{vorname} " .
+		  "war $alter Jahre alt, und darf daher " .
+		  "nicht in Klasse $klasse starten.\n";
+	    $fehler++;
+	}
+    }
+    if ($fehler) {
+	print "=> Bitte korrigieren Sie die Geburtsdaten oder Klassen " .
+	      "dieser Fahrer.\n\n";
 	$fehler = 0;
     }
 
