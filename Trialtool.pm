@@ -29,8 +29,9 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen dat_datei_parsen trialtool_dateien gestartete_klassen);
 
+use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
-use Encode qw(decode);
+use Encode qw(encode decode);
 use FileHandle;
 use strict;
 
@@ -114,7 +115,7 @@ sub decode_strings($$) {
 sub cfg_datei_parsen($) {
     my ($dateiname) = @_;
 
-    my $fh = new FileHandle($dateiname);
+    my $fh = new FileHandle(encode(locale_fs => $dateiname));
     binmode $fh, ":bytes";
     my $cfg = do { local $/; <$fh> };
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
@@ -145,7 +146,7 @@ sub punkte_aufteilen($) {
 sub dat_datei_parsen($) {
     my ($dateiname) = @_;
 
-    my $fh = new FileHandle($dateiname);
+    my $fh = new FileHandle(encode(locale_fs => $dateiname));
     binmode $fh, ":bytes";
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
@@ -185,14 +186,14 @@ sub trialtool_dateien(@) {
     my (%name);
 
     foreach my $arg (@_) {
-	if (-d $arg) {
-	    my $fh = new FileHandle("$arg/trialtool.ini")
-		or die "$arg/trialtool.ini: $!\n";
-	    binmode $fh, ":bytes";
+	if (-d encode(locale_fs => $arg)) {
+	    my $ini = catfile($arg, "trialtool.ini");
+	    my $fh = new FileHandle(encode(locale_fs => $ini), "<:bytes")
+		or die "$ini: $!\n";
 	    my $arg2 = do { local $/; <$fh> };
 	    $arg2 =~ s/\r?\n$//s;
 	    $arg2 = decode("windows-1252", $arg2);
-	    $name{"$arg/$arg2"} = 1;
+	    $name{catfile($arg, $arg2)} = 1;
 	} elsif ($arg =~ /^(.*)\.(cfg|dat)$/i) {
 	    $name{$1} = 1;
 	} else {
@@ -201,9 +202,9 @@ sub trialtool_dateien(@) {
     }
     foreach my $name (keys %name) {
 	die "Datei $name.cfg existiert nicht\n"
-	    unless -e "$name.cfg";
+	    unless -e encode(locale_fs => "$name.cfg");
 	die "Datei $name.dat existiert nicht\n"
-	    unless -e "$name.dat";
+	    unless -e encode(locale_fs => "$name.dat");
     }
     return sort keys %name;
 }

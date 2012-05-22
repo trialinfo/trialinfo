@@ -17,23 +17,28 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
-use open IO => ":locale";
-#use open IO => ":encoding(windows-1252)";
 use utf8;
 
 use File::Glob ':glob';
 use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
-#use Encode::Locale;
-use Encode qw(_utf8_on);
+use Encode::Locale qw(decode_argv);
 use strict;
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
-my $display_with;
+my $anzeigen_mit;
+
+binmode STDIN, ":encoding(console_in)";
+binmode STDERR, ":encoding(console_out)";
+if (-t STDOUT) {
+    binmode STDOUT, ":encoding(console_out)";
+} else {
+    binmode STDOUT, ":encoding(UTF-8)";
+}
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"anzeige-mit=s" => \$display_with);
+			"anzeigen-mit=s" => \$anzeigen_mit);
 
 unless ($result && @ARGV) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] {datei|verzeichnis} ...\n";
@@ -47,16 +52,19 @@ sub lizenzfahrer($) {
 }
 
 my ($tempfh, $tempname);
-if ($display_with) {
-    ($tempfh, $tempname) = tempfile("tt-check-XXXXXX", SUFFIX => ".txt")
+if ($anzeigen_mit) {
+    ($tempfh, $tempname) = tempfile("otsv-check-XXXXXX", SUFFIX => ".txt", UNLINK => 1)
 	or die "$!\n";
     STDOUT->fdopen($tempfh, "w")
 	or die "$tempname: $!\n";
+    binmode STDOUT, ":pop:encoding(UTF-8)";
 }
 
 if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
+
+decode_argv;
 
 foreach my $name (trialtool_dateien @ARGV) {
     my ($otsv, $osk);
@@ -69,7 +77,6 @@ foreach my $name (trialtool_dateien @ARGV) {
     map { $otsv = 1 if $_ } @$gestartete_klassen[0 .. 9];
     map { $osk = 1 if $_ } @$gestartete_klassen[10 .. 14];
 
-    _utf8_on $name;
     print "$name\n" . ("=" x length $name) . "\n\n";
 
     if ($osk) {
@@ -288,7 +295,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 }
 print "Check beendet.\n";
 
-if ($display_with) {
-    system $display_with, $tempname;
-    unlink $tempname;
+if ($anzeigen_mit) {
+    system $anzeigen_mit, $tempname;
+    # Windows won't allow to unlink an open file ...
+    close STDOUT;
 }

@@ -17,25 +17,35 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
-# TODO:
-# * Ergebnisse in Editor-Programm darstellen (notepad?)
-
-use open IO => ":locale";
 use utf8;
 
+use Encode qw(encode);
+use Encode::Locale qw(decode_argv);
+use File::Spec::Functions;
 use File::Glob ':glob';
+use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
 use RenderOutput;
 use Wertungen;
 use strict;
 
-my $shtml = "html/tageswertung.shtml";
+binmode(STDIN, ":encoding(console_in)");
+binmode(STDERR, ":encoding(console_out)");
+if (-t STDOUT) {
+    binmode(STDOUT, ":encoding(console_out)");
+} else {
+   binmode(STDOUT, ":encoding(UTF-8)");
+}
+
+my $shtml = catfile("html", "tageswertung.shtml");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
+my $anzeigen_mit;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"html" => \$RenderOutput::html,
+			"anzeigen-mit=s" => \$anzeigen_mit,
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
@@ -46,19 +56,32 @@ unless ($result) {
     exit 1;
 }
 
-my %FH;
-if ($RenderOutput::html) {
-    open FH, $shtml
-	or die "$shtml: $!\n";
-    while (<FH>) {
-	last if (/<!--#include.*?-->/);
-	s/<!--.*?-->//g;
-	print;
-    }
+my ($tempfh, $tempname);
+if ($anzeigen_mit) {
+    ($tempfh, $tempname) = tempfile("tageswertung-XXXXXX",
+				    SUFFIX => $RenderOutput::html ? ".html" : ".txt",
+				    UNLINK => 1)
+	or die "$!\n";
+    STDOUT->fdopen($tempfh, "w")
+	or die "$tempname: $!\n";
+    binmode STDOUT, ":pop:encoding(UTF-8)";
 }
 
 if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
+}
+
+decode_argv;
+
+my $fh;
+if ($RenderOutput::html) {
+    $fh = new FileHandle(encode(locale_fs => $shtml), "<:encoding(UTF-8)")
+	or die "$shtml: $!\n";
+    while (<$fh>) {
+	last if (/<!--#include.*?-->/);
+	s/<!--.*?-->//g;
+	print;
+    }
 }
 
 foreach my $name (trialtool_dateien @ARGV) {
@@ -72,8 +95,14 @@ foreach my $name (trialtool_dateien @ARGV) {
 }
 
 if ($RenderOutput::html) {
-    while (<FH>) {
+    while (<$fh>) {
 	s/<!--.*?-->//g;
 	print;
     }
+}
+
+if ($anzeigen_mit) {
+    system $anzeigen_mit, $tempname;
+    # Windows won't allow to unlink an open file ...
+    close STDOUT;
 }
