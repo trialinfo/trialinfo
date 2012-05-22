@@ -24,6 +24,7 @@ use open IO => ":locale";
 use utf8;
 
 use File::Glob ':glob';
+use File::Basename;
 use Getopt::Long;
 use Trialtool;
 use Wertungen;
@@ -56,8 +57,16 @@ if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
 
+my $n = 1;
 foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
+    if ($RenderOutput::html &&
+	basename($name) =~ /^(\d{4})-0*(\d+)-0*(\d+) /) {
+	$cfg->{label} = "$3.<br>$2.";
+    } else {
+	$cfg->{label} = $n;
+    }
+    $n++;
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];

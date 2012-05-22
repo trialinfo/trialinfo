@@ -299,6 +299,14 @@ sub jahreswertung($$$$) {
 	}
     }
 
+    my $spaltenbreite = 2;
+    #foreach my $veranstaltung (@$veranstaltungen) {
+    #	my $cfg = $veranstaltung->[0];
+    #	my $l = length $cfg->{label};
+    #	$spaltenbreite = $l
+    #	    if $l > $spaltenbreite;
+    #}
+
     my $alle_fahrer;
 
     my $jahreswertung;
@@ -340,10 +348,11 @@ sub jahreswertung($$$$) {
 	    push @$header, spaltentitel($spalte);
 	}
 	for (my $n = 0; $n < @$veranstaltungen; $n++) {
-	    my $gewertet = $veranstaltungen->[$n][0]{gewertet}[$klasse - 1];
+	    my $cfg = $veranstaltungen->[$n][0];
+	    my $gewertet = $cfg->{gewertet}[$klasse - 1];
 	    if ($gewertet) {
-		push @$format, "r2";
-		push @$header,  $gewertet ? $n + 1 : "";
+		push @$format, "r$spaltenbreite";
+		push @$header,  $gewertet ? $cfg->{label} : "";
 	    }
 	}
 	if (streichresultate($klasse, $streichresultate)) {
@@ -410,9 +419,9 @@ sub jahreswertung($$$$) {
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $cfg = $veranstaltungen->[$n][0];
 
-	push @$body, [ $n + 1, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
+	push @$body, [ $cfg->{label}, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
     }
-    doc_table ["Nr.", "Name"], $body, undef, ["r3", "l"];
+    doc_table ["", "Name"], $body, undef, ["r$spaltenbreite", "l"];
 }
 
 1;
