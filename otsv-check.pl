@@ -25,6 +25,7 @@ use File::Glob ':glob';
 use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
+#use Encode::Locale;
 use Encode qw(_utf8_on);
 use strict;
 
@@ -249,7 +250,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if (!lizenzfahrer($fahrer) &&
+	if ((!lizenzfahrer($fahrer) || $osk) &&
 	    !$fahrer->{wertungen}[$wertung] &&
 	    !$klassen_adjw->[$fahrer->{klasse} - 1] &&
 	    $fahrer->{ausfall} != 4) {  # 4 == aus der wertung
@@ -273,8 +274,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	if ($fahrer->{runden} != $cfg->{runden}[$fahrer->{klasse} - 1] &&
 	    ($fahrer->{ausfall} == 0 || $fahrer->{ausfall} == 4)) {
-	    printf "  %3u %s %s\n", $startnummer, $fahrer->{nachname},
-				    $fahrer->{vorname};
+	    printf "  %3u %s %s (Runde %s)\n", $startnummer, $fahrer->{nachname},
+				    $fahrer->{vorname}, $fahrer->{runden} + 1;
 	    $fehler++;
 	}
     }
