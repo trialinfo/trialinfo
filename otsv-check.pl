@@ -57,9 +57,9 @@ sub alter($) {
 
     return undef
 	unless exists $fahrer->{geburtsdatum} &&
-	       $fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
+	       $fahrer->{geburtsdatum} =~ /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
 
-    return (localtime->year() + 1900) - $3 - 1;
+    return (localtime->year() + 1900) - $1 - 1;
 }
 
 my ($tempfh, $tempname);

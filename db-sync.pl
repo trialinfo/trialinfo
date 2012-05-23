@@ -326,11 +326,11 @@ sub in_datenbank_schreiben($$$$$$$) {
 	startnummer klasse nachname vorname strasse wohnort plz club fahrzeug
 	telefon lizenznummer rahmennummer kennzeichen hubraum bemerkung land
 	startzeit zielzeit stechen nennungseingang papierabnahme runden ausfall
-	zusatzpunkte punkte rang
+	zusatzpunkte punkte rang geburtsdatum s0 s1 s2 s3
     );
     $sth = $dbh->prepare(sprintf qq{
-	INSERT INTO fahrer (id, %s, geburtsdatum, s0, s1, s2, s3)
-	VALUES (?, %s, ?, ?, ?, ?, ?)
+	INSERT INTO fahrer (id, %s)
+	VALUES (?, %s)
     }, join(", ", @felder), join(", ", map { "?" } @felder));
     my $sth2 = $dbh->prepare(qq{
 	INSERT INTO punkte (id, startnummer, runde, sektion,
@@ -346,17 +346,7 @@ sub in_datenbank_schreiben($$$$$$$) {
 	VALUES (?, ?, ?, ?)
     });
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	my $geburtsdatum;
-	$geburtsdatum = "$3-$2-$1"
-	    if (exists $fahrer->{geburtsdatum} &&
-		$fahrer->{geburtsdatum} =~ /^(\d\d)\.(\d\d)\.(\d\d\d\d)$/);
-	$fahrer->{startzeit} = "$1:$2"
-	    if $fahrer->{startzeit} =~ /^(\d\d)\.(\d\d)$/;
-	$fahrer->{zielzeit} = "$1:$2"
-	    if $fahrer->{zielzeit} =~ /^(\d\d)\.(\d\d)$/;
-
-	$sth->execute($id, (map { $fahrer->{$_} } @felder), $geburtsdatum,
-		      $fahrer->{s0}, $fahrer->{s1}, $fahrer->{s2}, $fahrer->{s3});
+	$sth->execute($id, (map { $fahrer->{$_} } @felder));
 
 	for (my $m = 0; $m < @{$fahrer->{punkte_pro_sektion}}; $m++) {
 	    my $punkte = $fahrer->{punkte_pro_sektion}[$m];

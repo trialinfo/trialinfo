@@ -163,8 +163,15 @@ sub dat_datei_parsen($) {
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
-	delete $fahrer->{geburtsdatum}
-	    if $fahrer->{geburtsdatum} eq "01.01.1901";
+	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/) {
+	    $fahrer->{geburtsdatum} = sprintf("%04d-%02d-%02d", $3, $2, $1);
+	    delete $fahrer->{geburtsdatum}
+		if $fahrer->{geburtsdatum} eq "1901-01-01";
+	}
+	$fahrer->{startzeit} = "$1:$2"
+	    if $fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
+	$fahrer->{zielzeit} = "$1:$2"
+	    if $fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
 	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
     }
 
