@@ -70,21 +70,29 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, wertung, titel, subtitel
+    SELECT id, datum, wertung, titel, subtitel
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN wereihe USING (vareihe, wertung)
+    JOIN veranstaltung USING (id)
     WHERE wereihe = ?
 });
 $sth->execute($wereihe);
 my $veranstaltungen;
+my $n = 1;
 while (my @row = $sth->fetchrow_array) {
     my $cfg;
     my $id = $row[0];
-    $wertung = $row[1] - 1;
+    $wertung = $row[2] - 1;
     $cfg->{id} = $id;
-    $cfg->{titel}[$wertung] = $row[2];
-    $cfg->{subtitel}[$wertung] = $row[3];
+    if ($row[1] =~ /^(\d{4})-0*(\d+)-0*(\d+)$/) {
+	$cfg->{label} = "$3.<br>$2.";
+    } else {
+	$cfg->{label} = $n;
+    }
+    $n++;
+    $cfg->{titel}[$wertung] = $row[3];
+    $cfg->{subtitel}[$wertung] = $row[4];
     $veranstaltungen->{$id}{cfg} = $cfg;
 }
 

@@ -21,7 +21,6 @@
 # * Alle SQL-Statements tracen
 # * Logfile
 
-use open IO => ":locale";
 use DBI;
 use Trialtool;
 use Wertungen;
@@ -31,7 +30,13 @@ use File::Glob ':glob';
 use File::Basename;
 use File::stat;
 use POSIX qw(strftime);
+use Encode qw(encode);
+use Encode::Locale qw(decode_argv);
 use strict;
+
+binmode(STDIN, ":encoding(console_in)");
+binmode(STDERR, ":encoding(console_out)");
+binmode(STDOUT, ":encoding(console_out)");
 
 sub traced_sql_value($) {
     my ($_) = @_;
@@ -148,6 +153,7 @@ CREATE TABLE sektion (
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
   id INT, -- veranstaltung
+  datum DATE,
   dat_mtime TIMESTAMP NULL,
   cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
@@ -258,6 +264,10 @@ sub in_datenbank_schreiben($$$$$$$) {
     my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
 	$cfg) = @_;
     my $sth;
+    my $datum;
+
+    $datum = $1
+	if $basename =~ /^(\d{4}-\d{2}-\d{2}) /;
 
     unless ($id) {
 	$sth = $dbh->prepare(qq{
@@ -268,10 +278,10 @@ sub in_datenbank_schreiben($$$$$$$) {
 	$id = $sth->fetchrow_array || 1;
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO veranstaltung (id, dateiname, cfg_mtime, dat_mtime)
-	VALUES (?, ?, ?, ?)
+	INSERT INTO veranstaltung (id, datum, dateiname, cfg_mtime, dat_mtime)
+	VALUES (?, ?, ?, ?, ?)
     });
-    $sth->execute($id, $basename, $cfg_mtime, $dat_mtime);
+    $sth->execute($id, $datum, $basename, $cfg_mtime, $dat_mtime);
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO wertung (id, wertung, titel, subtitel,
@@ -648,6 +658,8 @@ my $result = GetOptions("db=s" => \$db,
 if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
+
+decode_argv;
 
 unless ($result && $db && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
