@@ -552,8 +552,7 @@ sub tabelle_aktualisieren($$$$$) {
 	my $old_nonkeys = join(", ", map { "old.$_" } @nonkeys);
 	my $new_nonkeys = join(", ", map { "new.$_" } @nonkeys);
 	my $all_nonkeys_equal = join(" AND ",
-	    map { "((old.$_ COLLATE BINARY = new.$_ COLLATE BINARY) OR
-		    (old.$_ IS NULL AND new.$_ IS NULL))" } @nonkeys);
+	    map { "(old.$_ COLLATE BINARY IS new.$_ COLLATE BINARY)" } @nonkeys);
 	unless (@other_keys) {
 	    $sth = $tmp_dbh->prepare(qq{
 		SELECT $new_nonkeys
@@ -566,7 +565,7 @@ sub tabelle_aktualisieren($$$$$) {
 		    FROM $table
 		    WHERE id = ?
 		) AS new
-		ON NOT ($all_nonkeys_equal)
+		WHERE NOT ($all_nonkeys_equal)
 	    });
 	} else {
 	    $sth = $tmp_dbh->prepare(qq{
