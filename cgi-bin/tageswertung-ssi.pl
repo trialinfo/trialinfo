@@ -19,13 +19,10 @@ use CGI;
 use DBI;
 use RenderOutput;
 use Wertungen qw(tageswertung);
+use DatenbankAuswertung;
 use strict;
 
 $RenderOutput::html = 1;
-
-my $database = 'mysql:mydb;mysql_enable_utf8=1';
-my $username = 'auswertung';
-my $password = '3tAw4oSs';
 
 # club fahrzeug lizenznummer geburtsdatum
 #my $spalten = undef;

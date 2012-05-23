@@ -8,6 +8,10 @@
 <body>
 <h1>Österreichischer Trialsport-Verband</h1>
 <!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
+<h2>Sonstiges</h2>
+<p>
+<a href="statistik.shtml">Punktestatistiken</a>
+</p>
 <p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" /></a></p>
 </body>
 </html>

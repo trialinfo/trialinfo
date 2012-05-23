@@ -19,13 +19,10 @@ use CGI;
 use DBI;
 use RenderOutput;
 use Wertungen qw(jahreswertung);
+use DatenbankAuswertung;
 use strict;
 
 $RenderOutput::html = 1;
-
-my $database = 'mysql:mydb;mysql_enable_utf8=1';
-my $username = 'auswertung';
-my $password = '3tAw4oSs';
 
 # club fahrzeug lizenznummer geburtsdatum
 #my $spalten = undef;
@@ -149,5 +146,5 @@ if (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{wertungen}[$wertung] = $row[0];
 }
 
-doc_h2 "$bezeichnung";
+doc_h2 "$bezeichnung – Jahreswertung";
 jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;

@@ -19,13 +19,10 @@ use CGI;
 use DBI;
 use RenderOutput;
 use Wertungen qw(jahreswertung);
+use DatenbankAuswertung;
 use strict;
 
 $RenderOutput::html = 1;
-
-my $database = 'mysql:mydb;mysql_enable_utf8=1';
-my $username = 'auswertung';
-my $password = '3tAw4oSs';
 
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";

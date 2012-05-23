@@ -19,13 +19,10 @@ use CGI;
 use DBI;
 use RenderOutput;
 use Wertungen qw(jahreswertung);
+use DatenbankAuswertung;
 use strict;
 
 $RenderOutput::html = 1;
-
-my $database = 'mysql:mydb;mysql_enable_utf8=1';
-my $username = 'auswertung';
-my $password = '3tAw4oSs';
 
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
@@ -41,48 +38,9 @@ my $sth = $dbh->prepare(q{
     ORDER BY wereihe
 });
 $sth->execute;
-while (my @row =  $sth->fetchrow_array) {
-    my ($wereihe, $bezeichnung) = @row;
-    doc_h3 $bezeichnung;
-    my $sth2 = $dbh->prepare(q{
-	SELECT id, titel
-	FROM wereihe
-	JOIN vareihe_veranstaltung USING (vareihe)
-	JOIN wertung USING (id, wertung)
-	WHERE wereihe = ? AND EXISTS (
-	    SELECT *
-	    FROM klasse
-	    JOIN wereihe_klasse USING (klasse)
-	    WHERE wereihe = wereihe.wereihe AND gestartet AND id = wertung.id
-	)
-	ORDER BY id;
-    });
-    $sth2->execute($wereihe);
-    print "<p>\n";
-    while (my@row = $sth2->fetchrow_array) {
-	my ($id, $titel) = @row;
-	print "<a href=\"tageswertung.shtml?wertungsreihe=$wereihe&id=$id\">$titel</a><br>\n";
-    }
-    print "</p>\n";
-    print "<p>\n";
-    print "<a href=\"jahreswertung.shtml?wertungsreihe=$wereihe\">Jahreswertung</a><br>\n";
-    print "</p>\n";
-    print "\n";
-}
-
-doc_h2 "Punktestatistiken";
-my $sth = $dbh->prepare(q{
-    SELECT DISTINCT id, titel
-    FROM veranstaltung
-    JOIN wertung USING (id)
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe, wertung)
-    ORDER BY id;
-});
-$sth->execute;
 print "<p>\n";
 while (my @row =  $sth->fetchrow_array) {
-    my ($id, $titel) = @row;
-    print "<a href=\"statistik.shtml?id=$id\">$titel</a><br>\n";
+    my ($wereihe, $bezeichnung) = @row;
+    print "<a href=\"wertungsreihe.shtml?wertungsreihe=$wereihe\">$bezeichnung</a><br>\n";
 }
 print "</p>\n";
