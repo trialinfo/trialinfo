@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I..
+#! /usr/bin/perl -w -I../../trialtool-plus
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
@@ -84,6 +84,7 @@ while (my @row = $sth->fetchrow_array) {
     $cfg->{id} = $id;
     if ($row[1] =~ /^(\d{4})-0*(\d+)-0*(\d+)$/) {
 	$cfg->{label} = "$3.<br>$2.";
+	$cfg->{label2} = "$3.$2.";
     } else {
 	$cfg->{label} = $n;
     }

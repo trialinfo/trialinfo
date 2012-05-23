@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I..
+#! /usr/bin/perl -w -I../../trialtool-plus
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
