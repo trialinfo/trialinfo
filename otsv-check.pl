@@ -114,7 +114,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     } else {
 	$startende_klassen = $otsv_klassen;
 	$klassen_adw = [];
-	$klassen_adjw = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1];
+	$klassen_adjw = [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1];
 	$klassen_fuer_lizenzfahrer = $otsv_klassen;
     }
     my $alter_minmax = {
