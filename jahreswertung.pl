@@ -85,6 +85,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     if ($RenderOutput::html &&
 	basename($name) =~ /^(\d{4})-0*(\d+)-0*(\d+) /) {
 	$cfg->{label} = "$3.<br>$2.";
+	$cfg->{label2} = "$3.$2.";
     } else {
 	$cfg->{label} = $n;
     }

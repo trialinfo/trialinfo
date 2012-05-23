@@ -418,10 +418,11 @@ sub jahreswertung($$$$) {
     my $body;
     for (my $n = 0; $n < @$veranstaltungen; $n++) {
 	my $cfg = $veranstaltungen->[$n][0];
+	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
-	push @$body, [ $cfg->{label}, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
+	push @$body, [ $label, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
     }
-    doc_table ["", "Name"], $body, undef, ["r$spaltenbreite", "l"];
+    doc_table ["", "Name"], $body, undef, ["r", "l"];
 }
 
 1;
