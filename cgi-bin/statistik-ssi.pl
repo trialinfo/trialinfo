@@ -73,6 +73,25 @@ my $sth;
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
+unless (defined $id) {
+    doc_h2 "Punktestatistiken";
+    $sth = $dbh->prepare(q{
+	SELECT id, titel
+	FROM veranstaltung
+	JOIN wertung USING (id)
+	WHERE wertung = ?
+	ORDER BY datum
+    });
+    $sth->execute($wertung + 1);
+    print "<p>\n";
+    while (my @row = $sth->fetchrow_array) {
+	my ($id, $titel) = @row;
+	print "<a href=\"statistik.shtml?id=$id\">$titel</a><br>\n";
+    }
+    print "</p>\n";
+    exit;
+}
+
 $sth = $dbh->prepare(q{
     SELECT titel
     FROM veranstaltung
