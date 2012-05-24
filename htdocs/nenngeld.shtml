@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Österreichischer Trialsport-Verband</title>
+<link rel="stylesheet" type="text/css" href="ergebnisse.css" />
+</head>
+<body>
+<h1>Österreichischer Trialsport-Verband</h1>
+<!--#set var="which" value="$QUERY_STRING" -->
+<!--#include virtual="/cgi-bin/ergebnisse/nenngeld-ssi.pl?$which" -->
+<p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" /></a></p>
+</body>
+</html>
