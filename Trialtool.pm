@@ -32,6 +32,7 @@ require Exporter;
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
 use Encode qw(encode decode);
+use Time::localtime;
 use FileHandle;
 use strict;
 
@@ -163,10 +164,20 @@ sub dat_datei_parsen($) {
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
-	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/) {
-	    $fahrer->{geburtsdatum} = sprintf("%04d-%02d-%02d", $3, $2, $1);
+	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
+	    my $jahr;
+	    if ($3 > 100) {
+		$jahr = $3;
+	    } elsif ($3 > localtime->year() % 100) {
+		$jahr = $3 + int(localtime->year() / 100) * 100 + 1800;
+	    } else {
+		$jahr = $3 + int(localtime->year() / 100) * 100 + 1900;
+	    }
+	    $fahrer->{geburtsdatum} = sprintf("%04d-%02d-%02d", $jahr, $2, $1);
 	    delete $fahrer->{geburtsdatum}
 		if $fahrer->{geburtsdatum} eq "1901-01-01";
+	} else {
+	    delete $fahrer->{geburtsdatum};
 	}
 	$fahrer->{startzeit} = "$1:$2"
 	    if $fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
