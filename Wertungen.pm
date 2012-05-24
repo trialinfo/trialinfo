@@ -254,7 +254,7 @@ sub jahreswertung_berechnen($$) {
     my ($jahreswertung, $streichresultate) = @_;
 
     foreach my $klasse (keys %$jahreswertung) {
-	foreach my $startnummer (keys $jahreswertung->{$klasse}) {
+	foreach my $startnummer (keys %{$jahreswertung->{$klasse}}) {
 	    my $fahrer = $jahreswertung->{$klasse}{$startnummer};
 	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
 	    my $wertungspunkte = $fahrer->{wertungspunkte};
@@ -293,7 +293,7 @@ sub jahreswertung($$$$) {
 
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $cfg = $veranstaltung->[0];
-	foreach my $fahrer (values $veranstaltung->[1]) {
+	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
 		if exists $fahrer->{wertungspunkte};
 	}
@@ -331,7 +331,7 @@ sub jahreswertung($$$$) {
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
     foreach my $fahrer (map { $alle_fahrer->{$_} }
-			    map { keys $_ } values %$jahreswertung) {
+			    map { keys %$_ } values %$jahreswertung) {
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
 	$namenlaenge = max($n, $namenlaenge);
     }

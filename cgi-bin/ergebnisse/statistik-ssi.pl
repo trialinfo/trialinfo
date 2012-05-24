@@ -16,9 +16,9 @@
 # <http://www.gnu.org/licenses/>.
 
 use CGI;
+#use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
-use Wertungen qw(tageswertung);
 use DatenbankAuswertung;
 use strict;
 
@@ -131,16 +131,16 @@ if ($nach_sektionen) {
     my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
     my $header = [ qw(Sektion 0 1 2 3 5 ⌀) ];
     if ($bewertung) {
-	push $format, "c";
-	push $header, "↑↓";
+	push @$format, "c";
+	push @$header, "↑↓";
     }
-    foreach my $n (sort { $a <=> $b } keys $klassen) {
+    foreach my $n (sort { $a <=> $b } keys %$klassen) {
 	my $klasse = $klassen->{$n};
 	my $alle_punkte;
 
 	doc_h3 $cfg->{klassen}[$n - 1];
 	my $body;
-	foreach my $sektion (sort { $a <=> $b } keys $klasse) {
+	foreach my $sektion (sort { $a <=> $b } keys %$klasse) {
 	    my $punkte = $klasse->{$sektion};
 	    push @$alle_punkte, @$punkte;
 	    my $row;
@@ -155,16 +155,16 @@ if ($nach_sektionen) {
     my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
     my $header = [ qw(Klasse 0 1 2 3 5 ⌀) ];
     if ($bewertung) {
-	push $format, "c";
-	push $header, "↑↓";
+	push @$format, "c";
+	push @$header, "↑↓";
     }
     my $body;
     my $alle_punkte;
-    foreach my $n (sort { $a <=> $b } keys $klassen) {
+    foreach my $n (sort { $a <=> $b } keys %$klassen) {
 	my $klasse = $klassen->{$n};
 	my $punkte;
 
-	foreach my $sektion (sort { $a <=> $b } keys $klasse) {
+	foreach my $sektion (sort { $a <=> $b } keys %$klasse) {
 	    push @$punkte, @{$klasse->{$sektion}};
 	}
 	push @$alle_punkte, @$punkte;

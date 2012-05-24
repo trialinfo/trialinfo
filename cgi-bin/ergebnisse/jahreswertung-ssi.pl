@@ -16,6 +16,7 @@
 # <http://www.gnu.org/licenses/>.
 
 use CGI;
+#use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
 use Wertungen qw(jahreswertung);
