@@ -10,8 +10,9 @@
 <!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
 <h2>Sonstiges</h2>
 <p>
-<a href="statistik.shtml">Punktestatistiken</a>
+<a href="statistik.shtml">Punktestatistiken</a><br>
+<a href="nenngeld.shtml">Nenngeldlisten</a>
 </p>
-<p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" /></a></p>
+<p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" border="0" /></a></p>
 </body>
 </html>
