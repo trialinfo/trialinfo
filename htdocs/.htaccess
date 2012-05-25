@@ -1,10 +1,1 @@
-DirectoryIndex index.shtml
-Options Indexes Includes
-
-AuthUserFile .htpasswd
-AuthName "Protected"
-AuthType Basic
-
-<Files "nenngeld.shtml">
-  #require valid-user
-</Files>
+RedirectMatch permanent ^/$ http://www.otsv.at/

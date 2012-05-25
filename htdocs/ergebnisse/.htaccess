@@ -1,0 +1,11 @@
+DirectoryIndex index.shtml
+Options Indexes Includes
+
+#AuthUserFile /home/agruen/otsv/trialtool-plus/htdocs/.htpasswd
+AuthUserFile /srv/www/4571/www/www2.otsv.at/htdocs/.htpasswd
+AuthName "Protected"
+AuthType Basic
+
+<Files "nenngeld.shtml">
+  require valid-user
+</Files>
