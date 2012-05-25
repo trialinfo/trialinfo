@@ -91,7 +91,7 @@ sub html_col_format($) {
 sub html_cell_format($) {
     my ($format) = @_;
 
-    $format =~ /^(l|c|r)?(\d+)$/
+    $format =~ /^(l|c|r)?(\d*)$/
 	or die "Cell format specifier $format  not understood\n";
     return (($1 eq "l") ? " align=\"left\"" :
 	    ($1 eq "r") ? " align=\"right\"" :

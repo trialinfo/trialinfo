@@ -21,9 +21,23 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung);
 
+use utf8;
 use List::Util qw(max);
 use RenderOutput;
 use strict;
+
+my $klassenfarben = {
+     1 => "red",
+     2 => "blue",
+     3 => "yellow",
+     4 => "green",
+     5 => "white",
+     6 => "yellow",
+     7 => "green",
+    11 => "red",
+    12 => "blue",
+    13 => "yellow",
+};
 
 sub rang_vergleich($$$) {
     my ($a, $b, $cfg) = @_;
@@ -179,6 +193,11 @@ sub tageswertung($$$$) {
 	my $idx = $klasse - 1;
 	my $runden = $cfg->{runden}[$idx];
 	my ($header, $body, $format);
+	my $farbe = "";
+
+	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
+	    #$farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	}
 
 	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
 				     $_->{papierabnahme}) ?
@@ -187,7 +206,7 @@ sub tageswertung($$$$) {
 
 	doc_h3 "$cfg->{klassen}[$idx]";
 	push @$format, "r3", "r3", "l$namenlaenge";
-	push @$header, "", "Nr.", "Name";
+	push @$header, [ "$farbe", "c" ], "Nr.", "Name";
 	foreach my $spalte (@$spalten) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
@@ -340,9 +359,12 @@ sub jahreswertung($$$$) {
 	my $klassenwertung = $jahreswertung->{$klasse};
 	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
 	my ($header, $body, $format);
-
+	my $farbe = "";
+	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
+	    #$farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	}
 	push @$format, "r3", "r3", "l$namenlaenge";
-	push @$header, "", "Nr.", "Name";
+	push @$header, [ $farbe, "c" ], "Nr.", "Name";
 	foreach my $spalte (@$spalten) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
