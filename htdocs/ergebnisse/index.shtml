@@ -11,7 +11,8 @@
 <h2>Sonstiges</h2>
 <p>
 <a href="statistik.shtml">Punktestatistiken</a><br>
-<a href="nenngeld.shtml">Nenngeldlisten</a>
+<a href="nenngeld.shtml">Nenngeldlisten</a><br>
+<a href="/cgi-bin/ergebnisse/fahrerliste.pl">Aktuelle Fahrerliste (CSV, UTF-8)</a>
 </p>
 <p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" border="0" /></a></p>
 </body>
