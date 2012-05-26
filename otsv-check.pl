@@ -143,6 +143,33 @@ foreach my $name (trialtool_dateien @ARGV) {
 	$fehler = 0;
     }
 
+    # Hat ein Fahrer mehrere Startnummern in der selben Klasse?
+    my $fahrer_nach_name;
+    foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	my $name = "$fahrer->{nachname}, $fahrer->{vorname}";
+	my $klasse = $fahrer->{klasse};
+	push @{$fahrer_nach_name->{$name}{$klasse}}, $startnummer;
+    }
+    foreach my $klassen (values %$fahrer_nach_name) {
+	foreach my $startnummern (values %$klassen) {
+	    next
+		unless @$startnummern > 1;
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummern->[0]};
+	    print "Fehler: Fahrer $fahrer->{nachname} $fahrer->{vorname} " .
+		  "hat mehrere Startnummern in Klasse $fahrer->{klasse}: " .
+		  join(", ", sort { $a <=> $b } @$startnummern) . ".\n";
+	   $fehler++;
+	}
+    }
+    if ($fehler) {
+	print "=> Bitte geben Sie den Fahrern ihre ursprünglichen Startnummern " .
+	      "und löschen Sie die neuen Startnummern. Falls es sich nicht um " .
+	      "mehrere Personen handelt, stellen Sie bitte sicher, dass der " .
+	      "Name eindeutig ist.\n\n";
+	$fehler = 0;
+    }
+
     # Sind bei Fahrern Ergebnisse eingetragen sind, obwohl die Papierabnahme
     # nicht erfolgt ist ist?
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
