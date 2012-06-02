@@ -25,44 +25,20 @@ use DBI;
 use Trialtool;
 use Wertungen;
 use Getopt::Long;
-use Scalar::Util qw(looks_like_number);
 use File::Glob ':glob';
 use File::Basename;
 use File::stat;
 use POSIX qw(strftime);
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
+use DBH_Logger;
 use strict;
 
 binmode(STDIN, ":encoding(console_in)");
 binmode(STDERR, ":encoding(console_out)");
 binmode(STDOUT, ":encoding(console_out)");
 
-sub traced_sql_value($) {
-    my ($_) = @_;
-
-    return "NULL"
-	unless defined $_;
-    return $_
-	if looks_like_number $_;
-    s/'/''/g;
-    return "'$_'";
-}
-
 my $trace_sql;
-my $traced_sql_statement;
-sub trace_sql_statement($) {
-    $traced_sql_statement = shift;
-    return $traced_sql_statement;
-}
-
-sub trace_sql_values(@) {
-    if ($trace_sql) {
-	my $_ = $traced_sql_statement;
-	s/\?/traced_sql_value shift @_/ge;
-	print "    $_\n";
-    }
-}
 
 my @tables;  # Liste der Tabellen in der Datenbank
 
@@ -517,12 +493,11 @@ sub tabelle_aktualisieren($$$$$) {
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
-	    $sth2 = $dbh->prepare(trace_sql_statement(
+	    $sth2 = $dbh->prepare(
 		"DELETE FROM $table WHERE " .
 		join(" AND ", map { "$_ = ?" } (@other_keys, "id"))
-	    ));
+	    );
 	}
-	trace_sql_values (@row, $id);
 	$sth2->execute(@row, $id);
     }
 
@@ -561,13 +536,12 @@ sub tabelle_aktualisieren($$$$$) {
 	unless ($sth2) {
 	    my @spaltennamen = @{$sth->{NAME_lc}};
 	    pop @spaltennamen;
-	    $sth2 = $dbh->prepare(trace_sql_statement(
+	    $sth2 = $dbh->prepare(
 		"INSERT INTO $table (" . join(", ", @spaltennamen) . ") " .
 		"VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
-	    ));
+	    );
 	}
 	pop @row;
-	trace_sql_values (@row);
 	$sth2->execute(@row);
     }
 
@@ -610,15 +584,14 @@ sub tabelle_aktualisieren($$$$$) {
 	$sth2 = undef;
 	while (my @row = $sth->fetchrow_array) {
 	    unless ($sth2) {
-		$sth2 = $dbh->prepare(trace_sql_statement(
+		$sth2 = $dbh->prepare(
 		    "UPDATE $table " .
 		    "SET " . join(", ", map { "$_ = ?" } @nonkeys) . " " .
 		    "WHERE " .  join(" AND ",
 				     map { "$_ = ?" } (@other_keys, "id"))
-		));
+		);
 	    }
 
-	    trace_sql_values (@row, $id);
 	    $sth2->execute(@row, $id);
 	}
     }
@@ -705,6 +678,9 @@ do {
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
 			       { RaiseError => 1, AutoCommit => 1 })
 	    or die "Could not connect to database: $DBI::errstr\n";
+	$dbh = new DBH_Logger($dbh)
+	    if $trace_sql;
+
 	print "Connected to $db ...\n";
 	if ($create_tables) {
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
@@ -715,6 +691,8 @@ do {
 	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
 				       { RaiseError => 1, AutoCommit => 1 })
 		or die "Could not create in-memory database: $DBI::errstr\n";
+	    #$tmp_dbh = new DBH_Logger($tmp_dbh)
+	    #	if $trace_sql;
 	    sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
 	    my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
 	    while (my @row = $sth->fetchrow_array) {
