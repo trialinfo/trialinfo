@@ -9,6 +9,11 @@
 <h1>Österreichischer Trialsport-Verband</h1>
 <!--#set var="which" value="$QUERY_STRING" -->
 <!--#include virtual="/cgi-bin/ergebnisse/jahreswertung-ssi.pl?$which" -->
-<p><a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
+<p>
+<!--#if expr="$QUERY_STRING=/style=osk/" -->
+<a href="http://www.osk.or.at/"><img src="../osk-logo.jpg" border="0"  alt="OSK - Oberste Nationale Sportkomission für den Motorsport"/></a>
+<!--#endif -->
+<a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0"  alt="ÖTSV - Österreichischer Trialsport-Verband"/></a>
+</p>
 </body>
 </html>
