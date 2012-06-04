@@ -201,6 +201,7 @@ CREATE TABLE wereihe (
   vareihe INT NOT NULL,
   wertung INT NOT NULL, -- Wertung im Trialtool
   bezeichnung VARCHAR(40),
+  style VARCHAR(10),
   PRIMARY KEY (wereihe)
 );
 
@@ -232,8 +233,8 @@ INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
     VALUES (1, 7, 0);
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
-    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1);
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, style)
+    VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1, "osk");
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
     VALUES (2, 11, 0);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)

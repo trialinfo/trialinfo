@@ -33,14 +33,15 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 doc_h2 "Veranstaltungsergebnisse";
 my $sth = $dbh->prepare(q{
-    SELECT wereihe, bezeichnung
+    SELECT wereihe, bezeichnung, style
     FROM wereihe
     ORDER BY wereihe
 });
 $sth->execute;
 print "<p>\n";
 while (my @row =  $sth->fetchrow_array) {
-    my ($wereihe, $bezeichnung) = @row;
-    print "<a href=\"wertungsreihe.shtml?wertungsreihe=$wereihe\">$bezeichnung</a><br>\n";
+    my ($wereihe, $bezeichnung, $style) = @row;
+    $style = defined $style ? "&style=$style" : "";
+    print "<a href=\"wertungsreihe.shtml?wertungsreihe=$wereihe$style\">$bezeichnung</a><br>\n";
 }
 print "</p>\n";
