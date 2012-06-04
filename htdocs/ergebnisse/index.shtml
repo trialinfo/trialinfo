@@ -3,17 +3,14 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>Österreichischer Trialsport-Verband</title>
-<link rel="stylesheet" type="text/css" href="ergebnisse.css" />
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 </head>
 <body>
 <h1>Österreichischer Trialsport-Verband</h1>
 <!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
-<h2>Sonstiges</h2>
 <p>
 <a href="statistik.shtml">Punktestatistiken</a><br>
-<a href="nenngeld.shtml">Nenngeldlisten</a><br>
-<a href="/cgi-bin/ergebnisse/fahrerliste.pl">Aktuelle Fahrerliste (CSV, UTF-8)</a>
 </p>
-<p><a href="http://www.otsv.at/"><img src="otsv-logo.jpg" border="0" /></a></p>
+<p><a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
 </body>
 </html>
