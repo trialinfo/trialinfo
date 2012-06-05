@@ -25,15 +25,15 @@ use strict;
 
 $RenderOutput::html = 1;
 
-# club fahrzeug lizenznummer geburtsdatum
-#my $spalten = undef;
-my $spalten = [ 'fahrzeug' ];
-
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
 my $wereihe = $q->param('wertungsreihe');
+
+# Unterstützte Spalten:
+# club fahrzeug lizenznummer geburtsdatum
+my @spalten = $q->param('spalte');
 
 my $bezeichnung;
 my $vareihe;
@@ -97,7 +97,7 @@ while (my @row = $sth->fetchrow_array) {
 
 $sth = $dbh->prepare(q{
     SELECT id, klasse, startnummer, vorname, nachname, wertungspunkte
-    } . ( $spalten ? ", " . join(", ", @$spalten) : "") . q{
+    } . ( @spalten ? ", " . join(", ", @spalten) : "") . q{
     FROM fahrer_wertung
     JOIN fahrer USING (id, startnummer)
     JOIN vareihe_veranstaltung USING (id)
@@ -149,4 +149,4 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 doc_h2 "$bezeichnung – Jahreswertung";
-jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;
+jahreswertung $veranstaltungen, $wertung, $streichresultate, [ @spalten ];

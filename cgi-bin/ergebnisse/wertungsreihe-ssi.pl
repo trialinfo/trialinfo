@@ -32,7 +32,10 @@ my $q = CGI->new;
 my $wereihe = $q->param('wertungsreihe');
 my $style = $q->param('style');
 
-$style = defined $style ? "?style=$style" : "";
+my @spalten = $q->param('spalte');
+my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
+
+$style = defined $style ? "&style=$style" : "";
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
@@ -62,11 +65,11 @@ if (my @row =  $sth->fetchrow_array) {
     print "<p>\n";
     while (my@row = $sth2->fetchrow_array) {
 	my ($id, $titel) = @row;
-	print "<a href=\"tageswertung.shtml?wertungsreihe=$wereihe&id=$id$style\">$titel</a><br>\n";
+	print "<a href=\"tageswertung.shtml?wertungsreihe=$wereihe&id=$id$spalten$style\">$titel</a><br>\n";
     }
     print "</p>\n";
     print "<p>\n";
-    print "<a href=\"jahreswertung.shtml?wertungsreihe=$wereihe$style\">Jahreswertung</a><br>\n";
+    print "<a href=\"jahreswertung.shtml?wertungsreihe=$wereihe$spalten$style\">Jahreswertung</a><br>\n";
     print "</p>\n";
     print "\n";
 } else {
