@@ -38,7 +38,7 @@ if (-t STDOUT) {
     binmode(STDOUT, ":encoding(UTF-8)");
 }
 
-my $shtml = catfile("htdocs", "jahreswertung.shtml");
+my $shtml = catfile("htdocs", "ergebnisse", "jahreswertung.shtml");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 my $streichresultate = [];
