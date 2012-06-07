@@ -177,6 +177,15 @@ CREATE TABLE wertungspunkte (
   punkte INT NOT NULL,
   PRIMARY KEY (id, rang)
 );
+
+-- Geänderte Startnummern in der Jahreswertung
+DROP TABLE IF EXISTS neue_startnummer;
+CREATE TABLE neue_startnummer (
+  id INT, -- veranstaltung
+  startnummer INT,
+  neue_startnummer INT,
+  PRIMARY KEY (id, startnummer, neue_startnummer)
+);
 };
 
 my @create_reihen_tables = split /;/, q{
@@ -365,6 +374,12 @@ sub in_datenbank_schreiben($$$$$$$) {
 	    next unless exists $fahrer->{wertungspunkte}[$n];
 	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1,
 			   $fahrer->{wertungspunkte}[$n] || 0);
+	}
+	if (exists $fahrer->{neue_startnummer}) {
+	    $dbh->do(qq{
+		INSERT INTO neue_startnummer (id, startnummer, neue_startnummer)
+		VALUES (?, ?, ?)
+	}, undef, $id, $fahrer->{startnummer}, $fahrer->{neue_startnummer});
 	}
     }
     return $id;

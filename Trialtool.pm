@@ -183,6 +183,12 @@ sub dat_datei_parsen($) {
 	    if $fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
 	$fahrer->{zielzeit} = "$1:$2"
 	    if $fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
+	if ($fahrer->{bemerkung} =~ s/\s*\*Startnummer:(\d+)\*\s*//) {
+	    # Falls für die Jahreswerung eine andere Startnummer verwendet
+	    # werden soll, kann das im Feld Bemerkung vermerkt werden,
+	    # z.B.:  *Startnummer:987*
+	    $fahrer->{neue_startnummer} = $1;
+	}
 	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
     }
 
