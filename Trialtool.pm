@@ -179,10 +179,16 @@ sub dat_datei_parsen($) {
 	} else {
 	    delete $fahrer->{geburtsdatum};
 	}
-	$fahrer->{startzeit} = "$1:$2"
-	    if $fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
-	$fahrer->{zielzeit} = "$1:$2"
-	    if $fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/;
+	if ($fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/) {
+	    $fahrer->{startzeit} = "$1:$2:00";
+	} else {
+	    delete $fahrer->{startzeit};
+	}
+	if ($fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/) {
+	    $fahrer->{zielzeit} = "$1:$2:00";
+	} else {
+	    delete $fahrer->{zielzeit};
+	}
 	if ($fahrer->{bemerkung} =~ s/\s*\*Startnummer:(\d+)\*\s*//) {
 	    # Falls für die Jahreswerung eine andere Startnummer verwendet
 	    # werden soll, kann das im Feld Bemerkung vermerkt werden,
@@ -239,7 +245,7 @@ sub gestartete_klassen($) {
     my $sektionen = $cfg->{sektionen};
     my $gestartet;
     for (my $n = 0; $n < @$sektionen; $n++) {
-	push @$gestartet, (index $sektionen->[$n], "J") != -1;
+	push @$gestartet, index($sektionen->[$n], "J") != -1 ? 1 : 0;
     }
     return $gestartet;
 }
