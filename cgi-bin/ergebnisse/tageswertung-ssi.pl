@@ -30,7 +30,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password)
 
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
-my $wereihe = $q->param('wertungsreihe');
+my $wereihe = $q->param('wereihe');
 
 # Unterstützte Spalten:
 # club fahrzeug lizenznummer geburtsdatum

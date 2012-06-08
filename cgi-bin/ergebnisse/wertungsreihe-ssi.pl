@@ -29,7 +29,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
-my $wereihe = $q->param('wertungsreihe');
+my $wereihe = $q->param('wereihe');
 my $style = $q->param('style');
 
 my @spalten = $q->param('spalte');
@@ -65,11 +65,11 @@ if (my @row =  $sth->fetchrow_array) {
     print "<p>\n";
     while (my@row = $sth2->fetchrow_array) {
 	my ($id, $titel) = @row;
-	print "<a href=\"tageswertung.shtml?wertungsreihe=$wereihe&id=$id$spalten$style\">$titel</a><br>\n";
+	print "<a href=\"tageswertung.shtml?wereihe=$wereihe&id=$id$spalten$style\">$titel</a><br>\n";
     }
     print "</p>\n";
     print "<p>\n";
-    print "<a href=\"jahreswertung.shtml?wertungsreihe=$wereihe$spalten$style\">Jahreswertung</a><br>\n";
+    print "<a href=\"jahreswertung.shtml?wereihe=$wereihe$spalten$style\">Jahreswertung</a><br>\n";
     print "</p>\n";
     print "\n";
 } else {

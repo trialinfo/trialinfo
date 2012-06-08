@@ -42,6 +42,6 @@ print "<p>\n";
 while (my @row =  $sth->fetchrow_array) {
     my ($wereihe, $bezeichnung, $style) = @row;
     $style = defined $style ? "&style=$style" : "";
-    print "<a href=\"wertungsreihe.shtml?wertungsreihe=$wereihe$style&spalte=fahrzeug\">$bezeichnung</a><br>\n";
+    print "<a href=\"wertungsreihe.shtml?wereihe=$wereihe$style&spalte=fahrzeug\">$bezeichnung</a><br>\n";
 }
 print "</p>\n";

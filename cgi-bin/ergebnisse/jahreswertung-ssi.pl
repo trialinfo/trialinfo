@@ -29,7 +29,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
-my $wereihe = $q->param('wertungsreihe');
+my $wereihe = $q->param('wereihe');
 
 # Unterstützte Spalten:
 # club fahrzeug lizenznummer geburtsdatum
