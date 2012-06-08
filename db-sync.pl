@@ -633,13 +633,13 @@ sub veranstaltung_umnummerieren($$) {
     return $tmp_id;
 }
 
-sub in_veranstaltungsreihe_eintragen($$) {
-    my ($dbh, $id) = @_;
+sub in_veranstaltungsreihe_eintragen($$$) {
+    my ($dbh, $vareihe, $id) = @_;
 
     my $sth = $dbh->do(q{
 	INSERT INTO vareihe_veranstaltung(vareihe, id)
-	VALUES (1, ?)
-    }, undef, $id);
+	VALUES (?, ?)
+    }, undef, $vareihe, $id);
 }
 
 my $db;
@@ -650,6 +650,7 @@ my $temp_db = ':memory:';
 my $poll_interval;  # Sekunden
 my $reconnect_interval;  # Sekunden
 my $force;
+my $vareihe = 1;
 my $result = GetOptions("db=s" => \$db,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -658,7 +659,8 @@ my $result = GetOptions("db=s" => \$db,
 			"reconnect:i" => \$reconnect_interval,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
-			"temp-db=s" => \$temp_db);
+			"temp-db=s" => \$temp_db,
+			"vareihe=s" => \$vareihe);
 
 if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
@@ -668,8 +670,8 @@ decode_argv;
 
 unless ($result && $db && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
-	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force] [--trace-sql]\n" .
-	  "\t{datei|verzeichnis} ...\n";
+	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force]\n" .
+	  "\t[--trace-sql] [--vareihe=N] {datei|verzeichnis} ...\n";
     exit $result ? 0 : 1;
 }
 if (defined $poll_interval && $poll_interval == 0) {
@@ -722,7 +724,7 @@ do {
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer, $cfg;
-			in_veranstaltungsreihe_eintragen $dbh, $id
+			in_veranstaltungsreihe_eintragen $dbh, $vareihe, $id
 			    unless defined $tmp_id;
 			$tmp_dbh->commit;
 			if ($veraendert) {
