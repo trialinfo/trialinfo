@@ -385,7 +385,7 @@ sub in_datenbank_schreiben($$$$$$$) {
     return $id;
 }
 
-sub veranstaltungen_kopieren ($$$$$) {
+sub tabelle_kopieren ($$$$$) {
     my ($tabelle, $von_dbh, $nach_dbh, $id, $ersetzen) = @_;
     my ($von_sth, $nach_sth);
     my ($filter, @filter) = ("", ());
@@ -416,6 +416,15 @@ sub veranstaltungen_kopieren ($$$$$) {
 	    @zeile = $von_sth->fetchrow_array
 		or last;
 	}
+    }
+}
+
+sub veranstaltung_kopieren($$$) {
+    my ($von_dbh, $nach_dbh, $id) = @_;
+
+    foreach my $table (@tables) {
+	next if $table eq "veranstaltung";
+	tabelle_kopieren $table, $von_dbh, $nach_dbh, $id, 0;
     }
 }
 
@@ -599,6 +608,7 @@ sub tabelle_aktualisieren($$$$$) {
 				     map { "$_ = ?" } (@other_keys, "id"))
 		));
 	    }
+
 	    trace_sql_values (@row, $id);
 	    $sth2->execute(@row, $id);
 	}
@@ -633,13 +643,22 @@ sub veranstaltung_umnummerieren($$) {
     return $tmp_id;
 }
 
-sub in_veranstaltungsreihe_eintragen($$$) {
+sub in_vareihe_eintragen($$$) {
     my ($dbh, $vareihe, $id) = @_;
 
-    my $sth = $dbh->do(q{
-	INSERT INTO vareihe_veranstaltung(vareihe, id)
-	VALUES (?, ?)
-    }, undef, $vareihe, $id);
+    my $sth = $dbh->prepare(q{
+	SELECT COUNT(*)
+	FROM vareihe_veranstaltung
+	WHERE vareihe = ? AND id = ?
+    });
+    $sth->execute($vareihe, $id);
+    my ($exists) = $sth->fetchrow_array;
+    unless ($exists) {
+	my $sth = $dbh->do(q{
+	    INSERT INTO vareihe_veranstaltung(vareihe, id)
+	    VALUES (?, ?)
+	}, undef, $vareihe, $id);
+    }
 }
 
 my $db;
@@ -689,11 +708,11 @@ do {
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
 			       { RaiseError => 1, AutoCommit => 1 })
 	    or die "Could not connect to database: $DBI::errstr\n";
+	print "Connected to $db ...\n";
 	if ($create_tables) {
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
 	    sql_ausfuehren $dbh, @create_reihen_tables;
 	}
-	print "Connected to $db ...\n";
 
 	if (@ARGV) {
 	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
@@ -704,7 +723,7 @@ do {
 	    while (my @row = $sth->fetchrow_array) {
 		push @tables, $row[2];
 	    }
-	    veranstaltungen_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
+	    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    my $erster_check = 1;
 	    while ($erster_check || $erster_sync || $poll_interval) {
 		foreach my $dateiname (trialtool_dateien @ARGV) {
@@ -712,6 +731,10 @@ do {
 			status($tmp_dbh, $dateiname);
 
 		    $veraendert ||= $force;
+
+		    veranstaltung_kopieren $dbh, $tmp_dbh, $id
+			if defined $id && $erster_check &&
+			   ($veraendert || $poll_interval) && !$erster_sync;
 
 		    if ($erster_sync || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
@@ -724,17 +747,17 @@ do {
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer, $cfg;
-			in_veranstaltungsreihe_eintragen $dbh, $vareihe, $id
-			    unless defined $tmp_id;
 			$tmp_dbh->commit;
-			if ($veraendert) {
-			    $dbh->begin_work;
-			    veranstaltung_loeschen $dbh, $id, 0
-				if $erster_check || $erster_sync;
-			    tabellen_aktualisieren $tmp_dbh, $dbh, $id,
-				defined $tmp_id ? $tmp_id : $id + 1;
-			    $dbh->commit;
-			}
+
+			$dbh->begin_work;
+			veranstaltung_loeschen $dbh, $id, 0
+			    if $erster_sync;
+			in_vareihe_eintragen $dbh, $vareihe, $id
+			    unless defined $tmp_id;
+			tabellen_aktualisieren $tmp_dbh, $dbh, $id,
+			    defined $tmp_id ? $tmp_id : $id + 1;
+			$dbh->commit;
+
 			$tmp_dbh->begin_work;
 			veranstaltung_loeschen $tmp_dbh, $tmp_id, 1
 			    if defined $tmp_id;
