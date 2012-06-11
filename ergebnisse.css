@@ -1,0 +1,31 @@
+h1,h2,h3,p
+{
+font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+#wertung
+{
+font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+border-collapse:collapse;
+}
+#wertung td, #wertung th
+{
+border:1px solid #98bf21;
+padding:2px 5px 2px 5px;
+}
+#wertung th
+{
+font-weight:bolder;
+padding-top:2px;
+padding-bottom:2px;
+background-color:#A7C942;
+color:#ffffff;
+}
+#wertung tr.alt td
+{
+color:#000000;
+background-color:#EAF2D3;
+}
+#wertung tr.footer td
+{
+font-style:italic;
+}

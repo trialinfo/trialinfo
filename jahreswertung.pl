@@ -38,7 +38,6 @@ if (-t STDOUT) {
     binmode(STDOUT, ":encoding(UTF-8)");
 }
 
-my $shtml = catfile("htdocs", "ergebnisse", "jahreswertung.shtml");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 my $streichresultate = [];
@@ -117,23 +116,26 @@ my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 my $fh;
 if ($RenderOutput::html) {
-    $fh = new FileHandle(encode(locale_fs => $shtml), "<:encoding(UTF-8)")
-	or die "$shtml: $!\n";
-    while (<$fh>) {
-	last if (/<!--#include.*?-->/);
-	s/<!--.*?-->//g;
-	print;
-    }
+    print <<EOF;
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Österreichischer Trialsport-Verband</title>
+<link rel="stylesheet" type="text/css" href="ergebnisse.css" />
+</head>
+<body>
+EOF
 }
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
 jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;
 
 if ($RenderOutput::html) {
-    while (<$fh>) {
-	s/<!--.*?-->//g;
-	print;
-    }
+    print <<EOF;
+</body>
+</html>
+EOF
 }
 
 if ($anzeigen_mit) {
