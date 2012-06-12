@@ -186,6 +186,13 @@ CREATE TABLE neue_startnummer (
   neue_startnummer INT,
   PRIMARY KEY (id, startnummer, neue_startnummer)
 );
+
+DROP TABLE IF EXISTS vareihe_veranstaltung;
+CREATE TABLE vareihe_veranstaltung (
+  vareihe INT,
+  id INT, -- veranstaltung
+  PRIMARY KEY (vareihe, id)
+);
 };
 
 my @create_reihen_tables = split /;/, q{
@@ -194,13 +201,6 @@ DROP TABLE IF EXISTS vareihe;
 CREATE TABLE vareihe (
   vareihe INT,
   PRIMARY KEY (vareihe)
-);
-
-DROP TABLE IF EXISTS vareihe_veranstaltung;
-CREATE TABLE vareihe_veranstaltung (
-  vareihe INT,
-  id INT, -- veranstaltung
-  PRIMARY KEY (vareihe, id)
 );
 
 -- Wertungsreihe
@@ -265,14 +265,15 @@ sub veranstaltung_loeschen($$$) {
     my ($dbh, $id, $auch_in_veranstaltung) = @_;
 
     foreach my $table (@tables) {
-	next if $table eq "veranstaltung" && !$auch_in_veranstaltung;
+	next if ($table eq "veranstaltung" || $table eq "vareihe_veranstaltung") &&
+		!$auch_in_veranstaltung;
 	$dbh->do("DELETE FROM $table WHERE id = ?", undef, $id);
     }
 }
 
-sub in_datenbank_schreiben($$$$$$$) {
+sub in_datenbank_schreiben($$$$$$$$) {
     my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
-	$cfg) = @_;
+	$cfg, $vareihe) = @_;
     my $sth;
     my $datum;
 
@@ -292,6 +293,14 @@ sub in_datenbank_schreiben($$$$$$$) {
 	VALUES (?, ?, ?, ?, ?)
     });
     $sth->execute($id, $datum, $basename, $cfg_mtime, $dat_mtime);
+
+    $sth = $dbh->prepare(qq{
+	INSERT INTO vareihe_veranstaltung(vareihe, id)
+	VALUES (?, ?)
+    });
+    foreach my $vareihe (@$vareihe) {
+	$sth->execute($vareihe, $id);
+    }
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO wertung (id, wertung, titel, subtitel,
@@ -423,7 +432,7 @@ sub veranstaltung_kopieren($$$) {
     my ($von_dbh, $nach_dbh, $id) = @_;
 
     foreach my $table (@tables) {
-	next if $table eq "veranstaltung";
+	next if $table eq "veranstaltung" || $table eq "vareihe_veranstaltung";
 	tabelle_kopieren $table, $von_dbh, $nach_dbh, $id, 0;
     }
 }
@@ -643,24 +652,6 @@ sub veranstaltung_umnummerieren($$) {
     return $tmp_id;
 }
 
-sub in_vareihe_eintragen($$$) {
-    my ($dbh, $vareihe, $id) = @_;
-
-    my $sth = $dbh->prepare(q{
-	SELECT COUNT(*)
-	FROM vareihe_veranstaltung
-	WHERE vareihe = ? AND id = ?
-    });
-    $sth->execute($vareihe, $id);
-    my ($exists) = $sth->fetchrow_array;
-    unless ($exists) {
-	my $sth = $dbh->do(q{
-	    INSERT INTO vareihe_veranstaltung(vareihe, id)
-	    VALUES (?, ?)
-	}, undef, $vareihe, $id);
-    }
-}
-
 my $db;
 my $username;
 my $password;
@@ -669,7 +660,7 @@ my $temp_db = ':memory:';
 my $poll_interval;  # Sekunden
 my $reconnect_interval;  # Sekunden
 my $force;
-my $vareihe = 1;
+my $vareihe;
 my $result = GetOptions("db=s" => \$db,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -679,7 +670,11 @@ my $result = GetOptions("db=s" => \$db,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db,
-			"vareihe=s" => \$vareihe);
+			"vareihe=s" => \@$vareihe);
+
+$vareihe = [ map { split /,/, $_ } @$vareihe ];
+$vareihe = [ 1 ]
+    unless @$vareihe;
 
 if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
@@ -724,6 +719,7 @@ do {
 		push @tables, $row[2];
 	    }
 	    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
+	    tabelle_kopieren "vareihe_veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    my $erster_check = 1;
 	    while ($erster_check || $erster_sync || $poll_interval) {
 		foreach my $dateiname (trialtool_dateien @ARGV) {
@@ -746,14 +742,13 @@ do {
 			    if defined $id;
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
-						     $fahrer_nach_startnummer, $cfg;
+						     $fahrer_nach_startnummer,
+						     $cfg, $vareihe;
 			$tmp_dbh->commit;
 
 			$dbh->begin_work;
 			veranstaltung_loeschen $dbh, $id, 0
 			    if $erster_sync;
-			in_vareihe_eintragen $dbh, $vareihe, $id
-			    unless defined $tmp_id;
 			tabellen_aktualisieren $tmp_dbh, $dbh, $id,
 			    defined $tmp_id ? $tmp_id : $id + 1;
 			$dbh->commit;
