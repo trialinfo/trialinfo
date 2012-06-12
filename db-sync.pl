@@ -661,6 +661,7 @@ my $poll_interval;  # Sekunden
 my $reconnect_interval;  # Sekunden
 my $force;
 my $vareihe;
+my $delete;
 my $result = GetOptions("db=s" => \$db,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -670,7 +671,8 @@ my $result = GetOptions("db=s" => \$db,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db,
-			"vareihe=s" => \@$vareihe);
+			"vareihe=s" => \@$vareihe,
+			"delete" => \$delete);
 
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
 $vareihe = [ 1 ]
@@ -726,6 +728,13 @@ do {
 		    my ($id, $veraendert, $basename, $cfg_mtime, $dat_mtime) =
 			status($tmp_dbh, $dateiname);
 
+		    if ($delete) {
+			if ($id) {
+			    veranstaltung_loeschen $dbh, $id, 1;
+			}
+			next;
+		    }
+
 		    $veraendert ||= $force;
 
 		    veranstaltung_kopieren $dbh, $tmp_dbh, $id
@@ -762,6 +771,8 @@ do {
 
 		$erster_sync = undef;
 		$erster_check = undef;
+		exit
+		    if $delete;
 		sleep $poll_interval
 		    if defined $poll_interval;
 	    }
