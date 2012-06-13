@@ -111,6 +111,11 @@ Beispiele zur Verwendung
     otsv-check.pl "2012-04-22 Steinbach ÖTSV + OSK.cfg"
 
 
+ Die ÖTSV-Konventionen in der aktuellen Veranstaltung überprüfen:
+
+    otsv-check.pl "C:\Pfad\TrialTool 3.12"
+
+
  In der MySQL-Datenbank "datenbank" die Tabellen für den Import erzeugen
  (Achtung: bestehende Daten gehen ohne Nachfrage verloren!)
 
@@ -132,6 +137,13 @@ Beispiele zur Verwendung
 	--username=... --password=... \
 	--force \
 	2012-*
+
+
+ Löschen einer Veranstaltung aus der Datenbank:
+
+    db-sync.pl --db='mysql:datenbank;mysql_enable_utf8=1' \
+	--username=... --password=... --delete \
+	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
 
 
  Kontinuierlicher Import der Daten einer Veranstaltung in die Datenbank,
