@@ -196,7 +196,7 @@ sub tageswertung($$$$) {
 	my $farbe = "";
 
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    #$farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
 	}
 
 	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
@@ -361,7 +361,7 @@ sub jahreswertung($$$$) {
 	my ($header, $body, $format);
 	my $farbe = "";
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    #$farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
 	}
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ $farbe, "c" ], "Nr.", "Name";
