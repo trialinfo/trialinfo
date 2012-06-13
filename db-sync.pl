@@ -36,7 +36,11 @@ use strict;
 
 binmode(STDIN, ":encoding(console_in)");
 binmode(STDERR, ":encoding(console_out)");
-binmode(STDOUT, ":encoding(console_out)");
+if (-t STDOUT) {
+    binmode(STDOUT, ":encoding(console_out)");
+} else {
+   binmode(STDOUT, ":encoding(UTF-8)");
+}
 
 my $trace_sql;
 
@@ -691,6 +695,7 @@ do {
 	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
 				       { RaiseError => 1, AutoCommit => 1 })
 		or die "Could not create in-memory database: $DBI::errstr\n";
+	    $tmp_dbh->{unicode} = 1;
 	    #$tmp_dbh = new DBH_Logger($tmp_dbh)
 	    #	if $trace_sql;
 	    sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
