@@ -32,15 +32,14 @@ use POSIX qw(strftime);
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
 use DBH_Logger;
+use IO::Tee;
 use strict;
 
+my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
+my $STDERR_encoding = -t STDERR ? "console_out" : "UTF-8";
 binmode(STDIN, ":encoding(console_in)");
-binmode(STDERR, ":encoding(console_out)");
-if (-t STDOUT) {
-    binmode(STDOUT, ":encoding(console_out)");
-} else {
-   binmode(STDOUT, ":encoding(UTF-8)");
-}
+binmode(STDOUT, ":encoding($STDOUT_encoding)");
+binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $trace_sql;
 
@@ -639,6 +638,7 @@ my $reconnect_interval;  # Sekunden
 my $force;
 my $vareihe;
 my $delete;
+my $log;
 my $result = GetOptions("db=s" => \$db,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -649,7 +649,8 @@ my $result = GetOptions("db=s" => \$db,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db,
 			"vareihe=s" => \@$vareihe,
-			"delete" => \$delete);
+			"delete" => \$delete,
+			"log=s" => \$log);
 
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
 $vareihe = [ 1 ]
@@ -664,7 +665,7 @@ decode_argv;
 unless ($result && $db && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
 	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force]\n" .
-	  "\t[--trace-sql] [--vareihe=N] {datei|verzeichnis} ...\n";
+	  "\t[--trace-sql] [--vareihe=N] [--delete] [--log=datei] {datei|verzeichnis} ...\n";
     exit $result ? 0 : 1;
 }
 if (defined $poll_interval && $poll_interval == 0) {
@@ -672,6 +673,23 @@ if (defined $poll_interval && $poll_interval == 0) {
 }
 if (defined $reconnect_interval && $reconnect_interval == 0) {
     $reconnect_interval = $poll_interval;
+}
+
+if (defined $log) {
+    open LOG, ">>$log"
+	or die "$log: $!\n";
+    open STDOUT_DUP, ">&STDOUT"
+	or die "STDOUT: $!\n";
+    open STDERR_DUP, ">&STDERR"
+	or die "STDERR: $!\n";
+
+    binmode(LOG, ":encoding(UTF-8)");
+    binmode(STDOUT_DUP, ":encoding($STDOUT_encoding)");
+    binmode(STDERR_DUP, ":encoding($STDERR_encoding)");
+
+    print LOG "$0 ", join(" ", @ARGV), "\n";
+    *STDOUT = IO::Tee->new(\*STDOUT_DUP, \*LOG);
+    *STDERR = IO::Tee->new(\*STDERR_DUP, \*LOG);
 }
 
 my $erster_sync = $force;

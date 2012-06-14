@@ -30,13 +30,11 @@ use RenderOutput;
 use Wertungen;
 use strict;
 
+my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
+my $STDERR_encoding = -t STDERR ? "console_out" : "UTF-8";
 binmode(STDIN, ":encoding(console_in)");
-binmode(STDERR, ":encoding(console_out)");
-if (-t STDOUT) {
-    binmode(STDOUT, ":encoding(console_out)");
-} else {
-   binmode(STDOUT, ":encoding(UTF-8)");
-}
+binmode(STDOUT, ":encoding($STDOUT_encoding)");
+binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
