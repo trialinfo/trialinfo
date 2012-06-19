@@ -207,28 +207,28 @@ VALUES (1);
 INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
     VALUES (1, 1, "ÖTSV Cup 2012", 1);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 1, 0);
+    VALUES (1, 1, 4);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 2, 0);
+    VALUES (1, 2, 4);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 3, 0);
+    VALUES (1, 3, 4);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 4, 0);
+    VALUES (1, 4, 4);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 5, 0);
+    VALUES (1, 5, 4);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 6, 0);
+    VALUES (1, 6, 4);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 7, 0);
+    VALUES (1, 7, 4);
 
 INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, style)
     VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1, "osk");
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (2, 11, 0);
+    VALUES (2, 11, 2);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (2, 12, 0);
+    VALUES (2, 12, 2);
 INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (2, 13, 0);
+    VALUES (2, 13, 2);
 };
 
 sub sql_ausfuehren($@) {
