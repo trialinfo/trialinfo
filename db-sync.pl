@@ -27,8 +27,6 @@ use Wertungen;
 use Getopt::Long;
 use File::Glob ':glob';
 use File::Basename;
-use File::stat;
-use POSIX qw(strftime);
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
 use DBH_Logger;
@@ -414,14 +412,6 @@ sub veranstaltung_kopieren($$$) {
 	next if $table eq "veranstaltung" || $table eq "vareihe_veranstaltung";
 	tabelle_kopieren $table, $von_dbh, $nach_dbh, $id, 0;
     }
-}
-
-sub mtime($) {
-    my ($dateiname) = @_;
-
-    my $stat = stat("$dateiname")
-	or die "$dateiname: $!\n";
-    return strftime("%Y-%m-%d %H:%M:%S", localtime($stat->mtime));
 }
 
 sub status($$) {

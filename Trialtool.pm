@@ -27,8 +27,10 @@ package Trialtool;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_datei_parsen dat_datei_parsen trialtool_dateien gestartete_klassen);
+@EXPORT = qw(cfg_datei_parsen dat_datei_parsen trialtool_dateien gestartete_klassen mtime);
 
+use File::stat;
+use POSIX qw(strftime);
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
 use Encode qw(encode decode);
@@ -248,6 +250,14 @@ sub gestartete_klassen($) {
 	push @$gestartet, index($sektionen->[$n], "J") != -1 ? 1 : 0;
     }
     return $gestartet;
+}
+
+sub mtime($) {
+    my ($dateiname) = @_;
+
+    my $stat = stat("$dateiname")
+	or die "$dateiname: $!\n";
+    return strftime("%Y-%m-%d %H:%M:%S", @{localtime($stat->mtime)});
 }
 
 1;

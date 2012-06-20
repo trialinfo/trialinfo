@@ -19,7 +19,7 @@ use CGI;
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
-use Wertungen qw(tageswertung);
+use Wertungen;
 use DatenbankAuswertung;
 use strict;
 
@@ -38,6 +38,7 @@ my @spalten =  $q->param('spalte');
 
 my $bezeichnung;
 my $wertung;
+my $zeit;
 my $cfg;
 my $fahrer_nach_startnummer;
 my $sth;
@@ -45,33 +46,23 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT bezeichnung
-    FROM wereihe
-    WHERE wereihe = ?
-});
-$sth->execute($wereihe);
-($bezeichnung) = $sth->fetchrow_array;
-
-unless (defined $bezeichnung) {
-    doc_h2 "Wertungsreihe nicht gefunden.";
-    exit;
-}
-
-$sth = $dbh->prepare(q{
-    SELECT wertung, titel
+    SELECT wereihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN wereihe USING (vareihe, wertung)
+    JOIN veranstaltung USING (id)
     WHERE id = ? AND wereihe = ?
 });
 $sth->execute($id, $wereihe);
 if (my @row = $sth->fetchrow_array) {
-    $wertung = $row[0] - 1;
-    $cfg->{titel}[$wertung] = $row[1];
+    $bezeichnung = $row[0];
+    $wertung = $row[1] - 1;
+    $cfg->{titel}[$wertung] = $row[2];
+    $zeit = max_time($row[3], $row[4]);
 }
 
 unless (defined $cfg) {
-    doc_h2 "Veranstaltung nicht gefunden.";
+    doc_h2 "Veranstaltung in Wertungsreihe nicht gefunden.";
     exit;
 }
 
@@ -129,3 +120,5 @@ while (my @row = $sth->fetchrow_array) {
 
 doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ];
+
+print "<p>Letzte Änderung: $zeit</p>\n";

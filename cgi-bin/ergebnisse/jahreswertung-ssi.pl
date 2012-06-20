@@ -19,7 +19,7 @@ use CGI;
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
-use Wertungen qw(jahreswertung);
+use Wertungen;
 use DatenbankAuswertung;
 use strict;
 
@@ -39,6 +39,7 @@ my $bezeichnung;
 my $vareihe;
 my $streichresultate;
 my $wertung;
+my $zeit;
 my $fahrer_nach_startnummer;
 my $sth;
 
@@ -68,7 +69,7 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, datum, wertung, titel, subtitel
+    SELECT id, datum, wertung, titel, subtitel, dat_mtime, cfg_mtime
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN wereihe USING (vareihe, wertung)
@@ -93,6 +94,8 @@ while (my @row = $sth->fetchrow_array) {
     $cfg->{titel}[$wertung] = $row[3];
     $cfg->{subtitel}[$wertung] = $row[4];
     $veranstaltungen->{$id}{cfg} = $cfg;
+    $zeit = max_time($zeit, $row[5]);
+    $zeit = max_time($zeit, $row[6]);
 }
 
 $sth = $dbh->prepare(q{
@@ -157,3 +160,5 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h2 "$bezeichnung – Jahreswertung";
 jahreswertung $veranstaltungen, $wertung, $streichresultate, [ @spalten ];
+
+print "<p>Letzte Änderung: $zeit</p>\n";

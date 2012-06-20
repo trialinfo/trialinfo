@@ -19,11 +19,12 @@ package Wertungen;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung);
+@EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_time);
 
 use utf8;
 use List::Util qw(max);
 use RenderOutput;
+use Time::Local;
 use strict;
 
 my $klassenfarben = {
@@ -445,6 +446,20 @@ sub jahreswertung($$$$) {
 	push @$body, [ $label, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
     }
     doc_table ["", "Name"], $body, undef, ["r", "l"];
+}
+
+sub max_time($$) {
+    my ($a, $b) = @_;
+    my ($ta, $tb);
+
+    return $b unless defined $a;
+    return $a unless defined $b;
+
+    $ta = timelocal($6, $5, $4, $3, $2 - 1, $1 - 1900)
+	if $a =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/;
+    $tb = timelocal($6, $5, $4, $3, $2 - 1, $1 - 1900)
+	if $b =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/;
+    return $ta < $tb ? $b : $a;
 }
 
 1;

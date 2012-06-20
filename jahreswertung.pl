@@ -37,6 +37,7 @@ binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $zeit;
 my $spalten;
 my $streichresultate = [];
 my $anzeigen_mit;
@@ -78,6 +79,9 @@ decode_argv;
 
 my $n = 1;
 foreach my $name (trialtool_dateien @ARGV) {
+    $zeit = max_time($zeit, mtime("$name.cfg"));
+    $zeit = max_time($zeit, mtime("$name.dat"));
+
     my $cfg = cfg_datei_parsen("$name.cfg");
     if ($RenderOutput::html &&
 	basename($name) =~ /^(\d{4})-0*(\d+)-0*(\d+) /) {
@@ -128,6 +132,12 @@ EOF
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
 jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;
+
+if ($RenderOutput::html) {
+    print "<p>Letzte Änderung: $zeit</p>\n";
+} else {
+    print "\nLetzte Änderung: $zeit\n";
+}
 
 if ($RenderOutput::html) {
     print <<EOF;
