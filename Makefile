@@ -11,6 +11,7 @@ LOCAL_FILES = \
 	doc/eer-diagramm.mwb \
 	doc/eer-diagramm.pdf \
 	README \
+	ergebnisse.css \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
