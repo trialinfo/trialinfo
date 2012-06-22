@@ -255,7 +255,7 @@ sub gestartete_klassen($) {
 sub mtime($) {
     my ($dateiname) = @_;
 
-    my $stat = stat("$dateiname")
+    my $stat = stat(encode(locale_fs => "$dateiname"))
 	or die "$dateiname: $!\n";
     return strftime("%Y-%m-%d %H:%M:%S", @{localtime($stat->mtime)});
 }
