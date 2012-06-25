@@ -88,6 +88,13 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     print "$name\n" . ("=" x length $name) . "\n\n";
 
+    my $starter;
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$starter++
+	    if $fahrer->{papierabnahme};
+    }
+    printf "Starter insgesamt: %s\n\n", $starter;
+
     if ($osk) {
 	print "Nachdem bei dieser Veranstaltung OSK-Klassen starten, treten " .
 	      "OSK-Lizenzfahrer und ÖTSV-Fahrer getrennt an.\n";
@@ -306,7 +313,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    my $zusatzinfo = "";
 	    if ($fahrer->{klasse} == 11 || $fahrer->{klasse} == 12 ||
 		$fahrer->{klasse} == 13) {
-		$zusatzinfo = " (Bei ausländischen Lizenzfahrern ist das korrekt.)";
+		$zusatzinfo = " Bei ausländischen Lizenzfahrern ist das korrekt.";
 	    }
 	    print "Warnung: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
@@ -352,21 +359,25 @@ foreach my $name (trialtool_dateien @ARGV) {
     }
 
     # Fahrer, die noch unterwegs sind
-    print "Fahrer auf der Strecke:\n";
-    foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
+    my $fahrer_auf_der_strecke;
+    foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	if ($fahrer->{runden} != $cfg->{runden}[$fahrer->{klasse} - 1] &&
 	    ($fahrer->{ausfall} == 0 || $fahrer->{ausfall} == 4)) {
-	    printf "  %3u %s %s (Runde %s)\n", $startnummer, $fahrer->{nachname},
-				    $fahrer->{vorname}, $fahrer->{runden} + 1;
-	    $fehler++;
+	    push @$fahrer_auf_der_strecke, $startnummer;
 	}
     }
-    if ($fehler) {
+
+    if (defined $fahrer_auf_der_strecke) {
+	printf "%s Fahrer auf der Strecke:\n", scalar @$fahrer_auf_der_strecke;
+	foreach my $startnummer (sort { $a <=> $b } @$fahrer_auf_der_strecke) {
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	    printf "  %3u %s %s (Klasse %s, Runde %s)\n", $startnummer, $fahrer->{nachname},
+				    $fahrer->{vorname}, $fahrer->{klasse}, $fahrer->{runden} + 1;
+	}
 	print "\n";
-	$fehler = 0;
     } else {
-	print "  Keine\n\n";
+	print "Keine Fahrer auf der Strecke\n\n";
     }
 }
 print "Check beendet.\n";
