@@ -701,9 +701,8 @@ do {
 
 	if (@ARGV) {
 	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
-				       { RaiseError => 1, AutoCommit => 1 })
+				       { RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1 })
 		or die "Could not create in-memory database: $DBI::errstr\n";
-	    $tmp_dbh->{sqlite_unicode} = 1;
 	    #$tmp_dbh = new DBH_Logger($tmp_dbh)
 	    #	if $trace_sql;
 	    sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
