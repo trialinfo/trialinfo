@@ -45,15 +45,25 @@ my $sth;
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
-$sth = $dbh->prepare(q{
-    SELECT wereihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
-    FROM wertung
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe, wertung)
-    JOIN veranstaltung USING (id)
-    WHERE id = ? AND wereihe = ?
-});
-$sth->execute($id, $wereihe);
+if (defined $wereihe) {
+    $sth = $dbh->prepare(q{
+	SELECT wereihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	FROM wertung
+	JOIN vareihe_veranstaltung USING (id)
+	JOIN wereihe USING (vareihe, wertung)
+	JOIN veranstaltung USING (id)
+	WHERE id = ? AND wereihe = ?
+    });
+    $sth->execute($id, $wereihe);
+} else {
+    $sth = $dbh->prepare(q{
+	SELECT wertung.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	FROM wertung
+	JOIN veranstaltung USING (id)
+	WHERE id = ? AND wertung = 1;
+    });
+    $sth->execute($id);
+}
 if (my @row = $sth->fetchrow_array) {
     $bezeichnung = $row[0];
     $wertung = $row[1] - 1;
@@ -66,31 +76,54 @@ unless (defined $cfg) {
     exit;
 }
 
-$sth = $dbh->prepare(q{
-    SELECT klasse, runden, bezeichnung
-    FROM klasse
-    JOIN wereihe_klasse USING (klasse)
-    WHERE id = ? AND wereihe = ?
-    ORDER BY klasse
-});
-$sth->execute($id, $wereihe);
+if (defined $wereihe) {
+    $sth = $dbh->prepare(q{
+	SELECT klasse, runden, bezeichnung
+	FROM klasse
+	JOIN wereihe_klasse USING (klasse)
+	WHERE id = ? AND wereihe = ?
+	ORDER BY klasse
+    });
+    $sth->execute($id, $wereihe);
+} else {
+    $sth = $dbh->prepare(q{
+	SELECT klasse, runden, bezeichnung
+	FROM klasse
+	WHERE id = ?
+	ORDER BY klasse
+    });
+    $sth->execute($id);
+}
 while (my @row = $sth->fetchrow_array) {
     $cfg->{runden}[$row[0] - 1] = $row[1];
     $cfg->{klassen}[$row[0] - 1] = $row[2];
 }
 
-$sth = $dbh->prepare(q{
-    SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
-           } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
-	   s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
-	   papierabnahme
-    FROM wereihe_klasse
-    JOIN fahrer USING (klasse)
-    JOIN wereihe USING (wereihe)
-    LEFT JOIN fahrer_wertung USING (id, startnummer, wertung)
-    WHERE id = ? AND wereihe = ?
-});
-$sth->execute($id, $wereihe);
+if (defined $wereihe) {
+    $sth = $dbh->prepare(q{
+	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
+	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
+	       s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
+	       papierabnahme
+	FROM wereihe_klasse
+	JOIN fahrer USING (klasse)
+	JOIN wereihe USING (wereihe)
+	LEFT JOIN fahrer_wertung USING (id, startnummer, wertung)
+	WHERE id = ? AND wereihe = ?
+    });
+    $sth->execute($id, $wereihe);
+} else {
+    $sth = $dbh->prepare(q{
+	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
+	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
+	       s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
+	       papierabnahme
+	FROM fahrer
+	LEFT JOIN fahrer_wertung USING (id, startnummer)
+	WHERE id = ? AND wertung = ?
+    });
+    $sth->execute($id, $wertung + 1);
+}
 while (my $fahrer = $sth->fetchrow_hashref) {
     my $startnummer = $fahrer->{startnummer};
     my $w = [];
@@ -100,16 +133,27 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     $fahrer_nach_startnummer->{$startnummer} = $fahrer;
 }
 
-$sth = $dbh->prepare(q{
-    SELECT startnummer, runde, runde.punkte
-    FROM runde
-    JOIN fahrer USING (id, startnummer)
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe)
-    JOIN wereihe_klasse USING (wereihe, klasse)
-    WHERE id = ? and wereihe = ?
-});
-$sth->execute($id, $wereihe);
+if (defined $wereihe) {
+    $sth = $dbh->prepare(q{
+	SELECT startnummer, runde, runde.punkte
+	FROM runde
+	JOIN fahrer USING (id, startnummer)
+	JOIN vareihe_veranstaltung USING (id)
+	JOIN wereihe USING (vareihe)
+	JOIN wereihe_klasse USING (wereihe, klasse)
+	WHERE id = ? and wereihe = ?
+    });
+    $sth->execute($id, $wereihe);
+} else {
+    $sth = $dbh->prepare(q{
+	SELECT startnummer, runde, runde.punkte
+	FROM runde
+	JOIN fahrer USING (id, startnummer)
+	JOIN vareihe_veranstaltung USING (id)
+	WHERE id = ?
+    });
+    $sth->execute($id);
+}
 while (my @row = $sth->fetchrow_array) {
     my $fahrer = $fahrer_nach_startnummer->{$row[0]};
     $fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
