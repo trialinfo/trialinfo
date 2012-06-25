@@ -16,7 +16,7 @@
 # <http://www.gnu.org/licenses/>.
 
 use CGI;
-#use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
+use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
 use DatenbankAuswertung;
@@ -70,19 +70,23 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT startnummer AS 'Nr.', klasse,
+    SELECT startnummer AS 'Nr.',
+	   CASE WHEN klasse IN (11, 12, 13) AND
+		     (lizenznummer = '' OR
+		     lizenznummer IS NULL)
+		THEN CONCAT('(', klasse, ')')
+		ELSE klasse END AS klasse,
 	   CONCAT(nachname, ', ', vorname) AS name,
 	   YEAR(geburtsdatum) AS geburtsjahr,
-	   CASE WHEN klasse IN (11, 12, 13) AND ausfall != 4 THEN
-		CASE WHEN geburtsdatum IS NULL THEN 25
-		     WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 15
-		     ELSE 25 END
-	   END AS 'OSK',
-	   CASE WHEN NOT (klasse IN (11, 12, 13) AND ausfall != 4) THEN
-		CASE WHEN geburtsdatum IS NULL THEN 25
-		     WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 15
-		     ELSE 25 END
-	   END AS 'ÖTSV'
+	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 15
+		ELSE 25 END AS 'Nenngeld',
+	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN NULL
+		ELSE 5 END AS 'ÖTSV',
+	   CASE WHEN klasse NOT IN (11, 12, 13) OR
+		     lizenznummer = "" OR lizenznummer IS NULL THEN
+		CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN NULL
+		     ELSE 5 END
+	   END AS 'ÖTSV<BR>Vers.'
     FROM fahrer
     JOIN veranstaltung USING (id)
     WHERE id = ? AND papierabnahme
@@ -90,31 +94,37 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($id);
 my ($header, $body);
-my $format = [ qw(r r l r r r) ];
+my $format = [ qw(r r l r r r r) ];
 while (my @row = $sth->fetchrow_array) {
     push @$header, map { ucfirst } @{$sth->{NAME}}
 	unless defined $header;
     push @$body, [ @row ];
 }
 
-my ($osk, $otsv);
+my ($nenngeld, $otsv, $otsv_vers);
 foreach my $row (@$body) {
-    $osk += $row->[4]
-	if defined $row->[4];
+    $nenngeld += $row->[4];
     $otsv += $row->[5]
 	if defined $row->[5];
+    $otsv_vers += $row->[6]
+	if defined $row->[6];
 }
 foreach my $row (@$body) {
     $row->[4] = "€$row->[4]"
 	if defined $row->[4];
     $row->[5] = "€$row->[5]"
 	if defined $row->[5];
+    $row->[6] = "€$row->[6]"
+	if defined $row->[6];
 }
-$osk = "€$osk"
-    if defined $osk;
+$nenngeld = "€$nenngeld"
+    if defined $nenngeld;
 $otsv = "€$otsv"
     if defined $otsv;
-my $footer = [ [ "Summen", "r4" ], $osk, $otsv ];
+$otsv_vers = "€$otsv_vers"
+    if defined $otsv_vers;
+my $footer = [ [ "Summen", "r4" ], $nenngeld, $otsv, $otsv_vers ]
+    if defined $nenngeld || defined $otsv || defined $otsv_vers;
 
 doc_h2 "Nenngeldliste – $titel";
 doc_table $header, $body, $footer, $format;
