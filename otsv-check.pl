@@ -303,11 +303,16 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    !$fahrer->{wertungen}[$wertung] &&
 	    !$klassen_adjw->[$fahrer->{klasse} - 1] &&
 	    $fahrer->{ausfall} != 4) {  # 4 == aus der wertung
-	    print "Fehler: Fahrer $startnummer " .
+	    my $zusatzinfo = "";
+	    if ($fahrer->{klasse} == 11 || $fahrer->{klasse} == 12 ||
+		$fahrer->{klasse} == 13) {
+		$zusatzinfo = " (Bei ausländischen Lizenzfahrern ist das korrekt.)";
+	    }
+	    print "Warnung: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		  "$fahrer->{klasse} ist nicht in der " .
 		  "$cfg->{wertungen}[$wertung], diese Klasse nimmt aber " .
-		  "an der Wertung teil.\n";
+		  "an der Wertung teil.$zusatzinfo\n";
 	    $fehler++;
 	}
     }
