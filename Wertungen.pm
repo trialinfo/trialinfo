@@ -170,8 +170,8 @@ sub spaltentitel($) {
     }
 }
 
-sub tageswertung($$$$) {
-    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten) = @_;
+sub tageswertung($$$$$) {
+    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $alle_punkte) = @_;
 
     my $ausfall = {
 	0 => "",
@@ -235,7 +235,24 @@ sub tageswertung($$$$) {
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
-		    push @$row, $fahrer->{punkte_pro_runde}[$n];
+		    if ($alle_punkte) {
+			my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$n];
+			my $punkte;
+			my $on;
+			for (my $s = @$punkte_pro_runde - 1; $s >= 0; $s--) {
+			    if (substr($cfg->{sektionen}[$klasse - 1], $s, 1) eq "J") {
+				unshift @$punkte, $punkte_pro_runde->[$s];
+				$on = 1;
+			    } elsif ($on) {
+				unshift @$punkte, "-";
+			    }
+			}
+			$punkte = join(" ", @$punkte);
+			push @$row, [ $fahrer->{punkte_pro_runde}[$n], "r1",
+				      "title=\"$punkte\"" ];
+		    } else {
+			push @$row, $fahrer->{punkte_pro_runde}[$n];
+		    }
 		} else {
 		    push @$row, "-";
 		}

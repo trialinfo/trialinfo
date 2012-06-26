@@ -42,6 +42,7 @@ my $zeit;
 my $cfg;
 my $fahrer_nach_startnummer;
 my $sth;
+my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
@@ -159,11 +160,56 @@ while (my @row = $sth->fetchrow_array) {
     $fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
 }
 
+if ($alle_punkte) {
+    $sth = $dbh->prepare(q{
+	SELECT klasse, sektion
+	FROM sektion
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    my $sektionen;
+    for (my $n = 0; $n < 15; $n++) {
+	push @$sektionen, "N" x 15;
+    }
+    while (my @row = $sth->fetchrow_array) {
+	substr($sektionen->[$row[0] - 1], $row[1] - 1, 1) = "J";
+    }
+    $cfg->{sektionen} = $sektionen;
+
+    if (defined $wereihe) {
+	$sth = $dbh->prepare(q{
+	    SELECT startnummer, runde, sektion, punkte.punkte
+	    FROM wereihe_klasse
+	    JOIN wereihe USING (wereihe)
+	    JOIN fahrer USING (klasse)
+	    JOIN punkte USING (id, startnummer)
+	    WHERE id = ? AND wereihe = ?
+	});
+	$sth->execute($id, $wereihe);
+    } else {
+	$sth = $dbh->prepare(q{
+	    SELECT startnummer, runde, sektion, punkte.punkte
+	    FROM fahrer
+	    JOIN punkte USING (id, startnummer)
+	    WHERE id = ?
+	});
+	$sth->execute($id);
+    }
+    while (my @row = $sth->fetchrow_array) {
+	print STDERR "$row[0]\n"
+	    unless exists $fahrer_nach_startnummer->{$row[0]};
+	$fahrer_nach_startnummer->{$row[0]}
+				  {punkte_pro_sektion}
+				  [$row[1] - 1]
+				  [$row[2] - 1] = $row[3];
+    }
+}
+
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
 doc_h1 "$bezeichnung";
 doc_h2 "$cfg->{titel}[$wertung]";
-tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ];
+tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $alle_punkte;
 
 print "<p>Letzte Änderung: $zeit</p>\n";

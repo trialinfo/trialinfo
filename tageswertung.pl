@@ -39,17 +39,24 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 my $anzeigen_mit;
+my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
+			"alle-punkte" => \$alle_punkte,
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--alle-punkte] [--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
+    exit 1;
+}
+
+if ($alle_punkte && !$RenderOutput::html) {
+    print STDERR "Die Option --alle-punkte setzt die Option --html voraus\n";
     exit 1;
 }
 
@@ -93,7 +100,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
-    tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten;
+    tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten, $alle_punkte;
 
     if ($RenderOutput::html) {
 	print "<p>Letzte Änderung: $zeit</p>\n";

@@ -88,15 +88,16 @@ sub html_col_format($) {
     return $2 ? sprintf " style=\"width:%.1fem\"", $2 * 0.9 * (0.4 + 0.6 * exp(-$2 / 40)) : "";
 }
 
-sub html_cell_format($) {
-    my ($format) = @_;
+sub html_cell_format(@) {
+    my ($text, $format, $attrs) = @_;
 
     $format =~ /^(l|c|r)?(\d*)$/
 	or die "Cell format specifier $format  not understood\n";
     return (($1 eq "l") ? " align=\"left\"" :
 	    ($1 eq "r") ? " align=\"right\"" :
 			  " align=\"center\"") .
-	   ($2 ? " colspan=\"$2\"" : "");
+	   ($2 ? " colspan=\"$2\"" : "") .
+	   (defined $attrs ? " $attrs" : "");
 }
 
 sub render_html_table($$$$) {
@@ -115,7 +116,7 @@ sub render_html_table($$$$) {
 	print "<tr>";
 	for (my $n = 0; $n < @$header; $n++) {
 	    if (ref $header->[$n]) {
-		print "<th" . html_cell_format($header->[$n][1]) . ">" .
+		print "<th" . html_cell_format(@{$header->[$n]}) . ">" .
 		      $header->[$n][0] . "</th>";
 	    } else {
 		print "<th" . html_column_format($format->[$n]) . ">" .
@@ -131,7 +132,7 @@ sub render_html_table($$$$) {
 	    print "<tr" . ( $r++ % 2 ? ' class="alt"' : '') . ">";
 	    for (my $n = 0; $n < @$row; $n++) {
 		if (ref $row->[$n]) {
-		    print "<td " . html_cell_format($row->[$n][1]) . ">" .
+		    print "<td " . html_cell_format(@{$row->[$n]}) . ">" .
 			  $row->[$n][0] . "</td>";
 		} else {
 		    print "<td" . html_column_format($format->[$n]) . ">" .
@@ -147,7 +148,7 @@ sub render_html_table($$$$) {
 	print "<tr class=\"footer\">";
 	for (my $n = 0; $n < @$footer; $n++) {
 	    if (ref $footer->[$n]) {
-		print "<td" . html_cell_format($footer->[$n][1]) . ">" .
+		print "<td" . html_cell_format(@{$footer->[$n]}) . ">" .
 		      $footer->[$n][0] . "</td>";
 	    } else {
 		print "<td" . html_column_format($format->[$n]) . ">" .
