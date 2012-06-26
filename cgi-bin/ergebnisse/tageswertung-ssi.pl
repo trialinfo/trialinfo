@@ -120,7 +120,7 @@ if (defined $wereihe) {
 	       papierabnahme
 	FROM fahrer
 	LEFT JOIN fahrer_wertung USING (id, startnummer)
-	WHERE id = ? AND wertung = ?
+	WHERE id = ? AND (wertung = ? OR wertung IS NULL)
     });
     $sth->execute($id, $wertung + 1);
 }
