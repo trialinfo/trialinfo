@@ -95,10 +95,14 @@ $sth = $dbh->prepare(q{
 $sth->execute($id);
 my ($header, $body);
 my $format = [ qw(r r l r r r r) ];
+my ($starter, $ueber_18);
 while (my @row = $sth->fetchrow_array) {
     push @$header, map { ucfirst } @{$sth->{NAME}}
 	unless defined $header;
     push @$body, [ @row ];
+    $starter++;
+    $ueber_18++ unless
+	$row[4] eq 15;
 }
 
 my ($nenngeld, $otsv, $otsv_vers);
@@ -123,8 +127,10 @@ $otsv = "€$otsv"
     if defined $otsv;
 $otsv_vers = "€$otsv_vers"
     if defined $otsv_vers;
-my $footer = [ [ "Summen", "r4" ], $nenngeld, $otsv, $otsv_vers ]
+my $footer = [ [ "Summen:", "r4" ], $nenngeld, $otsv, $otsv_vers ]
     if defined $nenngeld || defined $otsv || defined $otsv_vers;
 
 doc_h2 "Nenngeldliste – $titel";
 doc_table $header, $body, $footer, $format;
+printf "<p>%s Starter, davon %s über 18 Jahren und %s unter 18 Jahren</p>\n",
+       $starter, $ueber_18, $starter - $ueber_18;
