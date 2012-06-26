@@ -31,7 +31,7 @@ my $q = CGI->new;
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
-doc_h2 "Veranstaltungsergebnisse";
+doc_h1 "Veranstaltungsergebnisse";
 my $sth = $dbh->prepare(q{
     SELECT wereihe, bezeichnung, style
     FROM wereihe

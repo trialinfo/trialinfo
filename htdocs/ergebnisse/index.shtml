@@ -6,11 +6,14 @@
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 </head>
 <body>
-<h1>Österreichischer Trialsport-Verband</h1>
 <!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
 <p>
 <a href="statistik.shtml">Punktestatistiken</a><br>
 </p>
-<p><a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
+<p>
+© Österreichischer Trialsport-Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+</p>
+<p>
+<a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
 </body>
 </html>

@@ -162,7 +162,8 @@ while (my @row = $sth->fetchrow_array) {
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
-doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
+doc_h1 "$bezeichnung";
+doc_h2 "$cfg->{titel}[$wertung]";
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ];
 
 print "<p>Letzte Änderung: $zeit</p>\n";

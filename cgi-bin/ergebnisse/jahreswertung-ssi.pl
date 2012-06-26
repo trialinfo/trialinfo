@@ -158,7 +158,8 @@ if (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{wertungen}[$wertung] = $row[0];
 }
 
-doc_h2 "$bezeichnung – Jahreswertung";
+doc_h1 "$bezeichnung";
+doc_h2 "Jahreswertung";
 jahreswertung $veranstaltungen, $wertung, $streichresultate, [ @spalten ];
 
 print "<p>Letzte Änderung: $zeit</p>\n";

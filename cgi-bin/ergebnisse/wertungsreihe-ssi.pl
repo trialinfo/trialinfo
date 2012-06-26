@@ -47,7 +47,7 @@ my $sth = $dbh->prepare(q{
 $sth->execute($wereihe);
 if (my @row =  $sth->fetchrow_array) {
     my ($bezeichnung) = @row;
-    doc_h2 $bezeichnung;
+    doc_h1 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
 	SELECT id, titel
 	FROM wereihe
