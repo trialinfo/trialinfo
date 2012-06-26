@@ -207,17 +207,23 @@ sub tageswertung($$$$$) {
 
 	doc_h3 "$cfg->{klassen}[$idx]";
 	push @$format, "r3", "r3", "l$namenlaenge";
-	push @$header, [ "$farbe", "c" ], "Nr.", "Name";
+	push @$header, [ "$farbe", "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
 	foreach my $spalte (@$spalten) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
 	}
 	for (my $n = 0; $n < $runden; $n++) {
 	    push @$format, "r2";
-	    push @$header, "R" . ($n + 1);
+	    push @$header, [ "R" . ($n + 1), "r1", "title=\"Runde " . ($n + 1) . "\"" ];
 	}
 	push @$format, "r2", "r2", "r2", "r2", "r2", "r3", "r2";
-	push @$header, "ZP", "0S", "1S", "2S", "3S", "Ges", "WP";
+	push @$header, [ "ZP", "r1", "title=\"Zusatzpunkte\"" ];
+	push @$header, [ "0S", "r1", "title=\"Nuller\"" ];
+	push @$header, [ "1S", "r1", "title=\"Einser\"" ];
+	push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
+	push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
+	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
+	push @$header, [ "WP", "r1", "title=\"Wertungspunkte\"" ];
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 	foreach my $fahrer (@$fahrer_in_klasse) {
@@ -387,7 +393,7 @@ sub jahreswertung($$$$) {
 	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
 	}
 	push @$format, "r3", "r3", "l$namenlaenge";
-	push @$header, [ $farbe, "c" ], "Nr.", "Name";
+	push @$header, [ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
 	foreach my $spalte (@$spalten) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
@@ -465,7 +471,8 @@ sub jahreswertung($$$$) {
 	my $cfg = $veranstaltungen->[$n][0];
 	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
-	push @$body, [ $label, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
+	#push @$body, [ $label, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
+	push @$body, [ $label, $cfg->{titel}[$wertung] ];
     }
     doc_table ["", "Name"], $body, undef, ["r", "l"];
 }
