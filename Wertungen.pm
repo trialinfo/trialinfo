@@ -392,15 +392,15 @@ sub jahreswertung($$$$) {
 	    my $gewertet = $cfg->{gewertet}[$klasse - 1];
 	    if ($gewertet) {
 		push @$format, "r$spaltenbreite";
-		push @$header,  $gewertet ? $cfg->{label} : "";
+		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
 	    }
 	}
 	if (streichresultate($klasse, $streichresultate)) {
 	    push @$format, "r3";
-	    push @$header, "Str";
+	    push @$header, [ "Str", "r1", "title=\"Streichpunkte\"" ];
 	}
 	push @$format, "r3";
-	push @$header, "Ges";
+	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
 
 	my $fahrer_in_klasse = [
 	    map { $alle_fahrer->{$_->{startnummer}} }
