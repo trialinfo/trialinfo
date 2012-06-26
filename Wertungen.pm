@@ -374,8 +374,13 @@ sub jahreswertung($$$$) {
     }
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
+	my $streichresultate = streichresultate($klasse, $streichresultate);
 	my $klassenwertung = $jahreswertung->{$klasse};
-	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
+	if ($streichresultate) {
+	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] ($streichresultate Streichresultate)";
+	} else {
+	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
+	}
 	my ($header, $body, $format);
 	my $farbe = "";
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
@@ -395,9 +400,9 @@ sub jahreswertung($$$$) {
 		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
 	    }
 	}
-	if (streichresultate($klasse, $streichresultate)) {
+	if ($streichresultate) {
 	    push @$format, "r3";
-	    push @$header, [ "Str", "r1", "title=\"Streichpunkte\"" ];
+	    push @$header, [ "Str", "r1", "title=\"Gestrichene Punkte\"" ];
 	}
 	push @$format, "r3";
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
@@ -447,7 +452,7 @@ sub jahreswertung($$$$) {
 		}
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
-		if streichresultate($klasse, $streichresultate);
+		if $streichresultate;
 	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	    push @$body, $row;
 	}
