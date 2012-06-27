@@ -259,6 +259,8 @@ sub tageswertung($$$$$) {
 		    } else {
 			push @$row, $fahrer->{punkte_pro_runde}[$n];
 		    }
+		} elsif ($fahrer->{ausfall} == 0 || $fahrer->{ausfall} == 4) {
+		    push @$row, undef;
 		} else {
 		    push @$row, "-";
 		}
@@ -455,10 +457,10 @@ sub jahreswertung($$$$) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    push @$row, ($fahrer->{klasse} = $klasse &&
+		    push @$row, ($fahrer->{klasse} == $klasse &&
 				 exists($fahrer->{wertungspunkte}[$wertung])) ?
 				$fahrer->{wertungspunkte}[$wertung] :
-				$gewertet ? "-" : "";
+				$RenderOutput::html ? "" : "-";
 		}
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
