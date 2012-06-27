@@ -386,10 +386,10 @@ sub jahreswertung($$$$) {
     }
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
-	my $streichresultate = streichresultate($klasse, $streichresultate);
+	my $sr = streichresultate($klasse, $streichresultate);
 	my $klassenwertung = $jahreswertung->{$klasse};
-	if ($streichresultate) {
-	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] ($streichresultate Streichresultate)";
+	if ($sr) {
+	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] ($sr Streichresultate)";
 	} else {
 	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
 	}
@@ -412,7 +412,7 @@ sub jahreswertung($$$$) {
 		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
 	    }
 	}
-	if ($streichresultate) {
+	if ($sr) {
 	    push @$format, "r3";
 	    push @$header, [ "Str", "r1", "title=\"Gestrichene Punkte\"" ];
 	}
@@ -464,7 +464,7 @@ sub jahreswertung($$$$) {
 		}
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
-		if $streichresultate;
+		if $sr;
 	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	    push @$body, $row;
 	}
