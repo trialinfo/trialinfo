@@ -71,3 +71,6 @@ upload:
 	for file in $(COMMON_FILES) $(WEB_FILES); do \
 	    echo $$file; \
 	done
+
+mount:
+	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ /mnt/www02.easyserver.at
