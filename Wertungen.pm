@@ -328,6 +328,10 @@ sub jahreswertung_berechnen($$) {
 sub jahreswertung_cmp {
     return $b->{gesamtpunkte} <=> $a->{gesamtpunkte}
 	if $a->{gesamtpunkte} != $b->{gesamtpunkte};
+    return $b->{streichpunkte} <=> $a->{streichpunkte}
+	if exists $a->{streichpunkte} &&
+	   exists $b->{streichpunkte} &&
+	   $a->{streichpunkte} != $b->{streichpunkte};
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
@@ -338,7 +342,7 @@ sub jahreswertung($$$$) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
-		if exists $fahrer->{wertungspunkte};
+		if exists $fahrer->{wertungspunkte}[$wertung];
 	}
     }
 
