@@ -39,7 +39,7 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 my $anzeigen_mit;
-my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
+my $alle_punkte;  # Punkte in den Sektionen als ToolTip
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"html" => \$RenderOutput::html,

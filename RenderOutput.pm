@@ -35,10 +35,9 @@ sub render_text_table($$$$) {
 		      @$body,
 		      defined $footer ? $footer : ())) {
 	for (my $n = 0; $n < @$row; $n++) {
-	    my $w = length $row->[$n];
-	    $width->[$n] = 0
-		unless (exists $width->[$n]);
-	    $width->[$n] = max($w, $width->[$n]);
+	    my $w = defined $row->[$n] ? length $row->[$n] : 0;
+	    $width->[$n] = defined $width->[$n] ?
+		max($w, $width->[$n]) : $w;
 	}
     }
 
@@ -60,11 +59,10 @@ sub render_text_table($$$$) {
 	    printf " %*s", $width->[0], $row->[0];
 	}
 	for (my $n = 1; $n < @$row; $n++) {
-	    if (ref  $row->[$n]) {
-		printf "  %*s", $width->[$n], $row->[$n][0];
-	    } else {
-		printf "  %*s", $width->[$n], $row->[$n];
-	    }
+	    my $x = ref $row->[$n] ? $row->[$n][0] : $row->[$n];
+	    $x = ""
+		unless defined $x;
+	    printf "  %*s", $width->[$n], $x;
 	}
 	print "\n";
     }
@@ -75,9 +73,9 @@ sub html_column_format($) {
 
     $format =~ /^(l|c|r)?(\d*)$/
 	or die "Format specifier $format not understood\n";
-    return (($1 eq "l") ? " align=\"left\"" :
-	    ($1 eq "r") ? " align=\"right\"" :
-			  " align=\"center\"");
+    return ($1 eq "l") ? " align=\"left\"" :
+	   ($1 eq "r") ? " align=\"right\"" :
+			 " align=\"center\"";
 }
 
 sub html_col_format($) {
@@ -131,12 +129,15 @@ sub render_html_table($$$$) {
 	if (@$row) {
 	    print "<tr" . ( $r++ % 2 ? ' class="alt"' : '') . ">";
 	    for (my $n = 0; $n < @$row; $n++) {
+		my $x = ref $row->[$n] ? $row->[$n][0] : $row->[$n];
+		$x = ""
+		    unless defined $x;
 		if (ref $row->[$n]) {
 		    print "<td " . html_cell_format(@{$row->[$n]}) . ">" .
-			  $row->[$n][0] . "</td>";
+			  $x . "</td>";
 		} else {
 		    print "<td" . html_column_format($format->[$n]) . ">" .
-			  $row->[$n] . "</td>";
+			  $x . "</td>";
 		}
 	    }
 	    print "</tr>\n";

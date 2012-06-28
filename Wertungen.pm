@@ -451,8 +451,8 @@ sub jahreswertung($$$$) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    push @$row, ($fahrer->{klasse} == $klasse &&
-				 exists($fahrer->{wertungspunkte}[$wertung])) ?
+		    push @$row, (exists $fahrer->{wertungspunkte}[$wertung] &&
+				 $fahrer->{klasse} == $klasse) ?
 				$fahrer->{wertungspunkte}[$wertung] :
 				$RenderOutput::html ? "" : "-";
 		}
