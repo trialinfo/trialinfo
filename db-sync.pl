@@ -195,7 +195,7 @@ DROP TABLE IF EXISTS wereihe_klasse;
 CREATE TABLE wereihe_klasse (
   wereihe INT,
   klasse INT,
-  streichresultate INT,
+  streichgrenze INT, -- Anzahl der Veranstaltungen, bis zu der es noch keine Streichresultate gibt
   PRIMARY KEY (wereihe, klasse)
 );
 
@@ -204,29 +204,29 @@ VALUES (1);
 
 INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
     VALUES (1, 1, "ÖTSV Cup 2012", 1);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 1, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 2, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 3, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 4, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 5, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 6, 4);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (1, 7, 4);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 1, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 2, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 3, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 4, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 5, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 6, 11);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (1, 7, 11);
 
 INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung, style)
     VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1, "osk");
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (2, 11, 2);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (2, 12, 2);
-INSERT INTO wereihe_klasse (wereihe, klasse, streichresultate)
-    VALUES (2, 13, 2);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (2, 11, 6);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (2, 12, 6);
+INSERT INTO wereihe_klasse (wereihe, klasse, streichgrenze)
+    VALUES (2, 13, 6);
 };
 
 sub sql_ausfuehren($@) {
@@ -777,57 +777,3 @@ do {
 	print "\n";
     }
 } while ($reconnect_interval);
-
-<<EOF
-
-In Postgresql liefert dieses Statement die Jahreswertung.  Mysql kann die
-Subquery, die die Streichpunkte ausrechnet, leider nicht.
-
-SELECT
-    serie, klasse, startnummer, streichpunkte, gesamtpunkte,
-    rank() OVER (PARTITION BY klasse ORDER BY gesamtpunkte DESC) AS rang
-FROM
-    (
-    SELECT
-	serie, klasse, startnummer, streichpunkte,
-	punkte - streichpunkte AS gesamtpunkte
-    FROM
-	(
-	SELECT
-	    serie, klasse, startnummer,
-	    (
-	    SELECT COALESCE(SUM(wertungspunkte), 0)
-	    FROM
-		(
-		SELECT wertungspunkte
-		FROM fahrer_wertung as _
-		JOIN fahrer
-		    USING (id, startnummer)
-		WHERE
-		    startnummer = fahrer_wertung.startnummer AND
-		    klasse = fahrer.klasse AND
-		    wertung = veranstaltungsreihe.wertung
-		ORDER BY
-		    wertungspunkte
-		LIMIT veranstaltungsreihe.streichresultate
-		) AS _
-	    ) AS streichpunkte,
-	    SUM(wertungspunkte) AS punkte
-	FROM
-	    veranstaltungsreihe
-	JOIN
-	    veranstaltungsreihe_veranstaltung
-	    USING (serie)
-	JOIN
-	    fahrer_wertung
-	    USING (id, wertung)
-	JOIN
-	    fahrer
-	    USING (id, startnummer)
-	GROUP BY serie, klasse, startnummer
-	) AS _
-    ) AS _
-WHERE
-    gesamtpunkte > 0;
-
-EOF

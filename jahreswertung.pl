@@ -39,11 +39,11 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $zeit;
 my $spalten;
-my $streichresultate = [];
+my $streichgrenzen = [];
 my $anzeigen_mit;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"streich=s@" => \@$streichresultate,
+			"streich=s@" => \@$streichgrenzen,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 
@@ -52,12 +52,12 @@ my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N] [--html]\n" .
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N[,...]] [--html]\n" .
 	  "\t[--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
     exit 1;
 }
 
-$streichresultate = [ map { split /,/, $_ } @$streichresultate ];
+$streichgrenzen = [ map { split /,/, $_ } @$streichgrenzen ];
 my $veranstaltungen;
 
 my ($tempfh, $tempname);
@@ -131,7 +131,7 @@ EOF
 }
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
-jahreswertung $veranstaltungen, $wertung, $streichresultate, $spalten;
+jahreswertung $veranstaltungen, $wertung, $streichgrenzen, $spalten;
 
 if ($RenderOutput::html) {
     print "<p>Letzte Änderung: $zeit</p>\n";

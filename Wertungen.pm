@@ -281,18 +281,8 @@ sub tageswertung($$$$$) {
     }
 }
 
-sub streichresultate($$) {
-    my ($klasse, $streichresultate) = @_;
-
-    for (my $n = $klasse - 1; $n >= 0; $n--) {
-	return $streichresultate->[$n]
-	    if defined $streichresultate->[$n];
-    }
-    return 0;
-}
-
 sub jahreswertung_berechnen($$) {
-    my ($jahreswertung, $streichresultate) = @_;
+    my ($jahreswertung, $streichgrenzen) = @_;
 
     foreach my $klasse (keys %$jahreswertung) {
 	foreach my $startnummer (keys %{$jahreswertung->{$klasse}}) {
@@ -300,26 +290,23 @@ sub jahreswertung_berechnen($$) {
 	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
 	    my $wertungspunkte = $fahrer->{wertungspunkte};
 	    my $n = 0;
-	    my $sr = streichresultate($klasse, $streichresultate);
-	    if ($sr) {
-		$fahrer->{streichpunkte} = 0;
-		$wertungspunkte = [ sort { $a <=> $b }
-					 @$wertungspunkte ];
-		for (; $n < $sr && $n < @$wertungspunkte; $n++) {
-		    $fahrer->{streichpunkte} += $wertungspunkte->[$n];
+	    my $streichgrenze = $streichgrenzen->[$klasse - 1];
+	    if (defined $streichgrenze) {
+		my $streichresultate = @$wertungspunkte - $streichgrenze;
+		if ($streichresultate > 0) {
+		    $fahrer->{streichpunkte} = 0;
+		    $wertungspunkte = [ sort { $a <=> $b }
+					     @$wertungspunkte ];
+		    for (; $n < $streichresultate; $n++) {
+			$fahrer->{streichpunkte} += $wertungspunkte->[$n];
+		    }
 		}
 	    }
 	    $fahrer->{gesamtpunkte} = 0;
 	    for (; $n < @$wertungspunkte; $n++) {
 		$fahrer->{gesamtpunkte} += $wertungspunkte->[$n];
 	    }
-
-	    #delete $jahreswertung->{$klasse}{$startnummer}
-	    #	unless $fahrer->{gesamtpunkte} > 0;
 	}
-
-	delete $jahreswertung->{$klasse}
-	    unless %{$jahreswertung->{$klasse}};
     }
 }
 
@@ -334,13 +321,18 @@ sub jahreswertung_cmp {
 }
 
 sub jahreswertung($$$$) {
-    my ($veranstaltungen, $wertung, $streichresultate, $spalten) = @_;
+    my ($veranstaltungen, $wertung, $streichgrenzen, $spalten) = @_;
 
+    my $veranstaltungen_pro_klasse;
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
 		if exists $fahrer->{wertungspunkte}[$wertung];
+	}
+	for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
+	    $veranstaltungen_pro_klasse->{$n + 1}++
+		if defined $cfg->{gewertet}[$n];
 	}
     }
 
@@ -371,7 +363,7 @@ sub jahreswertung($$$$) {
 
     my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
-    jahreswertung_berechnen $jahreswertung, $streichresultate;
+    jahreswertung_berechnen $jahreswertung, $streichgrenzen;
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
@@ -382,10 +374,16 @@ sub jahreswertung($$$$) {
     }
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
-	my $sr = streichresultate($klasse, $streichresultate);
+	my $streichgrenze = $streichgrenzen->[$klasse - 1];
+	my $streichresultate = $veranstaltungen_pro_klasse->{$klasse} - $streichgrenze
+	    if defined $streichgrenze;
 	my $klassenwertung = $jahreswertung->{$klasse};
-	if ($sr) {
-	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] ($sr Streichresultate)";
+	if ($streichresultate > 0) {
+	    if ($streichresultate == 1) {
+		doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] (1 Streichresultat)";
+	    } else {
+		doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] ($streichresultate Streichresultate)";
+	    }
 	} else {
 	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
 	}
@@ -408,7 +406,7 @@ sub jahreswertung($$$$) {
 		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
 	    }
 	}
-	if ($sr) {
+	if ($streichresultate > 0) {
 	    push @$format, "r3";
 	    push @$header, [ "Str", "r1", "title=\"Gestrichene Punkte\"" ];
 	}
@@ -460,7 +458,7 @@ sub jahreswertung($$$$) {
 		}
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
-		if $sr;
+		if $streichresultate > 0;
 	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
 	    push @$body, $row;
 	}

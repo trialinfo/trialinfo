@@ -37,7 +37,7 @@ my @spalten = $q->param('spalte');
 
 my $bezeichnung;
 my $vareihe;
-my $streichresultate;
+my $streichgrenzen;
 my $wertung;
 my $zeit;
 my $fahrer_nach_startnummer;
@@ -59,13 +59,13 @@ if (my @row =  $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, streichresultate
+    SELECT klasse, streichgrenze
     FROM wereihe_klasse
     WHERE wereihe = ?
 });
 $sth->execute($wereihe);
 while (my @row = $sth->fetchrow_array) {
-    $streichresultate->[$row[0] - 1] = $row[1];
+    $streichgrenzen->[$row[0] - 1] = $row[1];
 }
 
 $sth = $dbh->prepare(q{
@@ -160,6 +160,6 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung $veranstaltungen, $wertung, $streichresultate, [ @spalten ];
+jahreswertung $veranstaltungen, $wertung, $streichgrenzen, [ @spalten ];
 
 print "<p>Letzte Änderung: $zeit</p>\n";

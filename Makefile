@@ -73,4 +73,4 @@ upload:
 	done
 
 mount:
-	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ /mnt/www02.easyserver.at
+	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ /mnt/easyserver
