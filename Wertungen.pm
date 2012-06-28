@@ -244,13 +244,9 @@ sub tageswertung($$$$$) {
 		    if ($alle_punkte) {
 			my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$n];
 			my $punkte;
-			my $on;
-			for (my $s = @$punkte_pro_runde - 1; $s >= 0; $s--) {
+			for (my $s = 0; $s < @$punkte_pro_runde; $s++) {
 			    if (substr($cfg->{sektionen}[$klasse - 1], $s, 1) eq "J") {
-				unshift @$punkte, $punkte_pro_runde->[$s];
-				$on = 1;
-			    } elsif ($on) {
-				unshift @$punkte, "-";
+				push @$punkte, $punkte_pro_runde->[$s];
 			    }
 			}
 			$punkte = join(" ", @$punkte);
