@@ -282,7 +282,7 @@ sub tageswertung($$$$$) {
 }
 
 sub jahreswertung_berechnen($$) {
-    my ($jahreswertung, $streichgrenzen) = @_;
+    my ($jahreswertung, $streichgrenze) = @_;
 
     foreach my $klasse (keys %$jahreswertung) {
 	foreach my $startnummer (keys %{$jahreswertung->{$klasse}}) {
@@ -290,7 +290,6 @@ sub jahreswertung_berechnen($$) {
 	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
 	    my $wertungspunkte = $fahrer->{wertungspunkte};
 	    my $n = 0;
-	    my $streichgrenze = $streichgrenzen->[$klasse - 1];
 	    if (defined $streichgrenze) {
 		my $streichresultate = @$wertungspunkte - $streichgrenze;
 		if ($streichresultate > 0) {
@@ -321,7 +320,7 @@ sub jahreswertung_cmp {
 }
 
 sub jahreswertung($$$$) {
-    my ($veranstaltungen, $wertung, $streichgrenzen, $spalten) = @_;
+    my ($veranstaltungen, $wertung, $streichgrenze, $spalten) = @_;
 
     my $veranstaltungen_pro_klasse;
     foreach my $veranstaltung (@$veranstaltungen) {
@@ -330,9 +329,11 @@ sub jahreswertung($$$$) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
 		if exists $fahrer->{wertungspunkte}[$wertung];
 	}
-	for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
-	    $veranstaltungen_pro_klasse->{$n + 1}++
-		if defined $cfg->{gewertet}[$n];
+	if (exists $cfg->{gewertet}) {
+	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
+		$veranstaltungen_pro_klasse->{$n + 1}++
+		    if defined $cfg->{gewertet}[$n];
+	    }
 	}
     }
 
@@ -363,7 +364,7 @@ sub jahreswertung($$$$) {
 
     my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
-    jahreswertung_berechnen $jahreswertung, $streichgrenzen;
+    jahreswertung_berechnen $jahreswertung, $streichgrenze;
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
@@ -374,9 +375,8 @@ sub jahreswertung($$$$) {
     }
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
-	my $streichgrenze = $streichgrenzen->[$klasse - 1];
-	my $streichresultate = $veranstaltungen_pro_klasse->{$klasse} - $streichgrenze
-	    if defined $streichgrenze;
+	my $streichresultate = defined $streichgrenze ?
+	    $veranstaltungen_pro_klasse->{$klasse} - $streichgrenze : 0;
 	my $klassenwertung = $jahreswertung->{$klasse};
 	if ($streichresultate > 0) {
 	    if ($streichresultate == 1) {

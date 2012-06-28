@@ -39,11 +39,13 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $zeit;
 my $spalten;
-my $streichgrenzen = [];
+my $klassen = [];
+my $streichgrenze;
 my $anzeigen_mit;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
-			"streich=s@" => \@$streichgrenzen,
+			"klassen=s@" => \@$klassen,
+			"streichgrenze=s" => \$streichgrenze,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 
@@ -52,12 +54,13 @@ my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--streich=N[,...]] [--html]\n" .
-	  "\t[--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--klasen=N,...] [--streichgrenze=N]\n" .
+	  "\t[--html] [--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
     exit 1;
 }
 
-$streichgrenzen = [ map { split /,/, $_ } @$streichgrenzen ];
+$klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
+
 my $veranstaltungen;
 
 my ($tempfh, $tempname);
@@ -112,6 +115,14 @@ foreach my $veranstaltung (@$veranstaltungen) {
 		$fahrer_nach_startnummer->{$fahrer->{startnummer}} = $fahrer;
 	}
     }
+
+    if (%$klassen) {
+	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	    delete $fahrer_nach_startnummer->{$startnummer}
+		unless exists $klassen->{$fahrer->{klasse}};
+	}
+    }
 }
 
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
@@ -131,7 +142,7 @@ EOF
 }
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
-jahreswertung $veranstaltungen, $wertung, $streichgrenzen, $spalten;
+jahreswertung $veranstaltungen, $wertung, $streichgrenze, $spalten;
 
 if ($RenderOutput::html) {
     print "<p>Letzte Änderung: $zeit</p>\n";
