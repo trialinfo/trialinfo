@@ -97,6 +97,9 @@ sub rang_und_wertungspunkte_berechnen($$) {
 
 	my $rang = 1;
 	$fahrer_in_klasse = [ sort { rang_vergleich($a, $b, $cfg) } @$fahrer_in_klasse ];
+	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
+				     $_->{papierabnahme}) ?
+				     $_ : () } @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
@@ -118,7 +121,6 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    foreach my $fahrer (@$fahrer_in_klasse) {
 		next unless defined $fahrer->{rang} &&
 			    $fahrer->{wertungen}[$wertung] &&
-			    $fahrer->{runden} == $cfg->{runden}[$klasse - 1] &&
 			    !$fahrer->{ausfall};
 		if ($vorheriger_fahrer &&
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
@@ -227,7 +229,7 @@ sub tageswertung($$$$$) {
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $row;
-	    if ($fahrer->{runden} == $runden && !$fahrer->{ausfall}) {
+	    if (!$fahrer->{ausfall}) {
 		push @$row, "$fahrer->{rang}.";
 	    } else {
 		push @$row, "";
