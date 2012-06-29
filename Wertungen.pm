@@ -174,7 +174,6 @@ sub tageswertung($$$$$) {
     my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $alle_punkte) = @_;
 
     my $ausfall = {
-	0 => "",
 	3 => "ausgefallen",
 	4 => "aus der wertung",
 	5 => "nicht gestartet",
@@ -228,7 +227,7 @@ sub tageswertung($$$$$) {
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $row;
-	    if ($fahrer->{runden} == $runden &&  !$fahrer->{ausfall}) {
+	    if ($fahrer->{runden} == $runden && !$fahrer->{ausfall}) {
 		push @$row, "$fahrer->{rang}.";
 	    } else {
 		push @$row, "";
@@ -262,19 +261,18 @@ sub tageswertung($$$$$) {
 		}
 	    }
 	    push @$row, $fahrer->{zusatzpunkte} || "";
-	    if ($fahrer->{ausfall} != 0 || $fahrer->{runden} == 0) {
-		push @$row, [ $ausfall->{$fahrer->{ausfall}}, "c5" ], "";
-	    } elsif ($fahrer->{runden} > 0) {
+
+	    if ($fahrer->{ausfall} != 0) {
+		push @$row, [ $ausfall->{$fahrer->{ausfall}}, "c5" ];
+	    } elsif ($fahrer->{runden} == 0) {
+		push @$row, [ "", "c5" ];
+	    } else {
 		for (my $n = 0; $n < 4; $n++) {
 		    push @$row, $fahrer->{"s$n"};
 		}
-		push @$row, $fahrer->{punkte};
-		if (exists $fahrer->{wertungspunkte}[$wertung]) {
-		    push @$row, $fahrer->{wertungspunkte}[$wertung];
-		} else {
-		    push @$row, "";
-		}
+		push @$row, $fahrer->{punkte} || "";
 	    }
+	    push @$row, $fahrer->{wertungspunkte}[$wertung] || "";
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
