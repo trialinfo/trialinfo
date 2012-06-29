@@ -197,6 +197,12 @@ sub dat_datei_parsen($) {
 	    # z.B.:  *SN:987*
 	    $fahrer->{neue_startnummer} = $1;
 	}
+	if ($fahrer->{bemerkung} =~ s/\s*\*KW\*\s*//) {
+	    # Falls der Fahrer seine Punkte in der Jahreswertung verliert
+	    # (durch Klassenwechsel), kann das im Feld Bemerkung vermerkt
+	    # werden:  *KW*
+	    $fahrer->{keine_wertungspunkte} = 1;
+	}
 	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
     }
 

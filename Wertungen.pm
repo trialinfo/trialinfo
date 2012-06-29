@@ -133,6 +133,10 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		$wp_idx++;
 		$vorheriger_fahrer = $fahrer;
 	    }
+	    foreach my $fahrer (@$fahrer_in_klasse) {
+		$fahrer->{wertungspunkte}[$wertung] = undef
+		    if $fahrer->{keine_wertungspunkte};
+	    }
 	}
     }
 }
@@ -327,7 +331,7 @@ sub jahreswertung($$$$) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
-		if exists $fahrer->{wertungspunkte}[$wertung];
+		if defined $fahrer->{wertungspunkte}[$wertung];
 	}
 	if (exists $cfg->{gewertet}) {
 	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
@@ -353,7 +357,7 @@ sub jahreswertung($$$$) {
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
-	    if (exists $fahrer->{wertungspunkte}[$wertung]) {
+	    if (defined $fahrer->{wertungspunkte}[$wertung]) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		    $fahrer->{wertungspunkte}[$wertung];
@@ -451,7 +455,7 @@ sub jahreswertung($$$$) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    push @$row, (exists $fahrer->{wertungspunkte}[$wertung] &&
+		    push @$row, (defined $fahrer->{wertungspunkte}[$wertung] &&
 				 $fahrer->{klasse} == $klasse) ?
 				$fahrer->{wertungspunkte}[$wertung] :
 				$RenderOutput::html ? "" : "-";
