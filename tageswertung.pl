@@ -38,10 +38,12 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
+my $klassen = [];
 my $anzeigen_mit;
 my $alle_punkte;  # Punkte in den Sektionen als ToolTip
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
+			"klassen=s@" => \@$klassen,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 			"alle-punkte" => \$alle_punkte,
@@ -59,6 +61,8 @@ if ($alle_punkte && !$RenderOutput::html) {
     print STDERR "Die Option --alle-punkte setzt die Option --html voraus\n";
     exit 1;
 }
+
+$klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
 
 my ($tempfh, $tempname);
 if ($anzeigen_mit) {
@@ -97,6 +101,14 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
+
+    if (%$klassen) {
+	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	    delete $fahrer_nach_startnummer->{$startnummer}
+		unless exists $klassen->{$fahrer->{klasse}};
+	}
+    }
 
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
