@@ -110,7 +110,7 @@ sub render_html_table($$$$) {
     }
     print "</colgroup>\n";
     if ($header) {
-	#print "<thead>\n";
+	print "<thead>\n";
 	print "<tr>";
 	for (my $n = 0; $n < @$header; $n++) {
 	    if (ref $header->[$n]) {
@@ -122,7 +122,7 @@ sub render_html_table($$$$) {
 	    }
 	}
 	print "</tr>\n";
-	#print "</thead>\n";
+	print "</thead>\n";
     }
     #print "<tbody>\n";
     foreach my $row (@$body) {
