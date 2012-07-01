@@ -551,7 +551,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    map { "(old.$_ COLLATE BINARY IS new.$_ COLLATE BINARY)" } @nonkeys);
 	unless (@other_keys) {
 	    $sth = $tmp_dbh->prepare(qq{
-		SELECT $new_nonkeys
+		SELECT $old_nonkeys, $new_nonkeys
 		FROM (
 		    SELECT $nonkeys
 		    FROM $table
@@ -565,7 +565,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    });
 	} else {
 	    $sth = $tmp_dbh->prepare(qq{
-		SELECT $new_nonkeys, $old_other_keys
+		SELECT $old_nonkeys, $new_nonkeys, $old_other_keys
 		FROM (
 		    SELECT $other_keys, $nonkeys
 		    FROM $table
@@ -581,16 +581,41 @@ sub tabelle_aktualisieren($$$$$) {
 	$sth->execute($tmp_id, $id);
 	$sth2 = undef;
 	while (my @row = $sth->fetchrow_array) {
-	    unless ($sth2) {
-		$sth2 = $dbh->prepare(
-		    "UPDATE $table " .
-		    "SET " . join(", ", map { "$_ = ?" } @nonkeys) . " " .
-		    "WHERE " .  join(" AND ",
-				     map { "$_ = ?" } (@other_keys, "id"))
-		);
-	    }
+	    #unless ($sth2) {
+	    #	$sth2 = $dbh->prepare(
+	    #	    "UPDATE $table " .
+	    #	    "SET " . join(", ", map { "$_ = ?" } @nonkeys) . " " .
+	    #	    "WHERE " .  join(" AND ",
+	    #			     map { "$_ = ?" } (@other_keys, "id"))
+	    #	);
+	    #}
+	    #
+	    #$sth2->execute(@row, $id);
 
-	    $sth2->execute(@row, $id);
+	    my (@columns, @old, @new_values);
+	    for (my ($i, $j) = (0, scalar @nonkeys);
+		 $j < @row - @other_keys;
+		 $i++, $j++) {
+		unless ($row[$i] ~~ $row[$j]) {
+		    push @columns, $nonkeys[$i];
+		    push @old, " $nonkeys[$i] = " .
+			 STH_Logger::log_sql_value($row[$i]);
+		    push @new_values, $row[$j];
+		}
+	    }
+	    if (@columns) {
+		print "    # UPDATE FROM " . join(", ", @old), "\n"
+		   if $trace_sql;
+		$dbh->do(
+		    "UPDATE $table " .
+		    "SET " . join(", ", map { "$_ = ?" } @columns) . " " .
+		    "WHERE " .  join(" AND ",
+				     map { "$_ = ?" } (@other_keys, "id")),
+		    undef,
+		    @new_values, @row[2 * @nonkeys .. $#row], $id);
+	    } else {
+		warn "There should be differences, but I don't see them\n";
+	    }
 	}
     }
 }
