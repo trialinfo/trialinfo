@@ -205,14 +205,21 @@ sub tageswertung($$$$$) {
 	my ($header, $body, $format);
 	my $farbe = "";
 
-	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
-	}
-
 	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
 				     $_->{papierabnahme}) ?
 				     $_ : () } @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
+
+	my $wertungspunkte;
+	foreach my $fahrer (@$fahrer_in_klasse) {
+	    if (defined $fahrer->{wertungspunkte}[$wertung]) {
+		$wertungspunkte = 1;
+	    }
+	}
+
+	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
+	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	}
 
 	doc_h3 "$cfg->{klassen}[$idx]";
 	push @$format, "r3", "r3", "l$namenlaenge";
@@ -232,7 +239,8 @@ sub tageswertung($$$$$) {
 	push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
 	push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
-	push @$header, [ "WP", "r1", "title=\"Wertungspunkte\"" ];
+	push @$header, [ "WP", "r1", "title=\"Wertungspunkte\"" ]
+	    if $wertungspunkte;
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 	foreach my $fahrer (@$fahrer_in_klasse) {
@@ -282,7 +290,8 @@ sub tageswertung($$$$$) {
 		}
 		push @$row, $fahrer->{punkte} || "";
 	    }
-	    push @$row, $fahrer->{wertungspunkte}[$wertung] || "";
+	    push @$row, $fahrer->{wertungspunkte}[$wertung] || ""
+		if $wertungspunkte;
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
