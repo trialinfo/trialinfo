@@ -27,7 +27,7 @@ use RenderOutput;
 use Time::Local;
 use strict;
 
-my $klassenfarben = {
+my $otsv_klassenfarben = {
      1 => "red",
      2 => "blue",
      3 => "yellow",
@@ -180,8 +180,11 @@ sub spaltentitel($) {
     }
 }
 
-sub tageswertung($$$$$) {
-    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $alle_punkte) = @_;
+sub tageswertung($$$$$$) {
+    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $klassenfarben, $alle_punkte) = @_;
+
+    $klassenfarben = $otsv_klassenfarben
+	unless defined $klassenfarben;
 
     my $ausfall = {
 	3 => "ausgefallen",
@@ -355,8 +358,11 @@ sub jahreswertung_cmp {
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
-sub jahreswertung($$$$) {
-    my ($veranstaltungen, $wertung, $streichgrenze, $spalten) = @_;
+sub jahreswertung($$$$$) {
+    my ($veranstaltungen, $wertung, $streichgrenze, $klassenfarben, $spalten) = @_;
+
+    $klassenfarben = $otsv_klassenfarben
+	unless defined $klassenfarben;
 
     my $veranstaltungen_pro_klasse;
     foreach my $veranstaltung (@$veranstaltungen) {

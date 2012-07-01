@@ -40,6 +40,7 @@ binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $trace_sql;
+my $klassenfarben;
 
 my @tables;  # Liste der Tabellen in der Datenbank
 
@@ -98,6 +99,7 @@ CREATE TABLE klasse (
   runden INT,
   bezeichnung VARCHAR(60),
   gestartet BOOLEAN,
+  farbe VARCHAR(20),
   PRIMARY KEY (id, klasse)
 );
 
@@ -309,14 +311,15 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	}
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO klasse (id, klasse, runden, bezeichnung, gestartet)
-	VALUES (?, ?, ?, ?, ?)
+	INSERT INTO klasse (id, klasse, runden, bezeichnung, gestartet, farbe)
+	VALUES (?, ?, ?, ?, ?, ?)
     });
     my $gestartete_klassen = gestartete_klassen($cfg);
     for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
 	next if $cfg->{klassen}[$n] eq "";
+	my $farbe = defined $klassenfarben ? $klassenfarben->{$n + 1} : undef;
 	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n],
-		      $gestartete_klassen->[$n]);
+		      $gestartete_klassen->[$n], $farbe);
     }
 
     my @felder = qw(
@@ -348,11 +351,12 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	for (my $m = 0; $m < @{$fahrer->{punkte_pro_sektion}}; $m++) {
 	    my $punkte = $fahrer->{punkte_pro_sektion}[$m];
 	    for (my $n = 0; $n < @$punkte; $n++) {
-		next if $punkte->[$n] == 6;
+		next unless defined $punkte->[$n];
 		$sth2->execute($id, $fahrer->{startnummer}, $m + 1, $n + 1,
 			       $punkte->[$n]);
 	    }
 	    if ($m < $fahrer->{runden}) {
+		next unless defined $fahrer->{punkte_pro_runde}[$m];
 		$sth3->execute($id, $fahrer->{startnummer}, $m + 1,
 			       $fahrer->{punkte_pro_runde}[$m]);
 	   }
@@ -628,6 +632,7 @@ my $poll_interval;  # Sekunden
 my $reconnect_interval;  # Sekunden
 my $force;
 my $vareihe;
+my $farben = [];
 my $delete;
 my $log;
 my $result = GetOptions("db=s" => \$db,
@@ -640,12 +645,21 @@ my $result = GetOptions("db=s" => \$db,
 			"trace-sql" => \$trace_sql,
 			"temp-db=s" => \$temp_db,
 			"vareihe=s" => \@$vareihe,
+			"farben=s@" => \@$farben,
 			"delete" => \$delete,
 			"log=s" => \$log);
 
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
 $vareihe = [ 1 ]
     unless @$vareihe;
+
+$farben = [ map { split /,/, $_ } @$farben ];
+if (@$farben) {
+    for (my $n = 0; $n < @$farben; $n++) {
+	$klassenfarben->{$n + 1} = $farben->[$n]
+	    if $farben->[$n] ne "";
+    }
+}
 
 if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;

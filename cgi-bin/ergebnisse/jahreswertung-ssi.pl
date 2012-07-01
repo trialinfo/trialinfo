@@ -41,6 +41,7 @@ my $streichgrenze;
 my $wertung;
 my $zeit;
 my $fahrer_nach_startnummer;
+my $klassenfarben;
 my $sth;
 
 print "Content-type: text/html; charset=utf-8\n\n";
@@ -128,7 +129,7 @@ $veranstaltungen = [ map { [ $_->{cfg}, $_->{fahrer} ] }
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, bezeichnung
+    SELECT klasse, bezeichnung, farbe
     FROM klasse
     JOIN wereihe_klasse USING (klasse)
     WHERE wereihe = ? AND id = ?
@@ -136,6 +137,8 @@ $sth = $dbh->prepare(q{
 $sth->execute($wereihe, $letzte_cfg->{id});
 while (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{klassen}[$row[0] - 1] = $row[1];
+    $klassenfarben->{$row[0]} = $row[2]
+	if defined $row[2];
 }
 
 $sth = $dbh->prepare(q{
@@ -150,6 +153,7 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung $veranstaltungen, $wertung, $streichgrenze, [ @spalten ];
+jahreswertung $veranstaltungen, $wertung, $streichgrenze, $klassenfarben,
+	      [ @spalten ];
 
 print "<p>Letzte Änderung: $zeit</p>\n";

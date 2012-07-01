@@ -40,11 +40,13 @@ my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $zeit;
 my $spalten;
 my $klassen = [];
+my $farben = [];
 my $streichgrenze;
 my $anzeigen_mit;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"klassen=s@" => \@$klassen,
+			"farben=s@" => \@$farben,
 			"streichgrenze=s" => \$streichgrenze,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
@@ -60,6 +62,15 @@ unless ($result) {
 }
 
 $klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
+
+$farben = [ map { split /,/, $_ } @$farben ];
+my $klassenfarben;
+if (@$farben) {
+    for (my $n = 0; $n < @$farben; $n++) {
+	$klassenfarben->{$n + 1} = $farben->[$n]
+	    if $farben->[$n] ne "";
+    }
+}
 
 my $veranstaltungen;
 
@@ -142,7 +153,8 @@ EOF
 }
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
-jahreswertung $veranstaltungen, $wertung, $streichgrenze, $spalten;
+jahreswertung $veranstaltungen, $wertung, $streichgrenze, $klassenfarben,
+	      $spalten;
 
 if ($RenderOutput::html) {
     print "<p>Letzte Änderung: $zeit</p>\n";

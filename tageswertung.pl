@@ -39,11 +39,13 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
 my $spalten;
 my $klassen = [];
+my $farben = [];
 my $anzeigen_mit;
 my $alle_punkte;  # Punkte in den Sektionen als ToolTip
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"klassen=s@" => \@$klassen,
+			"farben=s@" => \@$farben,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 			"alle-punkte" => \$alle_punkte,
@@ -63,6 +65,15 @@ if ($alle_punkte && !$RenderOutput::html) {
 }
 
 $klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
+
+$farben = [ map { split /,/, $_ } @$farben ];
+my $klassenfarben;
+if (@$farben) {
+    for (my $n = 0; $n < @$farben; $n++) {
+	$klassenfarben->{$n + 1} = $farben->[$n]
+	    if $farben->[$n] ne "";
+    }
+}
 
 my ($tempfh, $tempname);
 if ($anzeigen_mit) {
@@ -112,7 +123,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
-    tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten, $alle_punkte;
+    tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten,
+		 $klassenfarben, $alle_punkte;
 
     if ($RenderOutput::html) {
 	print "<p>Letzte Änderung: $zeit</p>\n";

@@ -42,6 +42,7 @@ my $zeit;
 my $cfg;
 my $fahrer_nach_startnummer;
 my $sth;
+my $klassenfarben;
 my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
 
 print "Content-type: text/html; charset=utf-8\n\n";
@@ -79,7 +80,7 @@ unless (defined $cfg) {
 
 if (defined $wereihe) {
     $sth = $dbh->prepare(q{
-	SELECT klasse, runden, bezeichnung
+	SELECT klasse, runden, bezeichnung, farbe
 	FROM klasse
 	JOIN wereihe_klasse USING (klasse)
 	WHERE id = ? AND wereihe = ?
@@ -88,7 +89,7 @@ if (defined $wereihe) {
     $sth->execute($id, $wereihe);
 } else {
     $sth = $dbh->prepare(q{
-	SELECT klasse, runden, bezeichnung
+	SELECT klasse, runden, bezeichnung, farbe
 	FROM klasse
 	WHERE id = ?
 	ORDER BY klasse
@@ -98,6 +99,8 @@ if (defined $wereihe) {
 while (my @row = $sth->fetchrow_array) {
     $cfg->{runden}[$row[0] - 1] = $row[1];
     $cfg->{klassen}[$row[0] - 1] = $row[2];
+    $klassenfarben->{$row[0]} = $row[3]
+	if defined $row[3];
 }
 
 if (defined $wereihe) {
@@ -210,6 +213,7 @@ if ($alle_punkte) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "$cfg->{titel}[$wertung]";
-tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $alle_punkte;
+tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $klassenfarben,
+	     $alle_punkte;
 
 print "<p>Letzte Änderung: $zeit</p>\n";
