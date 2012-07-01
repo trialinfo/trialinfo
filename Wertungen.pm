@@ -116,7 +116,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
     # wurden: wir setzen die Summe einer nicht oder unvollständig gefahrenen
     # Runde auf undef.
 
-    foreach my $fahrer (values $fahrer_nach_startnummer) {
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $gefahrene_runden = $fahrer->{runden};
 	for (my $runde = 4; $runde >= 0; $runde--) {
 	    if ($fahrer->{runden} < $runde ||
@@ -274,7 +274,7 @@ sub tageswertung($$$$$$) {
 	next unless @$fahrer_in_klasse > 0;
 
 	my $wertungspunkte;
-	foreach my $fahrer (values @$fahrer_in_klasse) {
+	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $wertungspunkte = 1
 		if defined $fahrer->{wertungspunkte}[$wertung];
 	}
