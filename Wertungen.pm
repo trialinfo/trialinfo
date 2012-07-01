@@ -53,8 +53,8 @@ sub rang_vergleich($$$) {
     }
 
     # Abfallend nach gefahrenen Runden
-    return $b->{runden} <=> $a->{runden}
-	if $a->{runden} != $b->{runden};
+    return $b->{gefahrene_runden} <=> $a->{gefahrene_runden}
+	if $a->{gefahrene_runden} != $b->{gefahrene_runden};
 
     # Aufsteigend nach Punkten
     return $a->{punkte} <=> $b->{punkte}
@@ -81,6 +81,8 @@ sub rang_vergleich($$$) {
 	    }
 	} else {
 	    for (my $n = @$ax - 1; $n >= 0; $n--){
+		next unless defined $ax->[$n];
+		# Beide müssen definiert sein
 		return $ax->[$n] <=> $bx->[$n]
 		    if $ax->[$n] != $bx->[$n];
 	    }
@@ -91,11 +93,45 @@ sub rang_vergleich($$$) {
     return 0;
 }
 
+sub runde_vollstaendig($$$) {
+    my ($fahrer, $runde, $cfg) = @_;
+
+    my $klasse = $fahrer->{klasse};
+    my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$runde];
+    for (my $s = 0; $s < @$punkte_pro_runde; $s++) {
+	return undef
+	    if substr($cfg->{sektionen}[$klasse - 1], $s, 1) eq "J" &&
+	       !defined $punkte_pro_runde->[$s];
+    }
+    return 1;
+}
+
 sub rang_und_wertungspunkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
     my $wertungspunkte = $cfg->{wertungspunkte};
 
+    # Trialtool summiert die Punkte pro Runden auch dann auf, wenn eine Runde
+    # nicht vollständig gefahren wurde.  Wir ändern das hier und verwenden die
+    # Punkte pro Runde um zu erkennen, welche Runden vollständig gefahren
+    # wurden: wir setzen die Summe einer nicht oder unvollständig gefahrenen
+    # Runde auf undef.
+
+    foreach my $fahrer (values $fahrer_nach_startnummer) {
+	my $gefahrene_runden = $fahrer->{runden};
+	for (my $runde = 4; $runde >= 0; $runde--) {
+	    if ($fahrer->{runden} < $runde ||
+		!runde_vollstaendig($fahrer, $runde, $cfg)) {
+		$fahrer->{punkte_pro_runde}[$runde] = undef;
+		if ($gefahrene_runden >= $runde) {
+		    $gefahrene_runden = $runde - 1;
+		}
+	    }
+	}
+	$fahrer->{gefahrene_runden} = $gefahrene_runden;
+    }
+
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
+
     foreach my $klasse (keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
@@ -178,6 +214,21 @@ sub spaltentitel($) {
     } else {
 	return ucfirst $feld;
     }
+}
+
+sub punkte_pro_sektion($$$) {
+    my ($fahrer, $runde, $cfg) = @_;
+    my $punkte_pro_sektion;
+
+    my $klasse = $fahrer->{klasse};
+    my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$runde];
+    for (my $s = 0; $s < 15; $s++) {
+	if (substr($cfg->{sektionen}[$klasse - 1], $s, 1) eq "J") {
+	    my $p = $punkte_pro_runde->[$s];
+	    push @$punkte_pro_sektion, defined $p ? $p : '-';
+	}
+    }
+    return join(" ", @$punkte_pro_sektion);
 }
 
 sub tageswertung($$$$$$) {
@@ -279,19 +330,13 @@ sub tageswertung($$$$$$) {
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
+		    my $punkte = $fahrer->{punkte_pro_runde}[$n];
+		    $punkte = defined $punkte ? $punkte : "-";
 		    if ($alle_punkte) {
-			my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$n];
-			my $punkte;
-			for (my $s = 0; $s < @$punkte_pro_runde; $s++) {
-			    if (substr($cfg->{sektionen}[$klasse - 1], $s, 1) eq "J") {
-				push @$punkte, $punkte_pro_runde->[$s];
-			    }
-			}
-			$punkte = join(" ", @$punkte);
-			push @$row, [ $fahrer->{punkte_pro_runde}[$n], "r1",
-				      "title=\"$punkte\"" ];
+			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $cfg);
+			push @$row, [ $punkte, "r1", "title=\"$punkte_pro_sektion\"" ];
 		    } else {
-			push @$row, $fahrer->{punkte_pro_runde}[$n];
+			push @$row, $punkte;
 		    }
 		} elsif ($fahrer->{ausfall} == 0 || $fahrer->{ausfall} == 4) {
 		    push @$row, undef;

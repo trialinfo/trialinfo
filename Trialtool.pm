@@ -140,6 +140,7 @@ sub runden_zaehlen($) {
 sub punkte_aufteilen($) {
     my ($punkte) = @_;
 
+    $punkte = [ map { $_ == 6 ? undef : $_ } @$punkte ];
     return [ [@$punkte[0..14]],
 	     [@$punkte[15..29]],
 	     [@$punkte[30..44]],
@@ -165,6 +166,11 @@ sub dat_datei_parsen($) {
 	decode_strings($fahrer, $fahrer_format);
 	$fahrer->{startnummer} = $n + 1;
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
+	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
+	# wurden, und nicht, wieviele Runden komplett gefahren wurden.
+	# Sektionen können bei der Eingabe übersprungen werden, im Unterschied
+	# zur Eingabe für Strafpunkte für eine Sektion, die der Fahrer
+	# ausgelassen hat.
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
 	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
