@@ -197,6 +197,15 @@ sub tageswertung($$$$$) {
 	$namenlaenge = max($n, $namenlaenge);
     }
 
+    my $zusatzpunkte;
+    my $vierer;
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$vierer = 1
+	    if $fahrer->{s4};
+	$zusatzpunkte = 1
+	    if $fahrer->{zusatzpunkte};
+    }
+
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
@@ -211,11 +220,12 @@ sub tageswertung($$$$$) {
 	next unless @$fahrer_in_klasse > 0;
 
 	my $wertungspunkte;
-	foreach my $fahrer (@$fahrer_in_klasse) {
-	    if (defined $fahrer->{wertungspunkte}[$wertung]) {
-		$wertungspunkte = 1;
-	    }
+	foreach my $fahrer (values @$fahrer_in_klasse) {
+	    $wertungspunkte = 1
+		if defined $fahrer->{wertungspunkte}[$wertung];
 	}
+
+	my $ausfall_fmt = "c" . ($vierer ? 6 : 5);
 
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
 	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
@@ -232,12 +242,20 @@ sub tageswertung($$$$$) {
 	    push @$format, "r2";
 	    push @$header, [ "R" . ($n + 1), "r1", "title=\"Runde " . ($n + 1) . "\"" ];
 	}
-	push @$format, "r2", "r2", "r2", "r2", "r2", "r3", "r2";
-	push @$header, [ "ZP", "r1", "title=\"Zusatzpunkte\"" ];
+	if ($zusatzpunkte) {
+	    push @$format, "r2";
+	    push @$header, [ "ZP", "r1", "title=\"Zeit- und Zusatzpunkte\"" ];
+	}
+	push @$format, "r2", "r2", "r2", "r2";
 	push @$header, [ "0S", "r1", "title=\"Nuller\"" ];
 	push @$header, [ "1S", "r1", "title=\"Einser\"" ];
 	push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
 	push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
+	if ($vierer) {
+	    push @$format, "r2";
+	    push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
+	}
+	push @$format, "r3", "r2";
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
 	push @$header, [ "WP", "r1", "title=\"Wertungspunkte\"" ]
 	    if $wertungspunkte;
@@ -278,14 +296,15 @@ sub tageswertung($$$$$) {
 		    push @$row, "-";
 		}
 	    }
-	    push @$row, $fahrer->{zusatzpunkte} || "";
+	    push @$row, $fahrer->{zusatzpunkte} || ""
+		if $zusatzpunkte;
 
 	    if ($fahrer->{ausfall} != 0) {
-		push @$row, [ $ausfall->{$fahrer->{ausfall}}, "c5" ];
+		push @$row, [ $ausfall->{$fahrer->{ausfall}}, $ausfall_fmt ];
 	    } elsif ($fahrer->{runden} == 0) {
-		push @$row, [ "", "c5" ];
+		push @$row, [ "", $ausfall_fmt ];
 	    } else {
-		for (my $n = 0; $n < 4; $n++) {
+		for (my $n = 0; $n < ($vierer ? 5 : 4); $n++) {
 		    push @$row, $fahrer->{"s$n"};
 		}
 		push @$row, $fahrer->{punkte} || "";

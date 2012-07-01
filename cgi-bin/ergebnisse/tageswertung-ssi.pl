@@ -104,7 +104,7 @@ if (defined $wereihe) {
     $sth = $dbh->prepare(q{
 	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
 	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
-	       s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
+	       s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
 	       papierabnahme
 	FROM wereihe_klasse
 	JOIN fahrer USING (klasse)
@@ -117,7 +117,7 @@ if (defined $wereihe) {
     $sth = $dbh->prepare(q{
 	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
 	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
-	       s0, s1, s2, s3, punkte, wertungspunkte, runden, ausfall,
+	       s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
 	       papierabnahme
 	FROM fahrer
 	LEFT JOIN fahrer_wertung USING (id, startnummer)

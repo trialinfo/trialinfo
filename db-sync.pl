@@ -74,6 +74,7 @@ CREATE TABLE fahrer (
   s1 INT,
   s2 INT,
   s3 INT,
+  s4 INT,
   ausfall INT,
   zusatzpunkte INT,
   punkte INT,
@@ -322,7 +323,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	startnummer klasse nachname vorname strasse wohnort plz club fahrzeug
 	telefon lizenznummer rahmennummer kennzeichen hubraum bemerkung land
 	startzeit zielzeit stechen nennungseingang papierabnahme runden ausfall
-	zusatzpunkte punkte rang geburtsdatum s0 s1 s2 s3
+	zusatzpunkte punkte rang geburtsdatum s0 s1 s2 s3 s4
     );
     $sth = $dbh->prepare(sprintf qq{
 	INSERT INTO fahrer (id, %s)

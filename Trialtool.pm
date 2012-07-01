@@ -92,7 +92,8 @@ my $fahrer_format = [
     "s1:S<",				# 1er
     "s2:S<",				# 2er
     "s3:S<",				# 3er
-    ":A4",				# ?
+    "s4:S<",				# 4er (Fahrrad)
+    ":A2",				# ?
     "punkte:f",
     "ausfall:S<",			# 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
 					# 5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
