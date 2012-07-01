@@ -362,9 +362,9 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	   }
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
-	    next unless exists $fahrer->{wertungspunkte}[$n];
+	    next unless $fahrer->{wertungspunkte}[$n];
 	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1,
-			   $fahrer->{wertungspunkte}[$n] || 0);
+			   $fahrer->{wertungspunkte}[$n]);
 	}
 	if (exists $fahrer->{neue_startnummer}) {
 	    $dbh->do(qq{
