@@ -43,10 +43,14 @@ my $klassenfarben = {
 sub rang_vergleich($$$) {
     my ($a, $b, $cfg) = @_;
 
-    # Fahrer im Rennen und ausgefallene Fahrer vor Fahrern aus der Wertung und
-    # nicht gestarteten Fahrern
-    return ($b->{ausfall} <= 3) <=> ($a->{ausfall} <= 3)
-	if ($a->{ausfall} <= 3) != ($b->{ausfall} <= 3);
+    if ($a->{ausfall} != $b->{ausfall}) {
+	# Fahrer ohne Ausfall zuerst
+	return $a->{ausfall} <=> $b->{ausfall}
+	    if !$a->{ausfall} != !$b->{ausfall};
+	# Danach Fahrer, die nicht aus der Wertung sind
+	return ($a->{ausfall} == 4) <=> ($b->{ausfall} == 4)
+	    if $a->{ausfall} == 4 || $b->{ausfall} == 4;
+    }
 
     # Abfallend nach gefahrenen Runden
     return $b->{runden} <=> $a->{runden}
