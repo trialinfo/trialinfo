@@ -1,5 +1,5 @@
 NAME = trialtool-plus
-VERSION = 0.9
+VERSION = 0.10
 
 COMMON_FILES = \
 	RenderOutput.pm \
