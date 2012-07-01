@@ -598,7 +598,7 @@ sub tabelle_aktualisieren($$$$$) {
 		 $i++, $j++) {
 		unless ($row[$i] ~~ $row[$j]) {
 		    push @columns, $nonkeys[$i];
-		    push @old, " $nonkeys[$i] = " .
+		    push @old, "$nonkeys[$i] = " .
 			 STH_Logger::log_sql_value($row[$i]);
 		    push @new_values, $row[$j];
 		}
