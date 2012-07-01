@@ -5,10 +5,10 @@
 <title>ÖTSV Veranstaltungsergebnisse</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 </head>
+<body>
 <h1>ÖTSV Veranstaltungsergebnisse</h1>
 <h2>Motorradtrial Modern</h2>
-<body>
-<!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl" -->
+<!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl?vareihe=1" -->
 <p>
 <a href="statistik.shtml">Punktestatistiken</a><br>
 </p>

@@ -28,15 +28,27 @@ my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
+my $vareihe = $q->param('vareihe');
+my $sth;
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
-my $sth = $dbh->prepare(q{
-    SELECT wereihe, bezeichnung, style
-    FROM wereihe
-    ORDER BY wereihe
-});
-$sth->execute;
+if (defined $vareihe) {
+    $sth = $dbh->prepare(q{
+	SELECT wereihe, bezeichnung, style
+	FROM wereihe
+	WHERE vareihe = ?
+	ORDER BY wereihe
+    });
+    $sth->execute($vareihe);
+} else {
+    $sth = $dbh->prepare(q{
+	SELECT wereihe, bezeichnung, style
+	FROM wereihe
+	ORDER BY wereihe
+    });
+    $sth->execute;
+}
 print "<p>\n";
 while (my @row =  $sth->fetchrow_array) {
     my ($wereihe, $bezeichnung, $style) = @row;
