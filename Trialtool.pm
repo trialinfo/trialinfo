@@ -188,12 +188,14 @@ sub dat_datei_parsen($) {
 	} else {
 	    delete $fahrer->{geburtsdatum};
 	}
-	if ($fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/) {
+	if ($fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/ &&
+	    "$1:$2" ne "00:00") {
 	    $fahrer->{startzeit} = "$1:$2:00";
 	} else {
 	    delete $fahrer->{startzeit};
 	}
-	if ($fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/) {
+	if ($fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/ &&
+	    "$1:$2" ne "00:00") {
 	    $fahrer->{zielzeit} = "$1:$2:00";
 	} else {
 	    delete $fahrer->{zielzeit};
