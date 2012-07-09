@@ -355,7 +355,7 @@ sub tageswertung($$$$$$) {
 		for (my $n = 0; $n < ($vierer ? 5 : 4); $n++) {
 		    push @$row, $fahrer->{"s$n"};
 		}
-		push @$row, $fahrer->{punkte} || "";
+		push @$row, $fahrer->{punkte} // "";
 	    }
 	    push @$row, $fahrer->{wertungspunkte}[$wertung] || ""
 		if $wertungspunkte;
@@ -546,7 +546,7 @@ sub jahreswertung($$$$$) {
 	    }
 	    push @$row, $fahrerwertung->{streichpunkte}
 		if $streichresultate > 0;
-	    push @$row, $gesamtpunkte != 0 ? $gesamtpunkte : "";
+	    push @$row, $gesamtpunkte || "";
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
