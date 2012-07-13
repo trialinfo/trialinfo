@@ -103,7 +103,7 @@ sub render_html_table($$$$) {
     my $f;
     my $r;
 
-    print "<table id=\"wertung\" style=\"empty-cells:show;\">\n";
+    print "<table class=\"wertung\" style=\"empty-cells:show;\">\n";
     print "<colgroup>\n";
     for (my $n = 0; $n < @$format; $n++) {
 	print "<col" . html_col_format($format->[$n]) . ">\n";
