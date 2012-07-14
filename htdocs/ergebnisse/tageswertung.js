@@ -1,32 +1,31 @@
 function klasse_anzeigen(divs, div_idx, offset) {
-  div = divs.eq(div_idx);
+  var div = divs.eq(div_idx);
   div.show();
-
-  div_id = "#" + div.attr("id");
-  rows = $(div_id + " > table.wertung > tbody > tr");
 
   /*
    * Wenn eine Klasse nicht auf eine Seite passt, herausfinden, wieviele Seiten
    * benötigt werden, und die Einträge dann möglichst gleichmäßig auf die
    * Seiten verteilen.
    */
+  var rows = $("#" + div.attr("id") + " > table.wertung > tbody > tr");
   rows.slice(0, offset).hide();
   rows.slice(offset).show();
-  for (last = rows.size();
-       $(document).height() > $(window).height() && last > offset + 1;
-       last--) {
+  var last = rows.size();
+  while ($(document).height() > $(window).height() && last > offset + 1) {
     rows.eq(last - 1).hide();
+    last--;
   }
+  var next_div_idx, next_offset;
   if (last != rows.size()) {
     /* Einträge möglichst gleichmäßig verteilen */
-    rows_on_page = last - offset;
-    pages = Math.ceil(rows.size() / rows_on_page);
-    rows_per_page = Math.ceil(rows.size() / pages);
-    for (;
-         last > offset + 1 && rows_per_page < last - offset;
-	 last--) {
+    var rows_on_page = last - offset;
+    var pages = Math.ceil(rows.size() / rows_on_page);
+    var rows_per_page = Math.ceil(rows.size() / pages);
+    while (last > offset + 1 && rows_per_page < last - offset) {
       rows.eq(last - 1).hide();
+      last--;
     }
+    next_div_idx = div_idx;
     next_offset = last;
   } else {
     /* Nächste Klasse */
@@ -36,19 +35,17 @@ function klasse_anzeigen(divs, div_idx, offset) {
     next_offset = 0;
   }
 
-  timeout = 2000 + 250 * (last - offset);
+  var timeout = 2000 + 250 * (last - offset);
   setTimeout(function(){
       div.hide();
       klasse_anzeigen(divs, next_div_idx, next_offset);
     }, timeout);
   if (div_idx != next_div_idx) {
     /* Nächste Klasse aktualisieren */
-    next_div = divs.eq(next_div_idx);
-    next_div_id = "#" + next_div.attr("id");
-
     var jqxhr = $.get($(location).attr('href'));
     jqxhr.success(function(html) {
-      content = $(html).filter(next_div_id);
+      var next_div = divs.eq(next_div_idx);
+      var content = $(html).filter("#" + next_div.attr("id"));
       next_div.empty();
       next_div.append(content);
       $("#errors").empty();
@@ -60,7 +57,7 @@ function klasse_anzeigen(divs, div_idx, offset) {
 }
 
 $(document).ready(function () {
-  divs = $("div.klasse");
+  var divs = $("div.klasse");
   divs.hide();
   $("#errors").empty();
   $("#footer").hide();
