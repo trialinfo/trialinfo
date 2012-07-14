@@ -12,7 +12,7 @@
 <a href="../ergebnisse/statistik.shtml">Punktestatistiken</a><br>
 <a href="nenngeld.shtml">Nenngeldlisten</a><br>
 <a href="/cgi-bin/veranstalter/fahrerliste.pl">Aktuelle Fahrerliste (CSV, UTF-8)</a><br>
-<a href="../ergebnisse/tageswertung.shtml?animiert">Aktuelle Tageswertung als Präsentation</a>
+<a href="../ergebnisse/tageswertung.shtml?animiert=1">Aktuelle Tageswertung als Präsentation</a>
 </p>
 <p><a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
 </body>

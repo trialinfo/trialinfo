@@ -60,7 +60,7 @@ if (defined $wereihe) {
     $sth->execute($id, $wereihe);
 } elsif (defined $id) {
     $sth = $dbh->prepare(q{
-	SELECT id, wertung.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE id = ? AND wertung = ?
@@ -68,7 +68,7 @@ if (defined $wereihe) {
     $sth->execute($id, $wertung);
 } else {
     $sth = $dbh->prepare(q{
-	SELECT id, wertung.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE wertung = ?
@@ -224,10 +224,15 @@ if ($alle_punkte) {
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
 unless ($animiert) {
-    doc_h1 "$bezeichnung";
+    doc_h1 "$bezeichnung"
+	if defined $bezeichnung;
     doc_h2 "$cfg->{titel}[$wertung]";
 } else {
-    doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
+    if (defined $bezeichnung) {
+	doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
+    } else {
+	doc_h2 "$cfg->{titel}[$wertung]";
+    }
 }
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $klassenfarben,
 	     $alle_punkte;
