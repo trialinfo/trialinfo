@@ -1,3 +1,30 @@
+function drawPie(paper, f) {
+  var size = paper.width < paper.height ? paper.width : paper.height;
+  var margin = 1;
+  var radius = size / 2 - margin;
+  var frame;
+  paper.clear();
+  if (f >= 1) {
+    frame = paper.circle(radius, radius, radius);
+  } else {
+    var phi = 2 * Math.PI * (f - 0.25);
+    var x = radius * (Math.cos(phi) + 1);
+    var y = radius * (Math.sin(phi) + 1);
+    var path = "Mr,r Lr,0 Ar,r 0 l,1 x,y Lr,r z"
+	       .replace(/r/g, radius)
+	       .replace(/x/g, x)
+	       .replace(/y/, y)
+	       .replace(/l/g, (f <= 0.5) ? 0 : 1);  // long arc?
+    frame = paper.path(path);
+  }
+  frame.translate(paper.width / 2 - radius, paper.height / 2 - radius);
+  frame.attr({
+    fill : '#98bf21',
+    stroke : 'none',
+    opacity : 0.7
+  });
+}
+
 function klasse_anzeigen(divs, div_idx, offset) {
   var div = divs.eq(div_idx);
   div.show();
@@ -36,10 +63,19 @@ function klasse_anzeigen(divs, div_idx, offset) {
   }
 
   var timeout = 2000 + 250 * (last - offset);
-  setTimeout(function(){
+  var t = 0, step = 40;
+
+  (function progress() {
+    drawPie(paper, t / timeout);
+    if (t >= timeout) {
       div.hide();
       klasse_anzeigen(divs, next_div_idx, next_offset);
-    }, timeout);
+    } else {
+      t += step;
+      setTimeout(progress, step);
+    }
+  })();
+
   if (div_idx != next_div_idx) {
     /* Nächste Klasse aktualisieren */
     var jqxhr = $.get($(location).attr('href'));
@@ -51,7 +87,7 @@ function klasse_anzeigen(divs, div_idx, offset) {
       $("#errors").empty();
     });
     jqxhr.error(function(html) {
-      $("#errors").html("Aktualisierung fehlgeschlagen!");
+      $("#errors").html("Aktualisierung der Daten fehlgeschlagen!");
     });
   }
 }
@@ -61,5 +97,6 @@ $(document).ready(function () {
   divs.hide();
   $("#errors").empty();
   $("#footer").hide();
+  paper = Raphael("progress", 50, 50);
   klasse_anzeigen(divs, 0, 0);
 });
