@@ -31,6 +31,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password)
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $wereihe = $q->param('wereihe');
+my $animiert = defined $q->param('animiert');
 
 # Unterstützte Spalten:
 # club fahrzeug lizenznummer geburtsdatum
@@ -211,9 +212,14 @@ if ($alle_punkte) {
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
-doc_h1 "$bezeichnung";
-doc_h2 "$cfg->{titel}[$wertung]";
+unless ($animiert) {
+    doc_h1 "$bezeichnung";
+    doc_h2 "$cfg->{titel}[$wertung]";
+} else {
+    doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
+}
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $klassenfarben,
 	     $alle_punkte;
 
-print "<p>Letzte Änderung: $zeit</p>\n";
+print "<p>Letzte Änderung: $zeit</p>\n"
+    unless $animiert;

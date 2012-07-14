@@ -1,5 +1,5 @@
 NAME = trialtool-plus
-VERSION = 0.10
+VERSION = 0.11
 
 COMMON_FILES = \
 	RenderOutput.pm \
@@ -36,9 +36,12 @@ WEB_FILES = \
 	htdocs/ergebnisse/index.shtml \
 	htdocs/ergebnisse/jahreswertung.shtml \
 	htdocs/ergebnisse/statistik.shtml \
+	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
 	htdocs/ergebnisse/wertungsreihe.shtml \
 	htdocs/.htaccess \
+	htdocs/jquery-1.7.2.js \
+	htdocs/jquery-1.7.2.min.js \
 	htdocs/osk-logo.jpg \
 	htdocs/osk-logo-original.jpg \
 	htdocs/otsv-logo.jpg \
@@ -70,6 +73,7 @@ upload:
 	@set -e; \
 	for file in $(COMMON_FILES) $(WEB_FILES); do \
 	    echo $$file; \
+	    test -f $$file; \
 	done
 
 mount:
