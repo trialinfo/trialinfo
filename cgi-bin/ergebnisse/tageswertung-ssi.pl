@@ -38,7 +38,7 @@ my $animiert = defined $q->param('animiert');
 my @spalten =  $q->param('spalte');
 
 my $bezeichnung;
-my $wertung;
+my $wertung = 1;
 my $zeit;
 my $cfg;
 my $fahrer_nach_startnummer;
@@ -50,7 +50,7 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 if (defined $wereihe) {
     $sth = $dbh->prepare(q{
-	SELECT wereihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	SELECT id, wereihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
 	JOIN wereihe USING (vareihe, wertung)
@@ -58,24 +58,35 @@ if (defined $wereihe) {
 	WHERE id = ? AND wereihe = ?
     });
     $sth->execute($id, $wereihe);
-} else {
+} elsif (defined $id) {
     $sth = $dbh->prepare(q{
-	SELECT wertung.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	SELECT id, wertung.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
 	FROM wertung
 	JOIN veranstaltung USING (id)
-	WHERE id = ? AND wertung = 1;
+	WHERE id = ? AND wertung = ?
     });
-    $sth->execute($id);
+    $sth->execute($id, $wertung);
+} else {
+    $sth = $dbh->prepare(q{
+	SELECT id, wertung.bezeichnung, wertung, titel, dat_mtime, cfg_mtime
+	FROM wertung
+	JOIN veranstaltung USING (id)
+	WHERE wertung = ?
+        ORDER BY datum DESC
+	LIMIT 1
+    });
+    $sth->execute($wertung);
 }
 if (my @row = $sth->fetchrow_array) {
-    $bezeichnung = $row[0];
-    $wertung = $row[1] - 1;
-    $cfg->{titel}[$wertung] = $row[2];
-    $zeit = max_time($row[3], $row[4]);
+    $id = $row[0];
+    $bezeichnung = $row[1];
+    $wertung = $row[2] - 1;
+    $cfg->{titel}[$wertung] = $row[3];
+    $zeit = max_time($row[4], $row[5]);
 }
 
 unless (defined $cfg) {
-    doc_h2 "Veranstaltung in Wertungsreihe nicht gefunden.";
+    doc_h2 "Veranstaltung nicht gefunden.";
     exit;
 }
 
