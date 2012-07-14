@@ -45,6 +45,8 @@ WEB_FILES = \
 	htdocs/osk-logo.jpg \
 	htdocs/osk-logo-original.jpg \
 	htdocs/otsv-logo.jpg \
+	htdocs/raphael.js \
+	htdocs/raphael-min.js \
 
 all:
 
