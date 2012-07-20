@@ -13,6 +13,7 @@
 <script type="text/javascript" src="../js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="../js/raphael-min.js"></script>
 <!--#endif -->
+<script type="text/javascript" src="../js/jquery.polartimer.js"></script>
 <script type="text/javascript" src="tageswertung.js"></script>
 <!--#endif -->
 
@@ -22,7 +23,7 @@
 <!--#include virtual="/cgi-bin/ergebnisse/tageswertung-ssi.pl?$which" -->
 
 <!--#if expr="$QUERY_STRING=/animiert/" -->
-<p id="progress"></p>
+<p id="progress" style="width:50; height:50;"></p>
 <p id="errors" style="color:red; font-weight:bold;">Animierte Darstellung nicht möglich, da JavaScript nicht ausgeführt wird!</p>
 <!--#endif -->
 
