@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Österreichischer Trialsport-Verband</title>
+<title>ÖTSV</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 </head>
@@ -10,13 +10,13 @@
 <!--#set var="which" value="$QUERY_STRING" -->
 <!--#include virtual="/cgi-bin/ergebnisse/jahreswertung-ssi.pl?$which" -->
 <p>
-© Österreichischer Trialsport-Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+© ÖTSV &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
 </p>
 <p>
 <!--#if expr="$QUERY_STRING=/style=osk/" -->
 <a href="http://www.osk.or.at/"><img src="../osk-logo.jpg" border="0"  alt="OSK - Oberste Nationale Sportkomission für den Motorsport"/></a>
 <!--#endif -->
-<a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0"  alt="ÖTSV - Österreichischer Trialsport-Verband"/></a>
+<a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0"  alt="ÖTSV"/></a>
 </p>
 </body>
 </html>
