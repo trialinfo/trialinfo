@@ -137,9 +137,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 
 	my $rang = 1;
 	$fahrer_in_klasse = [ sort { rang_vergleich($a, $b, $cfg) } @$fahrer_in_klasse ];
-	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
-				     $_->{papierabnahme}) ?
-				     $_ : () } @$fahrer_in_klasse ];
+	$fahrer_in_klasse = [ map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
@@ -268,9 +266,7 @@ sub tageswertung($$$$$$) {
 	my ($header, $body, $format);
 	my $farbe = "";
 
-	$fahrer_in_klasse = [ map { ($_->{runden} > 0 ||
-				     $_->{papierabnahme}) ?
-				     $_ : () } @$fahrer_in_klasse ];
+	$fahrer_in_klasse = [ map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
 
 	my $wertungspunkte;
