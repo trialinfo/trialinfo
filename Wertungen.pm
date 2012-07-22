@@ -281,7 +281,8 @@ sub tageswertung($$$$$$) {
 	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
 	}
 
-	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n";
+	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"
+	    if $RenderOutput::html;
 	doc_h3 "$cfg->{klassen}[$idx]";
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ "$farbe", "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
@@ -359,7 +360,8 @@ sub tageswertung($$$$$$) {
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
-	print "</div>\n";
+	print "</div>\n"
+	    if $RenderOutput::html;
     }
 }
 
