@@ -94,7 +94,7 @@ sub html_cell_format(@) {
     return (($1 eq "l") ? " align=\"left\"" :
 	    ($1 eq "r") ? " align=\"right\"" :
 			  " align=\"center\"") .
-	   ($2 > 1 ? " colspan=\"$2\"" : "") .
+	   (($2 || 1) > 1 ? " colspan=\"$2\"" : "") .
 	   (defined $attrs ? " $attrs" : "");
 }
 
