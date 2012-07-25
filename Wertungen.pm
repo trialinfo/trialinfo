@@ -97,6 +97,8 @@ sub runde_vollstaendig($$$) {
     my ($fahrer, $runde, $cfg) = @_;
 
     my $klasse = $fahrer->{klasse};
+    return undef
+	if $klasse < 1 || $klasse > 15;
     my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$runde];
     for (my $s = 0; $s < @$punkte_pro_runde; $s++) {
 	return undef
