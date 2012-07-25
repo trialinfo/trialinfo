@@ -298,6 +298,8 @@ sub tageswertung($$$$$$) {
 	    push @$format, "r2";
 	    push @$header, [ "ZP", "r1", "title=\"Zeit- und Zusatzpunkte\"" ];
 	}
+	push @$format, "r3";
+	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
 	push @$format, "r2", "r2", "r2", "r2";
 	push @$header, [ "0S", "r1", "title=\"Nuller\"" ];
 	push @$header, [ "1S", "r1", "title=\"Einser\"" ];
@@ -307,8 +309,7 @@ sub tageswertung($$$$$$) {
 	    push @$format, "r2";
 	    push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
 	}
-	push @$format, "r3", "r2";
-	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
+	push @$format, "r2";
 	push @$header, [ "WP", "r1", "title=\"Wertungspunkte\"" ]
 	    if $wertungspunkte;
 
@@ -350,10 +351,10 @@ sub tageswertung($$$$$$) {
 	    } elsif ($fahrer->{runden} == 0) {
 		push @$row, [ "", $ausfall_fmt ];
 	    } else {
+		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < ($vierer ? 5 : 4); $n++) {
 		    push @$row, $fahrer->{"s$n"};
 		}
-		push @$row, $fahrer->{punkte} // "";
 	    }
 	    push @$row, $fahrer->{wertungspunkte}[$wertung] || ""
 		if $wertungspunkte;
