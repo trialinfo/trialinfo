@@ -17,10 +17,6 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
-# TODO:
-# * Alle SQL-Statements tracen
-# * Logfile
-
 use DBI;
 use Trialtool;
 use Wertungen;
@@ -40,6 +36,7 @@ binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $trace_sql;
+my $dry_run;
 my $klassenfarben;
 
 my @tables;  # Liste der Tabellen in der Datenbank
@@ -443,6 +440,7 @@ sub status($$) {
 sub tabelle_aktualisieren($$$$$) {
     my ($table, $tmp_dbh, $dbh, $id, $tmp_id) = @_;
     my ($sth, $sth2);
+    my $sql2;
 
     my @keys = $tmp_dbh->primary_key(undef, undef, $table);
     die unless map { $_ eq "id" } @keys;
@@ -491,12 +489,18 @@ sub tabelle_aktualisieren($$$$$) {
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
-	    $sth2 = $dbh->prepare(
-		"DELETE FROM $table WHERE " .
-		join(" AND ", map { "$_ = ?" } (@other_keys, "id"))
-	    );
+	    $sql2 = "DELETE FROM $table WHERE " .
+		   join(" AND ", map { "$_ = ?" } (@other_keys, "id"));
+	    $sth2 = $dbh->prepare($sql2);
 	}
-	$sth2->execute(@row, $id);
+	if ($dry_run) {
+	    if ($trace_sql) {
+		my $logger = new STH_Logger($sql2, undef);
+		$logger->log(@row, $id);
+	    }
+	} else {
+	    $sth2->execute(@row, $id);
+	}
     }
 
     unless (@other_keys) {
@@ -534,13 +538,19 @@ sub tabelle_aktualisieren($$$$$) {
 	unless ($sth2) {
 	    my @spaltennamen = @{$sth->{NAME_lc}};
 	    pop @spaltennamen;
-	    $sth2 = $dbh->prepare(
-		"INSERT INTO $table (" . join(", ", @spaltennamen) . ") " .
-		"VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
-	    );
+	    $sql2 = "INSERT INTO $table (" . join(", ", @spaltennamen) . ") " .
+		    "VALUES (" . join(", ", map { "?" } @spaltennamen) . ")";
+	    $sth2 = $dbh->prepare($sql2);
 	}
 	pop @row;
-	$sth2->execute(@row);
+	if ($dry_run) {
+	    if ($trace_sql) {
+		my $logger = new STH_Logger($sql2, undef);
+		$logger->log(@row);
+	    }
+	} else {
+	    $sth2->execute(@row);
+	}
     }
 
     if (@nonkeys) {
@@ -581,17 +591,6 @@ sub tabelle_aktualisieren($$$$$) {
 	$sth->execute($tmp_id, $id);
 	$sth2 = undef;
 	while (my @row = $sth->fetchrow_array) {
-	    #unless ($sth2) {
-	    #	$sth2 = $dbh->prepare(
-	    #	    "UPDATE $table " .
-	    #	    "SET " . join(", ", map { "$_ = ?" } @nonkeys) . " " .
-	    #	    "WHERE " .  join(" AND ",
-	    #			     map { "$_ = ?" } (@other_keys, "id"))
-	    #	);
-	    #}
-	    #
-	    #$sth2->execute(@row, $id);
-
 	    my (@columns, @old, @new_values);
 	    for (my ($i, $j) = (0, scalar @nonkeys);
 		 $j < @row - @other_keys;
@@ -606,13 +605,19 @@ sub tabelle_aktualisieren($$$$$) {
 	    if (@columns) {
 		print "    # UPDATE FROM " . join(", ", @old), "\n"
 		   if $trace_sql;
-		$dbh->do(
-		    "UPDATE $table " .
-		    "SET " . join(", ", map { "$_ = ?" } @columns) . " " .
-		    "WHERE " .  join(" AND ",
-				     map { "$_ = ?" } (@other_keys, "id")),
-		    undef,
-		    @new_values, @row[2 * @nonkeys .. $#row], $id);
+		$sql2 = "UPDATE $table " .
+			"SET " . join(", ", map { "$_ = ?" } @columns) . " " .
+			"WHERE " .  join(" AND ",
+				         map { "$_ = ?" } (@other_keys, "id"));
+		my @args2 = (@new_values, @row[2 * @nonkeys .. $#row], $id);
+		if ($dry_run) {
+		    if ($trace_sql) {
+			my $logger = new STH_Logger($sql2, undef);
+			$logger->log(@args2);
+		    }
+		} else {
+		    $dbh->do($sql2, undef, @args2);
+		}
 	    } else {
 		warn "There should be differences, but I don't see them\n";
 	    }
@@ -668,6 +673,7 @@ my $result = GetOptions("db=s" => \$db,
 			"reconnect:i" => \$reconnect_interval,
 			"force" => \$force,
 			"trace-sql" => \$trace_sql,
+			"dry-run" => \$dry_run,
 			"temp-db=s" => \$temp_db,
 			"vareihe=s" => \@$vareihe,
 			"farben=s@" => \@$farben,
