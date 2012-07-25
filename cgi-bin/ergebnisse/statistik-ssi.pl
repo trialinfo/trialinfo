@@ -31,11 +31,12 @@ my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $nach_sektionen = defined $q->param('nach_sektionen');
 my $bewertung = defined $q->param('bewertung');
+my $vierer;
 
 sub x($) {
     my ($punkte) = @_;
 
-    my @x = (0, 0, 0, 0, undef, 0);
+    my @x = (0, 0, 0, 0, 0, 0);
     my $y = 0;
     foreach my $p (@$punkte) {
 	$x[$p]++;
@@ -50,17 +51,18 @@ sub x($) {
 
     my @schwierigkeit;
     if ($bewertung) {
-	if ($x[0] > ($x[1] + $x[2] + $x[3] + $x[5]) * 3) {
+	if ($x[0] > ($x[1] + $x[2] + $x[3] + $x[4] + $x[5]) * 3) {
 	    push @schwierigkeit, "↓";
-	} elsif ($x[0] + $x[1] + $x[2] + $x[3] < $x[5]) {
+	} elsif ($x[0] + $x[1] + $x[2] + $x[3] + $x[4] < $x[5]) {
 	    push @schwierigkeit, "↑";
 	} else {
 	    push @schwierigkeit, "";
 	}
     }
 
-    return ($x[0], $x[1], $x[2], $x[3], $x[5],
-	    sprintf("%.1f%s", $y * $n), @schwierigkeit);
+    return ($x[0], $x[1], $x[2], $x[3],
+	    ($vierer ? $x[4] : ()), $x[5],
+	    sprintf("%.1f", $y * $n), @schwierigkeit);
 }
 
 my $wertung = 0;
@@ -126,10 +128,27 @@ while (my @row = $sth->fetchrow_array) {
     $cfg->{klassen}[$row[0] - 1] = $row[1];
 }
 
+foreach my $klasse (values %$klassen) {
+    foreach my $sektion (values %$klasse) {
+	foreach my $punkte (@$sektion) {
+	    if ($punkte == 4) {
+		$vierer = 1;
+		last;
+	    }
+	}
+    }
+}
+
 if ($nach_sektionen) {
     doc_h2 "Punktestatistik – $titel";
-    my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
-    my $header = [ qw(Sektion 0 1 2 3 5 ⌀) ];
+    my $format = [ qw(r3 r3 r3 r3 r3) ];
+    my $header = [ qw(Sektion 0 1 2 3) ];
+    if ($vierer) {
+	push @$format, "r3";
+	push @$header, "4";
+    }
+    push @$format, qw(r3 r);
+    push @$header, qw(5 ⌀);
     if ($bewertung) {
 	push @$format, "c";
 	push @$header, "↑↓";
@@ -152,8 +171,14 @@ if ($nach_sektionen) {
     }
 } else {
     doc_h2 "Punktestatistik – $titel";
-    my $format = [ qw(r3 r3 r3 r3 r3 r3 r) ];
-    my $header = [ qw(Klasse 0 1 2 3 5 ⌀) ];
+    my $format = [ qw(r3 r3 r3 r3 r3) ];
+    my $header = [ qw(Klasse 0 1 2 3) ];
+    if ($vierer) {
+	push @$format, "r3";
+	push @$header, "4";
+    }
+    push @$format, qw(r3 r);
+    push @$header, qw(5 ⌀);
     if ($bewertung) {
 	push @$format, "c";
 	push @$header, "↑↓";
