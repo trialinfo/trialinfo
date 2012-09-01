@@ -45,7 +45,7 @@ my $sth = $dbh->prepare(q{
     WHERE wereihe = ?
 });
 $sth->execute($wereihe);
-if (my @row =  $sth->fetchrow_array) {
+if (my @row = $sth->fetchrow_array) {
     my ($bezeichnung) = @row;
     doc_h1 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
@@ -53,13 +53,14 @@ if (my @row =  $sth->fetchrow_array) {
 	FROM wereihe
 	JOIN vareihe_veranstaltung USING (vareihe)
 	JOIN wertung USING (id, wertung)
+	JOIN veranstaltung USING (id)
 	WHERE wereihe = ? AND EXISTS (
 	    SELECT *
 	    FROM klasse
 	    JOIN wereihe_klasse USING (klasse)
 	    WHERE wereihe = wereihe.wereihe AND gestartet AND id = wertung.id
 	)
-	ORDER BY id;
+	ORDER BY datum;
     });
     $sth2->execute($wereihe);
     print "<p>\n";
