@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl -w -Itrialtool-plus
 
 # Trialtool: Daten in eine SQL-Datenbank kopieren und/oder synchron halten
 

@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl -w -Itrialtool-plus
 
 # Trialtool: Auswertung einer Veranstaltung machen ("Tageswertung")
 

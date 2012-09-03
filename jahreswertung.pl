@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl -w -Itrialtool-plus
 
 # Trialtool: Auswertung über mehrere Veranstaltungen machen ("Jahreswertung")
 

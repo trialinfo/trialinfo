@@ -1,9 +1,12 @@
 NAME = trialtool-plus
-VERSION = 0.11
+VERSION = 0.12
+
+MOUNTPOINT = /mnt/easyserver
+SUBDIR = www2.otsv.at
 
 COMMON_FILES = \
-	RenderOutput.pm \
-	Wertungen.pm \
+	trialtool-plus/RenderOutput.pm \
+	trialtool-plus/Wertungen.pm \
 
 LOCAL_FILES = \
 	DBH_Logger.pm \
@@ -30,7 +33,6 @@ WEB_FILES = \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/.htaccess \
 	cgi-bin/veranstalter/nenngeld-ssi.pl \
-	DatenbankAuswertung.pm.txt \
 	htdocs/ergebnisse.css \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/ergebnisse/index.shtml \
@@ -39,14 +41,20 @@ WEB_FILES = \
 	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
 	htdocs/ergebnisse/wertungsreihe.shtml \
+	htdocs/favicon.ico \
 	htdocs/.htaccess \
-	htdocs/jquery-1.7.2.js \
-	htdocs/jquery-1.7.2.min.js \
+	htdocs/js/jquery-1.7.2.js \
+	htdocs/js/jquery-1.7.2.min.js \
+	htdocs/js/jquery.polartimer.js \
+	htdocs/js/raphael.js \
+	htdocs/js/raphael-min.js \
 	htdocs/osk-logo.jpg \
 	htdocs/osk-logo-original.jpg \
 	htdocs/otsv-logo.jpg \
-	htdocs/raphael.js \
-	htdocs/raphael-min.js \
+	htdocs/veranstalter/.htaccess \
+	htdocs/veranstalter/index.shtml \
+	htdocs/veranstalter/nenngeld.shtml \
+	trialtool-plus/DatenbankAuswertung.pm.txt \
 
 all:
 
@@ -72,11 +80,20 @@ dist:
 	rm -rf $(NAME)-$(VERSION)
 
 upload:
+	$(MAKE) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
+
+upload-diff:
+	$(MAKE) do-upload CMD='diff -u "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
+
+do-upload:
 	@set -e; \
 	for file in $(COMMON_FILES) $(WEB_FILES); do \
-	    echo $$file; \
 	    test -f $$file; \
+	    if ! test -f "$(MOUNTPOINT)/$(SUBDIR)/$$file" || \
+	       ! cmp -s "$$file" "$(MOUNTPOINT)/$(SUBDIR)/$$file"; then \
+		$(CMD); \
+	    fi; \
 	done
 
 mount:
-	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ /mnt/easyserver
+	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT)
