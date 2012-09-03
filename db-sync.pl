@@ -732,15 +732,22 @@ my $erster_sync = $force;
 
 do {
     eval {
-	# 'DBI:mysql:databasename;host=db.example.com;mysql_enable_utf8=1'
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
 			       { RaiseError => 1, AutoCommit => 1 })
 	    or die "Could not connect to database: $DBI::errstr\n";
+
+	if ($dbh->{Driver}->{Name} eq "mysql") {
+	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
+	    $dbh->do("SET NAMES utf8");
+	}
+
 	$dbh = new DBH_Logger($dbh)
 	    if $trace_sql;
 
 	print "Connected to $db ...\n";
+
 	if ($create_tables) {
+	    print "Creating tables ...\n";
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
 	    sql_ausfuehren $dbh, @create_reihen_tables;
 	}

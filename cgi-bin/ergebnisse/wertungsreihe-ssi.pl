@@ -28,6 +28,10 @@ $RenderOutput::html = 1;
 my $dbh = DBI->connect("DBI:$database", $username, $password)
     or die "Could not connect to database: $DBI::errstr\n";
 
+if ($dbh->{Driver}->{Name} eq "mysql") {
+    $dbh->do("SET NAMES utf8");
+}
+
 my $q = CGI->new;
 my $wereihe = $q->param('wereihe');
 my $style = $q->param('style');
