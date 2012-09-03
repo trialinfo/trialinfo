@@ -9,7 +9,7 @@ COMMON_FILES = \
 	trialtool-plus/Wertungen.pm \
 
 LOCAL_FILES = \
-	DBH_Logger.pm \
+	trialtool-plus/DBH_Logger.pm \
 	db-sync.pl \
 	doc/eer-diagramm.mwb \
 	doc/eer-diagramm.pdf \
@@ -20,9 +20,9 @@ LOCAL_FILES = \
 	Makefile \
 	otsv-check.pl \
 	Parse/Binary/FixedFormat.pm \
-	STH_Logger.pm \
+	trialtool-plus/STH_Logger.pm \
 	tageswertung.pl \
-	Trialtool.pm \
+	trialtool-plus/Trialtool.pm \
 
 WEB_FILES = \
 	cgi-bin/ergebnisse/index-ssi.pl \
