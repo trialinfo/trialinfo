@@ -39,68 +39,76 @@ use FileHandle;
 use strict;
 
 my $cfg_format = [
-    "titel:A70:4",
-    "subtitel:A70:4",
-    "wertungen:A20:4",			# Bezeichnungen der Wertungen
-    ":A1",
-    "wertungsmodus:C",			# Rundenergebnis bei Punktegleichheit:
-					# 0 = keines, 1 = aufsteigend, 2 = absteigend
-    ":A9",
-    "kartenfarben:A7:5",		# "Blau", "Rot", "Gelb", "Weiss", "Keine"
-    "ergebnisliste_feld:A18",		# "Fahrzeug"
-    ":A5",				# ?
-    "klassen:A60:15",			# Klassenbezeichnungen
-    "startzeiten:A5:15",
-    "wertungspunkte:S<:20",		# Wertungspunkte für Rang 1 - 20
-    "sektionen:A15:15",			# Gefahrene Sektionen pro Klasse
-    ":A208",				# ?
-    "runden:A:15",			# Anzahl der Runden je Klasse ("4")
+    "titel:A70:4",			#    0:
+    "subtitel:A70:4",			#  280:
+    "wertungen:A20:4",			#  560: Bezeichnungen der Wertungen
+    ":A1",				#  640:
+    "wertungsmodus:C",			#  641: Rundenergebnis bei Punktegleichheit:
+					#	0 = keines, 1 = aufsteigend, 2 = absteigend
+    ":A9",				#  642:
+    "kartenfarben:A7:5",		#  651: "Blau", "Rot", "Gelb", "Weiss", "Keine"
+    "ergebnisliste_feld:A18",		#  686: "Fahrzeug"
+    ":A5",				#  704: ?
+    "klassen:A60:15",			#  709: Klassenbezeichnungen
+    "startzeiten:A5:15",		# 1609:
+    "wertungspunkte:S<:20",		# 1684: Wertungspunkte für Rang 1 - 20
+    "sektionen:A15:15",			# 1724: Gefahrene Sektionen pro Klasse
+    ":A208",				# 1949: ?
+    "runden:A:15",			# 2157: Anzahl der Runden je Klasse ("4")
+					#
+    ":A15",				# 2172:
+					# 2187
 ];
 
 my $fahrer_format = [
-    "klasse:S<",
-    "helfer:S<",			# 0 = kein Helfer, sonst > 1400
-    "nenngeld:A10",
-    "bewerber:A40",			# ?
-    "nachname:A30",
-    "vorname:A30",
-    ":A40",				# Nachname, Vorname
-    "strasse:A30",
-    "wohnort:A40",
-    "plz:A5",
-    "club:A40",
-    "fahrzeug:A30",
-    "geburtsdatum:A10",
-    "telefon:A20",
-    "lizenznummer:A20",
-    "rahmennummer:A20",
-    "kennzeichen:A15",
-    "hubraum:A10",
-    "bemerkung:A150",			# Verwendet für E-Mail
-    "land:A33",
-    "startzeit:A5",
-    "zielzeit:A5",
-    "wertungen:A:4",
-    "stechen:S<",			# 0 = kein Stechen
-    "papierabnahme:S<",
-    ":A",				# ?
-    "runden:A5",			# Gefahrene Runden
-    "zusatzpunkte:f",
-    "punkte_pro_runde:S<:5",
-    ":A60",				# ?
-    "s0:S<",				# 0er
-    "s1:S<",				# 1er
-    "s2:S<",				# 2er
-    "s3:S<",				# 3er
-    "s4:S<",				# 4er (Fahrrad)
-    ":A2",				# ?
-    "punkte:f",
-    "ausfall:S<",			# 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
-					# 5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
-    "nennungseingang:S<",
-    ":A2",				# ?
-    "punkte_pro_sektion:S<:75",		# 6 = kein Ergebnis
+    "klasse:S<",			#   0:
+    "helfer:S<",			#   2: 0 = kein Helfer, sonst > 1400
+    "nenngeld:A10",			#   4:
+    "bewerber:A40",			#  14: ?
+    "nachname:A30",			#  54: ?
+    "vorname:A30",			#  84:
+    ":A40",				# 114: Nachname, Vorname
+    "strasse:A30",			# 154:
+    "wohnort:A40",			# 184:
+    "plz:A5",				# 224:
+    "club:A40",				# 229:
+    "fahrzeug:A30",			# 269:
+    "geburtsdatum:A10",			# 299:
+    "telefon:A20",			# 309:
+    "lizenznummer:A20",			# 329:
+    "rahmennummer:A20",			# 349:
+    "kennzeichen:A15",			# 369:
+    "hubraum:A10",			# 384:
+    "bemerkung:A150",			# 394: Verwendet für E-Mail
+    "land:A33",				# 544:
+    "startzeit:A5",			# 577:
+    "zielzeit:A5",			# 582:
+    "wertungen:A:4",			# 587:
+    "stechen:S<",			# 591: 0 = kein Stechen
+    "papierabnahme:S<",			# 593:
+    ":A",				# 595: ?
+    "runden:A5",			# 596: Gefahrene Runden
+    "zusatzpunkte:f",			# 601:
+    "punkte_pro_runde:S<:5",		# 605:
+    ":A60",				# 615: Statistik pro Runde
+    "s0:S<",				# 675: 0er
+    "s1:S<",				# 677: 1er
+    "s2:S<",				# 679: 2er
+    "s3:S<",				# 681: 3er
+    "s4:S<",				# 683: 4er (Fahrrad)
+    ":S<",				# 685: 5er (nicht gezählt, immer 0)
+    "punkte:f",				# 687:
+    "ausfall:S<",			# 691: 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
+					#      5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
+    "nennungseingang:S<",		# 693:
+    ":A2",				# 695: ?
+    "punkte_pro_sektion:S<:75",		# 697: 6 = kein Ergebnis
+					# 847
 ];
+
+# Statistik pro Runde:
+#   [ 0er 1er 2er 3er 4er 5er ] * 5 Runden
+# Die 5er werden nicht gezählt, und sind immer 0.
 
 sub decode_strings($$) {
     my ($data, $fmt) = @_;
