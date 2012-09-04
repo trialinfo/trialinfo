@@ -66,8 +66,8 @@ sub rang_vergleich($$$) {
 
     # Abfallend nach 0ern, 1ern, 2ern, 3ern
     for (my $n = 0; $n < 4; $n++) {
-	return $b->{"s$n"} <=> $a->{"s$n"}
-	    if $a->{"s$n"} != $b->{"s$n"};
+	return $b->{s}[$n] <=> $a->{s}[$n]
+	    if $a->{s}[$n] != $b->{s}[$n];
     }
 
     # Aufsteigend nach der besten Runde?
@@ -355,7 +355,7 @@ sub tageswertung($$$$$$) {
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < ($vierer ? 5 : 4); $n++) {
-		    push @$row, $fahrer->{"s$n"};
+		    push @$row, $fahrer->{s}[$n];
 		}
 	    }
 	    push @$row, $fahrer->{wertungspunkte}[$wertung] || ""

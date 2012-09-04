@@ -67,7 +67,7 @@ my $fahrer_format = [
     "bewerber:A40",			#  14: ?
     "nachname:A30",			#  54: ?
     "vorname:A30",			#  84:
-    ":A40",				# 114: Nachname, Vorname
+    "nachname_vorname:A40",		# 114: Nachname, Vorname
     "strasse:A30",			# 154:
     "wohnort:A40",			# 184:
     "plz:A5",				# 224:
@@ -86,29 +86,20 @@ my $fahrer_format = [
     "wertungen:A:4",			# 587:
     "stechen:S<",			# 591: 0 = kein Stechen
     "papierabnahme:S<",			# 593:
-    ":A",				# 595: ?
+    ":C",				# 595: ? (immer 0)
     "runden:A5",			# 596: Gefahrene Runden
     "zusatzpunkte:f",			# 601:
     "punkte_pro_runde:S<:5",		# 605:
-    ":A60",				# 615: Statistik pro Runde
-    "s0:S<",				# 675: 0er
-    "s1:S<",				# 677: 1er
-    "s2:S<",				# 679: 2er
-    "s3:S<",				# 681: 3er
-    "s4:S<",				# 683: 4er (Fahrrad)
-    ":S<",				# 685: 5er (nicht gezählt, immer 0)
+    "r:S<:30",				# 615: [ 0er, ..., 5er ] pro Runde (5er nicht gezählt, immer 0)
+    "s:S<:6",				# 675: [ 0er, ..., 5er ] gesamt (5er nicht gezählt, immer 0)
     "punkte:f",				# 687:
     "ausfall:S<",			# 691: 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
 					#      5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
     "nennungseingang:S<",		# 693:
-    ":A2",				# 695: ?
+    ":S<",				# 695: ? (immer 0)
     "punkte_pro_sektion:S<:75",		# 697: 6 = kein Ergebnis
 					# 847
 ];
-
-# Statistik pro Runde:
-#   [ 0er 1er 2er 3er 4er 5er ] * 5 Runden
-# Die 5er werden nicht gezählt, und sind immer 0.
 
 sub decode_strings($$) {
     my ($data, $fmt) = @_;
@@ -156,6 +147,16 @@ sub punkte_aufteilen($) {
 	     [@$punkte[60..74]] ];
 }
 
+sub rundenstatistik_aufteilen($) {
+	my ($r) = @_;
+
+	return [ [@$r[0..5]],
+		 [@$r[6..11]],
+		 [@$r[12..17]],
+		 [@$r[18..23]],
+		 [@$r[24..29]] ];
+}
+
 sub dat_datei_parsen($) {
     my ($dateiname) = @_;
 
@@ -181,6 +182,7 @@ sub dat_datei_parsen($) {
 	# ausgelassen hat.
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
+	$fahrer->{r} = rundenstatistik_aufteilen($fahrer->{r});
 	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
 	    my $jahr;
 	    if ($3 > 100) {

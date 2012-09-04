@@ -343,6 +343,9 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	VALUES (?, ?, ?, ?)
     });
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	for (my $n = 0; $n < 5; $n++) {
+	    $fahrer->{"s$n"} = $fahrer->{s}[$n];
+	}
 	$sth->execute($id, (map { $fahrer->{$_} } @felder));
 
 	for (my $m = 0; $m < @{$fahrer->{punkte_pro_sektion}}; $m++) {

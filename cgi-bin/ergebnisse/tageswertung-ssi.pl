@@ -145,6 +145,10 @@ if (defined $wereihe) {
     $sth->execute($id, $wertung + 1);
 }
 while (my $fahrer = $sth->fetchrow_hashref) {
+    for (my $n = 0; $n < 5; $n++) {
+	$fahrer->{s}[$n] = $fahrer->{"s$n"};
+	delete $fahrer->{"s$n"};
+    }
     my $startnummer = $fahrer->{startnummer};
     my $w = [];
     $w->[$wertung] = $fahrer->{wertungspunkte}
