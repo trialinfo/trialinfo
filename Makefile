@@ -1,5 +1,5 @@
 NAME = trialtool-plus
-VERSION = 0.12
+VERSION = 0.13
 
 MOUNTPOINT = /mnt/easyserver
 SUBDIR = www2.otsv.at

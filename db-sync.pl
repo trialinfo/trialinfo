@@ -47,6 +47,9 @@ CREATE TABLE fahrer (
   id INT, -- veranstaltung
   startnummer INT,
   klasse INT NOT NULL,
+  helfer INT,
+  bewerber VARCHAR(40),
+  nenngeld VARCHAR(10),
   nachname VARCHAR(30),
   vorname VARCHAR(30),
   strasse VARCHAR(30),
@@ -61,12 +64,14 @@ CREATE TABLE fahrer (
   kennzeichen VARCHAR(15),
   hubraum VARCHAR(10),
   bemerkung VARCHAR(150),
-  land VARCHAR(33),
+  land VARCHAR(15),
+  helfer_nummer VARCHAR(8),
   startzeit TIME,
   zielzeit TIME,
   stechen INT,
   nennungseingang BOOLEAN,
   papierabnahme BOOLEAN,
+  versicherung INT,
   runden INT,
   s0 INT,
   s1 INT,
@@ -97,6 +102,7 @@ CREATE TABLE klasse (
   bezeichnung VARCHAR(60),
   gestartet BOOLEAN,
   farbe VARCHAR(20),
+  fahrzeit TIME,
   PRIMARY KEY (id, klasse)
 );
 
@@ -134,7 +140,32 @@ CREATE TABLE veranstaltung (
   dat_mtime TIMESTAMP NULL,
   cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
+  vierpunktewertung BOOLEAN,
+  wertungsmodus INT,
+  punkte_sektion_auslassen INT,
+  wertungen_234_punkte BOOLEAN,
+  ergebnisliste_feld INT,
+  wertungspunkte_markiert BOOLEAN,
+  versicherung INT,
+  rand_links INT,
+  rand_oben INT,
+  ergebnislistenbreite INT,
   PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS nennungsmaske_feld;
+CREATE TABLE nennungsmaske_feld (
+  id INT, -- veranstaltung
+  feld INT,
+  PRIMARY KEY (id, feld)
+);
+
+DROP TABLE IF EXISTS kartenfarbe;
+CREATE TABLE kartenfarbe (
+  id INT, -- veranstaltung
+  runde INT,
+  farbe VARCHAR(20),
+  PRIMARY KEY (id, runde)
 );
 
 DROP TABLE IF EXISTS wertung;
@@ -265,11 +296,42 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	$sth->execute;
 	$id = $sth->fetchrow_array || 1;
     }
+
+    my @cfg_felder = qw(
+	vierpunktewertung wertungsmodus punkte_sektion_auslassen
+	wertungen_234_punkte ergebnisliste_feld wertungspunkte_markiert
+	versicherung rand_links rand_oben ergebnislistenbreite
+    );
+    $sth = $dbh->prepare(sprintf qq{
+	INSERT INTO veranstaltung (id, datum, dateiname, cfg_mtime, dat_mtime, %s)
+	VALUES (?, ?, ?, ?, ?, %s)
+    }, join(", ", @cfg_felder), join(", ", map { "?" } @cfg_felder));
+    $sth->execute($id, $datum, $basename, $cfg_mtime, $dat_mtime,
+		  (map { $cfg->{$_} } @cfg_felder));
+
     $sth = $dbh->prepare(qq{
-	INSERT INTO veranstaltung (id, datum, dateiname, cfg_mtime, dat_mtime)
-	VALUES (?, ?, ?, ?, ?)
+	INSERT INTO nennungsmaske_feld (id, feld)
+	VALUES (?, ?)
     });
-    $sth->execute($id, $datum, $basename, $cfg_mtime, $dat_mtime);
+    my @nennungsmaske_felder = (
+	@{$cfg->{nennungsmaske_felder1}},
+	@{$cfg->{nennungsmaske_felder2}}
+    );
+    for (my $n = 0; $n < @nennungsmaske_felder; $n++) {
+	if ($nennungsmaske_felder[$n]) {
+	    $sth->execute($id, $n);
+	}
+    }
+
+    $sth = $dbh->prepare(qq{
+	INSERT INTO kartenfarbe (id, runde, farbe)
+	VALUES (?, ?, ?)
+    });
+    for (my $n = 0; $n < @{$cfg->{kartenfarben}}; $n++) {
+	my $farbe = $cfg->{kartenfarben}[$n];
+	next if $farbe eq "Keine";
+	 $sth->execute($id, $n, $farbe);
+    }
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO vareihe_veranstaltung(vareihe, id)
@@ -308,27 +370,28 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	}
     }
     $sth = $dbh->prepare(qq{
-	INSERT INTO klasse (id, klasse, runden, bezeichnung, gestartet, farbe)
-	VALUES (?, ?, ?, ?, ?, ?)
+	INSERT INTO klasse (id, klasse, runden, bezeichnung, gestartet, farbe, fahrzeit)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
     });
     my $gestartete_klassen = gestartete_klassen($cfg);
     for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
 	next if $cfg->{klassen}[$n] eq "";
 	my $farbe = defined $klassenfarben ? $klassenfarben->{$n + 1} : undef;
 	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n],
-		      $gestartete_klassen->[$n], $farbe);
+		      $gestartete_klassen->[$n], $farbe, $cfg->{fahrzeiten}[$n]);
     }
 
-    my @felder = qw(
-	startnummer klasse nachname vorname strasse wohnort plz club fahrzeug
-	telefon lizenznummer rahmennummer kennzeichen hubraum bemerkung land
-	startzeit zielzeit stechen nennungseingang papierabnahme runden ausfall
-	zusatzpunkte punkte rang geburtsdatum s0 s1 s2 s3 s4
+    my @dat_felder = qw(
+	startnummer klasse helfer nenngeld bewerber nachname vorname strasse
+	wohnort plz club fahrzeug telefon lizenznummer rahmennummer kennzeichen
+	hubraum bemerkung land helfer_nummer startzeit zielzeit stechen
+	nennungseingang papierabnahme versicherung runden ausfall zusatzpunkte
+	punkte rang geburtsdatum s0 s1 s2 s3 s4
     );
     $sth = $dbh->prepare(sprintf qq{
 	INSERT INTO fahrer (id, %s)
 	VALUES (?, %s)
-    }, join(", ", @felder), join(", ", map { "?" } @felder));
+    }, join(", ", @dat_felder), join(", ", map { "?" } @dat_felder));
     my $sth2 = $dbh->prepare(qq{
 	INSERT INTO punkte (id, startnummer, runde, sektion,
 				  punkte)
@@ -346,7 +409,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	for (my $n = 0; $n < 5; $n++) {
 	    $fahrer->{"s$n"} = $fahrer->{s}[$n];
 	}
-	$sth->execute($id, (map { $fahrer->{$_} } @felder));
+	$sth->execute($id, (map { $fahrer->{$_} } @dat_felder));
 
 	for (my $m = 0; $m < @{$fahrer->{punkte_pro_sektion}}; $m++) {
 	    my $punkte = $fahrer->{punkte_pro_sektion}[$m];

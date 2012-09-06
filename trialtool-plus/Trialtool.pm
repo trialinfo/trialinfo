@@ -16,10 +16,18 @@
 # <http://www.gnu.org/licenses/>.
 
 # Die *.dat - Dateien bestehen aus Datensätzen zu je 847 Bytes pro Fahrer,
-# direkt vom Dateianfang weg.  Das Format der Fahrerdaten ist in $fahrer_format
-# beschrieben.  Die Datensätze 0 - 999 enthalten die Fahrer mit zugeordneter
-# Startnummer, darauf folgen in den Datensätzen 1000 bis ~1400 Fahrer ohne
-# Startnummer.  Danach folgen die den Fahrern zugeordneten Helfer.
+# direkt vom Dateianfang weg.  Das Format der Fahrerdaten ist in $dat_format
+# beschrieben.  Die Datensätze sind folgendermaßen belegt:
+#  * 0 - 998:		Fahrer mit zugeordneten Startnummern 1-999.
+#  * 999 - 1398:	Fahrer ohne Startnummern.
+#  * 1399 - 1599:	Helfer.
+#
+# Bei Helfern ist die Klasse auf 100 gesetzt, Bewerber ist nachname_vorname des
+# zugeordneten Fahrers, und helfer_nummer wird verwendet.  Das Feld
+# geburtsdatum ist hier ein Textfeld mit beliebigem Inhalt.
+#
+# In manchen Dateien wiederholen sich danach Datensätze wie es scheint, und es
+# folge anderes rätselhaftes Zeug.
 #
 # Die *.cfg - Dateien enthalten die Veranstaltungsdaten (siehe $cfg_format).
 
@@ -27,7 +35,8 @@ package Trialtool;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_datei_parsen dat_datei_parsen trialtool_dateien gestartete_klassen mtime);
+@EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime);
 
 use File::stat;
 use POSIX qw(strftime);
@@ -42,32 +51,46 @@ my $cfg_format = [
     "titel:A70:4",			#    0:
     "subtitel:A70:4",			#  280:
     "wertungen:A20:4",			#  560: Bezeichnungen der Wertungen
-    ":A1",				#  640:
+    "vierpunktewertung:A",		#  640: Vierpunktewertung Fahhrad ("J", "N")
     "wertungsmodus:C",			#  641: Rundenergebnis bei Punktegleichheit:
 					#	0 = keines, 1 = aufsteigend, 2 = absteigend
-    ":A9",				#  642:
-    "kartenfarben:A7:5",		#  651: "Blau", "Rot", "Gelb", "Weiss", "Keine"
-    "ergebnisliste_feld:A18",		#  686: "Fahrzeug"
-    ":A5",				#  704: ?
+    ":a",				#  642: ?
+    "punkte_sektion_auslassen:S<",	#  643: Punkte für Auslassen einer Sektion
+    "wertungen_234_punkte:S<",		#  645: Wertungspunkte für jeden Fahrer in Wertung 2, 3, 4?
+    "rand_links:S<",			#  647: Seitenrand links
+    "tastatureingabe:S<",		#  649: Maus- oder Tastatureingabe
+    "kartenfarben:A7:5",		#  651: "Blau", "Rot", "Gelb", "Weiss", "Grün", "Braun", "Keine"
+    "ergebnisliste_feld:A18",		#  686: "Club", "Fahrzeug", "Wohnort"
+    ":a3",				#  704: ?
+    "rand_oben:S<",			#  707: Seitenrand oben
     "klassen:A60:15",			#  709: Klassenbezeichnungen
-    "startzeiten:A5:15",		# 1609:
+    "fahrzeiten:A5:15",			# 1609:
     "wertungspunkte:S<:20",		# 1684: Wertungspunkte für Rang 1 - 20
     "sektionen:A15:15",			# 1724: Gefahrene Sektionen pro Klasse
-    ":A208",				# 1949: ?
+    "wertungspunkte_markiert:S<",	# 1949: Feld "Wertungspunkte" markiert?
+    "versicherung:S<",			# 1951: Versicherungsart (0 = Keine, 1 = ADAC-Versicherung,
+					#       2 = DMV-Versicherung, 3 = KFZ-Versicherung,
+					#       4 = Tagesversicherung)
+    ":a10",				# 1953: ?
+    "ergebnislistenbreite:S<",		# 1963: Ergebnislistenbreite (7, 8, 9, 10, 12)
+    ":a8",				# 1965: ?
+    "nennungsmaske_felder1:S<:6",	# 1973: Felder Nennungsmaske (0, 1)
+    "auswertung_klasse:S<:15",		# 1985: Klasse in Auswertungsmenü ausgewählt (0, 1)?
+    ":a110",				# 2015: ?
+    "nennungsmaske_felder2:S<:16",	# 2125: Felder Nennungsmaske (0, 1, letzter Wert immer 1)
     "runden:A:15",			# 2157: Anzahl der Runden je Klasse ("4")
-					#
-    ":A15",				# 2172:
-					# 2187
+    ":A15",				# 2172: ?
 ];
 
-my $fahrer_format = [
-    "klasse:S<",			#   0:
-    "helfer:S<",			#   2: 0 = kein Helfer, sonst > 1400
+my $dat_format = [
+    "klasse:S<",			#   0: 99 = keine Klasse zugeordnet, 100 = Helfer
+    "helfer:S<",			#   2: 0 = kein Helfer, sonst "Startnummer" des Helfers
     "nenngeld:A10",			#   4:
-    "bewerber:A40",			#  14: ?
-    "nachname:A30",			#  54: ?
+    "bewerber:A40",			#  14:
+    "nachname:A30",			#  54:
     "vorname:A30",			#  84:
-    "nachname_vorname:A40",		# 114: Nachname, Vorname
+    "nachname_vorname:A20",		# 114: Nachname, Vorname
+    ":A20",				# 134: ?
     "strasse:A30",			# 154:
     "wohnort:A40",			# 184:
     "plz:A5",				# 224:
@@ -80,13 +103,17 @@ my $fahrer_format = [
     "kennzeichen:A15",			# 369:
     "hubraum:A10",			# 384:
     "bemerkung:A150",			# 394: Verwendet für E-Mail
-    "land:A33",				# 544:
+    "land:A15",				# 544:
+    "helfer_nummer:A8",			# 559: (Nur für Helfer)
+    ":A10",				# 567: ?
     "startzeit:A5",			# 577:
     "zielzeit:A5",			# 582:
     "wertungen:A:4",			# 587:
     "stechen:S<",			# 591: 0 = kein Stechen
     "papierabnahme:S<",			# 593:
-    ":C",				# 595: ? (immer 0)
+    "versicherung:A",			# 595: "0" = Keine, "1" = ADAC-Versicherung,
+					#      "2" = DMV-Versicherung, "3" = KFZ-Versicherung,
+					#      "4" = Tagesversicherung
     "runden:A5",			# 596: Gefahrene Runden
     "zusatzpunkte:f",			# 601:
     "punkte_pro_runde:S<:5",		# 605:
@@ -115,6 +142,25 @@ sub decode_strings($$) {
     }
 }
 
+sub encode_strings($$) {
+    my ($data, $fmt) = @_;
+
+    for (my $n = 0; $n < @$fmt; $n++) {
+	if ($fmt->[$n] =~ /(.*):A[^:]*(:)?/) {
+	    if ($2) {
+		$data->{$1} = [ map { encode("windows-1252", $_) } @{ $data->{$1}} ];
+	    } else {
+		$data->{$1} = encode("windows-1252", $data->{$1});
+	    }
+	}
+    }
+}
+
+my @ergebnisliste_felder = ( "Club", "Fahrzeug", "Wohnort" );
+my %ergebnisliste_felder = (
+    map { $ergebnisliste_felder[$_] => $_ }
+        (0 .. $#ergebnisliste_felder) );
+
 sub cfg_datei_parsen($) {
     my ($dateiname) = @_;
 
@@ -126,7 +172,32 @@ sub cfg_datei_parsen($) {
     delete $cfg->{''};
     decode_strings($cfg, $cfg_format);
     $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
+    $cfg->{fahrzeiten} = [ map { $_ eq "00:00" ? undef : "$_:00" } @{$cfg->{fahrzeiten}} ];
+    $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
+    $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
+
     return $cfg;
+}
+
+sub cfg_datei_schreiben($$) {
+    my ($dateiname, $cfg) = @_;
+
+    my $fh = new FileHandle("> " . encode(locale_fs => $dateiname))
+	or die;
+    binmode $fh, ":bytes";
+
+    my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
+
+    $cfg = { %{$cfg} };
+    encode_strings($cfg, $cfg_format);
+    $cfg->{runden} = [ map { "0" + $_ } @{$cfg->{runden}} ];
+    $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
+    $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
+    $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
+    print $fh $cfg_parser->format($cfg);
+
+    $fh->close
+	or die;
 }
 
 sub runden_zaehlen($) {
@@ -165,14 +236,14 @@ sub dat_datei_parsen($) {
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
 
-    my $fahrer_parser = new Parse::Binary::FixedFormat($fahrer_format);
-    for (my $n = 0; $n < 1000; $n++) {
+    my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
+    for (my $n = 0; $n < 1600; $n++) {
 	my $fahrer_binaer = substr($dat, $n * 847, 847);
 	my $klasse = unpack "S<", $fahrer_binaer;
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
 	delete $fahrer->{''};
-	decode_strings($fahrer, $fahrer_format);
+	decode_strings($fahrer, $dat_format);
 	$fahrer->{startnummer} = $n + 1;
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
@@ -210,6 +281,9 @@ sub dat_datei_parsen($) {
 	} else {
 	    delete $fahrer->{zielzeit};
 	}
+	$fahrer->{versicherung} = $fahrer->{versicherung} - '0';
+	delete $fahrer->{versicherung}
+	    if $fahrer->{versicherung} == 0;
 	if ($fahrer->{bemerkung} =~ s/\s*\*SN:(\d+)\*\s*//) {
 	    # Falls für die Jahreswerung eine andere Startnummer verwendet
 	    # werden soll, kann das im Feld Bemerkung vermerkt werden,
@@ -226,6 +300,63 @@ sub dat_datei_parsen($) {
     }
 
     return $fahrer_nach_startnummern;
+}
+
+sub dat_datei_schreiben($$) {
+    my ($dateiname, $fahrer_nach_startnummern) = @_;
+    my $leerer_fahrer = "\0" x 4 . " " x 573 . "00.0000.00NNNN" .
+			"\0" x 4 . "0NNNNN" . "\0" x 96 . "\6\0" x 75;
+
+    my $fh = new FileHandle("> " . encode(locale_fs => $dateiname))
+	or die;
+    binmode $fh, ":bytes";
+
+    my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
+
+    for (my $n = 0; $n < 999; $n++) {
+	my $startnummer = $n + 1;
+	if (exists $fahrer_nach_startnummern->{$startnummer}) {
+	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
+	    encode_strings($fahrer, $dat_format);
+	    my $nachname_vorname = "$fahrer->{nachname}, $fahrer->{vorname}";
+	    $nachname_vorname = substr($nachname_vorname, 0, 19) . '.'
+		if length $nachname_vorname > 20;
+	    $fahrer->{nachname_vorname} = $nachname_vorname;
+	    if (defined $fahrer->{geburtsdatum} && $fahrer->{geburtsdatum} =~ /^(....)-(..)-(..)$/) {
+		$fahrer->{geburtsdatum} = "$3.$2.$1";
+	    } else {
+		delete $fahrer->{geburtsdatum};
+	    }
+	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    $fahrer->{runden} = 'J' x $fahrer->{runden} .
+				'N' x (5 - $fahrer->{runden});
+	    $fahrer->{versicherung} = '0' + ($fahrer->{versicherung} // 0);
+	    $fahrer->{punkte_pro_sektion} = [ map { [ map { defined $_ ? $_ : 6 } @$_ ] }
+					      @{$fahrer->{punkte_pro_sektion}} ];
+	    if (defined $fahrer->{startzeit} && $fahrer->{startzeit} =~ /(..):(..):(..)/) {
+		$fahrer->{startzeit} = "$1.$2";
+	    } else {
+		delete $fahrer->{startzeit};
+	    }
+	    if (defined $fahrer->{zielzeit} && $fahrer->{zielzeit} =~ /(..):(..):(..)/) {
+		$fahrer->{zielzeit} = "$1.$2";
+	    } else {
+		delete $fahrer->{zielzeit};
+	    }
+	    if (defined $fahrer->{neue_startnummer}) {
+		$fahrer->{bemerkung} .= " *SN:$fahrer->{neue_startnummer}*";
+	    }
+	    if (defined $fahrer->{keine_wertungspunkte}) {
+		$fahrer->{bemerkung} .= " *KW*";
+	    }
+	    print $fh $fahrer_parser->format($fahrer);
+	} else {
+	    print $fh $leerer_fahrer;
+	}
+    }
+
+    $fh->close
+	or die;
 }
 
 # Nimmt eine Liste von Datei- / Verzeichnisnamen aus Argument, und liefert eine
