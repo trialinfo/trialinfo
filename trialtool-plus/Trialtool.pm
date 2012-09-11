@@ -187,12 +187,9 @@ sub cfg_datei_parsen($) {
 }
 
 sub cfg_datei_schreiben($$) {
-    my ($dateiname, $cfg) = @_;
+    my ($fh, $cfg) = @_;
 
-    my $fh = new FileHandle("> " . encode(locale_fs => $dateiname))
-	or die;
     binmode $fh, ":bytes";
-
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
 
     $cfg = { %{$cfg} };
@@ -207,9 +204,6 @@ sub cfg_datei_schreiben($$) {
     delete $cfg->{nennungsmaske_felder};
 
     print $fh $cfg_parser->format($cfg);
-
-    $fh->close
-	or die;
 }
 
 sub runden_zaehlen($) {
@@ -315,12 +309,10 @@ sub dat_datei_parsen($) {
 }
 
 sub dat_datei_schreiben($$) {
-    my ($dateiname, $fahrer_nach_startnummern) = @_;
+    my ($fh, $fahrer_nach_startnummern) = @_;
     my $leerer_fahrer = "\0" x 4 . " " x 573 . "00.0000.00NNNN" .
 			"\0" x 4 . "0NNNNN" . "\0" x 96 . "\6\0" x 75;
 
-    my $fh = new FileHandle("> " . encode(locale_fs => $dateiname))
-	or die;
     binmode $fh, ":bytes";
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
@@ -366,9 +358,6 @@ sub dat_datei_schreiben($$) {
 	    print $fh $leerer_fahrer;
 	}
     }
-
-    $fh->close
-	or die;
 }
 
 # Nimmt eine Liste von Datei- / Verzeichnisnamen aus Argument, und liefert eine
