@@ -164,7 +164,7 @@ DROP TABLE IF EXISTS kartenfarbe;
 CREATE TABLE kartenfarbe (
   id INT, -- veranstaltung
   runde INT,
-  farbe VARCHAR(20),
+  farbe VARCHAR(7),
   PRIMARY KEY (id, runde)
 );
 
