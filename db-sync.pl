@@ -325,8 +325,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
     });
     for (my $n = 0; $n < @{$cfg->{kartenfarben}}; $n++) {
 	my $farbe = $cfg->{kartenfarben}[$n];
-	next if $farbe eq "Keine";
-	 $sth->execute($id, $n + 1, $farbe);
+	next unless defined $farbe;
+	$sth->execute($id, $n + 1, $farbe);
     }
 
     $sth = $dbh->prepare(qq{

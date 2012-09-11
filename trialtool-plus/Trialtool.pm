@@ -175,6 +175,7 @@ sub cfg_datei_parsen($) {
     $cfg->{fahrzeiten} = [ map { $_ eq "00:00" ? undef : "$_:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
+    $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
 
     $cfg->{nennungsmaske_felder} = [
 	@{$cfg->{nennungsmaske_felder1}},
@@ -194,6 +195,7 @@ sub cfg_datei_schreiben($$) {
 
     $cfg = { %{$cfg} };
     encode_strings($cfg, $cfg_format);
+    $cfg->{kartenfarben} = [ map { defined $_ ? $_ : "Keine" } @{$cfg->{kartenfarben}} ];
     $cfg->{runden} = [ map { "0" + $_ } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
