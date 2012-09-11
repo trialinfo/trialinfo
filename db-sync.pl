@@ -315,7 +315,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
     });
     for (my $n = 0; $n < @{$cfg->{nennungsmaske_felder}}; $n++) {
 	if ($cfg->{nennungsmaske_felder}[$n]) {
-	    $sth->execute($id, $n);
+	    $sth->execute($id, $n + 1);
 	}
     }
 
@@ -326,7 +326,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
     for (my $n = 0; $n < @{$cfg->{kartenfarben}}; $n++) {
 	my $farbe = $cfg->{kartenfarben}[$n];
 	next if $farbe eq "Keine";
-	 $sth->execute($id, $n, $farbe);
+	 $sth->execute($id, $n + 1, $farbe);
     }
 
     $sth = $dbh->prepare(qq{
