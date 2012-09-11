@@ -313,12 +313,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	INSERT INTO nennungsmaske_feld (id, feld)
 	VALUES (?, ?)
     });
-    my @nennungsmaske_felder = (
-	@{$cfg->{nennungsmaske_felder1}},
-	@{$cfg->{nennungsmaske_felder2}}
-    );
-    for (my $n = 0; $n < @nennungsmaske_felder; $n++) {
-	if ($nennungsmaske_felder[$n]) {
+    for (my $n = 0; $n < @{$cfg->{nennungsmaske_felder}}; $n++) {
+	if ($cfg->{nennungsmaske_felder}[$n]) {
 	    $sth->execute($id, $n);
 	}
     }

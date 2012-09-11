@@ -176,6 +176,13 @@ sub cfg_datei_parsen($) {
     $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
 
+    $cfg->{nennungsmaske_felder} = [
+	@{$cfg->{nennungsmaske_felder1}},
+        @{$cfg->{nennungsmaske_felder2}}
+    ];
+    delete $cfg->{nennungsmaske_felder1};
+    delete $cfg->{nennungsmaske_felder2};
+
     return $cfg;
 }
 
@@ -194,6 +201,11 @@ sub cfg_datei_schreiben($$) {
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
+
+    $cfg->{nennungsmaske_felder1} = [ @{$cfg->{nennungsmaske_felder}}[0 .. 5] ];
+    $cfg->{nennungsmaske_felder2} = [ @{$cfg->{nennungsmaske_felder}}[6 .. 21] ];
+    delete $cfg->{nennungsmaske_felder};
+
     print $fh $cfg_parser->format($cfg);
 
     $fh->close
