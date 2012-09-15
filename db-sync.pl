@@ -90,7 +90,7 @@ CREATE TABLE fahrer_wertung (
   id INT, -- veranstaltung
   startnummer INT,
   wertung INT,
-  wertungspunkte INT NOT NULL,
+  wertungspunkte INT,
   PRIMARY KEY (id, startnummer, wertung)
 );
 
@@ -420,7 +420,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	   }
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
-	    next unless $fahrer->{wertungspunkte}[$n];
+	    next unless $fahrer->{wertungen}[$n];
 	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1,
 			   $fahrer->{wertungspunkte}[$n]);
 	}
