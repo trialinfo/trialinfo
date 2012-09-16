@@ -208,7 +208,7 @@ sub cfg_datei_schreiben($$) {
     }
 
     $cfg->{kartenfarben} = [ map { defined $_ ? $_ : "Keine" } @{$cfg->{kartenfarben}} ];
-    $cfg->{runden} = [ map { "0" + $_ } @{$cfg->{runden}} ];
+    $cfg->{runden} = [ map { "0" + ($_ // 0) } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
