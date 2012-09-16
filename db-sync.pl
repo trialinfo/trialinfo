@@ -402,6 +402,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	VALUES (?, ?, ?, ?)
     });
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	my $startnummer = $fahrer->{startnummer};
 	for (my $n = 0; $n < 5; $n++) {
 	    $fahrer->{"s$n"} = $fahrer->{s}[$n];
 	}
@@ -411,25 +412,25 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	    my $punkte = $fahrer->{punkte_pro_sektion}[$m];
 	    for (my $n = 0; $n < @$punkte; $n++) {
 		next unless defined $punkte->[$n];
-		$sth2->execute($id, $fahrer->{startnummer}, $m + 1, $n + 1,
+		$sth2->execute($id, $startnummer, $m + 1, $n + 1,
 			       $punkte->[$n]);
 	    }
 	    if ($m < $fahrer->{runden}) {
 		next unless defined $fahrer->{punkte_pro_runde}[$m];
-		$sth3->execute($id, $fahrer->{startnummer}, $m + 1,
+		$sth3->execute($id, $startnummer, $m + 1,
 			       $fahrer->{punkte_pro_runde}[$m]);
 	   }
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
 	    next unless $fahrer->{wertungen}[$n];
-	    $sth4->execute($id, $fahrer->{startnummer}, $n + 1,
+	    $sth4->execute($id, $startnummer, $n + 1,
 			   $fahrer->{wertungspunkte}[$n]);
 	}
 	if (exists $fahrer->{neue_startnummer}) {
 	    $dbh->do(qq{
 		INSERT INTO neue_startnummer (id, startnummer, neue_startnummer)
 		VALUES (?, ?, ?)
-	}, undef, $id, $fahrer->{startnummer}, $fahrer->{neue_startnummer});
+	}, undef, $id, $startnummer, $fahrer->{neue_startnummer});
 	}
     }
     return $id;
