@@ -19,17 +19,13 @@ use CGI;
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
+use Datenbank;
 use DatenbankAuswertung;
 use strict;
 
 $RenderOutput::html = 1;
 
-if ($database =~ /^mysql:/) {
-    # Make sure that strings form the database have Perl's utf8 flag set
-    $database .= ';mysql_enable_utf8=1';
-}
-
-my $dbh = DBI->connect("DBI:$database", $username, $password)
+my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($database) })
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;

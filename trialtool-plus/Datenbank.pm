@@ -19,7 +19,7 @@ package Datenbank;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank);
+@EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8);
 
 sub cfg_aus_datenbank($$) {
     my ($dbh, $id) = @_;
@@ -162,4 +162,15 @@ sub fahrer_aus_datenbank($$) {
 	    [$row[1] - 1] = 1;
     }
     return $fahrer_nach_startnummer;
+}
+
+sub db_utf8($) {
+    my ($db) = @_;
+
+    if ($db =~ /^(DBI:)?mysql:/) {
+	return mysql_enable_utf8 => 1;
+    } elsif ($db = ~ /^(DBI:)?SQLite:/) {
+	return sqlite_unicode => 1;
+    }
+    return ();
 }

@@ -119,21 +119,21 @@ Beispiele zur Verwendung
  In der MySQL-Datenbank "datenbank" die Tabellen für den Import erzeugen
  (Achtung: bestehende Daten gehen ohne Nachfrage verloren!)
 
-    db-sync.pl --db='mysql:datenbank;mysql_enable_utf8=1' \
+    db-sync.pl --db='mysql:datenbank' \
 	--username=... --password=... \
 	--create-tables
 
 
  Einmaliger Import der Daten von 2012 in die Datenbank:
 
-    db-sync.pl --db='mysql:datenbank;mysql_enable_utf8=1' \
+    db-sync.pl --db='mysql:datenbank' \
 	--username=... --password=... \
 	2012-*
 
 
  Neuimport der kompletten Daten von 2012 erzwingen:
 
-    db-sync.pl --db='mysql:datenbank;mysql_enable_utf8=1' \
+    db-sync.pl --db='mysql:datenbank' \
 	--username=... --password=... \
 	--force \
 	2012-*
@@ -141,7 +141,7 @@ Beispiele zur Verwendung
 
  Löschen einer Veranstaltung aus der Datenbank:
 
-    db-sync.pl --db='mysql:datenbank;mysql_enable_utf8=1' \
+    db-sync.pl --db='mysql:datenbank' \
 	--username=... --password=... --delete \
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
 
@@ -150,7 +150,7 @@ Beispiele zur Verwendung
  per Default alle 30 Sekunden, mit erneutem Verbindungsaufbau, falls die
  Verbindung zur Datenbank abbricht:
 
-    db-sync.pl --db='mysql:datenbank;mysql_enable_utf8=1' \
+    db-sync.pl --db='mysql:datenbank' \
 	--username=... --password=... \
 	--poll --reconnect \
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"

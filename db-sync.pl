@@ -27,6 +27,7 @@ use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
 use DBH_Logger;
 use IO::Tee;
+use Datenbank;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
@@ -791,15 +792,10 @@ if (defined $log) {
 
 my $erster_sync = $force;
 
-if ($db =~ /^mysql:/) {
-    # Make sure that strings form the database have Perl's utf8 flag set
-    $db .= ';mysql_enable_utf8=1';
-}
-
 do {
     eval {
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
-			       { RaiseError => 1, AutoCommit => 1 })
+			       { RaiseError => 1, AutoCommit => 1, db_utf8($db) })
 	    or die "Could not connect to database: $DBI::errstr\n";
 
 	if ($dbh->{Driver}->{Name} eq "mysql") {
