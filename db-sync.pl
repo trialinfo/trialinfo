@@ -791,6 +791,11 @@ if (defined $log) {
 
 my $erster_sync = $force;
 
+if ($db =~ /^mysql:/) {
+    # Make sure that strings form the database have Perl's utf8 flag set
+    $db .= ';mysql_enable_utf8=1';
+}
+
 do {
     eval {
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
@@ -799,7 +804,6 @@ do {
 
 	if ($dbh->{Driver}->{Name} eq "mysql") {
 	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
-	    $dbh->do("SET NAMES utf8");
 	}
 
 	$dbh = new DBH_Logger($dbh)
