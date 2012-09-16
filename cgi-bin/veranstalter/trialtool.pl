@@ -30,19 +30,21 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $type = $q->param('type');  # cfg oder dat
-my $veranstaltung;
+my $dateiname;
 
 if ($type !~ /^(cfg|dat)$/) {
     die "Invalid type specified\n";
 }
 
-my $sth = $dbh->prepare(qq{
+my $sth = $dbh->prepare(q{
     SELECT dateiname
     FROM veranstaltung
     WHERE id = ?
 });
 $sth->execute($id);
-unless ($veranstaltung = $sth->fetchrow_hashref) {
+if (my @row = $sth->fetchrow_array) {
+    $dateiname = $row[0];
+} else {
     die "Keine Veranstaltung mit dieser id gefunden\n";
 }
 
@@ -50,7 +52,7 @@ if ($type eq 'cfg') {
     my $cfg = cfg_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
-			 "filename=\"$veranstaltung->{dateiname}.cfg\"");
+			 "filename=\"$dateiname.cfg\"");
     cfg_datei_schreiben(\*STDOUT, $cfg);
 } else {
     #use Data::Dumper;
@@ -61,6 +63,6 @@ if ($type eq 'cfg') {
     my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
-			 "filename=\"$veranstaltung->{dateiname}.dat\"");
+			 "filename=\"$dateiname.dat\"");
     dat_datei_schreiben(\*STDOUT, $fahrer_nach_startnummer);
 }
