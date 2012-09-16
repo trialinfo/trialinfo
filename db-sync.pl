@@ -371,7 +371,6 @@ sub in_datenbank_schreiben($$$$$$$$) {
     });
     my $gestartete_klassen = gestartete_klassen($cfg);
     for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
-	next if $cfg->{klassen}[$n] eq "";
 	my $farbe = defined $klassenfarben ? $klassenfarben->{$n + 1} : undef;
 	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n],
 		      $gestartete_klassen->[$n], $farbe, $cfg->{fahrzeiten}[$n]);
