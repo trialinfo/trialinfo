@@ -50,7 +50,7 @@ my $sth = $dbh->prepare(q{
 	   wohnort AS ort, land, club, geburtsdatum, telefon, lizenznummer,
 	   fahrzeug, hubraum, bemerkung AS 'E-Mail'
     FROM fahrer
-    WHERE id = ?
+    WHERE id = ? AND startnummer < 1000
 	  } . ($gestartet ? "AND papierabnahme" : "") . q{
     ORDER BY startnummer
 });
