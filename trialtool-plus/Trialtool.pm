@@ -261,6 +261,8 @@ sub dat_datei_parsen($) {
 	delete $fahrer->{''};
 	decode_strings($fahrer, $dat_format);
 	$fahrer->{startnummer} = $n + 1;
+	$fahrer->{helfer} = undef
+	    if $fahrer->{helfer} == 0;
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
 	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
 	# wurden, und nicht, wieviele Runden komplett gefahren wurden.
