@@ -329,7 +329,7 @@ sub dat_datei_schreiben($$) {
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
 
-    for (my $n = 0; $n < 999; $n++) {
+    for (my $n = 0; $n < 1600; $n++) {
 	my $startnummer = $n + 1;
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
