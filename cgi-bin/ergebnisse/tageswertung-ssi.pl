@@ -126,7 +126,7 @@ if (defined $wereihe) {
 	JOIN fahrer USING (klasse)
 	JOIN wereihe USING (wereihe)
 	LEFT JOIN fahrer_wertung USING (id, startnummer, wertung)
-	WHERE id = ? AND wereihe = ?
+	WHERE id = ? AND wereihe = ? AND papierabnahme
     });
     $sth->execute($id, $wereihe);
 } else {
@@ -137,7 +137,7 @@ if (defined $wereihe) {
 	       papierabnahme
 	FROM fahrer
 	LEFT JOIN fahrer_wertung USING (id, startnummer)
-	WHERE id = ? AND (wertung = ? OR wertung IS NULL)
+	WHERE id = ? AND (wertung = ? OR wertung IS NULL) AND papierabnahme
     });
     $sth->execute($id, $wertung + 1);
 }
