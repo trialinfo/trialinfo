@@ -195,15 +195,23 @@ sub cfg_datei_schreiben($$) {
 
     $cfg = { %{$cfg} };
     encode_strings($cfg, $cfg_format);
+
+    $cfg->{nennungsmaske_felder1} = [ @{$cfg->{nennungsmaske_felder}}[0 .. 5] ];
+    $cfg->{nennungsmaske_felder2} = [ @{$cfg->{nennungsmaske_felder}}[6 .. 21] ];
+    delete $cfg->{nennungsmaske_felder};
+
+    # Pad arrays; otherwise pack() writes variable-length records
+    foreach my $fmt (@$cfg_format) {
+	if ($fmt =~ /(.*):.*:(.*)/) {
+	    $cfg->{$1}[$2 - 1] //= undef;
+	}
+    }
+
     $cfg->{kartenfarben} = [ map { defined $_ ? $_ : "Keine" } @{$cfg->{kartenfarben}} ];
     $cfg->{runden} = [ map { "0" + $_ } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
-
-    $cfg->{nennungsmaske_felder1} = [ @{$cfg->{nennungsmaske_felder}}[0 .. 5] ];
-    $cfg->{nennungsmaske_felder2} = [ @{$cfg->{nennungsmaske_felder}}[6 .. 21] ];
-    delete $cfg->{nennungsmaske_felder};
 
     print $fh $cfg_parser->format($cfg);
 }
@@ -333,12 +341,10 @@ sub dat_datei_schreiben($$) {
 	    } else {
 		delete $fahrer->{geburtsdatum};
 	    }
-	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
 	    $fahrer->{runden} = 'J' x $fahrer->{runden} .
 				'N' x (5 - $fahrer->{runden});
 	    $fahrer->{versicherung} = '0' + ($fahrer->{versicherung} // 0);
-	    $fahrer->{punkte_pro_sektion} = [ map { [ map { defined $_ ? $_ : 6 } @$_ ] }
-					      @{$fahrer->{punkte_pro_sektion}} ];
+
 	    if (defined $fahrer->{startzeit} && $fahrer->{startzeit} =~ /(..):(..):(..)/) {
 		$fahrer->{startzeit} = "$1.$2";
 	    } else {
@@ -355,6 +361,35 @@ sub dat_datei_schreiben($$) {
 	    if (defined $fahrer->{keine_wertungspunkte}) {
 		$fahrer->{bemerkung} .= " *KW*";
 	    }
+
+	    my $punkte_pro_sektion;
+	    for (my $runde = 0; $runde < 5; $runde++) {
+		for (my $sektion = 0; $sektion < 15; $sektion++) {
+		    $punkte_pro_sektion->[$runde * 15 + $sektion] =
+			$fahrer->{punkte_pro_sektion}[$runde][$sektion] // 6;
+		}
+	    }
+	    $fahrer->{punkte_pro_sektion} = $punkte_pro_sektion;
+
+	    # Rundenstatistik
+	    my $r;
+	    for (my $runde = 0; $runde < 5; $runde++) {
+		for (my $punkte = 0; $punkte < 5; $punkte++) {
+		    $r->[$runde * 6 + $punkte] =
+			$fahrer->{r}[$runde][$punkte];
+		}
+		$r->[$runde * 6 + 5] = 0;
+	    }
+	    $fahrer->{r} = $r;
+
+	    # Pad arrays; otherwise pack() writes variable-length records
+	    foreach my $fmt (@$dat_format) {
+		if ($fmt =~ /(.*):.*:(.*)/) {
+		    $fahrer->{$1}[$2 - 1] //= undef;
+		}
+	    }
+
+	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
 	    print $fh $fahrer_parser->format($fahrer);
 	} else {
 	    print $fh $leerer_fahrer;
