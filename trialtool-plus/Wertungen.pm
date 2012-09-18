@@ -139,7 +139,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 
 	my $rang = 1;
 	$fahrer_in_klasse = [ sort { rang_vergleich($a, $b, $cfg) } @$fahrer_in_klasse ];
-	$fahrer_in_klasse = [ map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
+	#$fahrer_in_klasse = [ map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
@@ -252,10 +252,8 @@ sub tageswertung($$$$$$) {
     }
 
     my $zusatzpunkte;
-    my $vierer;
+    my $vierpunktewertung = $cfg->{vierpunktewertung} ? 1 : 0;
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	$vierer = 1
-	    if $fahrer->{s4};
 	$zusatzpunkte = 1
 	    if $fahrer->{zusatzpunkte};
     }
@@ -277,7 +275,7 @@ sub tageswertung($$$$$$) {
 		if defined $fahrer->{wertungspunkte}[$wertung];
 	}
 
-	my $ausfall_fmt = "c" . ($vierer ? 6 : 5);
+	my $ausfall_fmt = "c" . (5 + $vierpunktewertung);
 
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
 	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
@@ -307,7 +305,7 @@ sub tageswertung($$$$$$) {
 	push @$header, [ "1S", "r1", "title=\"Einser\"" ];
 	push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
 	push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
-	if ($vierer) {
+	if ($vierpunktewertung) {
 	    push @$format, "r2";
 	    push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
 	}
@@ -354,7 +352,7 @@ sub tageswertung($$$$$$) {
 		push @$row, [ "", $ausfall_fmt ];
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
-		for (my $n = 0; $n < ($vierer ? 5 : 4); $n++) {
+		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
 		    push @$row, $fahrer->{s}[$n];
 		}
 	    }

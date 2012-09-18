@@ -32,7 +32,7 @@ my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $nach_sektionen = defined $q->param('nach_sektionen');
 my $bewertung = defined $q->param('bewertung');
-my $vierer;
+my $vierpunktewertung;
 
 sub x($) {
     my ($punkte) = @_;
@@ -62,7 +62,7 @@ sub x($) {
     }
 
     return ($x[0], $x[1], $x[2], $x[3],
-	    ($vierer ? $x[4] : ()), $x[5],
+	    ($vierpunktewertung ? $x[4] : ()), $x[5],
 	    sprintf("%.1f", $y * $n), @schwierigkeit);
 }
 
@@ -93,7 +93,7 @@ unless (defined $id) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT titel
+    SELECT titel, vierpunktewertung
     FROM veranstaltung
     JOIN wertung USING (id)
     WHERE id = ? AND wertung = ?
@@ -101,6 +101,7 @@ $sth = $dbh->prepare(q{
 $sth->execute($id, $wertung + 1);
 if (my @row = $sth->fetchrow_array) {
     $titel = $row[0];
+    $vierpunktewertung = $row[1];
 } else {
     doc_h2 "Veranstaltung nicht gefunden.";
     exit;
@@ -129,22 +130,11 @@ while (my @row = $sth->fetchrow_array) {
     $cfg->{klassen}[$row[0] - 1] = $row[1];
 }
 
-foreach my $klasse (values %$klassen) {
-    foreach my $sektion (values %$klasse) {
-	foreach my $punkte (@$sektion) {
-	    if ($punkte == 4) {
-		$vierer = 1;
-		last;
-	    }
-	}
-    }
-}
-
 if ($nach_sektionen) {
     doc_h2 "Punktestatistik – $titel";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Sektion 0 1 2 3) ];
-    if ($vierer) {
+    if ($vierpunktewertung) {
 	push @$format, "r3";
 	push @$header, "4";
     }
@@ -174,7 +164,7 @@ if ($nach_sektionen) {
     doc_h2 "Punktestatistik – $titel";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Klasse 0 1 2 3) ];
-    if ($vierer) {
+    if ($vierpunktewertung) {
 	push @$format, "r3";
 	push @$header, "4";
     }
