@@ -26,7 +26,7 @@ use strict;
 
 $RenderOutput::html = 1;
 
-my $dbh = DBI->connect("DBI:$database", $username, $password, { $db_utf8($database) })
+my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($database) })
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
