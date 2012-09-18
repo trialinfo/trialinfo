@@ -15,6 +15,7 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
+use utf8;
 use CGI;
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
@@ -23,6 +24,8 @@ use Datenbank;
 use DatenbankAuswertung;
 use Trialtool;
 use strict;
+
+binmode STDOUT, ':encoding(utf8)';
 
 my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($database) })
     or die "Could not connect to database: $DBI::errstr\n";
