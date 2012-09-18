@@ -110,7 +110,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $zeit = max_time(mtime("$name.cfg"), mtime("$name.dat"));
 
     my $cfg = cfg_datei_parsen("$name.cfg");
-    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat");
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
     if (%$klassen) {

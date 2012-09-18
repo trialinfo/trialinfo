@@ -244,16 +244,17 @@ sub rundenstatistik_aufteilen($) {
 		 [@$r[24..29]] ];
 }
 
-sub dat_datei_parsen($) {
-    my ($dateiname) = @_;
+sub dat_datei_parsen($$) {
+    my ($dateiname, $nur_fahrer) = @_;
 
+    my $startnummern = $nur_fahrer ? 1000 : 1600;
     my $fh = new FileHandle(encode(locale_fs => $dateiname));
     binmode $fh, ":bytes";
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
-    for (my $n = 0; $n < 1600; $n++) {
+    for (my $n = 0; $n < $startnummern; $n++) {
 	my $fahrer_binaer = substr($dat, $n * 847, 847);
 	my $klasse = unpack "S<", $fahrer_binaer;
 	next if $klasse == 0;
