@@ -138,8 +138,10 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	my $rang = 1;
-	$fahrer_in_klasse = [ sort { rang_vergleich($a, $b, $cfg) } @$fahrer_in_klasse ];
-	#$fahrer_in_klasse = [ map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
+	$fahrer_in_klasse = [
+	    map { $_->{startnummer} < 1000 && $_->{papierabnahme} ? $_ : () }
+		sort { rang_vergleich($a, $b, $cfg) }
+		     @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
@@ -266,7 +268,9 @@ sub tageswertung($$$$$$) {
 	my ($header, $body, $format);
 	my $farbe = "";
 
-	$fahrer_in_klasse = [ map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
+	$fahrer_in_klasse = [
+	    map { $_->{startnummer} < 1000 && $_->{papierabnahme} ? $_ : () }
+		  @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
 
 	my $wertungspunkte;
@@ -441,7 +445,8 @@ sub jahreswertung($$$$$) {
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
-	    if (defined $fahrer->{wertungspunkte}[$wertung]) {
+	    if ($startnummer < 1000 &&
+		defined $fahrer->{wertungspunkte}[$wertung]) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		    $fahrer->{wertungspunkte}[$wertung];
