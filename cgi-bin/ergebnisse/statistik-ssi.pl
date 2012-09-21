@@ -33,7 +33,9 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $nach_sektionen = defined $q->param('nach_sektionen');
-my $bewertung = defined $q->param('bewertung');
+my $verteilung = 1;
+my $verteilung_hoehe = 10;
+my $verteilung_breite = 200;
 my $vierpunktewertung;
 
 sub x($) {
@@ -52,20 +54,39 @@ sub x($) {
 	$n = 0;
     }
 
-    my @schwierigkeit;
-    if ($bewertung) {
-	if ($x[0] > ($x[1] + $x[2] + $x[3] + $x[4] + $x[5]) * 3) {
-	    push @schwierigkeit, "↓";
-	} elsif ($x[0] + $x[1] + $x[2] + $x[3] + $x[4] < $x[5]) {
-	    push @schwierigkeit, "↑";
-	} else {
-	    push @schwierigkeit, "";
+    my @rest;
+    if ($verteilung) {
+	my $code = "";
+	my $summe = 0;
+	for (my $n = 0, $summe = 0; $n < @x; $n++) {
+	    $summe += $x[$n];
 	}
+	if ($summe) {
+		for (my $n = 0, my $s = 0; $n < @x; $n++) {
+		    next unless $x[$n];
+		    my $w = int(($s + $x[$n]) * $verteilung_breite / $summe) -
+			    int($s * $verteilung_breite / $summe);
+		    $s += $x[$n];
+		    $code .= "<img src=\"$n.png\" title=\"$n\" height=\"$verteilung_hoehe\" width=\"$w\" />";
+		}
+	}
+	push @rest, [ $code, "l" ];
     }
 
     return ($x[0], $x[1], $x[2], $x[3],
 	    ($vierpunktewertung ? $x[4] : ()), $x[5],
-	    sprintf("%.1f", $y * $n), @schwierigkeit);
+	    sprintf("%.1f", $y * $n), @rest);
+}
+
+sub verteilung_legende() {
+    my @kategorien;
+
+    for (my $n = 0; $n <= 5; $n++) {
+	next if $n == 4 && !$vierpunktewertung;
+	push @kategorien, "<img src=\"$n.png\" height=\"$verteilung_hoehe\" " .
+			  "width=\"$verteilung_hoehe\" /> $n";
+    }
+    print "<p>\n" . join(" &nbsp;\n", @kategorien) . "</p>\n";
 }
 
 my $wertung = 0;
@@ -113,7 +134,7 @@ $sth = $dbh->prepare(q{
     SELECT klasse, sektion, punkte.punkte
     FROM punkte
     JOIN fahrer USING (id, startnummer)
-    WHERE id = ?
+    WHERE id = ? AND punkte.punkte <= 5
 });
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
@@ -142,9 +163,9 @@ if ($nach_sektionen) {
     }
     push @$format, qw(r3 r);
     push @$header, qw(5 ⌀);
-    if ($bewertung) {
-	push @$format, "c";
-	push @$header, "↑↓";
+    if ($verteilung) {
+	push @$format, "l";
+	push @$header, "";
     }
     foreach my $n (sort { $a <=> $b } keys %$klassen) {
 	my $klasse = $klassen->{$n};
@@ -162,6 +183,7 @@ if ($nach_sektionen) {
 	my $footer = [ "", x($alle_punkte) ];
 	doc_table $header, $body, $footer, $format;
     }
+    verteilung_legende;
 } else {
     doc_h2 "Punktestatistik – $titel";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
@@ -172,9 +194,9 @@ if ($nach_sektionen) {
     }
     push @$format, qw(r3 r);
     push @$header, qw(5 ⌀);
-    if ($bewertung) {
-	push @$format, "c";
-	push @$header, "↑↓";
+    if ($verteilung) {
+	push @$format, "l";
+	push @$header, "";
     }
     my $body;
     my $alle_punkte;
@@ -190,6 +212,7 @@ if ($nach_sektionen) {
     }
     my $footer = [ "", x($alle_punkte) ];
     doc_table $header, $body, $footer, $format;
+    verteilung_legende;
 
     print "<p><a href=\"statistik.shtml?id=$id&nach_sektionen\">Nach Sektionen</a></p>\n";
 }
