@@ -135,5 +135,5 @@ my $footer = [ [ "Summen:", "r4" ], $nenngeld, $otsv, $otsv_vers ]
 
 doc_h2 "Nenngeldliste – $titel";
 doc_table $header, $body, $footer, $format;
-printf "<p>%s Starter, davon %s über 18 Jahren und %s unter 18 Jahren</p>\n",
+printf "<p>%s Starter, davon %s über 18 Jahre und %s unter 18 Jahre</p>\n",
        $starter, $ueber_18, $starter - $ueber_18;
