@@ -56,7 +56,7 @@ my $cfg_format = [
 					#	0 = keines, 1 = aufsteigend, 2 = absteigend
     ":a",				#  642: ?
     "punkte_sektion_auslassen:S<",	#  643: Punkte für Auslassen einer Sektion
-    "wertungen_234_punkte:S<",		#  645: Wertungspunkte für jeden Fahrer in Wertung 2, 3, 4?
+    "wertungspunkte_234:S<",		#  645: Wertungspunkte für jeden Fahrer in Wertung 2, 3, 4?
     "rand_links:S<",			#  647: Seitenrand links
     "tastatureingabe:S<",		#  649: Maus- oder Tastatureingabe
     "kartenfarben:A7:5",		#  651: "Blau", "Rot", "Gelb", "Weiss", "Grün", "Braun", "Keine"

@@ -27,7 +27,7 @@ sub cfg_aus_datenbank($$) {
 
     my $sth = $dbh->prepare(q{
 	SELECT vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
-	       wertungen_234_punkte, rand_links, rand_oben,
+	       wertungspunkte_234, rand_links, rand_oben,
 	       wertungspunkte_markiert, versicherung, ergebnislistenbreite,
 	       ergebnisliste_feld
 	FROM veranstaltung

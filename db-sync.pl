@@ -144,7 +144,7 @@ CREATE TABLE veranstaltung (
   vierpunktewertung BOOLEAN,
   wertungsmodus INT,
   punkte_sektion_auslassen INT,
-  wertungen_234_punkte BOOLEAN,
+  wertungspunkte_234 BOOLEAN,
   ergebnisliste_feld INT,
   wertungspunkte_markiert BOOLEAN,
   versicherung INT,
@@ -300,7 +300,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 
     my @cfg_felder = qw(
 	vierpunktewertung wertungsmodus punkte_sektion_auslassen
-	wertungen_234_punkte ergebnisliste_feld wertungspunkte_markiert
+	wertungspunkte_234 ergebnisliste_feld wertungspunkte_markiert
 	versicherung rand_links rand_oben ergebnislistenbreite
     );
     $sth = $dbh->prepare(sprintf qq{
