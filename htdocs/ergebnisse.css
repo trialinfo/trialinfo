@@ -23,10 +23,13 @@ color:#ffffff;
 }
 table.wertung tr.alt td
 {
-color:#000000;
 background-color:#EAF2D3;
 }
 table.wertung tr.footer td
 {
 font-style:italic;
+}
+table.wertung td.info
+{
+color:#A0A0A0;
 }

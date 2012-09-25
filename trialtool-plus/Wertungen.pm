@@ -318,6 +318,26 @@ sub tageswertung($$$$$$) {
 	    if $wertungspunkte;
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
+
+	if ($RenderOutput::html) {
+	    # Welche 0er, 1er, ... sind für den Rang relevant?
+	    my $sn_alt = 0;
+	    for (my $n = 0; $n < @$fahrer_in_klasse - 1; $n++) {
+		my $a = $fahrer_in_klasse->[$n];
+		my $b = $fahrer_in_klasse->[$n + 1];
+		my $sn = 0;
+		if ($a->{punkte} == $b->{punkte}) {
+		    for (my $m = 0; $m < 5; $m++) {
+			$sn++;
+			last unless $a->{s}[$m] == $b->{s}[$m];
+		    }
+		}
+		$a->{sn} = max($sn_alt, $sn);
+		$sn_alt = $sn;
+	    }
+	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{sn} = $sn_alt;
+	}
+
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $row;
 	    if (!$fahrer->{ausfall}) {
@@ -357,7 +377,11 @@ sub tageswertung($$$$$$) {
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
-		    push @$row, $fahrer->{s}[$n];
+		    if ($n < $fahrer->{sn} // 0) {
+			push @$row, $fahrer->{s}[$n];
+		    } else {
+			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info\"" ];
+		    }
 		}
 	    }
 	    push @$row, $fahrer->{wertungspunkte}[$wertung] || ""
