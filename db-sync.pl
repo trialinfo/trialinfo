@@ -422,7 +422,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	   }
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
-	    next unless $fahrer->{wertungen}[$n];
+	    next unless $fahrer->{wertungen}[$n] &&
+			($n == 0 || $cfg->{wertungspunkte_234});
 	    $sth4->execute($id, $startnummer, $n + 1,
 			   $fahrer->{wertungspunkte}[$n]);
 	}
