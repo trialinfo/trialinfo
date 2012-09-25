@@ -353,8 +353,7 @@ sub tageswertung($$$$$$) {
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
 		if ($fahrer->{runden} > $n) {
-		    my $punkte = $fahrer->{punkte_pro_runde}[$n];
-		    $punkte = defined $punkte ? $punkte : "-";
+		    my $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
 		    if ($alle_punkte) {
 			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $cfg);
 			push @$row, [ $punkte, "r1", "title=\"$punkte_pro_sektion\"" ];
