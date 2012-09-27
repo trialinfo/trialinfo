@@ -41,27 +41,31 @@ my $spalten;
 my $klassen = [];
 my $farben = [];
 my $anzeigen_mit;
-my $alle_punkte;  # Punkte in den Sektionen als ToolTip
+my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
+my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Ergebnis egal
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"klassen=s@" => \@$klassen,
 			"farben=s@" => \@$farben,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
-			"alle-punkte" => \$alle_punkte,
+			"nicht-alle-punkte" => sub () { $alle_punkte = 0 },
+			"nicht-nach-relevanz" => sub () { $nach_relevanz = 0 },
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--alle-punkte] [--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--nicht-alle-punkte] " .
+	  "[--nicht-nach-relevanz] [--club] [--lizenznummer] [--fahrzeug] " .
+	  "[--geburtsdatum]\n";
     exit 1;
 }
 
-if ($alle_punkte && !$RenderOutput::html) {
-    print STDERR "Die Option --alle-punkte setzt die Option --html voraus\n";
-    exit 1;
+if (!$RenderOutput::html) {
+    $alle_punkte = 0;
+    $nach_relevanz = 0;
 }
 
 $klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
@@ -124,7 +128,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
     doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
     tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten,
-		 $klassenfarben, $alle_punkte;
+		 $klassenfarben, $alle_punkte, $nach_relevanz;
 
     if ($RenderOutput::html) {
 	print "<p>Letzte Änderung: $zeit</p>\n";

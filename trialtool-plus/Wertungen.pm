@@ -233,8 +233,8 @@ sub punkte_pro_sektion($$$) {
     return join(" ", @$punkte_pro_sektion);
 }
 
-sub tageswertung($$$$$$) {
-    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $klassenfarben, $alle_punkte) = @_;
+sub tageswertung($$$$$$$) {
+    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $klassenfarben, $alle_punkte, $nach_relevanz) = @_;
 
     $klassenfarben = $otsv_klassenfarben
 	unless defined $klassenfarben;
@@ -319,7 +319,7 @@ sub tageswertung($$$$$$) {
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 
-	if ($RenderOutput::html) {
+	if ($nach_relevanz && $RenderOutput::html) {
 	    # Welche 0er, 1er, ... sind für den Rang relevant?
 	    my $sn_alt = 0;
 	    for (my $n = 0; $n < @$fahrer_in_klasse - 1; $n++) {
@@ -376,7 +376,7 @@ sub tageswertung($$$$$$) {
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
-		    if ($n < $fahrer->{sn} // 0) {
+		    if ($n < ($fahrer->{sn} // 5)) {
 			push @$row, $fahrer->{s}[$n];
 		    } else {
 			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info\"" ];

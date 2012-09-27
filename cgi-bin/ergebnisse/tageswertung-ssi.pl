@@ -48,6 +48,7 @@ my $fahrer_nach_startnummer;
 my $sth;
 my $klassenfarben;
 my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
+my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Ergebnis egal
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
@@ -242,7 +243,7 @@ unless ($animiert) {
     }
 }
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $klassenfarben,
-	     $alle_punkte;
+	     $alle_punkte, $nach_relevanz;
 
 print "<p>Letzte Änderung: $zeit</p>\n"
     unless $animiert;
