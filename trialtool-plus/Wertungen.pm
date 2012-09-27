@@ -324,9 +324,11 @@ sub tageswertung($$$$$$$) {
 	if ($nach_relevanz && $RenderOutput::html) {
 	    # Welche 0er, 1er, ... sind für den Rang relevant?
 	    my $sn_alt = 0;
+	    my $rn_alt = 0;
 	    for (my $n = 0; $n < @$fahrer_in_klasse - 1; $n++) {
 		my $a = $fahrer_in_klasse->[$n];
 		my $b = $fahrer_in_klasse->[$n + 1];
+
 		my $sn = 0;
 		if ($a->{punkte} == $b->{punkte}) {
 		    for (my $m = 0; $m < 5; $m++) {
@@ -334,10 +336,32 @@ sub tageswertung($$$$$$$) {
 			last unless $a->{s}[$m] == $b->{s}[$m];
 		    }
 		}
+
+		my $rn = 0;
+		if ($sn == 5) {
+		    my $ra = $a->{punkte_pro_runde};
+		    my $rb = $b->{punkte_pro_runde};
+
+		    if ($cfg->{wertungsmodus} == 1) {
+			for (my $m = 0; $m < 5; $m++) {
+			    $rn++;
+			    last unless $ra->[$m] == $rb->[$m];
+			}
+		    } elsif ($cfg->{wertungsmodus} == 2) {
+			for (my $m = $runden - 1; $m >= 0; $m--) {
+			    $rn++;
+			    last unless $ra->[$m] == $rb->[$m];
+			}
+		    }
+		}
+
 		$a->{sn} = max($sn_alt, $sn);
+		$a->{rn} = max($rn_alt, $rn);
 		$sn_alt = $sn;
+		$rn_alt = $rn;
 	    }
 	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{sn} = $sn_alt;
+	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{rn} = $rn_alt;
 	}
 
 	foreach my $fahrer (@$fahrer_in_klasse) {
@@ -354,18 +378,31 @@ sub tageswertung($$$$$$$) {
 			    $fahrer->{$spalte} : "";
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
+		my $punkte;
+		my $fmt;
+
 		if ($fahrer->{runden} > $n) {
-		    my $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
+		    $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
 		    if ($alle_punkte) {
 			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $cfg);
-			push @$row, [ $punkte, "r1", "title=\"$punkte_pro_sektion\"" ];
-		    } else {
-			push @$row, $punkte;
+			push @$fmt, "title=\"$punkte_pro_sektion\"";
 		    }
-		} elsif ($fahrer->{ausfall} == 0 || $fahrer->{ausfall} == 4) {
-		    push @$row, undef;
+		} elsif ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
+		    $punkte = "-";
+		}
+
+		if (defined $fahrer->{rn} &&
+		    ($cfg->{wertungsmodus} == 0 ||
+		     ($cfg->{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
+		     ($cfg->{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
+		     $fahrer->{ausfall} != 0)) {
+		    push @$fmt, "class=\"info\"";
+		}
+
+		if ($fmt) {
+		    push @$row, [ $punkte, "r1", join(" ", @$fmt) ];
 		} else {
-		    push @$row, "-";
+		    push @$row, $punkte;
 		}
 	    }
 	    push @$row, $fahrer->{zusatzpunkte} || ""
