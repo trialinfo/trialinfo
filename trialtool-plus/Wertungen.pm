@@ -251,6 +251,8 @@ sub tageswertung($$$$$$$) {
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	next
+	    unless $fahrer->{startnummer} < 1000 && $fahrer->{papierabnahme};
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
 	$namenlaenge = max($n, $namenlaenge);
     }
