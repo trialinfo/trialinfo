@@ -76,6 +76,8 @@ sub rang_vergleich($$$) {
 	my $bx = $b->{punkte_pro_runde};
 	if ($cfg->{wertungsmodus} == 1) {
 	    for (my $n = 0; $n < @$ax; $n++) {
+		last unless defined $ax->[$n];
+		# Beide müssen definiert sein
 		return $ax->[$n] <=> $bx->[$n]
 		    if $ax->[$n] != $bx->[$n];
 	    }
