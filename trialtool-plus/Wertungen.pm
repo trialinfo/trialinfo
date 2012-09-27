@@ -124,8 +124,8 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    if ($fahrer->{runden} < $runde ||
 		!runde_vollstaendig($fahrer, $runde, $cfg)) {
 		$fahrer->{punkte_pro_runde}[$runde] = undef;
-		if ($gefahrene_runden >= $runde) {
-		    $gefahrene_runden = $runde - 1;
+		if ($gefahrene_runden > $runde) {
+		    $gefahrene_runden = $runde;
 		}
 	    }
 	}
