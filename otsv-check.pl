@@ -221,7 +221,8 @@ foreach my $name (trialtool_dateien @ARGV) {
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	if (lizenzfahrer($fahrer) &&
-	    !$klassen_fuer_lizenzfahrer->[$fahrer->{klasse} - 1]) {
+	    !$klassen_fuer_lizenzfahrer->[$fahrer->{klasse} - 1] &&
+	    !$fahrer->{ausfall}) {
 	    print "Fehler: OSK-Lizenzfahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} ist in Klasse " .
 		  "$fahrer->{klasse}, darf aber nur " .
@@ -250,7 +251,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	if (!lizenzfahrer($fahrer) &&
 	    $startende_klassen->[$fahrer->{klasse} - 1] &&
 	    $osk_klassen->[$fahrer->{klasse} - 1] &&
-	    $fahrer->{ausfall} != 4) {  # 4 == aus der wertung
+	    !$fahrer->{ausfall}) {
 	    print "Fehler: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} ist kein " .
 		  "Lizenzfahrer, und darf in OSK-Klasse $fahrer->{klasse} " .
@@ -268,7 +269,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	if ($fahrer->{wertungen}[$wertung] &&
 	    $klassen_adjw->[$fahrer->{klasse} - 1] &&
-	    $fahrer->{ausfall} != 4) {  # 4 == aus der wertung
+	    !$fahrer->{ausfall}) {
 	    print "Fehler: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		  "$fahrer->{klasse} ist in der " .
@@ -288,7 +289,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	    if (lizenzfahrer($fahrer) &&
 		$fahrer->{wertungen}[$wertung] &&
-		$fahrer->{ausfall} != 4) {  # 4 = aus der wertung
+		!$fahrer->{ausfall}) {
 		print "Fehler: Lizenzfahrer $startnummer " .
 		      "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		      "$fahrer->{klasse} ist in der " .
@@ -309,7 +310,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	if ((!lizenzfahrer($fahrer) || $osk) &&
 	    !$fahrer->{wertungen}[$wertung] &&
 	    !$klassen_adjw->[$fahrer->{klasse} - 1] &&
-	    $fahrer->{ausfall} != 4) {  # 4 == aus der wertung
+	    !$fahrer->{ausfall}) {
 	    my $zusatzinfo = "";
 	    if ($fahrer->{klasse} == 11 || $fahrer->{klasse} == 12 ||
 		$fahrer->{klasse} == 13) {
