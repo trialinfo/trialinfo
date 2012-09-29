@@ -346,6 +346,19 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	if (lizenzfahrer($fahrer) && !$fahrer->{startzeit}) {
+	    print "Fehler: Bei Lizenzfahrer $startnummer " .
+		  "$fahrer->{nachname} $fahrer->{vorname} ist keine Startzeit eingetragen.\n";
+	    $fehler++;
+	}
+    }
+    if ($fehler) {
+	print "=> Bitte tragen Sie die Startzeiten nach.\n\n";
+	$fehler = 0;
+    }
+
+    foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	my $klasse = $fahrer->{klasse};
 
 	my $alter = alter($fahrer);
