@@ -192,6 +192,20 @@ foreach my $name (trialtool_dateien @ARGV) {
 	$fehler = 0;
     }
 
+    foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	if ($fahrer->{helfer}) {
+	    print "Fahrer $startnummer " .
+		  "$fahrer->{nachname} $fahrer->{vorname} " .
+		  "ist ein Helfer zugeordnet.\n";
+	    $fehler++;
+	}
+    }
+    if ($fehler) {
+	print "=> Bitte löschen Sie die Helferzuordnung.\n\n";
+	$fehler = 0;
+    }
+
     # Fahrer ohne Papierabnahme von weiteren Checks ausnehmen
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
