@@ -377,7 +377,8 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $fahrer_auf_der_strecke;
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if ($fahrer->{runden} != $cfg->{runden}[$fahrer->{klasse} - 1] &&
+	if ($fahrer->{klasse} != 99 &&
+	    $fahrer->{runden} != $cfg->{runden}[$fahrer->{klasse} - 1] &&
 	    ($fahrer->{ausfall} == 0 || $fahrer->{ausfall} == 4)) {
 	    push @$fahrer_auf_der_strecke, $startnummer;
 	}
