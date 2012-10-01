@@ -54,6 +54,7 @@ WEB_FILES = \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
+	trialtool-plus/Datenbank.pm \
 	trialtool-plus/DatenbankAuswertung.pm.txt \
 
 all:
@@ -83,7 +84,7 @@ upload:
 	$(MAKE) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
 
 upload-diff:
-	$(MAKE) do-upload CMD='diff -u "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
+	$(MAKE) do-upload CMD='diff -Nu "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
 
 do-upload:
 	@set -e; \
