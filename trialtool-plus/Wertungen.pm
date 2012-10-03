@@ -385,7 +385,7 @@ sub tageswertung($$$$$$$) {
 		    $punkte = "-";
 		}
 
-		if (defined $fahrer->{rn} &&
+		if (!defined $fahrer->{rn} ||
 		    ($cfg->{wertungsmodus} == 0 ||
 		     ($cfg->{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
 		     ($cfg->{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
@@ -409,7 +409,7 @@ sub tageswertung($$$$$$$) {
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
-		    if ($n < ($fahrer->{sn} // 5)) {
+		    if ($n < ($fahrer->{sn} // -1)) {
 			push @$row, $fahrer->{s}[$n];
 		    } else {
 			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info\"" ];
