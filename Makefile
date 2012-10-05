@@ -5,12 +5,14 @@ MOUNTPOINT = /mnt/easyserver
 SUBDIR = www2.otsv.at
 
 COMMON_FILES = \
+	trialtool-plus/Datenbank.pm \
 	trialtool-plus/RenderOutput.pm \
 	trialtool-plus/Wertungen.pm \
 
 LOCAL_FILES = \
 	trialtool-plus/DBH_Logger.pm \
 	db-sync.pl \
+	db-export.pl \
 	doc/eer-diagramm.mwb \
 	doc/eer-diagramm.pdf \
 	README \
@@ -19,7 +21,7 @@ LOCAL_FILES = \
 	jahreswertung.pl \
 	Makefile \
 	otsv-check.pl \
-	Parse/Binary/FixedFormat.pm \
+	trialtool-plus/Parse/Binary/FixedFormat.pm \
 	trialtool-plus/STH_Logger.pm \
 	tageswertung.pl \
 	trialtool-plus/Trialtool.pm \
@@ -54,13 +56,13 @@ WEB_FILES = \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
-	trialtool-plus/Datenbank.pm \
 	trialtool-plus/DatenbankAuswertung.pm.txt \
 
 all:
 
 dist:
-	@rm -rf $(NAME)-$(VERSION)
+	@set -e; \
+	rm -rf $(NAME)-$(VERSION); \
 	umask 022; \
 	mkdir $(NAME)-$(VERSION); \
 	for file in $(COMMON_FILES) $(LOCAL_FILES); do \
