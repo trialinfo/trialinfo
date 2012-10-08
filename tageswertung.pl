@@ -115,6 +115,18 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     my $cfg = cfg_datei_parsen("$name.cfg");
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+
+    if ($wertung != 0) {
+	# FIXME: Rang und Wertungspunkte sollten pro Wertung berechnet werden,
+	# und die Funktion tageswertung sollte die Fahrer bei der Ausgabe
+	# filtern.
+	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	    delete $fahrer_nach_startnummer->{$startnummer}
+		unless $fahrer->{wertungen}[$wertung];
+	}
+    }
+
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
     if (%$klassen) {
