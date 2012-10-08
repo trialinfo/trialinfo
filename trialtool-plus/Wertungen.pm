@@ -22,7 +22,7 @@ require Exporter;
 @EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_time);
 
 use utf8;
-use List::Util qw(max);
+use List::Util qw(min max);
 use RenderOutput;
 use Time::Local;
 use strict;
@@ -468,18 +468,48 @@ sub jahreswertung_cmp {
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
+sub jahreswertung_zusammenfassung($$$$) {
+    my ($klasse, $laeufe_bisher, $laeufe_gesamt, $streichresultate) = @_;
+
+    if ($laeufe_gesamt < $streichresultate) {
+	print STDERR (defined $klasse ? "Klasse $klasse: " : "") .
+		     "Mehr Streichresultate als geplante Läufe.\n";
+    }
+    if ($laeufe_gesamt < $laeufe_bisher) {
+	print STDERR (defined $klasse ? "Klasse $klasse: " : "") .
+		     "Mehr Läufe gefunden als geplant.\n";
+    }
+    $streichresultate = min($laeufe_gesamt, $streichresultate);
+
+    my @l;
+    if (defined $laeufe_bisher && defined $laeufe_gesamt) {
+	push @l, "Stand nach $laeufe_bisher von $laeufe_gesamt " .
+		 ($laeufe_gesamt == 1 ? "Lauf" : "Läufen");
+    }
+    if (defined $streichresultate) {
+	my $gestrichen = min($laeufe_bisher,
+			     $laeufe_bisher + $streichresultate - $laeufe_gesamt);
+	if ($gestrichen > 0) {
+	    push @l, "$gestrichen von $streichresultate " .
+		     ($streichresultate == 1 ? "Streichresultat" : "Streichresultaten") .
+		     " berücksichtigt";
+	}
+    }
+    return @l ? (join(", ", @l) . ".") : "";
+}
+
 sub jahreswertung($$$$$$) {
-    my ($veranstaltungen, $wertung, $laeufe, $streichresultate, $klassenfarben,
-	$spalten) = @_;
+    my ($veranstaltungen, $wertung, $laeufe_gesamt, $streichresultate,
+	$klassenfarben, $spalten) = @_;
 
     my $streichgrenze;
-    $streichgrenze = $laeufe - $streichresultate
-	if defined $laeufe && defined $streichresultate;
+    $streichgrenze = $laeufe_gesamt - $streichresultate
+	if defined $laeufe_gesamt && defined $streichresultate;
 
     $klassenfarben = $otsv_klassenfarben
 	unless defined $klassenfarben;
 
-    my $veranstaltungen_pro_klasse;
+    my $laeufe_pro_klasse;
     foreach my $veranstaltung (@$veranstaltungen) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
@@ -488,9 +518,23 @@ sub jahreswertung($$$$$$) {
 	}
 	if (exists $cfg->{gewertet}) {
 	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
-		$veranstaltungen_pro_klasse->{$n + 1}++
+		$laeufe_pro_klasse->{$n + 1}++
 		    if defined $cfg->{gewertet}[$n];
 	    }
+	}
+    }
+
+    my $gemeinsame_zusammenfassung;
+    my $laeufe_bisher;
+    foreach my $klasse (keys %$laeufe_pro_klasse) {
+	if (defined $laeufe_bisher) {
+	    if ($laeufe_bisher != $laeufe_pro_klasse->{$klasse}) {
+		$gemeinsame_zusammenfassung = undef;
+		last;
+	    }
+	} else {
+	    $laeufe_bisher = $laeufe_pro_klasse->{$klasse};
+	    $gemeinsame_zusammenfassung = 1;
 	}
     }
 
@@ -532,19 +576,20 @@ sub jahreswertung($$$$$$) {
 	$namenlaenge = max($n, $namenlaenge);
     }
 
+    doc_p jahreswertung_zusammenfassung(undef, $laeufe_bisher,
+					$laeufe_gesamt, $streichresultate)
+	if $gemeinsame_zusammenfassung;
+
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
-	my $streichresultate = defined $streichgrenze ?
-	    $veranstaltungen_pro_klasse->{$klasse} - $streichgrenze : 0;
+	my $gestrichen = defined $streichgrenze ?
+	    $laeufe_pro_klasse->{$klasse} - $streichgrenze : 0;
 	my $klassenwertung = $jahreswertung->{$klasse};
-	if ($streichresultate > 0) {
-	    if ($streichresultate == 1) {
-		doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] (1 Streichresultat)";
-	    } else {
-		doc_h3 "$letzte_cfg->{klassen}[$klasse - 1] ($streichresultate Streichresultate)";
-	    }
-	} else {
-	    doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
-	}
+	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
+
+	doc_p jahreswertung_zusammenfassung($klasse, $laeufe_pro_klasse->{$klasse},
+					    $laeufe_gesamt, $streichresultate)
+	    unless $gemeinsame_zusammenfassung;
+
 	my ($header, $body, $format);
 	my $farbe = "";
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
@@ -564,7 +609,7 @@ sub jahreswertung($$$$$$) {
 		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
 	    }
 	}
-	if ($streichresultate > 0) {
+	if ($gestrichen > 0) {
 	    push @$format, "r3";
 	    push @$header, [ "Str", "r1", "title=\"Gestrichene Punkte\"" ];
 	}
@@ -616,7 +661,7 @@ sub jahreswertung($$$$$$) {
 		}
 	    }
 	    push @$row, [ $fahrerwertung->{streichpunkte}, "r", "class=\"info2\"" ]
-		if $streichresultate > 0;
+		if $gestrichen > 0;
 	    push @$row, $gesamtpunkte || "";
 	    push @$body, $row;
 	}
