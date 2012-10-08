@@ -439,6 +439,8 @@ sub jahreswertung_berechnen($$) {
 	    my $n = 0;
 	    if (defined $streichgrenze) {
 		my $streichresultate = @$wertungspunkte - $streichgrenze;
+		$streichresultate = @$wertungspunkte
+		    if $streichresultate > @$wertungspunkte;
 		if ($streichresultate > 0) {
 		    $fahrer->{streichpunkte} = 0;
 		    $wertungspunkte = [ sort { $a <=> $b }
