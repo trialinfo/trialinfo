@@ -581,9 +581,27 @@ sub jahreswertung($$$$$$) {
 	if $gemeinsame_zusammenfassung;
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
+	my $klassenwertung = $jahreswertung->{$klasse};
+	my $fahrer_in_klasse = [
+	    map { $alle_fahrer->{$_->{startnummer}} }
+		(sort jahreswertung_cmp (values %$klassenwertung)) ];
+
 	my $gestrichen = defined $streichgrenze ?
 	    $laeufe_pro_klasse->{$klasse} - $streichgrenze : 0;
-	my $klassenwertung = $jahreswertung->{$klasse};
+	if ($gestrichen > 0) {
+	    my $streichpunkte;
+	    foreach my $fahrer (@$fahrer_in_klasse) {
+		my $startnummer = $fahrer->{startnummer};
+		my $fahrerwertung = $klassenwertung->{$startnummer};
+		if (defined $fahrerwertung->{streichpunkte}) {
+		    $streichpunkte = 1;
+		    last;
+		}
+	    }
+	    $gestrichen = 0
+		unless $streichpunkte;
+	}
+
 	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
 
 	doc_p jahreswertung_zusammenfassung($klasse, $laeufe_pro_klasse->{$klasse},
@@ -615,10 +633,6 @@ sub jahreswertung($$$$$$) {
 	}
 	push @$format, "r3";
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
-
-	my $fahrer_in_klasse = [
-	    map { $alle_fahrer->{$_->{startnummer}} }
-		(sort jahreswertung_cmp (values %$klassenwertung)) ];
 
 	my $letzter_fahrer;
 	for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
