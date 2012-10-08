@@ -41,13 +41,15 @@ my $zeit;
 my $spalten;
 my $klassen = [];
 my $farben = [];
-my $streichgrenze;
+my $laeufe;
+my $streichresultate;
 my $anzeigen_mit;
 
 my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"klassen=s@" => \@$klassen,
 			"farben=s@" => \@$farben,
-			"streichgrenze=s" => \$streichgrenze,
+			"laeufe=s" => \$laeufe,
+			"streichresultate=s" => \$streichresultate,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 
@@ -56,8 +58,15 @@ my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--klasen=N,...] [--streichgrenze=N]\n" .
-	  "\t[--html] [--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
+    print "VERWENDUNG: $0 [--wertung=(1..4)] [--klasen=N,...] [--html]\n" .
+	  "\t[--laeufe=N [--streichresultate=N]] [--html] [--club]\n" .
+	  "\t[--lizenznummer] [--fahrzeug] [--geburtsdatum]\n";
+    exit 1;
+}
+
+if (defined $streichresultate && !defined $laeufe) {
+    print STDERR "Option --streichresultate nur in Kombination mit " .
+	         "Option --laeufe sinnvoll.\n";
     exit 1;
 }
 
@@ -153,8 +162,8 @@ EOF
 }
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung];
-jahreswertung $veranstaltungen, $wertung, $streichgrenze, $klassenfarben,
-	      $spalten;
+jahreswertung $veranstaltungen, $wertung, $laeufe, $streichresultate,
+	      $klassenfarben, $spalten;
 
 if ($RenderOutput::html) {
     print "<p>Letzte Änderung: $zeit</p>\n";

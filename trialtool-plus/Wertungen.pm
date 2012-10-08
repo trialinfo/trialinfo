@@ -466,8 +466,13 @@ sub jahreswertung_cmp {
     return $a->{startnummer} <=> $b->{startnummer};
 }
 
-sub jahreswertung($$$$$) {
-    my ($veranstaltungen, $wertung, $streichgrenze, $klassenfarben, $spalten) = @_;
+sub jahreswertung($$$$$$) {
+    my ($veranstaltungen, $wertung, $laeufe, $streichresultate, $klassenfarben,
+	$spalten) = @_;
+
+    my $streichgrenze;
+    $streichgrenze = $laeufe - $streichresultate
+	if defined $laeufe && defined $streichresultate;
 
     $klassenfarben = $otsv_klassenfarben
 	unless defined $klassenfarben;

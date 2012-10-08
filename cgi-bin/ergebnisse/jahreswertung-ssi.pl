@@ -40,7 +40,8 @@ my @spalten = $q->param('spalte');
 
 my $bezeichnung;
 my $vareihe;
-my $streichgrenze;
+my $laeufe;
+my $streichresultate;
 my $wertung;
 my $zeit;
 my $fahrer_nach_startnummer;
@@ -50,13 +51,13 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT vareihe, bezeichnung, streichgrenze
+    SELECT vareihe, bezeichnung, laeufe, streichresultate
     FROM wereihe
     WHERE wereihe = ?
 });
 $sth->execute($wereihe);
 if (my @row =  $sth->fetchrow_array) {
-    ($vareihe, $bezeichnung, $streichgrenze) = @row;
+    ($vareihe, $bezeichnung, $laeufe, $streichresultate) = @row;
 } else {
     doc_h2 "Wertungsreihe nicht gefunden.\n";
     exit;
@@ -156,7 +157,7 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung $veranstaltungen, $wertung, $streichgrenze, $klassenfarben,
-	      [ @spalten ];
+jahreswertung $veranstaltungen, $wertung, $laeufe, $streichresultate,
+	      $klassenfarben, [ @spalten ];
 
 print "<p>Letzte Änderung: $zeit</p>\n";
