@@ -124,7 +124,7 @@ while (my @row = $sth->fetchrow_array) {
 	if defined $row[3];
 }
 
-if (defined $wereihe) {
+if (defined $wereihe && $wertung == 0) {
     $sth = $dbh->prepare(q{
 	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
 	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
@@ -138,14 +138,17 @@ if (defined $wereihe) {
     });
     $sth->execute($id, $wereihe);
 } else {
+    my $w = ($wertung == 0) ?
+	'(wertung = ? OR wertung IS NULL)' :
+	'wertung = ?';
     $sth = $dbh->prepare(q{
 	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
-	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
+	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . qq{
 	       s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
 	       papierabnahme
 	FROM fahrer
 	LEFT JOIN fahrer_wertung USING (id, startnummer)
-	WHERE id = ? AND (wertung = ? OR wertung IS NULL) AND papierabnahme
+	WHERE id = ? AND $w AND papierabnahme
     });
     $sth->execute($id, $wertung + 1);
 }
