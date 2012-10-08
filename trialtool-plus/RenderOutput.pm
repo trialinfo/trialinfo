@@ -21,7 +21,7 @@ our $html;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(render_text_table render_html_table
-	     doc_h1 doc_h2 doc_h3 doc_table doc_text);
+	     doc_text doc_p doc_h1 doc_h2 doc_h3 doc_table);
 
 use List::Util qw(max);
 use strict;
@@ -168,6 +168,15 @@ sub doc_text($) {
 	$text =~ s/\n/<br>/g;
     }
     return $text;
+}
+
+sub doc_p($) {
+    my ($text) = @_;
+    if ($html) {
+	print "<p>" . doc_text($text) . "</p>\n";
+    } else {
+	print "$text\n";
+    }
 }
 
 sub doc_h1($) {
