@@ -392,7 +392,7 @@ sub tageswertung($$$$$$$) {
 		     $fahrer->{ausfall} != 0)) {
 		    push @$fmt, "class=\"info\"";
 		} else {
-		    push @$fmt, "class=\"rang\"";
+		    push @$fmt, "class=\"info2\"";
 		}
 
 		if ($fmt) {
@@ -412,7 +412,7 @@ sub tageswertung($$$$$$$) {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
 		    if ($n < ($fahrer->{sn} // -1)) {
-			push @$row, [ $fahrer->{s}[$n], "r", "class=\"rang\"" ];
+			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info2\"" ];
 		    } else {
 			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info\"" ];
 		    }
