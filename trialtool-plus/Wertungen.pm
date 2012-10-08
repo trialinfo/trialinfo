@@ -608,7 +608,7 @@ sub jahreswertung($$$$$) {
 				$RenderOutput::html ? "" : "-";
 		}
 	    }
-	    push @$row, $fahrerwertung->{streichpunkte}
+	    push @$row, [ $fahrerwertung->{streichpunkte}, "r", "class=\"info2\"" ]
 		if $streichresultate > 0;
 	    push @$row, $gesamtpunkte || "";
 	    push @$body, $row;
