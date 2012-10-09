@@ -586,20 +586,16 @@ sub jahreswertung($$$$$$) {
 	    map { $alle_fahrer->{$_->{startnummer}} }
 		(sort jahreswertung_cmp (values %$klassenwertung)) ];
 
-	my $gestrichen = defined $streichgrenze ?
-	    $laeufe_pro_klasse->{$klasse} - $streichgrenze : 0;
-	if ($gestrichen > 0) {
-	    my $streichpunkte;
+	my $hat_streichpunkte;
+	if (defined $streichresultate) {
 	    foreach my $fahrer (@$fahrer_in_klasse) {
 		my $startnummer = $fahrer->{startnummer};
 		my $fahrerwertung = $klassenwertung->{$startnummer};
 		if (defined $fahrerwertung->{streichpunkte}) {
-		    $streichpunkte = 1;
+		    $hat_streichpunkte = 1;
 		    last;
 		}
 	    }
-	    $gestrichen = 0
-		unless $streichpunkte;
 	}
 
 	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
@@ -627,7 +623,7 @@ sub jahreswertung($$$$$$) {
 		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
 	    }
 	}
-	if ($gestrichen > 0) {
+	if ($hat_streichpunkte) {
 	    push @$format, "r3";
 	    push @$header, [ "Str", "r1", "title=\"Gestrichene Punkte\"" ];
 	}
@@ -675,7 +671,7 @@ sub jahreswertung($$$$$$) {
 		}
 	    }
 	    push @$row, [ $fahrerwertung->{streichpunkte}, "r", "class=\"info2\"" ]
-		if $gestrichen > 0;
+		if $hat_streichpunkte;
 	    push @$row, $gesamtpunkte || "";
 	    push @$body, $row;
 	}
