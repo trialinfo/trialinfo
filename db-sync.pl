@@ -897,6 +897,12 @@ do {
     };
     if ($@) {
 	warn $@;
+	if ($@ =~ /Duplicate entry .* for key/) {
+	    # Der Datenstand am Server scheint nicht mehr mit dem lokal
+	    # zwischengespeicherten Datenstand übereinzustimmen.
+	    # Reparaturversuch über Neuübertragung der Daten vom Server.
+	    undef $tmp_dbh;
+	}
     }
     if ($reconnect_interval) {
 	print "Waiting for $reconnect_interval seconds...\n";
