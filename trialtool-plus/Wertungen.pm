@@ -502,9 +502,12 @@ sub jahreswertung($$$$$$) {
     my ($veranstaltungen, $wertung, $laeufe_gesamt, $streichresultate,
 	$klassenfarben, $spalten) = @_;
 
+    undef $streichresultate
+	unless defined $laeufe_gesamt;
+
     my $streichgrenze;
     $streichgrenze = $laeufe_gesamt - $streichresultate
-	if defined $laeufe_gesamt && defined $streichresultate;
+	if defined $streichresultate;
 
     $klassenfarben = $otsv_klassenfarben
 	unless defined $klassenfarben;
