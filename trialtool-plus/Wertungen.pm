@@ -22,7 +22,7 @@ require Exporter;
 @EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_time);
 
 use utf8;
-use List::Util qw(min max);
+use List::Util qw(max);
 use RenderOutput;
 use Time::Local;
 use strict;
@@ -428,8 +428,15 @@ sub tageswertung($$$$$$$) {
     }
 }
 
-sub jahreswertung_berechnen($$) {
-    my ($jahreswertung, $streichgrenze) = @_;
+sub streichen($$$) {
+    my ($laeufe_bisher, $laeufe_gesamt, $streichresultate) = @_;
+
+    $laeufe_gesamt = max($laeufe_bisher, $laeufe_gesamt);
+    return $laeufe_bisher - max(0, $laeufe_gesamt - $streichresultate);
+}
+
+sub jahreswertung_berechnen($$$) {
+    my ($jahreswertung, $laeufe_gesamt, $streichresultate) = @_;
 
     foreach my $klasse (keys %$jahreswertung) {
 	foreach my $startnummer (keys %{$jahreswertung->{$klasse}}) {
@@ -437,15 +444,14 @@ sub jahreswertung_berechnen($$) {
 	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
 	    my $wertungspunkte = $fahrer->{wertungspunkte};
 	    my $n = 0;
-	    if (defined $streichgrenze) {
-		my $streichresultate = @$wertungspunkte - $streichgrenze;
-		$streichresultate = @$wertungspunkte
-		    if $streichresultate > @$wertungspunkte;
-		if ($streichresultate > 0) {
+	    if (defined $streichresultate) {
+		my $laeufe_bisher = @$wertungspunkte;
+		my $streichen = streichen($laeufe_bisher, $laeufe_gesamt, $streichresultate);
+		if ($streichen > 0) {
 		    $fahrer->{streichpunkte} = 0;
 		    $wertungspunkte = [ sort { $a <=> $b }
 					     @$wertungspunkte ];
-		    for (; $n < $streichresultate; $n++) {
+		    for (; $n < $streichen; $n++) {
 			$fahrer->{streichpunkte} += $wertungspunkte->[$n];
 		    }
 		}
@@ -471,26 +477,15 @@ sub jahreswertung_cmp {
 sub jahreswertung_zusammenfassung($$$$) {
     my ($klasse, $laeufe_bisher, $laeufe_gesamt, $streichresultate) = @_;
 
-    if ($laeufe_gesamt < $streichresultate) {
-	print STDERR (defined $klasse ? "Klasse $klasse: " : "") .
-		     "Mehr Streichresultate als geplante Läufe.\n";
-    }
-    if ($laeufe_gesamt < $laeufe_bisher) {
-	print STDERR (defined $klasse ? "Klasse $klasse: " : "") .
-		     "Mehr Läufe gefunden als geplant.\n";
-    }
-    $streichresultate = min($laeufe_gesamt, $streichresultate);
-
     my @l;
     if (defined $laeufe_bisher && defined $laeufe_gesamt) {
 	push @l, "Stand nach $laeufe_bisher von $laeufe_gesamt " .
 		 ($laeufe_gesamt == 1 ? "Lauf" : "Läufen");
     }
     if (defined $streichresultate) {
-	my $gestrichen = min($laeufe_bisher,
-			     $laeufe_bisher + $streichresultate - $laeufe_gesamt);
-	if ($gestrichen > 0) {
-	    push @l, "$gestrichen von $streichresultate " .
+	my $streichen = streichen($laeufe_bisher, $laeufe_gesamt, $streichresultate);
+	if ($streichen > 0) {
+	    push @l, "$streichen von $streichresultate " .
 		     ($streichresultate == 1 ? "Streichresultat" : "Streichresultaten") .
 		     " berücksichtigt";
 	}
@@ -504,10 +499,6 @@ sub jahreswertung($$$$$$) {
 
     undef $streichresultate
 	unless defined $laeufe_gesamt;
-
-    my $streichgrenze;
-    $streichgrenze = $laeufe_gesamt - $streichresultate
-	if defined $streichresultate;
 
     $klassenfarben = $otsv_klassenfarben
 	unless defined $klassenfarben;
@@ -569,7 +560,7 @@ sub jahreswertung($$$$$$) {
 
     my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
-    jahreswertung_berechnen $jahreswertung, $streichgrenze;
+    jahreswertung_berechnen $jahreswertung, $laeufe_gesamt, $streichresultate;
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
@@ -591,14 +582,17 @@ sub jahreswertung($$$$$$) {
 
 	my $hat_streichpunkte;
 	if (defined $streichresultate) {
-	    foreach my $fahrer (@$fahrer_in_klasse) {
-		my $startnummer = $fahrer->{startnummer};
-		my $fahrerwertung = $klassenwertung->{$startnummer};
-		if (defined $fahrerwertung->{streichpunkte}) {
-		    $hat_streichpunkte = 1;
-		    last;
-		}
-	    }
+	    my $laeufe_bisher = $laeufe_pro_klasse->{$klasse};
+	    my $streichen = streichen($laeufe_bisher, $laeufe_gesamt, $streichresultate);
+	    $hat_streichpunkte = $streichen > 0;
+	    #foreach my $fahrer (@$fahrer_in_klasse) {
+	    #	my $startnummer = $fahrer->{startnummer};
+	    #	my $fahrerwertung = $klassenwertung->{$startnummer};
+	    #	if (defined $fahrerwertung->{streichpunkte}) {
+	    #	    $hat_streichpunkte = 1;
+	    #	    last;
+	    #	}
+	    #}
 	}
 
 	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
