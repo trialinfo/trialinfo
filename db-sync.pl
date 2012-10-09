@@ -823,9 +823,11 @@ do {
 	    #$tmp_dbh = new DBH_Logger($tmp_dbh)
 	    #	if $trace_sql;
 	    sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
-	    my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
-	    while (my @row = $sth->fetchrow_array) {
-		push @tables, $row[2];
+	    unless (@tables) {
+		my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
+		while (my @row = $sth->fetchrow_array) {
+		    push @tables, $row[2];
+		}
 	    }
 	    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    tabelle_kopieren "vareihe_veranstaltung", $dbh, $tmp_dbh, undef, 0;
