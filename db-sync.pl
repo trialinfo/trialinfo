@@ -25,6 +25,7 @@ use File::Glob ':glob';
 use File::Basename;
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
+use POSIX qw(strftime);
 use DBH_Logger;
 use IO::Tee;
 use Datenbank;
@@ -788,7 +789,10 @@ if (defined $log) {
     binmode(STDOUT_DUP, ":encoding($STDOUT_encoding)");
     binmode(STDERR_DUP, ":encoding($STDERR_encoding)");
 
-    print LOG "$0 ", join(" ", @ARGV), "\n";
+    print LOG "\n$0 ", join(" ", @ARGV), "\nGestartet um ",
+	      strftime("%Y-%m-%d %H:%M:%S", localtime()), "\n";
+    LOG->flush;
+
     *STDOUT = IO::Tee->new(\*STDOUT_DUP, \*LOG);
     *STDERR = IO::Tee->new(\*STDERR_DUP, \*LOG);
 }
