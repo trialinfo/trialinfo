@@ -796,6 +796,8 @@ if (defined $log) {
 # Daten am Server löschen und komplett neu übertragen?
 my $neu_uebertragen = $force;
 
+my $tmp_dbh;
+
 do {
     eval {
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
@@ -815,24 +817,28 @@ do {
 	    print "Creating tables ...\n";
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
 	    sql_ausfuehren $dbh, @create_reihen_tables;
+	    undef $create_tables;
 	}
 
 	if (@ARGV) {
-	    my $tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
-				       { RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1 })
-		or die "Could not create in-memory database: $DBI::errstr\n";
-	    #$tmp_dbh = new DBH_Logger($tmp_dbh)
-	    #	if $trace_sql;
-	    sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
-	    unless (@tables) {
+	    my $erster_check;
+	    unless (defined $tmp_dbh) {
+		$tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
+					   { RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1 })
+		    or die "Could not create in-memory database: $DBI::errstr\n";
+		#$tmp_dbh = new DBH_Logger($tmp_dbh)
+		#	if $trace_sql;
+		sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
 		my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
 		while (my @row = $sth->fetchrow_array) {
 		    push @tables, $row[2];
 		}
+
+		tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
+		tabelle_kopieren "vareihe_veranstaltung", $dbh, $tmp_dbh, undef, 0;
+		$erster_check = 1;
 	    }
-	    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
-	    tabelle_kopieren "vareihe_veranstaltung", $dbh, $tmp_dbh, undef, 0;
-	    my $erster_check = 1;
+
 	    while ($erster_check || $neu_uebertragen || $poll_interval) {
 		foreach my $dateiname (trialtool_dateien @ARGV) {
 		    my ($id, $veraendert, $basename, $cfg_mtime, $dat_mtime) =
@@ -865,6 +871,7 @@ do {
 						     $cfg, $vareihe;
 			$tmp_dbh->commit;
 
+			print "\n";
 			$dbh->begin_work;
 			veranstaltung_loeschen $dbh, $id, 0
 			    if $neu_uebertragen;
