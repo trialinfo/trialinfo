@@ -869,17 +869,20 @@ do {
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer,
 						     $cfg, $vareihe;
-			$tmp_dbh->commit;
 
 			print "\n";
-			$dbh->begin_work;
-			veranstaltung_loeschen $dbh, $id, 0
-			    if $neu_uebertragen;
-			tabellen_aktualisieren $tmp_dbh, $dbh, $id,
-			    defined $tmp_id ? $tmp_id : $id + 1;
-			$dbh->commit;
-
-			$tmp_dbh->begin_work;
+			eval {
+			    $dbh->begin_work;
+			    veranstaltung_loeschen $dbh, $id, 0
+				if $neu_uebertragen;
+			    tabellen_aktualisieren $tmp_dbh, $dbh, $id,
+				defined $tmp_id ? $tmp_id : $id + 1;
+			    $dbh->commit;
+			};
+			if ($@) {
+			    $tmp_dbh->rollback;
+			    die $@;
+			};
 			veranstaltung_loeschen $tmp_dbh, $tmp_id, 1
 			    if defined $tmp_id;
 			$tmp_dbh->commit;
