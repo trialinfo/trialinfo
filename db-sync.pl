@@ -793,7 +793,8 @@ if (defined $log) {
     *STDERR = IO::Tee->new(\*STDERR_DUP, \*LOG);
 }
 
-my $erster_sync = $force;
+# Daten am Server löschen und komplett neu übertragen?
+my $neu_uebertragen = $force;
 
 do {
     eval {
@@ -832,7 +833,7 @@ do {
 	    tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    tabelle_kopieren "vareihe_veranstaltung", $dbh, $tmp_dbh, undef, 0;
 	    my $erster_check = 1;
-	    while ($erster_check || $erster_sync || $poll_interval) {
+	    while ($erster_check || $neu_uebertragen || $poll_interval) {
 		foreach my $dateiname (trialtool_dateien @ARGV) {
 		    my ($id, $veraendert, $basename, $cfg_mtime, $dat_mtime) =
 			status($tmp_dbh, $dateiname);
@@ -848,9 +849,9 @@ do {
 
 		    veranstaltung_kopieren $dbh, $tmp_dbh, $id
 			if defined $id && $erster_check &&
-			   ($veraendert || $poll_interval) && !$erster_sync;
+			   ($veraendert || $poll_interval) && !$neu_uebertragen;
 
-		    if ($erster_sync || $veraendert) {
+		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
 			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", 0);
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
@@ -866,7 +867,7 @@ do {
 
 			$dbh->begin_work;
 			veranstaltung_loeschen $dbh, $id, 0
-			    if $erster_sync;
+			    if $neu_uebertragen;
 			tabellen_aktualisieren $tmp_dbh, $dbh, $id,
 			    defined $tmp_id ? $tmp_id : $id + 1;
 			$dbh->commit;
@@ -878,7 +879,7 @@ do {
 		    }
 		}
 
-		$erster_sync = undef;
+		$neu_uebertragen = undef;
 		$erster_check = undef;
 		exit
 		    if $delete;
