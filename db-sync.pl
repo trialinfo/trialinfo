@@ -846,6 +846,10 @@ do {
 
 		    $veraendert ||= $force;
 
+		    # Wenn wir nicht laufend übertragen, die Zeitstempel der
+		    # Dateien ignorieren und die Daten vergleichen.
+		    $veraendert ||= !$poll_interval;
+
 		    $tmp_dbh->begin_work;
 		    veranstaltung_kopieren $dbh, $tmp_dbh, $id
 			if defined $id && $erster_check &&
