@@ -559,14 +559,7 @@ sub tabelle_aktualisieren($$$$$) {
 		   join(" AND ", map { "$_ = ?" } (@other_keys, "id"));
 	    $sth2 = $dbh->prepare($sql2);
 	}
-	if ($dry_run) {
-	    if ($trace_sql) {
-		my $logger = new STH_Logger($sql2, undef);
-		$logger->log(@row, $id);
-	    }
-	} else {
-	    $sth2->execute(@row, $id);
-	}
+	$sth2->execute(@row, $id);
     }
 
     unless (@other_keys) {
@@ -609,14 +602,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    $sth2 = $dbh->prepare($sql2);
 	}
 	pop @row;
-	if ($dry_run) {
-	    if ($trace_sql) {
-		my $logger = new STH_Logger($sql2, undef);
-		$logger->log(@row);
-	    }
-	} else {
-	    $sth2->execute(@row);
-	}
+	$sth2->execute(@row);
     }
 
     if (@nonkeys) {
@@ -676,14 +662,7 @@ sub tabelle_aktualisieren($$$$$) {
 			"WHERE " .  join(" AND ",
 				         map { "$_ = ?" } (@other_keys, "id"));
 		my @args2 = (@new_values, @row[2 * @nonkeys .. $#row], $id);
-		if ($dry_run) {
-		    if ($trace_sql) {
-			my $logger = new STH_Logger($sql2, undef);
-			$logger->log(@args2);
-		    }
-		} else {
-		    $dbh->do($sql2, undef, @args2);
-		}
+		$dbh->do($sql2, undef, @args2);
 	    } else {
 		warn "There should be differences, but I don't see them\n";
 	    }
@@ -717,6 +696,16 @@ sub veranstaltung_umnummerieren($$) {
 	}, undef, $tmp_id, $id);
     }
     return $tmp_id;
+}
+
+sub commit_or_rollback($) {
+    my ($dbh) = @_;
+
+    if ($dry_run) {
+	$dbh->rollback;
+    } else {
+	$dbh->commit;
+    }
 }
 
 my $db;
@@ -857,14 +846,17 @@ do {
 
 		    $veraendert ||= $force;
 
+		    $tmp_dbh->begin_work;
 		    veranstaltung_kopieren $dbh, $tmp_dbh, $id
 			if defined $id && $erster_check &&
 			   ($veraendert || $poll_interval) && !$neu_uebertragen;
+		    $tmp_dbh->commit;
 
 		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
 			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", 1);
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
+
 			$tmp_dbh->begin_work;
 			my $tmp_id;
 			$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id
@@ -881,7 +873,7 @@ do {
 				if $neu_uebertragen;
 			    tabellen_aktualisieren $tmp_dbh, $dbh, $id,
 				defined $tmp_id ? $tmp_id : $id + 1;
-			    $dbh->commit;
+			    commit_or_rollback $dbh;
 			};
 			if ($@) {
 			    $tmp_dbh->rollback;
@@ -889,7 +881,7 @@ do {
 			};
 			veranstaltung_loeschen $tmp_dbh, $tmp_id, 1
 			    if defined $tmp_id;
-			$tmp_dbh->commit;
+			commit_or_rollback $tmp_dbh;
 		    }
 		}
 
