@@ -22,7 +22,7 @@ require Exporter;
 @EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_time);
 
 use utf8;
-use List::Util qw(max);
+use List::Util qw(min max);
 use RenderOutput;
 use Time::Local;
 use strict;
@@ -154,7 +154,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
-	    my $wp_idx = 0;
+	    my $wertungsrang = 1;
 	    my $vorheriger_fahrer;
 	    foreach my $fahrer (@$fahrer_in_klasse) {
 		next unless defined $fahrer->{rang} &&
@@ -164,11 +164,12 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
 		    $fahrer->{wertungspunkte}[$wertung] =
 			$vorheriger_fahrer->{wertungspunkte}[$wertung];
-		} elsif ($wp_idx < @$wertungspunkte &&
-			 $wertungspunkte->[$wp_idx] != 0) {
-		    $fahrer->{wertungspunkte}[$wertung] = $wertungspunkte->[$wp_idx];
+		} else {
+		    $fahrer->{wertungspunkte}[$wertung] =
+			$wertungspunkte->[min($wertungsrang, @$wertungspunkte) - 1] || undef;
 		}
-		$wp_idx++;
+		$wertungsrang++;
+
 		$vorheriger_fahrer = $fahrer;
 	    }
 	    foreach my $fahrer (@$fahrer_in_klasse) {
