@@ -863,7 +863,7 @@ do {
 
 		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
-			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", 0);
+			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", 1);
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 			$tmp_dbh->begin_work;
 			my $tmp_id;
