@@ -20,7 +20,6 @@ use CGI;
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use RenderOutput;
-use Wertungen qw(jahreswertung);
 use Datenbank;
 use DatenbankAuswertung;
 use strict;

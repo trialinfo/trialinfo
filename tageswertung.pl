@@ -36,7 +36,7 @@ binmode(STDIN, ":encoding(console_in)");
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $wertung = 1;
 my $spalten;
 my $klassen = [];
 my $farben = [];
@@ -44,7 +44,7 @@ my $anzeigen_mit;
 my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
 my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Ergebnis egal
 
-my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
+my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
 			"farben=s@" => \@$farben,
 			"html" => \$RenderOutput::html,
@@ -116,14 +116,14 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $cfg = cfg_datei_parsen("$name.cfg");
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
 
-    if ($wertung != 0) {
+    if ($wertung != 1) {
 	# FIXME: Rang und Wertungspunkte sollten pro Wertung berechnet werden,
 	# und die Funktion tageswertung sollte die Fahrer bei der Ausgabe
 	# filtern.
 	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	    delete $fahrer_nach_startnummer->{$startnummer}
-		unless $fahrer->{wertungen}[$wertung];
+		unless $fahrer->{wertungen}[$wertung - 1];
 	}
     }
 
@@ -137,8 +137,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 	}
     }
 
-    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung]";
-    doc_h2 doc_text "$cfg->{titel}[$wertung]\n$cfg->{subtitel}[$wertung]";
+    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]";
+    doc_h2 doc_text "$cfg->{titel}[$wertung - 1]\n$cfg->{subtitel}[$wertung - 1]";
     tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten,
 		 $klassenfarben, $alle_punkte, $nach_relevanz;
 

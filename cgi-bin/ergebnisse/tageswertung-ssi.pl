@@ -87,8 +87,8 @@ if (defined $wereihe) {
 if (my @row = $sth->fetchrow_array) {
     $id = $row[0];
     $bezeichnung = $row[1];
-    $wertung = $row[2] - 1;
-    $cfg->{titel}[$wertung] = $row[3];
+    $wertung = $row[2];
+    $cfg->{titel}[$wertung - 1] = $row[3];
     $zeit = max_time($row[4], $row[5]);
     $cfg->{wertungsmodus} = $row[6];
     $cfg->{vierpunktewertung} = $row[7];
@@ -124,7 +124,7 @@ while (my @row = $sth->fetchrow_array) {
 	if defined $row[3];
 }
 
-if (defined $wereihe && $wertung == 0) {
+if (defined $wereihe && $wertung == 1) {
     $sth = $dbh->prepare(q{
 	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
 	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
@@ -138,7 +138,7 @@ if (defined $wereihe && $wertung == 0) {
     });
     $sth->execute($id, $wereihe);
 } else {
-    my $w = ($wertung == 0) ?
+    my $w = ($wertung == 1) ?
 	'(wertung = ? OR wertung IS NULL)' :
 	'wertung = ?';
     $sth = $dbh->prepare(q{
@@ -150,7 +150,7 @@ if (defined $wereihe && $wertung == 0) {
 	LEFT JOIN fahrer_wertung USING (id, startnummer)
 	WHERE id = ? AND $w AND papierabnahme
     });
-    $sth->execute($id, $wertung + 1);
+    $sth->execute($id, $wertung);
 }
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n < 5; $n++) {
@@ -159,7 +159,7 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     }
     my $startnummer = $fahrer->{startnummer};
     my $w = [];
-    $w->[$wertung] = $fahrer->{wertungspunkte}
+    $w->[$wertung - 1] = $fahrer->{wertungspunkte}
 	if defined $fahrer->{wertungspunkte};
     $fahrer->{wertungspunkte} = $w;
     $fahrer_nach_startnummer->{$startnummer} = $fahrer;
@@ -242,12 +242,12 @@ if ($alle_punkte) {
 unless ($animiert) {
     doc_h1 "$bezeichnung"
 	if defined $bezeichnung;
-    doc_h2 "$cfg->{titel}[$wertung]";
+    doc_h2 "$cfg->{titel}[$wertung - 1]";
 } else {
     if (defined $bezeichnung) {
-	doc_h2 "$bezeichnung – $cfg->{titel}[$wertung]";
+	doc_h2 "$bezeichnung – $cfg->{titel}[$wertung - 1]";
     } else {
-	doc_h2 "$cfg->{titel}[$wertung]";
+	doc_h2 "$cfg->{titel}[$wertung - 1]";
     }
 }
 tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $klassenfarben,

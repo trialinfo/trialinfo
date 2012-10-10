@@ -36,7 +36,7 @@ binmode(STDIN, ":encoding(console_in)");
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $wertung = 1;
 my $zeit;
 my $spalten;
 my $klassen = [];
@@ -45,7 +45,7 @@ my $laeufe;
 my $streichresultate;
 my $anzeigen_mit;
 
-my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
+my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
 			"farben=s@" => \@$farben,
 			"laeufe=s" => \$laeufe,
@@ -161,7 +161,7 @@ if ($RenderOutput::html) {
 EOF
 }
 
-doc_h1 $letzte_cfg->{wertungen}[$wertung];
+doc_h1 $letzte_cfg->{wertungen}[$wertung - 1];
 jahreswertung $veranstaltungen, $wertung, $laeufe, $streichresultate,
 	      $klassenfarben, $spalten;
 

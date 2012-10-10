@@ -148,9 +148,9 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
     }
 
-    for (my $wertung = 0; $wertung < @{$cfg->{wertungen}}; $wertung++) {
+    for (my $idx = 0; $idx < @{$cfg->{wertungen}}; $idx++) {
 	my $wertungspunkte_vergeben =
-	    $wertung == 0 || $cfg->{wertungspunkte_234};
+	    $idx == 0 || $cfg->{wertungspunkte_234};
 
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
@@ -159,19 +159,19 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    my $vorheriger_fahrer;
 	    foreach my $fahrer (@$fahrer_in_klasse) {
 		next unless defined $fahrer->{rang} &&
-			    $fahrer->{wertungen}[$wertung];
+			    $fahrer->{wertungen}[$idx];
 		if ($vorheriger_fahrer &&
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
-		    $fahrer->{wertungsrang}[$wertung] =
-			$vorheriger_fahrer->{wertungsrang}[$wertung];
+		    $fahrer->{wertungsrang}[$idx] =
+			$vorheriger_fahrer->{wertungsrang}[$idx];
 		    if ($wertungspunkte_vergeben && !$fahrer->{ausfall}) {
-			$fahrer->{wertungspunkte}[$wertung] =
-			    $vorheriger_fahrer->{wertungspunkte}[$wertung];
+			$fahrer->{wertungspunkte}[$idx] =
+			    $vorheriger_fahrer->{wertungspunkte}[$idx];
 		    }
 		} else {
-		    $fahrer->{wertungsrang}[$wertung] = $wertungsrang;
+		    $fahrer->{wertungsrang}[$idx] = $wertungsrang;
 		    if ($wertungspunkte_vergeben && !$fahrer->{ausfall}) {
-			$fahrer->{wertungspunkte}[$wertung] =
+			$fahrer->{wertungspunkte}[$idx] =
 			    $wertungspunkte->[min($wertungsrang, scalar @$wertungspunkte) - 1] || undef;
 		    }
 		}
@@ -181,7 +181,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    }
 	    if ($wertungspunkte_vergeben) {
 		foreach my $fahrer (@$fahrer_in_klasse) {
-		    $fahrer->{wertungspunkte}[$wertung] = undef
+		    $fahrer->{wertungspunkte}[$idx] = undef
 			if $fahrer->{keine_wertungspunkte};
 		}
 	    }
@@ -284,7 +284,7 @@ sub tageswertung($$$$$$$) {
 	my $wertungspunkte;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $wertungspunkte = 1
-		if defined $fahrer->{wertungspunkte}[$wertung];
+		if defined $fahrer->{wertungspunkte}[$wertung - 1];
 	}
 
 	my $ausfall_fmt = "c" . (5 + $vierpunktewertung);
@@ -430,7 +430,7 @@ sub tageswertung($$$$$$$) {
 		    }
 		}
 	    }
-	    push @$row, $fahrer->{wertungspunkte}[$wertung] || ""
+	    push @$row, $fahrer->{wertungspunkte}[$wertung - 1] || ""
 		if $wertungspunkte;
 	    push @$body, $row;
 	}
@@ -520,7 +520,7 @@ sub jahreswertung($$$$$$) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
-		if defined $fahrer->{wertungspunkte}[$wertung];
+		if defined $fahrer->{wertungspunkte}[$wertung - 1];
 	}
 	if (exists $cfg->{gewertet}) {
 	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
@@ -561,10 +561,10 @@ sub jahreswertung($$$$$$) {
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
 	    if ($startnummer < 1000 &&
-		defined $fahrer->{wertungspunkte}[$wertung]) {
+		defined $fahrer->{wertungspunkte}[$wertung - 1]) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
-		    $fahrer->{wertungspunkte}[$wertung];
+		    $fahrer->{wertungspunkte}[$wertung - 1];
 	    }
 	    $alle_fahrer->{$startnummer} = $fahrer;
 	}
@@ -629,7 +629,7 @@ sub jahreswertung($$$$$$) {
 	    my $gewertet = $cfg->{gewertet}[$klasse - 1];
 	    if ($gewertet) {
 		push @$format, "r$spaltenbreite";
-		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung]\"" ] : "";
+		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung - 1]\"" ] : "";
 	    }
 	}
 	if ($hat_streichpunkte) {
@@ -673,9 +673,9 @@ sub jahreswertung($$$$$$) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    push @$row, (defined $fahrer->{wertungspunkte}[$wertung] &&
+		    push @$row, (defined $fahrer->{wertungspunkte}[$wertung - 1] &&
 				 $fahrer->{klasse} == $klasse) ?
-				$fahrer->{wertungspunkte}[$wertung] :
+				$fahrer->{wertungspunkte}[$wertung - 1] :
 				$RenderOutput::html ? "" : "-";
 		}
 	    }
@@ -693,8 +693,8 @@ sub jahreswertung($$$$$$) {
 	my $cfg = $veranstaltungen->[$n][0];
 	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
-	#push @$body, [ $label, "$cfg->{titel}[$wertung]: $cfg->{subtitel}[$wertung]" ];
-	push @$body, [ $label, $cfg->{titel}[$wertung] ];
+	#push @$body, [ $label, "$cfg->{titel}[$wertung - 1]: $cfg->{subtitel}[$wertung - 1]" ];
+	push @$body, [ $label, $cfg->{titel}[$wertung - 1] ];
     }
     doc_table ["", "Name"], $body, undef, ["r", "l"];
 }

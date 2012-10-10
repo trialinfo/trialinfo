@@ -27,7 +27,7 @@ use Encode::Locale qw(decode_argv);
 use Time::localtime;
 use strict;
 
-my $wertung = 0;  # Index von Wertung 1 (0 .. 3)
+my $wertung = 1;
 my $anzeigen_mit;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
@@ -36,7 +36,7 @@ binmode STDIN, ":encoding(console_in)";
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $result = GetOptions("wertung=i" => sub { $wertung = $_[1] - 1; },
+my $result = GetOptions("wertung=i" => \$wertung,
 			"anzeigen-mit=s" => \$anzeigen_mit);
 
 unless ($result && @ARGV) {
@@ -281,19 +281,19 @@ foreach my $name (trialtool_dateien @ARGV) {
     # "Jahreswertung" selektiert, obwohl Fahrer nicht gewertet werden darf?
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if ($fahrer->{wertungen}[$wertung] &&
+	if ($fahrer->{wertungen}[$wertung - 1] &&
 	    $klassen_adjw->[$fahrer->{klasse} - 1] &&
 	    !$fahrer->{ausfall}) {
 	    print "Fehler: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		  "$fahrer->{klasse} ist in der " .
-		  "$cfg->{wertungen}[$wertung], diese Klasse nimmt aber " .
+		  "$cfg->{wertungen}[$wertung - 1], diese Klasse nimmt aber " .
 		  "nicht an der Wertung teil.\n";
 	    $fehler++;
 	}
     }
     if ($fehler) {
-	print "=> Bitte deaktivieren Sie das $cfg->{wertungen}[$wertung]-" .
+	print "=> Bitte deaktivieren Sie das $cfg->{wertungen}[$wertung - 1]-" .
 	      "Häkchen oder korrigieren Sie die Klassen dieser Fahrer.\n\n";
 	$fehler = 0;
     }
@@ -302,18 +302,18 @@ foreach my $name (trialtool_dateien @ARGV) {
 	foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	    if (lizenzfahrer($fahrer) &&
-		$fahrer->{wertungen}[$wertung] &&
+		$fahrer->{wertungen}[$wertung - 1] &&
 		!$fahrer->{ausfall}) {
 		print "Fehler: Lizenzfahrer $startnummer " .
 		      "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		      "$fahrer->{klasse} ist in der " .
-		      "$cfg->{wertungen}[$wertung], darf aber nicht an " .
+		      "$cfg->{wertungen}[$wertung - 1], darf aber nicht an " .
 		      "dieser Wertung teilnehmen.\n";
 		$fehler++;
 	    }
 	}
 	if ($fehler) {
-	    print "=> Bitte deaktivieren Sie das $cfg->{wertungen}[$wertung]-" .
+	    print "=> Bitte deaktivieren Sie das $cfg->{wertungen}[$wertung - 1]-" .
 		  "Häkchen dieser Fahrer.\n\n";
 	    $fehler = 0;
 	}
@@ -322,7 +322,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	if ((!lizenzfahrer($fahrer) || $osk) &&
-	    !$fahrer->{wertungen}[$wertung] &&
+	    !$fahrer->{wertungen}[$wertung - 1] &&
 	    !$klassen_adjw->[$fahrer->{klasse} - 1] &&
 	    !$fahrer->{ausfall}) {
 	    my $zusatzinfo = "";
@@ -333,13 +333,13 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    print "Warnung: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		  "$fahrer->{klasse} ist nicht in der " .
-		  "$cfg->{wertungen}[$wertung], diese Klasse nimmt aber " .
+		  "$cfg->{wertungen}[$wertung - 1], diese Klasse nimmt aber " .
 		  "an der Wertung teil.$zusatzinfo\n";
 	    $fehler++;
 	}
     }
     if ($fehler) {
-	print "=> Bitte aktivieren Sie das $cfg->{wertungen}[$wertung]-" .
+	print "=> Bitte aktivieren Sie das $cfg->{wertungen}[$wertung - 1]-" .
 	      "Häkchen oder korrigieren Sie die Klasse dieser Fahrer.\n\n";
 	$fehler = 0;
     }

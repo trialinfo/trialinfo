@@ -33,7 +33,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 
-my $wertung = 0;
+my $wertung = 1;
 my $titel;
 my $sth;
 
@@ -48,7 +48,7 @@ unless (defined $id) {
 	WHERE wertung = ?
 	ORDER BY datum
     });
-    $sth->execute($wertung + 1);
+    $sth->execute($wertung);
     print "<p>\n";
     while (my @row = $sth->fetchrow_array) {
 	my ($id, $titel) = @row;
@@ -64,7 +64,7 @@ $sth = $dbh->prepare(q{
     JOIN wertung USING (id)
     WHERE id = ? AND wertung = ?
 });
-$sth->execute($id, $wertung + 1);
+$sth->execute($id, $wertung);
 if (my @row = $sth->fetchrow_array) {
     $titel = $row[0];
 } else {
