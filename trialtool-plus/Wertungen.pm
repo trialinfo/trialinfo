@@ -149,8 +149,9 @@ sub rang_und_wertungspunkte_berechnen($$) {
     }
 
     for (my $wertung = 0; $wertung < @{$cfg->{wertungen}}; $wertung++) {
-	next
-	    unless $wertung == 0 || $cfg->{wertungspunkte_234};
+	my $wertungspunkte_vergeben =
+	    $wertung == 0 || $cfg->{wertungspunkte_234};
+
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
@@ -158,23 +159,31 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    my $vorheriger_fahrer;
 	    foreach my $fahrer (@$fahrer_in_klasse) {
 		next unless defined $fahrer->{rang} &&
-			    $fahrer->{wertungen}[$wertung] &&
-			    !$fahrer->{ausfall};
+			    $fahrer->{wertungen}[$wertung];
 		if ($vorheriger_fahrer &&
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
-		    $fahrer->{wertungspunkte}[$wertung] =
-			$vorheriger_fahrer->{wertungspunkte}[$wertung];
+		    $fahrer->{wertungsrang}[$wertung] =
+			$vorheriger_fahrer->{wertungsrang}[$wertung];
+		    if ($wertungspunkte_vergeben && !$fahrer->{ausfall}) {
+			$fahrer->{wertungspunkte}[$wertung] =
+			    $vorheriger_fahrer->{wertungspunkte}[$wertung];
+		    }
 		} else {
-		    $fahrer->{wertungspunkte}[$wertung] =
-			$wertungspunkte->[min($wertungsrang, @$wertungspunkte) - 1] || undef;
+		    $fahrer->{wertungsrang}[$wertung] = $wertungsrang;
+		    if ($wertungspunkte_vergeben && !$fahrer->{ausfall}) {
+			$fahrer->{wertungspunkte}[$wertung] =
+			    $wertungspunkte->[min($wertungsrang, scalar @$wertungspunkte) - 1] || undef;
+		    }
 		}
 		$wertungsrang++;
 
 		$vorheriger_fahrer = $fahrer;
 	    }
-	    foreach my $fahrer (@$fahrer_in_klasse) {
-		$fahrer->{wertungspunkte}[$wertung] = undef
-		    if $fahrer->{keine_wertungspunkte};
+	    if ($wertungspunkte_vergeben) {
+		foreach my $fahrer (@$fahrer_in_klasse) {
+		    $fahrer->{wertungspunkte}[$wertung] = undef
+			if $fahrer->{keine_wertungspunkte};
+		}
 	    }
 	}
     }

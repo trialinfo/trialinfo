@@ -92,6 +92,7 @@ CREATE TABLE fahrer_wertung (
   id INT, -- veranstaltung
   startnummer INT,
   wertung INT,
+  wertungsrang INT,
   wertungspunkte INT,
   PRIMARY KEY (id, startnummer, wertung)
 );
@@ -400,8 +401,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	VALUES (?, ?, ?, ?)
     });
     my $sth4 = $dbh->prepare(qq{
-	INSERT INTO fahrer_wertung (id, startnummer, wertung, wertungspunkte)
-	VALUES (?, ?, ?, ?)
+	INSERT INTO fahrer_wertung (id, startnummer, wertung, wertungsrang, wertungspunkte)
+	VALUES (?, ?, ?, ?, ?)
     });
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $startnummer = $fahrer->{startnummer};
@@ -425,7 +426,9 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	}
 	for (my $n = 0; $n < @{$fahrer->{wertungen}}; $n++) {
 	    next unless $fahrer->{wertungen}[$n];
-	    $sth4->execute($id, $startnummer, $n + 1, $fahrer->{wertungspunkte}[$n]);
+	    $sth4->execute($id, $startnummer, $n + 1,
+			   $fahrer->{wertungsrang}[$n],
+			   $fahrer->{wertungspunkte}[$n]);
 	}
 	if (exists $fahrer->{neue_startnummer}) {
 	    $dbh->do(qq{
