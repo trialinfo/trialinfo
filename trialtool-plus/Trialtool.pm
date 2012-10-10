@@ -247,7 +247,7 @@ sub rundenstatistik_aufteilen($) {
 sub dat_datei_parsen($$) {
     my ($dateiname, $nur_fahrer) = @_;
 
-    my $startnummern = $nur_fahrer ? 1000 : 1600;
+    my $startnummern = $nur_fahrer ? 999 : 1600;
     my $fh = new FileHandle(encode(locale_fs => $dateiname));
     binmode $fh, ":bytes";
     my $dat = do { local $/; <$fh> };
