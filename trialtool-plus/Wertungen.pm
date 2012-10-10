@@ -149,6 +149,8 @@ sub rang_und_wertungspunkte_berechnen($$) {
     }
 
     for (my $wertung = 0; $wertung < @{$cfg->{wertungen}}; $wertung++) {
+	next
+	    unless $wertung == 0 || $cfg->{wertungspunkte_234};
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
