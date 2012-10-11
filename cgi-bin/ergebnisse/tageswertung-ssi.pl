@@ -35,13 +35,13 @@ my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $wereihe = $q->param('wereihe');
 my $animiert = defined $q->param('animiert');
+my $wertung = $q->param('wertung') || 1;
 
 # Unterstützte Spalten:
 # club fahrzeug lizenznummer geburtsdatum
 my @spalten =  $q->param('spalte');
 
 my $bezeichnung;
-my $wertung = 1;
 my $zeit;
 my $cfg;
 my $fahrer_nach_startnummer;
@@ -73,6 +73,8 @@ if (defined $wereihe) {
     });
     $sth->execute($id, $wertung);
 } else {
+    # FIXME: Stattdessen eine Liste der Veranstaltungen; Parameter
+    # durchschleifen. Veranstalter-Link zu animiertem Ergebnis?
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime,
 	       wertungsmodus, vierpunktewertung
@@ -124,34 +126,19 @@ while (my @row = $sth->fetchrow_array) {
 	if defined $row[3];
 }
 
-if (defined $wereihe && $wertung == 1) {
-    $sth = $dbh->prepare(q{
-	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
-	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
-	       s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
-	       papierabnahme
-	FROM wereihe_klasse
-	JOIN fahrer USING (klasse)
-	JOIN wereihe USING (wereihe)
-	LEFT JOIN fahrer_wertung USING (id, startnummer, wertung)
-	WHERE id = ? AND wereihe = ? AND papierabnahme
-    });
-    $sth->execute($id, $wereihe);
-} else {
-    my $w = ($wertung == 1) ?
-	'(wertung = ? OR wertung IS NULL)' :
-	'wertung = ?';
-    $sth = $dbh->prepare(q{
-	SELECT klasse, rang, startnummer, nachname, vorname, zusatzpunkte,
-	       } . ( @spalten ? join(", ", @spalten) . ", " : "") . qq{
-	       s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
-	       papierabnahme
-	FROM fahrer
-	LEFT JOIN fahrer_wertung USING (id, startnummer)
-	WHERE id = ? AND $w AND papierabnahme
-    });
-    $sth->execute($id, $wertung);
-}
+$sth = $dbh->prepare(q{
+    SELECT klasse, } . ($wertung == 1 ? "rang" : "wertungsrang AS rang") . ", " . q{
+	   startnummer, nachname, vorname, zusatzpunkte,
+	   } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
+	   s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
+	   papierabnahme
+    FROM fahrer} . (defined $wereihe ? q{
+    JOIN wereihe_klasse USING (klasse)
+    JOIN wereihe USING (wereihe)} : "") . "\n" .
+    ($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
+    q{(SELECT * FROM fahrer_wertung WHERE wertung = ?) AS fahrer_wertung USING (id, startnummer)
+    WHERE papierabnahme AND id = ?} . (defined $wereihe ? " AND wereihe = ?" : ""));
+$sth->execute($wertung, $id, defined $wereihe ? $wereihe : ());
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n < 5; $n++) {
 	$fahrer->{s}[$n] = $fahrer->{"s$n"};
