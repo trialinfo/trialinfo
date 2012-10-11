@@ -90,9 +90,12 @@ $sth = $dbh->prepare(q{
 		CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN NULL
 		     ELSE 5 END
 	   END AS 'ÖTSV<BR>Vers.'
+	   # , GROUP_CONCAT(wertung ORDER BY wertung SEPARATOR ", ") AS "Wertungen"
     FROM fahrer
+    # LEFT JOIN fahrer_wertung USING (id, startnummer)
     JOIN veranstaltung USING (id)
     WHERE id = ? AND papierabnahme
+    # GROUP BY id, startnummer
     ORDER BY startnummer;
 });
 $sth->execute($id);
