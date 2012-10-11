@@ -100,7 +100,7 @@ my ($header, $body);
 my $format = [ qw(r r l r r r r) ];
 my ($starter, $ueber_18);
 while (my @row = $sth->fetchrow_array) {
-    push @$header, map { ucfirst } @{$sth->{NAME}}
+    push @$header, map { ucfirst } force_utf8_on @{$sth->{NAME}}
 	unless defined $header;
     push @$body, [ @row ];
     $starter++;

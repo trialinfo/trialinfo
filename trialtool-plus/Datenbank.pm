@@ -17,9 +17,11 @@
 
 package Datenbank;
 
+use Encode qw(_utf8_on);
+
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8);
+@EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8 force_utf8_on);
 
 sub cfg_aus_datenbank($$) {
     my ($dbh, $id) = @_;
@@ -173,4 +175,13 @@ sub db_utf8($) {
 	return sqlite_unicode => 1;
     }
     return ();
+}
+
+# DBI seems to leave the utf8 flags of some strings like $sth->{NAME} and
+# $sth->{NAME_lc} turned off by accident even if the database (MySQL) is
+# configured to use utf8.  Fix this up.
+sub force_utf8_on(@) {
+    my @l = @_;
+    map { _utf8_on  $_ } @l;
+    return @l;
 }

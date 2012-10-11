@@ -461,7 +461,7 @@ sub tabelle_kopieren ($$$$$) {
     });
     $von_sth->execute(@filter);
     if (@zeile = $von_sth->fetchrow_array) {
-	my @spaltennamen = @{$von_sth->{NAME_lc}};
+	my @spaltennamen = force_utf8_on @{$von_sth->{NAME_lc}};
 	$nach_sth = $nach_dbh->prepare(
 	    "INSERT INTO $tabelle (" . join(", ", @spaltennamen) . ") " .
 	    "VALUES (" . join(", ", map { "?" } @spaltennamen) . ")"
@@ -596,7 +596,7 @@ sub tabelle_aktualisieren($$$$$) {
     $sth2 = undef;
     while (my @row = $sth->fetchrow_array) {
 	unless ($sth2) {
-	    my @spaltennamen = @{$sth->{NAME_lc}};
+	    my @spaltennamen = force_utf8_on @{$sth->{NAME_lc}};
 	    pop @spaltennamen;
 	    $sql2 = "INSERT INTO $table (" . join(", ", @spaltennamen) . ") " .
 		    "VALUES (" . join(", ", map { "?" } @spaltennamen) . ")";

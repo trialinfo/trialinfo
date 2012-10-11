@@ -60,7 +60,7 @@ my $sth = $dbh->prepare(q{
 my ($header, $body);
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
-    push @$header, map { ucfirst } @{$sth->{NAME}}
+    push @$header, map { ucfirst } force_utf8_on @{$sth->{NAME}}
 	unless defined $header;
     push @$body, [ @row ];
 }
