@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>ÖTSV</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+<link rel="icon" type="image/icon" href="/favicon.ico" />
+</head>
+<body>
+<!--#set var="which" value="$QUERY_STRING" -->
+<!--#include virtual="/cgi-bin/veranstalter/starterzahl-ssi.pl?$which" -->
+<p>
+© ÖTSV &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+</p>
+<p>
+<a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
+</body>
+</html>

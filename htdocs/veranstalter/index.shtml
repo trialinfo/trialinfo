@@ -11,6 +11,7 @@
 <h2>Listen für Veranstalter</h2>
 <p>
 <a href="../ergebnisse/statistik.shtml">Punktestatistiken</a><br>
+<a href="../veranstalter/starterzahl.shtml">Starterzahlen</a><br>
 <a href="nenngeld.shtml">Nenngeldlisten</a><br>
 <a href="/cgi-bin/veranstalter/fahrerliste.pl">Aktuelle Fahrerliste (CSV, Zeichensatz UTF-8)</a><br>
 <a href="../ergebnisse/tageswertung.shtml?animiert=1">Aktuelle Tageswertung als Präsentation</a>

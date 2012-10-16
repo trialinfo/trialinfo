@@ -35,6 +35,7 @@ WEB_FILES = \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/.htaccess \
 	cgi-bin/veranstalter/nenngeld-ssi.pl \
+	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/ergebnisse.css \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/ergebnisse/index.shtml \
@@ -56,6 +57,7 @@ WEB_FILES = \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
+	htdocs/veranstalter/starterzahl.shtml \
 	trialtool-plus/DatenbankAuswertung.pm.txt \
 
 all:
