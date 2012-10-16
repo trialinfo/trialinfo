@@ -211,6 +211,7 @@ DROP TABLE IF EXISTS vareihe;
 -- Veranstaltungsreihe
 CREATE TABLE vareihe (
   vareihe INT,
+  bezeichnung VARCHAR(40),
   PRIMARY KEY (vareihe)
 );
 
@@ -234,8 +235,8 @@ CREATE TABLE wereihe_klasse (
   PRIMARY KEY (wereihe, klasse)
 );
 
-INSERT INTO vareihe (vareihe)
-VALUES (1);
+INSERT INTO vareihe (vareihe, bezeichnung)
+VALUES (1, 'ÖTSV Motorrad-Wettbewerbe 2012');
 
 INSERT INTO wereihe (wereihe, vareihe, bezeichnung, laeufe, streichresultate, wertung)
     VALUES (1, 1, "ÖTSV Cup 2012", 15, 4, 1);
