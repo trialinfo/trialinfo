@@ -17,7 +17,7 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
-use DBI;
+use DBI qw(looks_like_number);
 use Trialtool;
 use Wertungen;
 use Getopt::Long;
@@ -26,7 +26,6 @@ use File::Basename;
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
 use POSIX qw(strftime);
-use DBH_Logger;
 use IO::Tee;
 use Datenbank;
 use strict;
@@ -652,7 +651,7 @@ sub tabelle_aktualisieren($$$$$) {
 		unless ($row[$i] ~~ $row[$j]) {
 		    push @columns, $nonkeys[$i];
 		    push @old, "$nonkeys[$i] = " .
-			 STH_Logger::log_sql_value($row[$i]);
+			 sql_value($row[$i]);
 		    push @new_values, $row[$j];
 		}
 	    }
@@ -793,6 +792,24 @@ my $neu_uebertragen = $force;
 
 my $tmp_dbh;
 
+sub sql_value($) {
+    my ($_) = @_;
+
+    return "NULL"
+	unless defined $_;
+    return $_
+	if looks_like_number $_;
+    s/'/''/g;
+    return "'$_'";
+}
+
+sub log_sql_statement($@) {
+    my ($statement, @bind_values) = @_;
+    $statement =~ s/^\s*(.*)\s*$/$1/;
+    $statement =~ s/\?/sql_value shift @bind_values/ge;
+    print "    $statement\n";
+}
+
 do {
     eval {
 	my $dbh = DBI->connect("DBI:$db", $username, $password,
@@ -803,8 +820,22 @@ do {
 	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
 	}
 
-	$dbh = new DBH_Logger($dbh)
-	    if $trace_sql;
+	if ($trace_sql) {
+	    $dbh->{Callbacks} = {
+		ChildCallbacks => {
+		    execute => sub {
+			my ($sth, @bind_values) = @_;
+			log_sql_statement $sth->{Statement}, @bind_values;
+			return;
+		    },
+		},
+		do => sub {
+		    my ($dbh, $statement, $attr, @bind_values) = @_;
+		    log_sql_statement $statement, @bind_values;
+		    return;
+		},
+	     };
+	}
 
 	print "Connected to $db ...\n";
 
@@ -821,8 +852,6 @@ do {
 		$tmp_dbh = DBI->connect("DBI:SQLite:dbname=$temp_db",
 					   { RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1 })
 		    or die "Could not create in-memory database: $DBI::errstr\n";
-		#$tmp_dbh = new DBH_Logger($tmp_dbh)
-		#	if $trace_sql;
 		sql_ausfuehren $tmp_dbh, @create_veranstaltung_tables;
 		my $sth = $tmp_dbh->table_info(undef, undef, undef, "TABLE");
 		while (my @row = $sth->fetchrow_array) {

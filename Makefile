@@ -10,7 +10,6 @@ COMMON_FILES = \
 	trialtool-plus/Wertungen.pm \
 
 LOCAL_FILES = \
-	trialtool-plus/DBH_Logger.pm \
 	db-sync.pl \
 	db-export.pl \
 	doc/eer-diagramm.mwb \
@@ -22,7 +21,6 @@ LOCAL_FILES = \
 	Makefile \
 	otsv-check.pl \
 	trialtool-plus/Parse/Binary/FixedFormat.pm \
-	trialtool-plus/STH_Logger.pm \
 	tageswertung.pl \
 	trialtool-plus/Trialtool.pm \
 
