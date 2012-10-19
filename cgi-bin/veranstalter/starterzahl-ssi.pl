@@ -60,6 +60,8 @@ if (my @row = $sth->fetchrow_array) {
     exit;
 }
 
+doc_h1 "$vareihe_bezeichnung";
+
 my $veranstaltungstitel;
 $sth = $dbh->prepare(q{
     SELECT id, titel
@@ -103,18 +105,18 @@ while (my @row = $sth->fetchrow_array) {
     $klassenbezeichnung->{$row[0]} = $row[1];
 }
 
-my $gesamt;
+my $nummern;
 $sth = $dbh->prepare(q{
-    SELECT klasse, count(*)
+    SELECT id, klasse, count(*)
     FROM fahrer
     JOIN vareihe_veranstaltung USING (id)
-    WHERE vareihe = ? AND startnummer < 1000 AND id = ?
-    GROUP BY klasse
+    WHERE vareihe = ? AND startnummer < 1000
+    GROUP BY id, klasse
 });
-$sth->execute($vareihe, $max_id);
+$sth->execute($vareihe);
 while (my @row = $sth->fetchrow_array) {
     my ($klasse, $anzahl) = @row;
-    $gesamt->{$row[0]} = $row[1];
+    $nummern->{$row[0]}{$row[1]} = $row[2];
 }
 
 my $klassen;
@@ -132,34 +134,37 @@ foreach my $klasse (@$klassen) {
     push @$header, $klasse;
 }
 push @$format, qw(r3);
-push @$header, qw(Starter);
+push @$header, qw(Summe);
 
 my $body;
 foreach my $id (sort { $a <=> $b } keys %$starter) {
     my @k = ();
     for (my $n = 0; $n < @$klassen; $n++) {
 	my $klasse = $klassen->[$n];
-	$k[$n] = $starter->{$id}{$klasse};
+	push @k, $starter->{$id}{$klasse};
     }
     push @$body, [ $veranstaltungstitel->{$id}, @k, summe(@k) ];
 }
 
-my @k = ();
+doc_h2 "Starterzahlen";
+doc_table $header, $body, undef, $format;
 
-for (my $n = 0; $n < @$klassen; $n++) {
-    my $klasse = $klassen->[$n];
-    $k[$n] = $gesamt->{$klasse};
+$body = [];
+foreach my $id (sort { $a <=> $b } keys %$starter) {
+    my @k = ();
+    for (my $n = 0; $n < @$klassen; $n++) {
+	my $klasse = $klassen->[$n];
+	push @k, $nummern->{$id}{$klasse};
+    }
+    push @$body, [ $veranstaltungstitel->{$id}, summe(@k) ];
 }
 
-my $footer = [ "Vergebene Startnummern", @k, summe(@k) ];
-
-doc_h1 "$vareihe_bezeichnung";
-doc_h2 "Starterzahlen";
-doc_table $header, $body, $footer, $format;
+doc_h2 "Vergebene Startnummern";
+doc_table [ "Veranstaltung", "" ], $body, undef, $format;
 
 $body = [];
 foreach my $klasse (@$klassen) {
     push @$body, [ $klasse, $klassenbezeichnung->{$klasse} ];
 }
-doc_h3 "Klassen";
+doc_h2 "Klassen";
 doc_table [ qw(Kl. Bezeichnung) ], $body, undef, [ qw(r2 l) ];
