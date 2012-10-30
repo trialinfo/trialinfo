@@ -509,6 +509,7 @@ sub jahreswertung($$$$$$) {
     my ($veranstaltungen, $wertung, $laeufe_gesamt, $streichresultate,
 	$klassenfarben, $spalten) = @_;
 
+    my $idx = $wertung - 1;
     undef $streichresultate
 	unless defined $laeufe_gesamt;
 
@@ -520,7 +521,7 @@ sub jahreswertung($$$$$$) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
-		if defined $fahrer->{wertungspunkte}[$wertung - 1];
+		if defined $fahrer->{wertungspunkte}[$idx];
 	}
 	if (exists $cfg->{gewertet}) {
 	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
@@ -561,10 +562,10 @@ sub jahreswertung($$$$$$) {
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
 	    if ($startnummer < 1000 &&
-		defined $fahrer->{wertungspunkte}[$wertung - 1]) {
+		defined $fahrer->{wertungspunkte}[$idx]) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
-		    $fahrer->{wertungspunkte}[$wertung - 1];
+		    $fahrer->{wertungspunkte}[$idx];
 	    }
 	    $alle_fahrer->{$startnummer} = $fahrer;
 	}
@@ -629,7 +630,7 @@ sub jahreswertung($$$$$$) {
 	    my $gewertet = $cfg->{gewertet}[$klasse - 1];
 	    if ($gewertet) {
 		push @$format, "r$spaltenbreite";
-		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$wertung - 1]\"" ] : "";
+		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$idx]\"" ] : "";
 	    }
 	}
 	if ($hat_streichpunkte) {
@@ -673,9 +674,9 @@ sub jahreswertung($$$$$$) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    push @$row, (defined $fahrer->{wertungspunkte}[$wertung - 1] &&
+		    push @$row, (defined $fahrer->{wertungspunkte}[$idx] &&
 				 $fahrer->{klasse} == $klasse) ?
-				$fahrer->{wertungspunkte}[$wertung - 1] :
+				$fahrer->{wertungspunkte}[$idx] :
 				$RenderOutput::html ? "" : "-";
 		}
 	    }
@@ -693,8 +694,8 @@ sub jahreswertung($$$$$$) {
 	my $cfg = $veranstaltungen->[$n][0];
 	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
-	#push @$body, [ $label, "$cfg->{titel}[$wertung - 1]: $cfg->{subtitel}[$wertung - 1]" ];
-	push @$body, [ $label, $cfg->{titel}[$wertung - 1] ];
+	#push @$body, [ $label, "$cfg->{titel}[$idx]: $cfg->{subtitel}[$idx]" ];
+	push @$body, [ $label, $cfg->{titel}[$idx] ];
     }
     doc_table ["", "Name"], $body, undef, ["r", "l"];
 }
