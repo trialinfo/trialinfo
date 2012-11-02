@@ -1,0 +1,3 @@
+#! /bin/sh
+
+dd if="$1" bs=847 skip=$(($2 - 1)) count=1 | /usr/bin/hexdump -C
