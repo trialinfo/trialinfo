@@ -95,7 +95,7 @@ while (my @row = $sth->fetchrow_array) {
 
 $sth = $dbh->prepare(q{
     SELECT id, klasse, startnummer, neue_startnummer, vorname, nachname,
-	   wertungspunkte
+	   wertungspunkte, wertungsrang
     } . ( @spalten ? ", " . join(", ", @spalten) : "") . q{
     FROM fahrer_wertung
     JOIN fahrer USING (id, startnummer)
@@ -109,9 +109,15 @@ $sth->execute($wereihe);
 while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
+
     my $wertungspunkte = $fahrer->{wertungspunkte};
     $fahrer->{wertungspunkte} = [];
     $fahrer->{wertungspunkte}[$wertung - 1] = $wertungspunkte;
+
+    my $wertungsrang = $fahrer->{wertungsrang};
+    $fahrer->{wertungsrang} = [];
+    $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
+
     if (defined $fahrer->{neue_startnummer}) {
 	$fahrer->{alte_startnummer} = $fahrer->{startnummer};
 	$fahrer->{startnummer} = $fahrer->{neue_startnummer};
