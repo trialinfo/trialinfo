@@ -461,8 +461,8 @@ sub wertungsrang_cmp($$) {
     return $a <=> $b;
 }
 
-sub jahreswertung_cmp($$) {
-    my ($aa, $bb) = @_;
+sub jahreswertung_cmp($$$) {
+    my ($aa, $bb, $grund) = @_;
 
     # Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
     return $bb->{gesamtpunkte} <=> $aa->{gesamtpunkte}
@@ -474,21 +474,25 @@ sub jahreswertung_cmp($$) {
 
     for (my $n = 0; $n < @$ra && $n < @$rb; $n++) {
 	my $cmp = wertungsrang_cmp($ra->[$n], $rb->[$n]);
-	if ($cmp != 0) {
-	    #my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
-	    #my $platz = ($cmp < 0) ? $ra->[$n] : $rb->[$n];
-	    #print STDERR "Fahrer $A->{startnummer} hat mehr $platz. Plätze " .
-	    #		 "als Fahrer $B->{startnummer}.\n";
+	if ($cmp) {
+	    if (defined $grund) {
+		my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
+		my $platz = ($cmp < 0) ? $ra->[$n] : $rb->[$n];
+		push @$grund, "Fahrer $A->{startnummer} hat " .
+			      "mehr $platz. Plätze als " .
+			      "Fahrer $B->{startnummer}.";
+	    }
 	    return $cmp;
 	}
     }
 
     # Fahrer mit höheren Streichpunkten gewinnt
     my $cmp = ($bb->{streichpunkte} // 0) <=> ($aa->{streichpunkte} // 0);
-    if ($cmp != 0) {
-	#my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
-	#print STDERR "Fahrer $A->{startnummer} hat mehr Streichpunkte " .
-	#	     "als Fahrer $B->{startnummer}.\n";
+    if ($cmp && defined $grund) {
+	my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
+	push @$grund, "Fahrer $A->{startnummer} hat bei gleichen " .
+		      "Platzierungen mehr Streichpunkte als " .
+		      "Fahrer $B->{startnummer}.";
     }
     return $cmp;
 }
@@ -530,10 +534,11 @@ sub jahreswertung_berechnen($$$) {
 	# Gesamtrang berechnen
 	my $gesamtrang = 1;
 	my $vorheriger_fahrer;
-	foreach my $fahrer (sort jahreswertung_cmp @$fahrer_in_klasse) {
+	foreach my $fahrer (sort { jahreswertung_cmp($a, $b, undef) }
+				 @$fahrer_in_klasse) {
 	    $fahrer->{gesamtrang} =
 		$vorheriger_fahrer &&
-		jahreswertung_cmp($vorheriger_fahrer, $fahrer) == 0 ?
+		jahreswertung_cmp($vorheriger_fahrer, $fahrer, undef) == 0 ?
 		    $vorheriger_fahrer->{gesamtrang} : $gesamtrang;
 	    $gesamtrang++;
 	    $vorheriger_fahrer = $fahrer;
@@ -571,6 +576,8 @@ sub jahreswertung_zusammenfassung($$$$) {
 sub jahreswertung($$$$$$) {
     my ($veranstaltungen, $wertung, $laeufe_gesamt, $streichresultate,
 	$klassenfarben, $spalten) = @_;
+
+    my $mit_begruendung;
 
     my $idx = $wertung - 1;
     undef $streichresultate
@@ -735,6 +742,26 @@ sub jahreswertung($$$$$$) {
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
+
+	if ($mit_begruendung) {
+	    my $gruende = [];
+	    for (my $n = 1; $n < @$fahrer_in_klasse; $n++) {
+		my $startnummer_a = $fahrer_in_klasse->[$n - 1]{startnummer};
+		my $startnummer_b = $fahrer_in_klasse->[$n]{startnummer};
+		jahreswertung_cmp $klassenwertung->{$startnummer_a},
+				  $klassenwertung->{$startnummer_b},
+				  $gruende;
+	    }
+	    if (@$gruende) {
+		if ($RenderOutput::html) {
+		    doc_p join("<br>", @$gruende);
+		} else {
+		    foreach my $grund (@$gruende) {
+			doc_p $grund;
+		    }
+		}
+	    }
+	}
     }
 
     doc_h3 "Veranstaltungen:";
