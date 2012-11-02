@@ -131,6 +131,9 @@ sub rang_und_wertungspunkte_berechnen($$) {
     foreach my $klasse (keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
+	# $fahrer->{rang} ist der Rang in der Tages-Gesamtwertung, in der alle
+	# Starter aufscheinen.
+
 	my $rang = 1;
 	$fahrer_in_klasse = [
 	    sort { rang_vergleich($a, $b, $cfg) }
@@ -154,6 +157,9 @@ sub rang_und_wertungspunkte_berechnen($$) {
 
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
+
+	    # $fahrer->{wertungsrang}[] ist der Rang in der jeweiligen
+	    # Teilwertung.
 
 	    my $wertungsrang = 1;
 	    my $vorheriger_fahrer;
