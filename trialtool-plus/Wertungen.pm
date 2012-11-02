@@ -453,6 +453,46 @@ sub streichen($$$) {
     return $laeufe_bisher - max(0, $laeufe_gesamt - $streichresultate);
 }
 
+sub wertungsrang_cmp($$) {
+    my ($a, $b) = @_;
+
+    return defined $b <=> defined $a
+	unless defined $a && defined $b;
+    return $a <=> $b;
+}
+
+sub jahreswertung_cmp($$) {
+    my ($aa, $bb) = @_;
+
+    # Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
+    return $bb->{gesamtpunkte} <=> $aa->{gesamtpunkte}
+	if $aa->{gesamtpunkte} != $bb->{gesamtpunkte};
+
+    # Fahrer mit mehr guten Platzierungen (ohne Beachtung von Streichresultaten) gewinnt
+    my $ra = [ sort wertungsrang_cmp @{$aa->{wertungsrang}} ];
+    my $rb = [ sort wertungsrang_cmp @{$bb->{wertungsrang}} ];
+
+    for (my $n = 0; $n < @$ra && $n < @$rb; $n++) {
+	my $cmp = wertungsrang_cmp($ra->[$n], $rb->[$n]);
+	if ($cmp != 0) {
+	    #my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
+	    #my $platz = ($cmp < 0) ? $ra->[$n] : $rb->[$n];
+	    #print STDERR "Fahrer $A->{startnummer} hat mehr $platz. Plätze " .
+	    #		 "als Fahrer $B->{startnummer}.\n";
+	    return $cmp;
+	}
+    }
+
+    # Fahrer mit höheren Streichpunkten gewinnt
+    my $cmp = ($bb->{streichpunkte} // 0) <=> ($aa->{streichpunkte} // 0);
+    if ($cmp != 0) {
+	#my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
+	#print STDERR "Fahrer $A->{startnummer} hat mehr Streichpunkte " .
+	#	     "als Fahrer $B->{startnummer}.\n";
+    }
+    return $cmp;
+}
+
 sub jahreswertung_berechnen($$$) {
     my ($jahreswertung, $laeufe_gesamt, $streichresultate) = @_;
 
@@ -460,6 +500,13 @@ sub jahreswertung_berechnen($$$) {
 	foreach my $startnummer (keys %{$jahreswertung->{$klasse}}) {
 	    my $fahrer = $jahreswertung->{$klasse}{$startnummer};
 	    $jahreswertung->{$klasse}{$startnummer}{startnummer} = $startnummer;
+	}
+
+	my $fahrer_in_klasse = [ map { $jahreswertung->{$klasse}{$_} }
+				     keys %{$jahreswertung->{$klasse}} ];
+
+	# Gesamtpunkte und Streichpunkte berechnen
+	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $wertungspunkte = $fahrer->{wertungspunkte};
 	    my $n = 0;
 	    if (defined $streichresultate) {
@@ -479,17 +526,27 @@ sub jahreswertung_berechnen($$$) {
 		$fahrer->{gesamtpunkte} += $wertungspunkte->[$n];
 	    }
 	}
+
+	# Gesamtrang berechnen
+	my $gesamtrang = 1;
+	my $vorheriger_fahrer;
+	foreach my $fahrer (sort jahreswertung_cmp @$fahrer_in_klasse) {
+	    $fahrer->{gesamtrang} =
+		$vorheriger_fahrer &&
+		jahreswertung_cmp($vorheriger_fahrer, $fahrer) == 0 ?
+		    $vorheriger_fahrer->{gesamtrang} : $gesamtrang;
+	    $gesamtrang++;
+	    $vorheriger_fahrer = $fahrer;
+	}
     }
 }
 
-sub jahreswertung_cmp {
-    return $b->{gesamtpunkte} <=> $a->{gesamtpunkte}
-	if $a->{gesamtpunkte} != $b->{gesamtpunkte};
-    return $b->{streichpunkte} <=> $a->{streichpunkte}
-	if exists $a->{streichpunkte} &&
-	   exists $b->{streichpunkte} &&
-	   $a->{streichpunkte} != $b->{streichpunkte};
-    return $a->{startnummer} <=> $b->{startnummer};
+sub jahreswertung_anzeige_cmp($$) {
+    my ($aa, $bb) = @_;
+
+    return $aa->{gesamtrang} <=> $bb->{gesamtrang}
+	if $aa->{gesamtrang} != $bb->{gesamtrang};
+    return $aa->{startnummer} <=> $bb->{startnummer};
 }
 
 sub jahreswertung_zusammenfassung($$$$) {
@@ -572,6 +629,8 @@ sub jahreswertung($$$$$$) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		    $fahrer->{wertungspunkte}[$idx];
+		push @{$jahreswertung->{$klasse}{$startnummer}{wertungsrang}},
+		    $fahrer->{wertungsrang}[$idx];
 	    }
 	    $alle_fahrer->{$startnummer} = $fahrer;
 	}
@@ -597,7 +656,7 @@ sub jahreswertung($$$$$$) {
 	my $klassenwertung = $jahreswertung->{$klasse};
 	my $fahrer_in_klasse = [
 	    map { $alle_fahrer->{$_->{startnummer}} }
-		(sort jahreswertung_cmp (values %$klassenwertung)) ];
+		(sort jahreswertung_anzeige_cmp values %$klassenwertung) ];
 
 	my $hat_streichpunkte;
 	if (defined $streichresultate) {
@@ -646,28 +705,12 @@ sub jahreswertung($$$$$$) {
 	push @$format, "r3";
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
 
-	my $letzter_fahrer;
-	for (my $n = 0; $n < @$fahrer_in_klasse; $n++) {
-	    my $fahrer = $fahrer_in_klasse->[$n];
-	    my $startnummer = $fahrer->{startnummer};
-
-	    if ($letzter_fahrer &&
-		$klassenwertung->{$startnummer}{gesamtpunkte} ==
-		$klassenwertung->{$letzter_fahrer->{startnummer}}->{gesamtpunkte}) {
-		$klassenwertung->{$startnummer}{rang} =
-		    $klassenwertung->{$letzter_fahrer->{startnummer}}->{rang};
-	    } else {
-		$klassenwertung->{$startnummer}{rang} = $n + 1;
-	    }
-	    $letzter_fahrer = $fahrer;
-	}
-
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $startnummer = $fahrer->{startnummer};
 	    my $fahrerwertung = $klassenwertung->{$startnummer};
 	    my $gesamtpunkte = $fahrerwertung->{gesamtpunkte};
 	    my $row;
-	    push @$row, $gesamtpunkte ? "$fahrerwertung->{rang}." : "";
+	    push @$row, $gesamtpunkte ? "$fahrerwertung->{gesamtrang}." : "";
 	    push @$row, $startnummer,
 			$alle_fahrer->{$startnummer}{nachname} . ", " .
 			$alle_fahrer->{$startnummer}{vorname};
