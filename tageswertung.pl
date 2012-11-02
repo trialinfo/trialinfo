@@ -56,10 +56,10 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"fahrzeug" => sub { push @$spalten, $_[0] },
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
-unless ($result) {
+unless ($result && @ARGV) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--nicht-alle-punkte] " .
 	  "[--nicht-nach-relevanz] [--club] [--lizenznummer] [--fahrzeug] " .
-	  "[--geburtsdatum]\n";
+	  "[--geburtsdatum] {datei}\n";
     exit 1;
 }
 
