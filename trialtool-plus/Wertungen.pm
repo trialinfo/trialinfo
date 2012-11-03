@@ -494,6 +494,11 @@ sub jahreswertung_cmp($$$) {
 		      "Platzierungen mehr Streichpunkte als " .
 		      "Fahrer $B->{startnummer}.";
     }
+
+    # TODO: Ist auch dann noch keine Differenzierung möglich, wird der
+    # OSK-Prädikatstitel dem Fahrer zuerkannt, der den letzten wertbaren Lauf
+    # zu dem entsprechenden Bewerb gewonnen hat.
+
     return $cmp;
 }
 
