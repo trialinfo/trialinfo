@@ -482,12 +482,27 @@ sub jahreswertung_cmp($$) {
 	}
     }
 
+    foreach my $rang (keys %{$aa->{rang_wichtig}}) {
+	$bb->{rang_wichtig}{$rang}++
+	   unless $bb->{rang_wichtig}{$rang};
+    }
+    foreach my $rang (keys %{$bb->{rang_wichtig}}) {
+	$aa->{rang_wichtig}{$rang}++
+	   unless $aa->{rang_wichtig}{$rang};
+    }
+
     # Fahrer mit höheren Streichpunkten gewinnt
     my $cmp = ($bb->{streichpunkte} // 0) <=> ($aa->{streichpunkte} // 0);
     if ($cmp) {
 	$aa->{streichpunkte_wichtig}++;
 	$bb->{streichpunkte_wichtig}++;
+	return $cmp;
     }
+
+    $bb->{streichpunkte_wichtig}++
+	if $aa->{streichpunkte_wichtig};
+    $aa->{streichpunkte_wichtig}++
+	if $bb->{streichpunkte_wichtig};
 
     # TODO: Ist auch dann noch keine Differenzierung möglich, wird der
     # OSK-Prädikatstitel dem Fahrer zuerkannt, der den letzten wertbaren Lauf
