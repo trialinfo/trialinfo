@@ -461,8 +461,8 @@ sub wertungsrang_cmp($$) {
     return $a <=> $b;
 }
 
-sub jahreswertung_cmp($$$) {
-    my ($aa, $bb, $grund) = @_;
+sub jahreswertung_cmp($$) {
+    my ($aa, $bb) = @_;
 
     # Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
     return $bb->{gesamtpunkte} <=> $aa->{gesamtpunkte}
@@ -475,24 +475,18 @@ sub jahreswertung_cmp($$$) {
     for (my $n = 0; $n < @$ra && $n < @$rb; $n++) {
 	my $cmp = wertungsrang_cmp($ra->[$n], $rb->[$n]);
 	if ($cmp) {
-	    if (defined $grund) {
-		my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
-		my $platz = ($cmp < 0) ? $ra->[$n] : $rb->[$n];
-		push @$grund, "Fahrer $A->{startnummer} hat " .
-			      "mehr $platz. Plätze als " .
-			      "Fahrer $B->{startnummer}.";
-	    }
+	    my $rang = ($cmp < 0) ? $ra->[$n] : $rb->[$n];
+	    $aa->{rang_wichtig}{$rang}++;
+	    $bb->{rang_wichtig}{$rang}++;
 	    return $cmp;
 	}
     }
 
     # Fahrer mit höheren Streichpunkten gewinnt
     my $cmp = ($bb->{streichpunkte} // 0) <=> ($aa->{streichpunkte} // 0);
-    if ($cmp && defined $grund) {
-	my ($A, $B) = ($cmp < 0) ? ($aa, $bb) : ($bb, $aa);
-	push @$grund, "Fahrer $A->{startnummer} hat bei gleichen " .
-		      "Platzierungen mehr Streichpunkte als " .
-		      "Fahrer $B->{startnummer}.";
+    if ($cmp) {
+	$aa->{streichpunkte_wichtig}++;
+	$bb->{streichpunkte_wichtig}++;
     }
 
     # TODO: Ist auch dann noch keine Differenzierung möglich, wird der
@@ -539,11 +533,10 @@ sub jahreswertung_berechnen($$$) {
 	# Gesamtrang berechnen
 	my $gesamtrang = 1;
 	my $vorheriger_fahrer;
-	foreach my $fahrer (sort { jahreswertung_cmp($a, $b, undef) }
-				 @$fahrer_in_klasse) {
+	foreach my $fahrer (sort jahreswertung_cmp @$fahrer_in_klasse) {
 	    $fahrer->{gesamtrang} =
 		$vorheriger_fahrer &&
-		jahreswertung_cmp($vorheriger_fahrer, $fahrer, undef) == 0 ?
+		jahreswertung_cmp($vorheriger_fahrer, $fahrer) == 0 ?
 		    $vorheriger_fahrer->{gesamtrang} : $gesamtrang;
 	    $gesamtrang++;
 	    $vorheriger_fahrer = $fahrer;
@@ -581,8 +574,6 @@ sub jahreswertung_zusammenfassung($$$$) {
 sub jahreswertung($$$$$$) {
     my ($veranstaltungen, $wertung, $laeufe_gesamt, $streichresultate,
 	$klassenfarben, $spalten) = @_;
-
-    my $mit_begruendung;
 
     my $idx = $wertung - 1;
     undef $streichresultate
@@ -712,7 +703,7 @@ sub jahreswertung($$$$$$) {
 	}
 	if ($hat_streichpunkte) {
 	    push @$format, "r3";
-	    push @$header, [ "Str", "r1", "title=\"Gestrichene Punkte\"" ];
+	    push @$header, [ "Str", "r1", "title=\"Streichpunkte\"" ];
 	}
 	push @$format, "r3";
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
@@ -735,38 +726,26 @@ sub jahreswertung($$$$$$) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    push @$row, (defined $fahrer->{wertungspunkte}[$idx] &&
+		    my $feld = (defined $fahrer->{wertungspunkte}[$idx] &&
 				 $fahrer->{klasse} == $klasse) ?
 				$fahrer->{wertungspunkte}[$idx] :
 				$RenderOutput::html ? "" : "-";
+		    my $rang = $fahrer->{wertungsrang}[$idx];
+		    $feld = [ $feld, "r", "class=\"text2\"" ]
+			if $fahrerwertung->{rang_wichtig}{$rang};
+		    push @$row, $feld;
 		}
 	    }
-	    push @$row, [ $fahrerwertung->{streichpunkte}, "r", "class=\"info2\"" ]
-		if $hat_streichpunkte;
+	    if ($hat_streichpunkte) {
+		my $feld = $fahrerwertung->{streichpunkte};
+		$feld = [ $feld, "r", "class=\"text2\"" ]
+		    if $fahrerwertung->{streichpunkte_wichtig};
+		push @$row, $feld;
+	    }
 	    push @$row, $gesamtpunkte || "";
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
-
-	if ($mit_begruendung) {
-	    my $gruende = [];
-	    for (my $n = 1; $n < @$fahrer_in_klasse; $n++) {
-		my $startnummer_a = $fahrer_in_klasse->[$n - 1]{startnummer};
-		my $startnummer_b = $fahrer_in_klasse->[$n]{startnummer};
-		jahreswertung_cmp $klassenwertung->{$startnummer_a},
-				  $klassenwertung->{$startnummer_b},
-				  $gruende;
-	    }
-	    if (@$gruende) {
-		if ($RenderOutput::html) {
-		    doc_p join("<br>", @$gruende);
-		} else {
-		    foreach my $grund (@$gruende) {
-			doc_p $grund;
-		    }
-		}
-	    }
-	}
     }
 
     doc_h3 "Veranstaltungen:";

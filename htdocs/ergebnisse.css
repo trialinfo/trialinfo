@@ -29,6 +29,10 @@ table.wertung tr.footer td
 {
 font-style:italic;
 }
+table.wertung td.text2
+{
+color:#A11111;
+}
 table.wertung td.info
 {
 color:#A0A0A0;
