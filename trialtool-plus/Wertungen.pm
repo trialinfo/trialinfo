@@ -170,22 +170,20 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
 		    $fahrer->{wertungsrang}[$idx] =
 			$vorheriger_fahrer->{wertungsrang}[$idx];
-		    if ($wertungspunkte_vergeben && !$fahrer->{ausfall}) {
-			$fahrer->{wertungspunkte}[$idx] =
-			    $vorheriger_fahrer->{wertungspunkte}[$idx];
-		    }
 		} else {
 		    $fahrer->{wertungsrang}[$idx] = $wertungsrang;
-		    if ($wertungspunkte_vergeben && !$fahrer->{ausfall}) {
-			$fahrer->{wertungspunkte}[$idx] =
-			    $wertungspunkte->[min($wertungsrang, scalar @$wertungspunkte) - 1] || undef;
-		    }
 		}
 		$wertungsrang++;
 
 		$vorheriger_fahrer = $fahrer;
 	    }
 	    if ($wertungspunkte_vergeben) {
+		foreach my $fahrer (@$fahrer_in_klasse) {
+		    my $wr = $fahrer->{wertungsrang}[$idx];
+		    next if $fahrer->{ausfall} || !defined $wr;
+		    my $x = min($wr, scalar @$wertungspunkte);
+		    $fahrer->{wertungspunkte}[$idx] = $wertungspunkte->[$x - 1] || undef;
+		}
 		foreach my $fahrer (@$fahrer_in_klasse) {
 		    $fahrer->{wertungspunkte}[$idx] = undef
 			if $fahrer->{keine_wertungspunkte};
