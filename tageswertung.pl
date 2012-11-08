@@ -43,6 +43,7 @@ my $farben = [];
 my $anzeigen_mit;
 my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
 my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Ergebnis egal
+my $punkteteilung;
 
 my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
@@ -51,6 +52,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 			"nicht-alle-punkte" => sub () { $alle_punkte = 0 },
 			"nicht-nach-relevanz" => sub () { $nach_relevanz = 0 },
+			"punkteteilung" => \$punkteteilung,
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
@@ -59,7 +61,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 unless ($result && @ARGV) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--nicht-alle-punkte] " .
 	  "[--nicht-nach-relevanz] [--club] [--lizenznummer] [--fahrzeug] " .
-	  "[--geburtsdatum] {datei}\n";
+	  "[--geburtsdatum] [--punkteteilung] {datei}\n";
     exit 1;
 }
 
@@ -127,6 +129,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	}
     }
 
+    $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
     if (%$klassen) {

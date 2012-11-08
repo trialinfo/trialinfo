@@ -178,11 +178,47 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		$vorheriger_fahrer = $fahrer;
 	    }
 	    if ($wertungspunkte_vergeben) {
-		foreach my $fahrer (@$fahrer_in_klasse) {
-		    my $wr = $fahrer->{wertungsrang}[$idx];
-		    next if $fahrer->{ausfall} || !defined $wr;
-		    my $x = min($wr, scalar @$wertungspunkte);
-		    $fahrer->{wertungspunkte}[$idx] = $wertungspunkte->[$x - 1] || undef;
+		if ($cfg->{punkteteilung}) {
+		    my ($m, $n);
+		    for ($m = 0; $m < @$fahrer_in_klasse; $m = $n) {
+			my $fahrer_m = $fahrer_in_klasse->[$m];
+			if ($fahrer_m->{ausfall} ||
+			    !defined $fahrer_m->{wertungsrang}[$idx]) {
+			    $n = $m + 1;
+			    next;
+			}
+
+			my $anzahl_fahrer = 1;
+			for ($n = $m + 1; $n < @$fahrer_in_klasse; $n++) {
+			    my $fahrer_n = $fahrer_in_klasse->[$n];
+			    next if $fahrer_n->{ausfall} ||
+				    !defined $fahrer_m->{wertungsrang}[$idx];
+			    last if $fahrer_m->{wertungsrang}[$idx] !=
+				    $fahrer_n->{wertungsrang}[$idx];
+			    $anzahl_fahrer++;
+			}
+			my $summe;
+			my $wr = $fahrer_m->{wertungsrang}[$idx];
+			for (my $i = 0; $i < $anzahl_fahrer; $i++) {
+			    my $x = min($wr + $i, scalar @$wertungspunkte);
+			    $summe += $wertungspunkte->[$x - 1];
+			}
+			for ($n = $m; $n < @$fahrer_in_klasse; $n++) {
+			    my $fahrer_n = $fahrer_in_klasse->[$n];
+			    next if $fahrer_n->{ausfall} ||
+				    !defined $fahrer_m->{wertungsrang}[$idx];
+			    last if $fahrer_m->{wertungsrang}[$idx] !=
+				    $fahrer_n->{wertungsrang}[$idx];
+			    $fahrer_n->{wertungspunkte}[$idx] = ($summe / $anzahl_fahrer) || undef;
+			}
+		    }
+		} else {
+		    foreach my $fahrer (@$fahrer_in_klasse) {
+			my $wr = $fahrer->{wertungsrang}[$idx];
+			next if $fahrer->{ausfall} || !defined $wr;
+			my $x = min($wr, scalar @$wertungspunkte);
+			$fahrer->{wertungspunkte}[$idx] = $wertungspunkte->[$x - 1] || undef;
+		    }
 		}
 		foreach my $fahrer (@$fahrer_in_klasse) {
 		    $fahrer->{wertungspunkte}[$idx] = undef

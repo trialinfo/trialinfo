@@ -44,6 +44,7 @@ my $farben = [];
 my $laeufe;
 my $streichresultate;
 my $anzeigen_mit;
+my $punkteteilung;
 
 my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
@@ -52,6 +53,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"streichresultate=s" => \$streichresultate,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
+			"punkteteilung" => \$punkteteilung,
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
@@ -59,8 +61,8 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result && @ARGV) {
     print "VERWENDUNG: $0 [--wertung=(1..4)] [--klasen=N,...] [--html]\n" .
-	  "\t[--laeufe=N [--streichresultate=N]] [--html] [--club]\n" .
-	  "\t[--lizenznummer] [--fahrzeug] [--geburtsdatum] {datei} ...\n";
+	  "\t[--laeufe=N [--streichresultate=N]] [--punkteteilung]\n" .
+	  "\t[--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum] {datei} ...\n";
     exit 1;
 }
 
@@ -115,6 +117,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     }
     $n++;
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+    $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }

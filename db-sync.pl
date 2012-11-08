@@ -92,7 +92,7 @@ CREATE TABLE fahrer_wertung (
   startnummer INT,
   wertung INT,
   wertungsrang INT,
-  wertungspunkte INT,
+  wertungspunkte REAL,
   PRIMARY KEY (id, startnummer, wertung)
 );
 
@@ -144,6 +144,7 @@ CREATE TABLE veranstaltung (
   dateiname VARCHAR(128),
   vierpunktewertung BOOLEAN,
   wertungsmodus INT,
+  punkteteilung BOOLEAN,
   punkte_sektion_auslassen INT,
   wertungspunkte_234 BOOLEAN,
   ergebnisliste_feld INT,
@@ -305,6 +306,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	vierpunktewertung wertungsmodus punkte_sektion_auslassen
 	wertungspunkte_234 ergebnisliste_feld wertungspunkte_markiert
 	versicherung rand_links rand_oben ergebnislistenbreite
+	punkteteilung
     );
     $sth = $dbh->prepare(sprintf qq{
 	INSERT INTO veranstaltung (id, datum, dateiname, cfg_mtime, dat_mtime, %s)
@@ -719,6 +721,7 @@ my $reconnect_interval;  # Sekunden
 my $force;
 my $vareihe;
 my $farben = [];
+my $punkteteilung;
 my $delete;
 my $log;
 my $result = GetOptions("db=s" => \$db,
@@ -733,6 +736,7 @@ my $result = GetOptions("db=s" => \$db,
 			"temp-db=s" => \$temp_db,
 			"vareihe=s" => \@$vareihe,
 			"farben=s@" => \@$farben,
+			"punkteteilung" => \$punkteteilung,
 			"delete" => \$delete,
 			"log=s" => \$log);
 
@@ -757,7 +761,8 @@ decode_argv;
 unless ($result && $db && ($create_tables || @ARGV)) {
     print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
 	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force]\n" .
-	  "\t[--trace-sql] [--vareihe=N] [--delete] [--log=datei] {datei|verzeichnis} ...\n";
+	  "\t[--trace-sql] [--vareihe=N] [--farben=...,...] [--punkteteilung]\n" .
+	  "\t[--delete] [--log=datei] {datei|verzeichnis} ...\n";
     exit $result ? 0 : 1;
 }
 if (defined $poll_interval && $poll_interval == 0) {
@@ -890,6 +895,7 @@ do {
 		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
 			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", 1);
+			$cfg->{punkteteilung} = $punkteteilung;
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
 			$tmp_dbh->begin_work;
