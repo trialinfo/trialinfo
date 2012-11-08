@@ -279,6 +279,17 @@ sub punkte_pro_sektion($$$) {
     return join(" ", @$punkte_pro_sektion);
 }
 
+sub log10($) {
+    my ($x) = @_;
+    return log($x) / log(10)
+}
+
+sub wp($) {
+    my ($wp) = @_;
+    my $prec = 1; # Maximale Nachkommastellen
+    return defined $wp ? sprintf("%.*g", log10($wp) + 1 + $prec, $wp) : $wp;
+}
+
 sub tageswertung($$$$$$$) {
     my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $klassenfarben, $alle_punkte, $nach_relevanz) = @_;
 
@@ -470,7 +481,8 @@ sub tageswertung($$$$$$$) {
 		    }
 		}
 	    }
-	    push @$row, $fahrer->{wertungspunkte}[$wertung - 1] || ""
+
+	    push @$row, wp($fahrer->{wertungspunkte}[$wertung - 1]) || ""
 		if $wertungspunkte;
 	    push @$body, $row;
 	}
@@ -777,7 +789,7 @@ sub jahreswertung($$$$$$) {
 		if ($gewertet) {
 		    my $feld = (defined $fahrer->{wertungspunkte}[$idx] &&
 				 $fahrer->{klasse} == $klasse) ?
-				$fahrer->{wertungspunkte}[$idx] :
+				wp($fahrer->{wertungspunkte}[$idx]) :
 				$RenderOutput::html ? "" : "-";
 		    my $rang = $fahrer->{wertungsrang}[$idx];
 		    $feld = [ $feld, "r", "class=\"text2\"" ]
@@ -791,7 +803,7 @@ sub jahreswertung($$$$$$) {
 		    if $fahrerwertung->{streichpunkte_wichtig};
 		push @$row, $feld;
 	    }
-	    push @$row, $gesamtpunkte || "";
+	    push @$row, wp($gesamtpunkte) || "";
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
