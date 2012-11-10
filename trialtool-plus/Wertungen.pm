@@ -23,6 +23,7 @@ require Exporter;
 
 use utf8;
 use List::Util qw(min max);
+use POSIX qw(modf);
 use RenderOutput;
 use Time::Local;
 use strict;
@@ -286,8 +287,28 @@ sub log10($) {
 
 sub wp($) {
     my ($wp) = @_;
-    my $prec = 1; # Maximale Nachkommastellen
-    return defined $wp ? sprintf("%.*g", log10($wp) + 1 + $prec, $wp) : $wp;
+    return undef unless defined $wp;
+    my ($komma, $ganzzahl) = modf($wp);
+    if ($komma) {
+	my $bruch_zeichen = {
+	    # Unicode kennt folgende Zeichen für Brüche:
+	    #   ⅛ ⅙ ⅕ ¼ ⅓ ⅜ ⅖ ½ ⅗ ⅝ ⅔ ¾ ⅘ ⅚ ⅞
+	    #   ⁰¹²³⁴⁵⁶⁷⁸⁹ ⁄ ₀₁₂₃₄₅₆₇₈₉
+	    # Z.B. Windows Vista unterstützt aber nur die Halben, Drittel, und
+	    # Viertel, und auch die zusammengesetzten Brücke werden nicht
+	    # sauber gerendert.
+	    1/4 => '¼', 1/3 => '⅓', 1/2 => '½', 2/3 => '⅔', 3/4 => '¾',
+	};
+	my $eps = 1 / (1 << 13);
+
+	foreach my $wert (keys %$bruch_zeichen) {
+	    return "$ganzzahl$bruch_zeichen->{$wert}"
+		if $komma >= $wert - $eps &&
+		   $komma <= $wert + $eps;
+	}
+    }
+    my $prec = 3; # Maximale Nachkommastellen
+    return sprintf("%.*g", log10($wp) + 1 + $prec, $wp);
 }
 
 sub tageswertung($$$$$$$) {
@@ -482,7 +503,7 @@ sub tageswertung($$$$$$$) {
 		}
 	    }
 
-	    push @$row, wp($fahrer->{wertungspunkte}[$wertung - 1]) || ""
+	    push @$row, wp($fahrer->{wertungspunkte}[$wertung - 1])
 		if $wertungspunkte;
 	    push @$body, $row;
 	}
@@ -772,9 +793,8 @@ sub jahreswertung($$$$$$) {
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $startnummer = $fahrer->{startnummer};
 	    my $fahrerwertung = $klassenwertung->{$startnummer};
-	    my $gesamtpunkte = $fahrerwertung->{gesamtpunkte};
 	    my $row;
-	    push @$row, $gesamtpunkte ? "$fahrerwertung->{gesamtrang}." : "";
+	    push @$row, $fahrerwertung->{gesamtpunkte} ? "$fahrerwertung->{gesamtrang}." : "";
 	    push @$row, $startnummer,
 			$alle_fahrer->{$startnummer}{nachname} . ", " .
 			$alle_fahrer->{$startnummer}{vorname};
@@ -798,12 +818,12 @@ sub jahreswertung($$$$$$) {
 		}
 	    }
 	    if ($hat_streichpunkte) {
-		my $feld = $fahrerwertung->{streichpunkte};
+		my $feld = wp($fahrerwertung->{streichpunkte});
 		$feld = [ $feld, "r", "class=\"text2\"" ]
 		    if $fahrerwertung->{streichpunkte_wichtig};
 		push @$row, $feld;
 	    }
-	    push @$row, wp($gesamtpunkte) || "";
+	    push @$row, wp($fahrerwertung->{gesamtpunkte});
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
