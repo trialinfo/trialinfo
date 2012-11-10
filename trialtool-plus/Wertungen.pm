@@ -193,7 +193,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			for ($n = $m + 1; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
 			    next if $fahrer_n->{ausfall} ||
-				    !defined $fahrer_m->{wertungsrang}[$idx];
+				    !defined $fahrer_n->{wertungsrang}[$idx];
 			    last if $fahrer_m->{wertungsrang}[$idx] !=
 				    $fahrer_n->{wertungsrang}[$idx];
 			    $anzahl_fahrer++;
@@ -207,7 +207,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			for ($n = $m; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
 			    next if $fahrer_n->{ausfall} ||
-				    !defined $fahrer_m->{wertungsrang}[$idx];
+				    !defined $fahrer_n->{wertungsrang}[$idx];
 			    last if $fahrer_m->{wertungsrang}[$idx] !=
 				    $fahrer_n->{wertungsrang}[$idx];
 			    $fahrer_n->{wertungspunkte}[$idx] = ($summe / $anzahl_fahrer) || undef;
@@ -813,7 +813,7 @@ sub jahreswertung($$$$$$) {
 				$RenderOutput::html ? "" : "-";
 		    my $rang = $fahrer->{wertungsrang}[$idx];
 		    $feld = [ $feld, "r", "class=\"text2\"" ]
-			if $fahrerwertung->{rang_wichtig}{$rang};
+			if defined $rang && $fahrerwertung->{rang_wichtig}{$rang};
 		    push @$row, $feld;
 		}
 	    }
