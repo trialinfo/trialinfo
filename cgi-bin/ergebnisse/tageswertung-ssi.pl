@@ -168,7 +168,6 @@ if (defined $wereihe) {
 	SELECT startnummer, runde, runde.punkte
 	FROM runde
 	JOIN fahrer USING (id, startnummer)
-	JOIN vareihe_veranstaltung USING (id)
 	WHERE id = ?
     });
     $sth->execute($id);
