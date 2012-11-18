@@ -362,7 +362,7 @@ sub tageswertung($$$$$$$) {
 	my $ausfall_fmt = "c" . (5 + $vierpunktewertung);
 
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	    $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span>";
 	}
 
 	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"
@@ -409,6 +409,7 @@ sub tageswertung($$$$$$$) {
 
 		my $sn = 0;
 		if ($a->{punkte} == $b->{punkte}) {
+		    # FIXME: Wenn es ein Stechen gab, zählt nur das.
 		    for (my $m = 0; $m < 5; $m++) {
 			$sn++;
 			last unless $a->{s}[$m] == $b->{s}[$m];
@@ -767,7 +768,7 @@ sub jahreswertung($$$$$$) {
 	my ($header, $body, $format);
 	my $farbe = "";
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    $farbe = "<font color=\"$klassenfarben->{$klasse}\">◼</font>";
+	    $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span>";
 	}
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
