@@ -1,30 +1,37 @@
-Perl-Erweiterungen zum Trialtool
-================================
+Erweiterungen zum Trialtool
+===========================
 
 Diese Erweiterungen zum Programm Trialtool von Ortwin Sann [1] bieten folgenden
 Möglichkeiten:
 
- * Einlesen der Konfiguration und der Fahrerdaten (die Dateien *.cfg und *.dat
-   im Trialtool).
+ * Einlesen der Konfiguration und der Fahrerdaten (den *.cfg und *.dat -
+   Dateien des Trialtools).
 
- * Erstellung der Tageswertung einer Veranstaltung.  Die Ausgabe erfolgt als
-   Text oder HTML.
+ * Erstellung einer Tageswertung einer Veranstaltung aus den Trialtool-Dateien.
+   Die Ausgabe erfolgt als Text oder HTML.
 
- * Erstellung der Jahreswertung über mehrere Veranstaltungen.  Die Ausgabe
-   erfolgt als Text oder HTML.
+ * Erstellung einer Jahreswertung über mehrere Veranstaltungen aus den
+   Trialtool-Dateien.  Die Ausgabe erfolgt als Text oder HTML.
 
  * Import der Daten in eine Datenbank (z.B. ODBC, MySQL, PostgreSQL), entweder
-   einmalig oder kontinuierlich.  Bei kontinuierlichem Import werden immer nur
-   die Änderungen in die Datenbank geschrieben.
+   einmalig oder fortlaufend.  Bei fortlaufendem Import werden immer nur die
+   Änderungen in die Datenbank geschrieben.
 
- * Anzeige der Daten aus der Datenbank über HTTP / HTML als Tageswertung,
-   Jahreswertung, oder als Punktestatistik.  Die dabei generierten Seiten sind
-   recht leicht und flexibel anpassbar.
+ * Anzeige der Daten aus der Datenbank über CGI-Scripts und einen Web-Server
+   als Tageswertung, Jahreswertung, oder als Punktestatistik.  Die dabei
+   generierten Seiten sind recht leicht und flexibel anpassbar.
+
+ * Erzeugen von *.cfg und *.dat - Dateien aus der Datenbank.
 
  * Konsistenzprüfung der Daten für den ÖTSV.
 
-Diese Erweiterungen sind unabhängig vom Trialtool selbst; das Trialtool muss
-nicht angepasst werden.
+Diese Erweiterungen sind unabhängig vom Trialtool selbst; das Trialtool selbst
+muss nicht angepasst werden.
+
+Die Scripts wurden unter Linux entwickelt, und unter Linux und Windows Vista
+getestet.  Serverseitig war bisher der HTTP-Server Apache und die Datenbank
+MySQL im Einsatz.  Andere Umgebungen können mehr oder weniger umfangreiche
+Anpassungsarbeiten erfordern.
 
 
 Systemvoraussetzungen
@@ -33,7 +40,7 @@ Systemvoraussetzungen
  * Die Scriptsprache Perl.  Eine kostenlose Version für Windows mit dem Namen
    ActivePerl gibt es von der Firma ActiveState [2].
 
- * Für den Datenbank-Import braucht es je nach verwendeter Datenbank
+   Für den Datenbank-Import braucht es je nach verwendeter Datenbank
    unterschiedliche Datenbanktreiber, die möglicherweise zusätzlich installiert
    werden müssen (für MySQL unter ActivePerl: "ppm install DBD-mysql").
 
@@ -44,19 +51,61 @@ Systemvoraussetzungen
 Installation
 ------------
 
-Keine spezielle Installation erforderlich.
+Einige der Scripts sind direkt von der Kommandozeile verwendbar. Diese Scripts
+erfordern keine besondere Konfiguration oder Installation; die notwendigen
+Parameter werden auf der Kommandozeile übergeben.
+
+Wenn eine Datenbank verwendet werden soll, sind die nötigen Schritte unter dem
+Punkte Datenbank-Konfiguration beschrieben.
+
+Wenn die CGI-Scripts werwendet werden sollen, sind die nötigen Schritte unter
+Web Server-Konfiguration beschrieben.
 
 
 Datenbank - Konfiguration
 -------------------------
 
+Die verwendete Datenbankschnittstelle ist Perl's DBI, das viele Datenbanken
+unterstützt.  In den Scripts wird recht einfacher SQL-Code verwendet, sodass
+hoffentlich einige Datenbanken damit umgehen können.  Momentan ist aber nur
+MySQL gestestet.
+
+Es ist zu beachten, dass die Synchronisation in die Datenbank (db-sync)
+Datenbank-Transaktionen voraussetzt.  Das können fast alle Datenbanken.
+
+Bei MySQL ist aber wichtig, dass eine transaktionsfähige Datenbank-Engine
+verwendet wird (z.B. InnoDB, nicht MyISAM).  Ist das nicht der Fall, kann es
+bei Ereignissen wie Verbindungsabbruch bei der Datenübertragung zu
+Inkonsistenzen kommen.
+
+
+Datenmodell
+-----------
+
+Die anfängliche Datenbankstruktur lässt sich mit "db-sync --create-tables"
+erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen und
+Wertungsreihen definiert werden, siehe dazu die Tabellen vareihe, wereihe, und
+wereihe_klasse:
+
+ * Eine Veranstaltungsreihe zeichnet sich dadurch aus, dass es eine
+   oder mehrere Gesamtwertungen über die Veranstaltungen in der Reihe gibt.
+
+ * Eine Wertungsreihe ist eine solche Gesamtwertung.  Sie bezieht sich auf
+   bestimmte Klassen in den Veranstaltungen einer Veranstaltungsreihe und hat
+   eine definierte Anzahl an Läufen und Streichresultaten.
+
+Das verwendete Datenmodell in der Datenbank ist in der Datei
+doc/eer-diagramm.pdf dargestellt.  Das Diagramm wurde mit MySQL Workbench
+erstellt.  Das Diagramm muss nicht immer ganz aktuell sein; im Zweifelsfall
+schadet ein Blick auf die Definitionen der Tabellen in db-sync.pl nicht.
+
 
 Web Server - Konfiguration
 --------------------------
 
-Die Dateien im Verzeichnis "html" müssen in einem Dokumentenverzeichnis liegen;
-die Dateien im Verzeichnis "cgi-bin" in einem Verzeichnis, in dem der Web
-Server CGI-Scripts ausführen darf.
+Die Dateien im Verzeichnis "htdocs" müssen in einem Dokumentenverzeichnis
+liegen; die Dateien im Verzeichnis "cgi-bin" in einem Verzeichnis, in dem der
+Web Server CGI-Scripts ausführen darf.
 
 Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 (SSI) verarbeitet werden.
@@ -64,9 +113,9 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
   Beispielkonfiguration für Apache:
 
     ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-toolkit/cgi-bin
-    Alias /ergebnisse /home/agruen/trial-toolkit/html
+    Alias /ergebnisse /home/agruen/trial-toolkit/htdocs
 
-    <Directory "/home/agruen/trial-toolkit/html">
+    <Directory "/home/agruen/trial-toolkit/htdocs">
 	Options Indexes
 	AllowOverride All
 	Order allow,deny
@@ -157,22 +206,12 @@ Beispiele zur Verwendung
 
  Kontinuierlicher Import der Daten einer Veranstaltung in die Datenbank,
  per Default alle 30 Sekunden, mit erneutem Verbindungsaufbau, falls die
- Verbindung zur Datenbank abbricht:
+ Verbindung zur Datenbank abreißt:
 
     db-sync.pl --db='mysql:datenbank' \
 	--username=... --password=... \
 	--poll --reconnect \
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
-
-
-Datenmodell
------------
-
-Das verwendete Datenmodell in der Datenbank ist in der Datei "eer-diagramm.pdf"
-dargestellt.  Das Diagramm wurde mit MySQL Workbench erstellt.
-
-(Im Zweifelsfall schadet es nicht, die eigentlichen Definitionen der Tabellen
-in db-sync.pl zu lesen.)
 
 
 Lizenz

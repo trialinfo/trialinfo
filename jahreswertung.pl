@@ -60,9 +60,46 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result && @ARGV) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--klasen=N,...] [--html]\n" .
-	  "\t[--laeufe=N [--streichresultate=N]] [--punkteteilung]\n" .
-	  "\t[--club] [--lizenznummer] [--fahrzeug] [--geburtsdatum] {datei} ...\n";
+    print <<EOF;
+VERWENDUNG: $0 [optionen] {datei} ...
+
+Erstellt eine Jahreswertung aus Trialtool-Dateien.  Als {datei} können die
+*.cfg oder *.dat - Dateien angegeben werden, oder beide.  Die Ausgabe erfolgt
+direkt, als Text oder HTML.
+
+Optionen:
+  --wertung=(1..4)
+    Wertung 1 (alle Starter), oder 2-4 (nur die Starter in dieser Wertung).
+
+  --klassen=N,...
+    Nur die angegebenen Klassen anzeigen.
+
+  --html
+    Ausgabe im HTML-Format.  Normalerweise erfolgt die Ausgabe im Textformat.
+
+  --farben=...,...
+    Spurfarben der einzelnen Klassen als HTML Farbname oder Farbcode. Nur für
+    das HTML-Format relevant.
+
+  --laeufe=N, --streichresultate=N
+    Anzahl der Läufe und der Streichresultate.  Wenn nicht angegeben, wird ohne
+    Streichresultate gerechnet.
+
+  --club, --lizenznummer, --fahrzeug, --geburtsdatum
+    Zusätzliche Anzeige einer Spalte für den Club, die Lizenznummer, das
+    Fahrzeug und/oder das Geburtsdatum.
+
+  --punkteteilung
+    Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
+    allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
+    Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei
+    Punkteteilung werden stattdessen die Wertungspunkte für den ersten und
+    zweiten Platz unter den beiden Ersten aufgeteilt.  Geteilte Punkte werden
+    soweit möglich als Brüche dargestellt (z.B. 20⅓ statt 20.333).
+
+  --anzeigen-mit=...
+    Externes Programm, mit dem die Wertung angezeigt werden soll (z.B. Firefox).
+EOF
     exit 1;
 }
 

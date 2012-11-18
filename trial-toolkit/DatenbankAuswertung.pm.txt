@@ -4,7 +4,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw($database $username $password);
 
-$database = 'mysql:database;mysql_enable_utf8=1';
+$database = 'mysql:database;host=mysql.example.com';
 $username = 'username';
 $password = 'password';
 

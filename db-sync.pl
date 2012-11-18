@@ -17,6 +17,7 @@
 # You can find a copy of the GNU Affero General Public License at
 # <http://www.gnu.org/licenses/>.
 
+use utf8;
 use DBI qw(looks_like_number);
 use Trialtool;
 use Wertungen;
@@ -724,6 +725,7 @@ my $farben = [];
 my $punkteteilung;
 my $delete;
 my $log;
+my $nur_fahrer = 1;
 my $result = GetOptions("db=s" => \$db,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -737,6 +739,7 @@ my $result = GetOptions("db=s" => \$db,
 			"vareihe=s" => \@$vareihe,
 			"farben=s@" => \@$farben,
 			"punkteteilung" => \$punkteteilung,
+			"alle-fahrer" => sub () { undef $nur_fahrer; },
 			"delete" => \$delete,
 			"log=s" => \$log);
 
@@ -759,10 +762,74 @@ if ($^O =~ /win/i) {
 decode_argv;
 
 unless ($result && $db && ($create_tables || @ARGV)) {
-    print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
-	  "\t[--create-tables] [--poll=N] [--reconnect=N] [--force]\n" .
-	  "\t[--trace-sql] [--vareihe=N] [--farben=...,...] [--punkteteilung]\n" .
-	  "\t[--delete] [--log=datei] {datei|verzeichnis} ...\n";
+    print <<EOF;
+VERWENDUNG: $0 [optionen] {datei|verzeichnis} ...
+
+Überträgt eine oder mehrere Veranstaltungen an eine Datenbank, löscht sie dort
+(--delete), oder erzeugt die Datenbanktabellen neu (--create-tables).
+
+Optionen:
+  --db=...
+    Name der Datenbank, z.B. "mysql:database;host=hostname".  Verschiedene
+    Datenbanktypen werden unterstützt; derzeit wird hauptsächlich MySQL
+    verwendet.
+
+  --username=...
+    Benutzername für den Datenbankzugriff.
+
+  --password=...
+    Kennwort für den Datenbankzugriff.
+
+  --create-tables
+    Alle benötigten Tabellen löschen und neu erzeugen.  Achtung, alle
+    bestehenden Daten gehen dabei verloren!
+
+  --delete
+    Lösche die angegebenen Veranstaltungen aus der Datenbank.
+
+  --alle-fahrer
+    Alle Fahrerdaten übertragen, auch von Fahrern, denen keine Startnummern
+    zugewiesen sind.
+
+  --poll[=M], --reconnect[=N]
+    Die angegebenen Veranstaltungen alle M Sekunden auf Änderungen überprüfen.
+    Wenn die Verbindung zur Datenbank abreißt, alle N Sekunden einen Neuaufbau
+    versuchen.
+
+  --force
+    Die Veranstaltung am Server löschen und komplett neu übertragen.  Die
+    Zeitstempel der Dateien immer ignorieren.  (Normalerweise wird bei --poll
+    nur nach Änderungen gesucht, wenn sich die Zeitstempel ändern.)
+
+  --vareihe=N,...
+    Die angegebenen Veranstaltung(en) in die angegebenen Veranstaltungsreihe(n)
+    eintragen.  Wenn nicht anders angegeben, wird Veranstaltungsreihe 1
+    verwendet.
+
+  --farben=...,...
+    Spurfarben der einzelnen Klassen als HTML Farbname oder Farbcode.
+
+  --punkteteilung
+    Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
+    allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
+    Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei
+    Punkteteilung werden stattdessen die Wertungspunkte für den ersten und
+    zweiten Platz unter den beiden Ersten aufgeteilt.
+
+  --trace-sql
+    Die ausgeführten SQL-Befehle mitprotokollieren.
+
+  --log=datei
+    Die Ausgaben des Programms zusätzlich an die angegebene Datei anhängen.
+
+  --dry-run
+    Die Daten an die Datenbank übertragen, aber nicht tatsächlich schreiben
+    (kein Commit).
+
+  --temp-db=dateiname
+    Die intern verwendete SQLite-Datenbank in die angegebene Datei schrieben.
+    Diese Option ist zur Fehlersuche gedacht.
+EOF
     exit $result ? 0 : 1;
 }
 if (defined $poll_interval && $poll_interval == 0) {
@@ -894,7 +961,7 @@ do {
 
 		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
-			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", 1);
+			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", $nur_fahrer);
 			$cfg->{punkteteilung} = $punkteteilung;
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 

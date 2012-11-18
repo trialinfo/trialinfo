@@ -36,11 +36,22 @@ binmode STDIN, ":encoding(console_in)";
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $result = GetOptions("wertung=i" => \$wertung,
-			"anzeigen-mit=s" => \$anzeigen_mit);
+my $result = GetOptions("anzeigen-mit=s" => \$anzeigen_mit);
 
 unless ($result && @ARGV) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] {datei|verzeichnis} ...\n";
+    print <<EOF;
+VERWENDUNG: $0 [optionen] {datei|verzeichnis} ...
+
+Überprüft die ÖTSV-spezifischen Regeln in den angegebenen Veranstaltungen.  Als
+{datei} kann die *.cfg oder *.dat - Datei angegeben werden, oder beide.  Wird
+das {verzeichnis} des Trialtools angegeben, wird die aktuelle Veranstaltung
+angezeigt.
+
+Optionen:
+  --anzeigen-mit=...
+    Externes Programm, mit dem die Auswertung angezeigt werden soll (z.B.
+    Notepad).
+EOF
     exit 1;
 }
 

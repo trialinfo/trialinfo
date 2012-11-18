@@ -59,9 +59,56 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"geburtsdatum" => sub { push @$spalten, $_[0] },
 			"lizenznummer" => sub { push @$spalten, $_[0] });
 unless ($result && @ARGV) {
-    print "VERWENDUNG: $0 [--wertung=(1..4)] [--html] [--nicht-alle-punkte] " .
-	  "[--nicht-nach-relevanz] [--club] [--lizenznummer] [--fahrzeug] " .
-	  "[--geburtsdatum] [--punkteteilung] {datei}\n";
+    print <<EOF;
+VERWENDUNG: $0 [optionen] {datei|verzeichnis} ...
+
+Erstellt eine Tageswertung aus Trialtool-Dateien.  Als {datei} kann die *.cfg
+oder *.dat - Datei angegeben werden, oder beide.  Wird das {verzeichnis} des
+Trialtools angegeben, wird die aktuelle Veranstaltung angezeigt.  Die Ausgabe
+erfolgt direkt, als Text oder HTML.
+
+Optionen:
+  --wertung=(1..4)
+    Wertung 1 (alle Starter), oder 2-4 (nur die Starter in dieser Wertung).
+
+  --klassen=N,...
+    Nur die angegebenen Klassen anzeigen.
+
+  --html
+    Ausgabe im HTML-Format.  Normalerweise erfolgt die Ausgabe im Textformat.
+
+  --farben=...,...
+    Spurfarben der einzelnen Klassen als HTML Farbname oder Farbcode. Nur für
+    das HTML-Format relevant.
+
+  --nicht-alle-punkte
+    Normalerweise werden den Summen pro Runde als Zusatzinformation ("title")
+    die Einzelpunkte in jeder Sektion mitgegeben.  Web Broser zeigen diese
+    meist an, wenn man die Maus über die Rundensumme bewegt. Diese Option
+    deaktiviert die Einzelpunkte.  Nur für das HTML-Format relevant.
+
+  --nicht-nach-relevanz
+    Wenn Fahrer gleich viele Punkte haben, werden sie nach Anzahl der 0er, 1er,
+    usw. gereiht, danach je nach Trialtool-Konfiguration nach dem besten
+    Rundenergebnis.  In der Tageswertung wird versucht, den Grund der Reihung
+    bei Punktegleichstand farblich klar zu machen.  Diese Option deaktiviert
+    das.  Nur für das HTML-Format relevant.
+
+  --club, --lizenznummer, --fahrzeug, --geburtsdatum
+    Zusätzliche Anzeige einer Spalte für den Club, die Lizenznummer, das
+    Fahrzeug und/oder das Geburtsdatum.
+
+  --punkteteilung
+    Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
+    allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
+    Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei
+    Punkteteilung werden stattdessen die Wertungspunkte für den ersten und
+    zweiten Platz unter den beiden Ersten aufgeteilt.  Geteilte Punkte werden
+    soweit möglich als Brüche dargestellt (z.B. 20⅓ statt 20.333).
+
+  --anzeigen-mit=...
+    Externes Programm, mit dem die Wertung angezeigt werden soll (z.B. Firefox).
+EOF
     exit 1;
 }
 

@@ -52,8 +52,31 @@ if ($^O =~ /win/i) {
 decode_argv;
 
 unless ($result && $db && ($list || @ARGV)) {
-    print "VERWENDUNG: $0 {--db=...} [--username=...] [--password=...]\n" .
-	  "\t[--list] [--force] {id} ...\n";
+    print <<EOF;
+VERWENDUNG: $0 [optionen] {id} ...
+
+Erzeugt die *.cfg und *.dat - Datei einer oder mehrerer Veranstaltungen aus der
+Datenbank.  Eine Liste der vorhandenen Veranstaltungs-IDs kann mit der Option
+--list angezeigt werden.
+
+Optionen:
+  --db=...
+    Name der Datenbank, z.B. "mysql:database;host=hostname".  Verschiedene
+    Datenbanktypen werden unterstützt; derzeit wird hauptsächlich MySQL
+    verwendet.
+
+  --username=...
+    Benutzername für den Datenbankzugriff.
+
+  --password=...
+    Kennwort für den Datenbankzugriff.
+
+  --list
+    Die vorhandenen Veranstaltungen mit ihrer ID anzeigen.
+
+  --force
+    Bestehende Dateien überschreiben.
+EOF
     exit $result ? 0 : 1;
 }
 
