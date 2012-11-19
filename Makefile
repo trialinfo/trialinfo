@@ -1,5 +1,5 @@
 NAME = trial-toolkit
-VERSION = 0.14
+VERSION = 0.16
 
 MOUNTPOINT = /mnt/easyserver
 SUBDIR = www2.otsv.at
