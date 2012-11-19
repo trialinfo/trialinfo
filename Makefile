@@ -1,13 +1,13 @@
-NAME = trialtool-plus
+NAME = trial-online-toolkit
 VERSION = 0.14
 
 MOUNTPOINT = /mnt/easyserver
 SUBDIR = www2.otsv.at
 
 COMMON_FILES = \
-	trialtool-plus/Datenbank.pm \
-	trialtool-plus/RenderOutput.pm \
-	trialtool-plus/Wertungen.pm \
+	lib/Datenbank.pm \
+	lib/RenderOutput.pm \
+	lib/Wertungen.pm \
 
 LOCAL_FILES = \
 	db-sync.pl \
@@ -20,9 +20,9 @@ LOCAL_FILES = \
 	jahreswertung.pl \
 	Makefile \
 	otsv-check.pl \
-	trialtool-plus/Parse/Binary/FixedFormat.pm \
+	lib/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
-	trialtool-plus/Trialtool.pm \
+	lib/Trialtool.pm \
 
 WEB_FILES = \
 	cgi-bin/ergebnisse/index-ssi.pl \
@@ -56,7 +56,7 @@ WEB_FILES = \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
-	trialtool-plus/DatenbankAuswertung.pm.txt \
+	lib/DatenbankAuswertung.pm.txt \
 
 all:
 

@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrialtool-plus
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Daten in eine SQL-Datenbank kopieren und/oder synchron halten
 
@@ -207,8 +207,8 @@ CREATE TABLE vareihe_veranstaltung (
 };
 
 my @create_reihen_tables = split /;/, q{
-DROP TABLE IF EXISTS vareihe;
 -- Veranstaltungsreihe
+DROP TABLE IF EXISTS vareihe;
 CREATE TABLE vareihe (
   vareihe INT,
   bezeichnung VARCHAR(40),

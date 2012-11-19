@@ -63,22 +63,22 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 
   Beispielkonfiguration für Apache:
 
-    ScriptAlias /cgi-bin/ergebnisse /home/agruen/tt-sync/cgi-bin
-    Alias /ergebnisse /home/agruen/tt-sync/html
+    ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-online-toolkit/cgi-bin
+    Alias /ergebnisse /home/agruen/trial-online-toolkit/html
 
-    <Directory "/home/agruen/tt-sync/html">
+    <Directory "/home/agruen/trial-online-toolkit/html">
 	Options Indexes
 	AllowOverride All
 	Order allow,deny
 	Allow from all
     </Directory>
 
-    <Directory "/home/agruen/tt-sync/cgi-bin">
+    <Directory "/home/agruen/trial-online-toolkit/cgi-bin">
 	SetHandler cgi-script
 	Options ExecCGI
     </Directory>
 
-  Im Verzeichnis "html" befindet sich eine passende ".htaccess" - Datei mit:
+  Im Verzeichnis "htdocs" befindet sich eine passende ".htaccess" - Datei mit:
 
     DirectoryIndex index.shtml
     Options Indexes Includes
@@ -113,7 +113,7 @@ Beispiele zur Verwendung
 
  Die ÖTSV-Konventionen in der aktuellen Veranstaltung überprüfen:
 
-    otsv-check.pl "C:\Pfad\TrialTool 3.12"
+    otsv-check.pl "C:\TrialTool 3.12"
 
 
  In der MySQL-Datenbank "datenbank" die Tabellen für den Import erzeugen
