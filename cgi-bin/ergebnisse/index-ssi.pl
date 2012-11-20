@@ -38,6 +38,18 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
+	SELECT bezeichnung
+	FROM vareihe
+	WHERE vareihe = ?
+    });
+    $sth->execute($vareihe);
+    if (my @row = $sth->fetchrow_array) {
+	doc_h2 $row[0];
+    } else {
+	doc_p "Veranstaltungsreihe nicht gefunden";
+	exit;
+    }
+    $sth = $dbh->prepare(q{
 	SELECT wereihe, bezeichnung, style
 	FROM wereihe
 	WHERE vareihe = ?
