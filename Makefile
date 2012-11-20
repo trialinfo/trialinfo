@@ -32,7 +32,6 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/wertungsreihe-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/.htaccess \
-	cgi-bin/veranstalter/nenngeld-ssi.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/ergebnisse.css \
 	htdocs/ergebnisse/.htaccess \
@@ -54,7 +53,6 @@ WEB_FILES = \
 	htdocs/otsv-logo.jpg \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
-	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
 	trial-toolkit/DatenbankAuswertung.pm.txt \
 
