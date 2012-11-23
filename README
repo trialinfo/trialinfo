@@ -63,17 +63,17 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 
   Beispielkonfiguration für Apache:
 
-    ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-online-toolkit/cgi-bin
-    Alias /ergebnisse /home/agruen/trial-online-toolkit/html
+    ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-toolkit/cgi-bin
+    Alias /ergebnisse /home/agruen/trial-toolkit/html
 
-    <Directory "/home/agruen/trial-online-toolkit/html">
+    <Directory "/home/agruen/trial-toolkit/html">
 	Options Indexes
 	AllowOverride All
 	Order allow,deny
 	Allow from all
     </Directory>
 
-    <Directory "/home/agruen/trial-online-toolkit/cgi-bin">
+    <Directory "/home/agruen/trial-toolkit/cgi-bin">
 	SetHandler cgi-script
 	Options ExecCGI
     </Directory>

@@ -1,4 +1,4 @@
-NAME = trial-online-toolkit
+NAME = trial-toolkit
 VERSION = 0.14
 
 MOUNTPOINT = /mnt/easyserver
