@@ -1,7 +1,7 @@
 Tageswertung:
 * Es gibt keine Spalte für Stechen.
 * Die Einfärbung nach Relevanz berücksichtigt Stechen nicht.
-* Die Einfärbung ist nicht genau erklärt.
+* Das Bewerber-Feld wird momentan nie ausgegeben.
 
 Jahreswertung:
 * Es gibt keinen Mechanismus ähnlich Stechen, um bei Punktegleichheit
