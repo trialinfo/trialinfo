@@ -48,9 +48,6 @@ WEB_FILES = \
 	htdocs/js/jquery.polartimer.js \
 	htdocs/js/raphael.js \
 	htdocs/js/raphael-min.js \
-	htdocs/osk-logo.jpg \
-	htdocs/osk-logo-original.jpg \
-	htdocs/otsv-logo.jpg \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/starterzahl.shtml \

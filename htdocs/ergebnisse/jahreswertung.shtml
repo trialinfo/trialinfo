@@ -12,11 +12,5 @@
 <p>
 © ÖTSV &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
 </p>
-<p>
-<!--#if expr="$QUERY_STRING=/style=osk/" -->
-<a href="http://www.osk.or.at/"><img src="../osk-logo.jpg" border="0"  alt="OSK - Oberste Nationale Sportkomission für den Motorsport"/></a>
-<!--#endif -->
-<a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0"  alt="ÖTSV"/></a>
-</p>
 </body>
 </html>

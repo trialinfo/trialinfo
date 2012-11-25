@@ -50,7 +50,7 @@ if (defined $vareihe) {
 	exit;
     }
     $sth = $dbh->prepare(q{
-	SELECT wereihe, bezeichnung, style
+	SELECT wereihe, bezeichnung
 	FROM wereihe
 	WHERE vareihe = ?
 	ORDER BY wereihe
@@ -58,7 +58,7 @@ if (defined $vareihe) {
     $sth->execute($vareihe);
 } else {
     $sth = $dbh->prepare(q{
-	SELECT wereihe, bezeichnung, style
+	SELECT wereihe, bezeichnung
 	FROM wereihe
 	ORDER BY wereihe
     });
@@ -67,8 +67,7 @@ if (defined $vareihe) {
 
 print "<p>\n";
 while (my @row =  $sth->fetchrow_array) {
-    my ($wereihe, $bezeichnung, $style) = @row;
-    $style = defined $style ? "&style=$style" : "";
-    print "<a href=\"wertungsreihe.shtml?wereihe=$wereihe$style&spalte=fahrzeug\">$bezeichnung</a><br>\n";
+    my ($wereihe, $bezeichnung) = @row;
+    print "<a href=\"wertungsreihe.shtml?wereihe=$wereihe&spalte=fahrzeug\">$bezeichnung</a><br>\n";
 }
 print "</p>\n";
