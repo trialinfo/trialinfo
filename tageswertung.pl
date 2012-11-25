@@ -28,6 +28,7 @@ use Getopt::Long;
 use Trialtool;
 use RenderOutput;
 use Wertungen;
+use TrialToolkit;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
@@ -152,7 +153,7 @@ if ($RenderOutput::html) {
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>ÖTSV</title>
+<title>$txt->{'tageswertung-titel'}</title>
 <link rel="stylesheet" type="text/css" href="ergebnisse.css" />
 </head>
 <body>

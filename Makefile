@@ -51,7 +51,7 @@ WEB_FILES = \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
-	trial-toolkit/DatenbankAuswertung.pm.txt \
+	trial-toolkit/TrialToolkit.pm.txt \
 
 all:
 

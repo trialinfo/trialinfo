@@ -22,7 +22,7 @@ use DBI;
 use RenderOutput;
 use Wertungen;
 use Datenbank;
-use DatenbankAuswertung;
+use TrialToolkit;
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';

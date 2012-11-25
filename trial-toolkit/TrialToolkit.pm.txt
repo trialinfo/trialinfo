@@ -1,0 +1,23 @@
+package TrialToolkit;
+
+use utf8;
+require Exporter;
+@ISA = qw(Exporter);
+@EXPORT = qw($database $username $password $txt);
+
+$database = 'mysql:database;host=mysql.example.com';
+$username = 'username';
+$password = 'password';
+
+$txt = {
+    'tageswertung-titel' => 'Tageswertung',
+    'jahreswertung-titel' => 'Jahreswertung',
+};
+
+# HTML5-Farbnamen oder Farbcodes
+$klassenfarben = {
+     #1 => "red",
+     #2 => "blue",
+};
+
+1;

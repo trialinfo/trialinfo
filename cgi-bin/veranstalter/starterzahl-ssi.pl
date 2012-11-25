@@ -21,7 +21,7 @@ use CGI;
 use DBI;
 use RenderOutput;
 use Datenbank;
-use DatenbankAuswertung;
+use TrialToolkit;
 use List::Util qw(max);
 use strict;
 

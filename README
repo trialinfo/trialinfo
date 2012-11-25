@@ -140,9 +140,9 @@ Benutzern Zugriff gestattet.  Dazu muss noch zusätzlich eine .htpasswd - Datei
 erzeugt werden, und der Pfad zu dieser Datei in die .htaccess - Dateien
 eingetragen werden.
 
-Außerdem muss in der Datei trial-toolkit/DatenbankAuswertung.pm definiert
-werden, auf welche Datenbank die CGI-Scripts mit welchem Benutzernamen und
-Kennwort zugreifen sollen.
+Außerdem muss in der Datei trial-toolkit/TrialToolkit.pm definiert werden, auf
+welche Datenbank die CGI-Scripts mit welchem Benutzernamen und Kennwort
+zugreifen sollen.
 
 
 Beispiele zur Verwendung

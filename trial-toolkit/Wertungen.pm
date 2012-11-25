@@ -26,20 +26,8 @@ use List::Util qw(min max);
 use POSIX qw(modf);
 use RenderOutput;
 use Time::Local;
+use TrialToolkit;
 use strict;
-
-my $otsv_klassenfarben = {
-     1 => "red",
-     2 => "blue",
-     3 => "yellow",
-     4 => "green",
-     5 => "white",
-     6 => "yellow",
-     7 => "green",
-    11 => "red",
-    12 => "blue",
-    13 => "yellow",
-};
 
 sub rang_vergleich($$$) {
     my ($a, $b, $cfg) = @_;
@@ -314,7 +302,7 @@ sub wp($) {
 sub tageswertung($$$$$$$) {
     my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $klassenfarben, $alle_punkte, $nach_relevanz) = @_;
 
-    $klassenfarben = $otsv_klassenfarben
+    $klassenfarben = $TrialToolkit::klassenfarben
 	unless defined $klassenfarben;
 
     my $ausfall = {
@@ -662,7 +650,7 @@ sub jahreswertung($$$$$$) {
     undef $streichresultate
 	unless defined $laeufe_gesamt;
 
-    $klassenfarben = $otsv_klassenfarben
+    $klassenfarben = $TrialToolkit::klassenfarben
 	unless defined $klassenfarben;
 
     my $laeufe_pro_klasse;

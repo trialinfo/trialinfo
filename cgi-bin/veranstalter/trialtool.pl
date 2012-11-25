@@ -21,7 +21,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use Datenbank;
 use Datenbank;
-use DatenbankAuswertung;
+use TrialToolkit;
 use Trialtool;
 use strict;
 

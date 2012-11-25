@@ -20,7 +20,7 @@ use CGI;
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use Datenbank;
-use DatenbankAuswertung;
+use TrialToolkit;
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';
