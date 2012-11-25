@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I../../lib
+#! /usr/bin/perl -w -I../../trial-toolkit
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #

@@ -5,9 +5,9 @@ MOUNTPOINT = /mnt/easyserver
 SUBDIR = www2.otsv.at
 
 COMMON_FILES = \
-	lib/Datenbank.pm \
-	lib/RenderOutput.pm \
-	lib/Wertungen.pm \
+	trial-toolkit/Datenbank.pm \
+	trial-toolkit/RenderOutput.pm \
+	trial-toolkit/Wertungen.pm \
 
 LOCAL_FILES = \
 	db-sync.pl \
@@ -20,9 +20,9 @@ LOCAL_FILES = \
 	jahreswertung.pl \
 	Makefile \
 	otsv-check.pl \
-	lib/Parse/Binary/FixedFormat.pm \
+	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
-	lib/Trialtool.pm \
+	trial-toolkit/Trialtool.pm \
 
 WEB_FILES = \
 	cgi-bin/ergebnisse/index-ssi.pl \
@@ -56,7 +56,7 @@ WEB_FILES = \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
-	lib/DatenbankAuswertung.pm.txt \
+	trial-toolkit/DatenbankAuswertung.pm.txt \
 
 all:
 

@@ -86,6 +86,15 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
   Achtung: der Alias "/ergebnisse" muss in der Konfiguration vor dem Alias "/"
   stehen.
 
+Das Veranstalter-Verzeichnis ist so konfiguriert, dass es nur authorisierten
+Benutzern Zugriff gestattet.  Dazu muss noch zusätzlich eine .htpasswd - Datei
+erzeugt werden, und der Pfad zu dieser Datei in die .htaccess - Dateien
+eingetragen werden.
+
+Außerdem muss in der Datei trial-toolkit/DatenbankAuswertung.pm definiert
+werden, auf welche Datenbank die CGI-Scripts mit welchem Benutzernamen und
+Kennwort zugreifen sollen.
+
 
 Beispiele zur Verwendung
 ------------------------
