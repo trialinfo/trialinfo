@@ -273,10 +273,10 @@ sub log10($) {
     return log($x) / log(10)
 }
 
-sub wp($) {
-    my ($wp) = @_;
-    return undef unless defined $wp;
-    my ($komma, $ganzzahl) = modf($wp);
+sub wertungspunkte($) {
+    my ($wertungspunkte) = @_;
+    return undef unless defined $wertungspunkte;
+    my ($komma, $ganzzahl) = modf($wertungspunkte);
     if ($komma) {
 	my $bruch_zeichen = {
 	    # Unicode kennt folgende Zeichen für Brüche:
@@ -296,7 +296,7 @@ sub wp($) {
 	}
     }
     my $prec = 3; # Maximale Nachkommastellen
-    return sprintf("%.*g", log10($wp) + 1 + $prec, $wp);
+    return sprintf("%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
 }
 
 sub tageswertung($$$$$$$) {
@@ -492,7 +492,7 @@ sub tageswertung($$$$$$$) {
 		}
 	    }
 
-	    push @$row, wp($fahrer->{wertungspunkte}[$wertung - 1])
+	    push @$row, wertungspunkte($fahrer->{wertungspunkte}[$wertung - 1])
 		if $wertungspunkte;
 	    push @$body, $row;
 	}
@@ -798,7 +798,7 @@ sub jahreswertung($$$$$$) {
 		if ($gewertet) {
 		    my $feld = (defined $fahrer->{wertungspunkte}[$idx] &&
 				 $fahrer->{klasse} == $klasse) ?
-				wp($fahrer->{wertungspunkte}[$idx]) :
+				wertungspunkte($fahrer->{wertungspunkte}[$idx]) :
 				$RenderOutput::html ? "" : "-";
 		    my $rang = $fahrer->{wertungsrang}[$idx];
 		    $feld = [ $feld, "r", "class=\"text2\"" ]
@@ -807,12 +807,12 @@ sub jahreswertung($$$$$$) {
 		}
 	    }
 	    if ($hat_streichpunkte) {
-		my $feld = wp($fahrerwertung->{streichpunkte});
+		my $feld = wertungspunkte($fahrerwertung->{streichpunkte});
 		$feld = [ $feld, "r", "class=\"text2\"" ]
 		    if $fahrerwertung->{streichpunkte_wichtig};
 		push @$row, $feld;
 	    }
-	    push @$row, wp($fahrerwertung->{gesamtpunkte});
+	    push @$row, wertungspunkte($fahrerwertung->{gesamtpunkte});
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
