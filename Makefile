@@ -4,12 +4,16 @@ VERSION = 0.16
 MOUNTPOINT = /mnt/easyserver
 SUBDIR = www2.otsv.at
 
+VPATH = trial-toolkit
+
 COMMON_FILES = \
-	trial-toolkit/Datenbank.pm \
-	trial-toolkit/RenderOutput.pm \
-	trial-toolkit/Wertungen.pm \
+	$(UPPER_COMMON_FILES) \
+	./trial-toolkit/Datenbank.pm \
+	./trial-toolkit/RenderOutput.pm \
+	./trial-toolkit/Wertungen.pm \
 
 LOCAL_FILES = \
+	$(UPPER_LOCAL_FILES) \
 	db-sync.pl \
 	db-export.pl \
 	doc/eer-diagramm.mwb \
@@ -20,11 +24,12 @@ LOCAL_FILES = \
 	jahreswertung.pl \
 	Makefile \
 	otsv-check.pl \
-	trial-toolkit/Parse/Binary/FixedFormat.pm \
+	./trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
-	trial-toolkit/Trialtool.pm \
+	./trial-toolkit/Trialtool.pm \
 
 WEB_FILES = \
+	$(UPPER_WEB_FILES) \
 	cgi-bin/ergebnisse/index-ssi.pl \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
@@ -41,7 +46,6 @@ WEB_FILES = \
 	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
 	htdocs/ergebnisse/wertungsreihe.shtml \
-	htdocs/favicon.ico \
 	htdocs/.htaccess \
 	htdocs/js/jquery-1.7.2.js \
 	htdocs/js/jquery-1.7.2.min.js \
@@ -51,22 +55,24 @@ WEB_FILES = \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
-	trial-toolkit/TrialToolkit.pm.txt \
+	./trial-toolkit/TrialToolkit.pm.txt \
 
 all:
 
-dist:
+dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \
 	rm -rf $(NAME)-$(VERSION); \
 	umask 022; \
 	mkdir $(NAME)-$(VERSION); \
-	for file in $(COMMON_FILES) $(LOCAL_FILES); do \
+	for file in $^; do \
+	    original=$$file; \
+	    file=$$(echo "$$original" | sed -e 's:^trial-toolkit/::'); \
 	    mkdir -p "$(NAME)-$(VERSION)/$$(dirname "$$file")"; \
 	    case "$$file" in \
 		*.pl | *.pm | README | Makefile) \
-		    recode ../CR-LF < "$$file" > "$(NAME)-$(VERSION)/$$file" ;; \
+		    recode ../CR-LF < "$$original" > "$(NAME)-$(VERSION)/$$file" ;; \
 		*) \
-		    cat "$$file" > "$(NAME)-$(VERSION)/$$file" ;; \
+		    cat "$$original" > "$(NAME)-$(VERSION)/$$file" ;; \
 	    esac; \
 	    case "$$file" in \
 		*.pl) \
@@ -78,17 +84,18 @@ dist:
 	rm -rf $(NAME)-$(VERSION)
 
 upload:
-	$(MAKE) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
+	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='cp -v "$$$$original" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
 
 upload-diff:
-	$(MAKE) do-upload CMD='diff -Nu "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
+	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='diff -Nu "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$original" || true'
 
-do-upload:
+do-upload: $(COMMON_FILES) $(WEB_FILES)
 	@set -e; \
-	for file in $(COMMON_FILES) $(WEB_FILES); do \
-	    test -f $$file; \
+	for file in $^; do \
+	    original=$$file; \
+	    file=$$(echo "$$original" | sed -e 's:^trial-toolkit/::'); \
 	    if ! test -f "$(MOUNTPOINT)/$(SUBDIR)/$$file" || \
-	       ! cmp -s "$$file" "$(MOUNTPOINT)/$(SUBDIR)/$$file"; then \
+	       ! cmp -s "$$original" "$(MOUNTPOINT)/$(SUBDIR)/$$file"; then \
 		$(CMD); \
 	    fi; \
 	done
