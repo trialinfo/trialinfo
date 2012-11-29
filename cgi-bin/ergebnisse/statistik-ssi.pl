@@ -36,7 +36,7 @@ my $nach_sektionen = defined $q->param('nach_sektionen');
 my $verteilung = 1;
 my $verteilung_hoehe = 10;
 my $verteilung_breite = 200;
-my $vierpunktewertung;
+my $cfg;
 
 sub x($) {
     my ($punkte) = @_;
@@ -74,7 +74,7 @@ sub x($) {
     }
 
     return ($x[0], $x[1], $x[2], $x[3],
-	    ($vierpunktewertung ? $x[4] : ()), $x[5],
+	    ($cfg->{vierpunktewertung} ? $x[4] : ()), $x[5],
 	    sprintf("%.1f", $y * $n), @rest);
 }
 
@@ -82,7 +82,7 @@ sub verteilung_legende() {
     my @kategorien;
 
     for (my $n = 0; $n <= 5; $n++) {
-	next if $n == 4 && !$vierpunktewertung;
+	next if $n == 4 && !$cfg->{vierpunktewertung};
 	push @kategorien, "<img src=\"$n.png\" height=\"$verteilung_hoehe\" " .
 			  "width=\"$verteilung_hoehe\" /> $n";
     }
@@ -90,7 +90,6 @@ sub verteilung_legende() {
 }
 
 my $wertung = 1;
-my $titel;
 my $klassen;
 my $sth;
 
@@ -123,8 +122,8 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($id, $wertung);
 if (my @row = $sth->fetchrow_array) {
-    $titel = $row[0];
-    $vierpunktewertung = $row[1];
+    $cfg->{titel}[$wertung - 1] = $row[0];
+    $cfg->{vierpunktewertung} = $row[1];
 } else {
     doc_h2 "Veranstaltung nicht gefunden.";
     exit;
@@ -148,16 +147,15 @@ $sth = $dbh->prepare(q{
     WHERE id = ?
 });
 $sth->execute($id);
-my $cfg;
 while (my @row = $sth->fetchrow_array) {
     $cfg->{klassen}[$row[0] - 1] = $row[1];
 }
 
 if ($nach_sektionen) {
-    doc_h2 "Punktestatistik – $titel";
+    doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Sektion 0 1 2 3) ];
-    if ($vierpunktewertung) {
+    if ($cfg->{vierpunktewertung}) {
 	push @$format, "r3";
 	push @$header, "4";
     }
@@ -185,10 +183,10 @@ if ($nach_sektionen) {
     }
     verteilung_legende;
 } else {
-    doc_h2 "Punktestatistik – $titel";
+    doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Klasse 0 1 2 3) ];
-    if ($vierpunktewertung) {
+    if ($cfg->{vierpunktewertung}) {
 	push @$format, "r3";
 	push @$header, "4";
     }
