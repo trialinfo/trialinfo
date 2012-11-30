@@ -1,8 +1,8 @@
 NAME = trial-toolkit
 VERSION = 0.16
 
-MOUNTPOINT = /mnt/easyserver
-SUBDIR = www2.otsv.at
+MOUNTPOINT ?= /mnt/easyserver
+SUBDIR ?= www2.otsv.at
 
 VPATH = trial-toolkit
 
@@ -99,6 +99,3 @@ do-upload: $(COMMON_FILES) $(WEB_FILES)
 		$(CMD); \
 	    fi; \
 	done
-
-mount:
-	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT)
