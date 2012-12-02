@@ -64,7 +64,7 @@ if (my @row =  $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, datum, wertung, titel, subtitel, dat_mtime, cfg_mtime
+    SELECT id, datum, wertung, titel, subtitel, dat_mtime, cfg_mtime, punkteteilung
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN wereihe USING (vareihe, wertung)
@@ -91,6 +91,7 @@ while (my @row = $sth->fetchrow_array) {
     $veranstaltungen->{$id}{cfg} = $cfg;
     $zeit = max_time($zeit, $row[5]);
     $zeit = max_time($zeit, $row[6]);
+    $cfg->{punkteteilung} = $row[7];
 }
 
 $sth = $dbh->prepare(q{

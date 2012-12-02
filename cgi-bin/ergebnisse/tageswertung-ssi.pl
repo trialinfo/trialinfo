@@ -55,7 +55,7 @@ print "Content-type: text/html; charset=utf-8\n\n";
 if (defined $wereihe) {
     $sth = $dbh->prepare(q{
 	SELECT id, wereihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime,
-	       wertungsmodus, vierpunktewertung
+	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
 	JOIN wereihe USING (vareihe, wertung)
@@ -77,7 +77,7 @@ if (defined $wereihe) {
     # durchschleifen. Veranstalter-Link zu animiertem Ergebnis?
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime,
-	       wertungsmodus, vierpunktewertung
+	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE wertung = ?
@@ -94,6 +94,7 @@ if (my @row = $sth->fetchrow_array) {
     $zeit = max_time($row[4], $row[5]);
     $cfg->{wertungsmodus} = $row[6];
     $cfg->{vierpunktewertung} = $row[7];
+    $cfg->{punkteteilung} = $row[8];
 }
 
 unless (defined $cfg) {

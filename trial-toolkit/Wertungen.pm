@@ -273,11 +273,11 @@ sub log10($) {
     return log($x) / log(10)
 }
 
-sub wertungspunkte($) {
-    my ($wertungspunkte) = @_;
+sub wertungspunkte($$) {
+    my ($wertungspunkte, $punkteteilung) = @_;
     return undef unless defined $wertungspunkte;
     my ($komma, $ganzzahl) = modf($wertungspunkte);
-    if ($komma) {
+    if ($komma && $punkteteilung) {
 	my $bruch_zeichen = {
 	    # Unicode kennt folgende Zeichen für Brüche:
 	    #   ⅛ ⅙ ⅕ ¼ ⅓ ⅜ ⅖ ½ ⅗ ⅝ ⅔ ¾ ⅘ ⅚ ⅞
@@ -295,7 +295,7 @@ sub wertungspunkte($) {
 		   $komma <= $wert + $eps;
 	}
     }
-    my $prec = 3; # Maximale Nachkommastellen
+    my $prec = 2; # Maximale Nachkommastellen
     return sprintf("%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
 }
 
@@ -492,7 +492,8 @@ sub tageswertung($$$$$$$) {
 		}
 	    }
 
-	    push @$row, wertungspunkte($fahrer->{wertungspunkte}[$wertung - 1])
+	    push @$row, wertungspunkte($fahrer->{wertungspunkte}[$wertung - 1],
+				       $cfg->{punkteteilung})
 		if $wertungspunkte;
 	    push @$body, $row;
 	}
@@ -668,6 +669,13 @@ sub jahreswertung($$$$$$) {
 	}
     }
 
+    my $punkteteilung;
+    foreach my $veranstaltung (@$veranstaltungen) {
+	my $cfg = $veranstaltung->[0];
+	$punkteteilung++
+	    if $cfg->{punkteteilung};
+    }
+
     my $gemeinsame_zusammenfassung;
     my $laeufe_bisher;
     foreach my $klasse (keys %$laeufe_pro_klasse) {
@@ -798,7 +806,7 @@ sub jahreswertung($$$$$$) {
 		if ($gewertet) {
 		    my $feld = (defined $fahrer->{wertungspunkte}[$idx] &&
 				 $fahrer->{klasse} == $klasse) ?
-				wertungspunkte($fahrer->{wertungspunkte}[$idx]) :
+				wertungspunkte($fahrer->{wertungspunkte}[$idx], $punkteteilung) :
 				$RenderOutput::html ? "" : "-";
 		    my $rang = $fahrer->{wertungsrang}[$idx];
 		    $feld = [ $feld, "r", "class=\"text2\"" ]
@@ -807,12 +815,12 @@ sub jahreswertung($$$$$$) {
 		}
 	    }
 	    if ($hat_streichpunkte) {
-		my $feld = wertungspunkte($fahrerwertung->{streichpunkte});
+		my $feld = wertungspunkte($fahrerwertung->{streichpunkte}, $punkteteilung);
 		$feld = [ $feld, "r", "class=\"text2\"" ]
 		    if $fahrerwertung->{streichpunkte_wichtig};
 		push @$row, $feld;
 	    }
-	    push @$row, wertungspunkte($fahrerwertung->{gesamtpunkte});
+	    push @$row, wertungspunkte($fahrerwertung->{gesamtpunkte}, $punkteteilung);
 	    push @$body, $row;
 	}
 	doc_table $header, $body, undef, $format;
