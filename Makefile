@@ -6,6 +6,14 @@ SUBDIR ?= www2.otsv.at
 
 VPATH = trial-toolkit
 
+CURL = curl
+
+DOWNLOAD_FILES = \
+	htdocs/js/jquery.js \
+	htdocs/js/jquery.min.js \
+	htdocs/js/raphael.js \
+	htdocs/js/raphael-min.js \
+
 COMMON_FILES = \
 	$(UPPER_COMMON_FILES) \
 	./trial-toolkit/Datenbank.pm \
@@ -30,6 +38,7 @@ LOCAL_FILES = \
 
 WEB_FILES = \
 	$(UPPER_WEB_FILES) \
+	$(DOWNLOAD_FILES) \
 	cgi-bin/ergebnisse/index-ssi.pl \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
@@ -46,17 +55,22 @@ WEB_FILES = \
 	htdocs/ergebnisse/tageswertung.shtml \
 	htdocs/ergebnisse/wertungsreihe.shtml \
 	htdocs/.htaccess \
-	htdocs/js/jquery-1.7.2.js \
-	htdocs/js/jquery-1.7.2.min.js \
 	htdocs/js/jquery.polartimer.js \
-	htdocs/js/raphael.js \
-	htdocs/js/raphael-min.js \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
 	./trial-toolkit/TrialToolkit.pm.txt \
 
 all:
+
+htdocs/js/jquery.js htdocs/js/jquery.min.js:
+	@mkdir -p $(dir $@)
+	$(CURL) -o $@ --fail --silent --location http://code.jquery.com/$(notdir $@)
+
+htdocs/js/raphael.js htdocs/js/raphael-min.js:
+	@mkdir -p $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		http://github.com/DmitryBaranovskiy/raphael/raw/master/$(notdir $@)
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \
@@ -98,3 +112,6 @@ do-upload: $(COMMON_FILES) $(WEB_FILES)
 		$(CMD); \
 	    fi; \
 	done
+
+clean:
+	rm -f $(DOWNLOAD)
