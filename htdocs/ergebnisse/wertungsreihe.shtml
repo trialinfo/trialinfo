@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>ÖTSV Veranstaltungsergebnisse</title>
+<title>ÖTSV Wertungsreihe</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 </head>
@@ -10,7 +10,7 @@
 <!--#set var="which" value="$QUERY_STRING" -->
 <!--#include virtual="/cgi-bin/ergebnisse/wertungsreihe-ssi.pl?$which" -->
 <p>
-© ÖTSV &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+© Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
 </p>
 </body>
 </html>
