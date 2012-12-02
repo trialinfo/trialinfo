@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>ÖTSV Veranstaltungsergebnisse</title>
-<link rel="stylesheet" type="text/css" href="ergebnisse.css" />
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 
 <!--#if expr="$QUERY_STRING=/animiert/" -->

@@ -196,7 +196,7 @@ if ($RenderOutput::html) {
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>$txt->{'jahreswertung-titel'}</title>
-<base href="htdocs/ergebnisse/" />
+<base href="htdocs/" />
 <link rel="stylesheet" type="text/css" href="ergebnisse.css" />
 </head>
 <body>

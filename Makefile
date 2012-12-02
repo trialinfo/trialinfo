@@ -11,6 +11,7 @@ COMMON_FILES = \
 	./trial-toolkit/Datenbank.pm \
 	./trial-toolkit/RenderOutput.pm \
 	./trial-toolkit/Wertungen.pm \
+	htdocs/ergebnisse.css \
 
 LOCAL_FILES = \
 	$(UPPER_LOCAL_FILES) \
@@ -19,7 +20,6 @@ LOCAL_FILES = \
 	doc/eer-diagramm.mwb \
 	doc/eer-diagramm.pdf \
 	README \
-	ergebnisse.css \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
@@ -38,7 +38,6 @@ WEB_FILES = \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/.htaccess \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
-	htdocs/ergebnisse.css \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/ergebnisse/index.shtml \
 	htdocs/ergebnisse/jahreswertung.shtml \
