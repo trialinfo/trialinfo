@@ -341,13 +341,19 @@ sub tageswertung($$$$$$$) {
 		  @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
 
+	    my $stechen;
+	    foreach my $fahrer (@$fahrer_in_klasse) {
+		$stechen = 1
+		   if $fahrer->{stechen};
+	    }
+
 	my $wertungspunkte;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $wertungspunkte = 1
 		if defined $fahrer->{wertungspunkte}[$wertung - 1];
 	}
 
-	my $ausfall_fmt = "c" . (5 + $vierpunktewertung);
+	my $ausfall_fmt = "c" . (5 + $vierpunktewertung + $stechen);
 
 	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
 	    $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span>";
@@ -381,6 +387,10 @@ sub tageswertung($$$$$$$) {
 	    push @$format, "r2";
 	    push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
 	}
+	if ($stechen) {
+	    push @$format, "r2";
+	    push @$header, [ "ST", "r1", "title=\"Stechen\"" ];
+	}
 	push @$format, "r2";
 	push @$header, [ "WP", "r1", "title=\"Wertungspunkte\"" ]
 	    if $wertungspunkte;
@@ -396,8 +406,8 @@ sub tageswertung($$$$$$$) {
 		my $b = $fahrer_in_klasse->[$n + 1];
 
 		my $sn = 0;
-		if ($a->{punkte} == $b->{punkte}) {
-		    # FIXME: Wenn es ein Stechen gab, zählt nur das.
+		if ($a->{punkte} == $b->{punkte} &&
+		    !$a->{stechen} && !$b->{stechen}) {
 		    for (my $m = 0; $m < 5; $m++) {
 			$sn++;
 			last unless $a->{s}[$m] == $b->{s}[$m];
@@ -489,6 +499,12 @@ sub tageswertung($$$$$$$) {
 		    } else {
 			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info\"" ];
 		    }
+		}
+		if ($stechen) {
+		    my $x = $fahrer->{stechen} ? "$fahrer->{stechen}." : undef;
+		    $x = [ $x, "r1", "class=\"info2\"" ]
+			if $x && $nach_relevanz;
+		    push @$row, $x;
 		}
 	    }
 
