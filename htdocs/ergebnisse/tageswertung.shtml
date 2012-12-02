@@ -24,7 +24,9 @@
 <!--#include virtual="/cgi-bin/ergebnisse/tageswertung-ssi.pl?$which" -->
 
 <!--#if expr="$QUERY_STRING=/animiert/" -->
-<p id="progress" style="width:50; height:50;"></p>
+<p>
+<div id="progress" style="width:3em; height:3em;"></div>
+</p>
 <p id="errors" style="color:red; font-weight:bold;">Animierte Darstellung nicht möglich, da JavaScript nicht ausgeführt wird!</p>
 <!--#endif -->
 

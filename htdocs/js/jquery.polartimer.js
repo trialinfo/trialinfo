@@ -28,7 +28,6 @@
 	var data = $this.data('polartimer');
 	if (! data) {
 	  $this.addClass('polartimer');
-	  $this.height($this.width());
 	  state.timer = null;
 	  state.timerCurrent = 0;
 	  state.paper = Raphael($this.context, $this.width(), $this.height());
