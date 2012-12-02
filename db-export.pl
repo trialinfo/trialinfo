@@ -34,12 +34,12 @@ binmode(STDIN, ":encoding(console_in)");
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $db;
+my $database;
 my $username;
 my $password;
 my $list;
 my $force;
-my $result = GetOptions("db=s" => \$db,
+my $result = GetOptions("db=s" => \$database,
 			"username=s" => \$username,
 			"password=s" => \$password,
 			"l|list" => \$list,
@@ -51,7 +51,7 @@ if ($^O =~ /win/i) {
 
 decode_argv;
 
-unless ($result && $db && ($list || @ARGV)) {
+unless ($result && $database && ($list || @ARGV)) {
     print <<EOF;
 VERWENDUNG: $0 [optionen] {id} ...
 
@@ -80,8 +80,8 @@ EOF
     exit $result ? 0 : 1;
 }
 
-my $dbh = DBI->connect("DBI:$db", $username, $password,
-		       { RaiseError => 1, AutoCommit => 1, db_utf8($db) })
+my $dbh = DBI->connect("DBI:$database", $username, $password,
+		       { RaiseError => 1, AutoCommit => 1, db_utf8($database) })
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $status = 0;

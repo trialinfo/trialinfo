@@ -711,7 +711,7 @@ sub commit_or_rollback($) {
     }
 }
 
-my $db;
+my $database;
 my $username;
 my $password;
 my $create_tables;
@@ -725,7 +725,7 @@ my $punkteteilung;
 my $delete;
 my $log;
 my $nur_fahrer = 1;
-my $result = GetOptions("db=s" => \$db,
+my $result = GetOptions("db=s" => \$database,
 			"username=s" => \$username,
 			"password=s" => \$password,
 			"create-tables" => \$create_tables,
@@ -760,7 +760,7 @@ if ($^O =~ /win/i) {
 
 decode_argv;
 
-unless ($result && $db && ($create_tables || @ARGV)) {
+unless ($result && $database && ($create_tables || @ARGV)) {
     print <<EOF;
 VERWENDUNG: $0 [optionen] {datei|verzeichnis} ...
 
@@ -883,8 +883,8 @@ sub log_sql_statement($@) {
 
 do {
     eval {
-	my $dbh = DBI->connect("DBI:$db", $username, $password,
-			       { RaiseError => 1, AutoCommit => 1, db_utf8($db) })
+	my $dbh = DBI->connect("DBI:$database", $username, $password,
+			       { RaiseError => 1, AutoCommit => 1, db_utf8($database) })
 	    or die "Could not connect to database: $DBI::errstr\n";
 
 	if ($dbh->{Driver}->{Name} eq "mysql") {
@@ -908,7 +908,7 @@ do {
 	     };
 	}
 
-	print "Connected to $db ...\n";
+	print "Connected to $database ...\n";
 
 	if ($create_tables) {
 	    print "Creating tables ...\n";

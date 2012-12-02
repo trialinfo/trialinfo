@@ -167,11 +167,11 @@ sub fahrer_aus_datenbank($$) {
 }
 
 sub db_utf8($) {
-    my ($db) = @_;
+    my ($database) = @_;
 
-    if ($db =~ /^(DBI:)?mysql:/) {
+    if ($database =~ /^(DBI:)?mysql:/) {
 	return mysql_enable_utf8 => 1;
-    } elsif ($db = ~ /^(DBI:)?SQLite:/) {
+    } elsif ($database = ~ /^(DBI:)?SQLite:/) {
 	return sqlite_unicode => 1;
     }
     return ();
