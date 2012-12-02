@@ -26,6 +26,7 @@ use File::Glob ':glob';
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
 use File::Temp qw(tempfile);
+use TrialToolkit;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
@@ -34,9 +35,6 @@ binmode(STDIN, ":encoding(console_in)");
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $database;
-my $username;
-my $password;
 my $list;
 my $force;
 my $result = GetOptions("db=s" => \$database,
@@ -63,13 +61,16 @@ Optionen:
   --db=...
     Name der Datenbank, z.B. "mysql:database;host=hostname".  Verschiedene
     Datenbanktypen werden unterstützt; derzeit wird hauptsächlich MySQL
+    verwendet.  Wenn nicht angegeben, wird die Default-Datenbankverbindung
     verwendet.
 
   --username=...
-    Benutzername für den Datenbankzugriff.
+    Benutzername für den Datenbankzugriff.  Wenn nicht angegeben, wird der
+    Default-Benutzername verwendet.
 
   --password=...
-    Kennwort für den Datenbankzugriff.
+    Kennwort für den Datenbankzugriff.  Wen nicht angegeben, wird das Default-
+    Kennwort verwendet.
 
   --list
     Die vorhandenen Veranstaltungen mit ihrer ID anzeigen.

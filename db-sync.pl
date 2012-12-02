@@ -29,6 +29,7 @@ use Encode::Locale qw(decode_argv);
 use POSIX qw(strftime);
 use IO::Tee;
 use Datenbank;
+use TrialToolkit;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
@@ -711,9 +712,6 @@ sub commit_or_rollback($) {
     }
 }
 
-my $database;
-my $username;
-my $password;
 my $create_tables;
 my $temp_db = ':memory:';
 my $poll_interval;  # Sekunden
@@ -771,13 +769,16 @@ Optionen:
   --db=...
     Name der Datenbank, z.B. "mysql:database;host=hostname".  Verschiedene
     Datenbanktypen werden unterstützt; derzeit wird hauptsächlich MySQL
+    verwendet.  Wenn nicht angegeben, wird die Default-Datenbankverbindung
     verwendet.
 
   --username=...
-    Benutzername für den Datenbankzugriff.
+    Benutzername für den Datenbankzugriff.  Wenn nicht angegeben, wird der
+    Default-Benutzername verwendet.
 
   --password=...
-    Kennwort für den Datenbankzugriff.
+    Kennwort für den Datenbankzugriff.  Wen nicht angegeben, wird das Default-
+    Kennwort verwendet.
 
   --create-tables
     Alle benötigten Tabellen löschen und neu erzeugen.  Achtung, alle
