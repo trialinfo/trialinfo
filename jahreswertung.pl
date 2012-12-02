@@ -45,7 +45,6 @@ my $farben = [];
 my $laeufe;
 my $streichresultate;
 my $anzeigen_mit;
-my $punkteteilung;
 
 my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
@@ -55,6 +54,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"html" => \$RenderOutput::html,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 			"punkteteilung" => \$punkteteilung,
+			"keine-punkteteilung" => sub () { undef $punkteteilung },
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
@@ -90,7 +90,7 @@ Optionen:
     Zusätzliche Anzeige einer Spalte für den Club, die Lizenznummer, das
     Fahrzeug und/oder das Geburtsdatum.
 
-  --punkteteilung
+  --punkteteilung, --keine-punkteteilung
     Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
     allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
     Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei

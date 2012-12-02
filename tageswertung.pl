@@ -44,7 +44,6 @@ my $farben = [];
 my $anzeigen_mit;
 my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
 my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Ergebnis egal
-my $punkteteilung;
 
 my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
@@ -54,6 +53,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"nicht-alle-punkte" => sub () { $alle_punkte = 0 },
 			"nicht-nach-relevanz" => sub () { $nach_relevanz = 0 },
 			"punkteteilung" => \$punkteteilung,
+			"keine-punkteteilung" => sub () { undef $punkteteilung },
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
@@ -99,7 +99,7 @@ Optionen:
     Zusätzliche Anzeige einer Spalte für den Club, die Lizenznummer, das
     Fahrzeug und/oder das Geburtsdatum.
 
-  --punkteteilung
+  --punkteteilung, --keine-punkteteilung
     Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
     allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
     Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei

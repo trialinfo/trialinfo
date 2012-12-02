@@ -719,7 +719,6 @@ my $reconnect_interval;  # Sekunden
 my $force;
 my $vareihe;
 my $farben = [];
-my $punkteteilung;
 my $delete;
 my $log;
 my $nur_fahrer = 1;
@@ -736,6 +735,7 @@ my $result = GetOptions("db=s" => \$database,
 			"vareihe=s" => \@$vareihe,
 			"farben=s@" => \@$farben,
 			"punkteteilung" => \$punkteteilung,
+			"keine-punkteteilung" => sub () { undef $punkteteilung },
 			"alle-fahrer" => sub () { undef $nur_fahrer; },
 			"delete" => \$delete,
 			"log=s" => \$log);
@@ -809,7 +809,7 @@ Optionen:
   --farben=...,...
     Spurfarben der einzelnen Klassen als HTML Farbname oder Farbcode.
 
-  --punkteteilung
+  --punkteteilung, --keine-punkteteilung
     Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
     allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
     Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei
