@@ -299,11 +299,13 @@ sub wertungspunkte($$) {
     return sprintf("%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
 }
 
-sub tageswertung($$$$$$$) {
-    my ($cfg, $fahrer_nach_startnummer, $wertung, $spalten, $klassenfarben, $alle_punkte, $nach_relevanz) = @_;
-
-    $klassenfarben = $TrialToolkit::klassenfarben
-	unless defined $klassenfarben;
+sub tageswertung(@) {
+  # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
+  # nach_relevanz
+    my %args = (
+	klassenfarben => $TrialToolkit::klassenfarben,
+	@_,
+    );
 
     my $ausfall = {
 	3 => "ausgefallen",
@@ -314,7 +316,7 @@ sub tageswertung($$$$$$$) {
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+    foreach my $fahrer (values %{$args{fahrer_nach_startnummer}}) {
 	next
 	    unless $fahrer->{startnummer} < 1000 && $fahrer->{papierabnahme};
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
@@ -322,17 +324,17 @@ sub tageswertung($$$$$$$) {
     }
 
     my $zusatzpunkte;
-    my $vierpunktewertung = $cfg->{vierpunktewertung} ? 1 : 0;
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+    my $vierpunktewertung = $args{cfg}{vierpunktewertung} ? 1 : 0;
+    foreach my $fahrer (values %{$args{fahrer_nach_startnummer}}) {
 	$zusatzpunkte = 1
 	    if $fahrer->{zusatzpunkte};
     }
 
-    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
+    my $fahrer_nach_klassen = fahrer_nach_klassen($args{fahrer_nach_startnummer});
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 	my $idx = $klasse - 1;
-	my $runden = $cfg->{runden}[$idx];
+	my $runden = $args{cfg}{runden}[$idx];
 	my ($header, $body, $format);
 	my $farbe = "";
 
@@ -350,21 +352,21 @@ sub tageswertung($$$$$$$) {
 	my $wertungspunkte;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $wertungspunkte = 1
-		if defined $fahrer->{wertungspunkte}[$wertung - 1];
+		if defined $fahrer->{wertungspunkte}[$args{wertung} - 1];
 	}
 
 	my $ausfall_fmt = "c" . (5 + $vierpunktewertung + $stechen);
 
-	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span>";
+	if ($RenderOutput::html && exists $args{klassenfarben}{$klasse}) {
+	    $farbe = "<span style=\"color:$args{klassenfarben}{$klasse}\">◼</span>";
 	}
 
 	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"
 	    if $RenderOutput::html;
-	doc_h3 "$cfg->{klassen}[$idx]";
+	doc_h3 "$args{cfg}{klassen}[$idx]";
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ "$farbe", "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
-	foreach my $spalte (@$spalten) {
+	foreach my $spalte (@{$args{spalten}}) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
 	}
@@ -397,7 +399,7 @@ sub tageswertung($$$$$$$) {
 
 	$fahrer_in_klasse = [ sort rang_wenn_definiert @$fahrer_in_klasse ];
 
-	if ($nach_relevanz && $RenderOutput::html) {
+	if ($args{nach_relevanz} && $RenderOutput::html) {
 	    # Welche 0er, 1er, ... sind für den Rang relevant?
 	    my $sn_alt = 0;
 	    my $rn_alt = 0;
@@ -419,13 +421,13 @@ sub tageswertung($$$$$$$) {
 		    my $ra = $a->{punkte_pro_runde};
 		    my $rb = $b->{punkte_pro_runde};
 
-		    if ($cfg->{wertungsmodus} == 1) {
+		    if ($args{cfg}{wertungsmodus} == 1) {
 			$rn = 5 - $runden;
 			for (my $m = 0; $m < $runden; $m++) {
 			    $rn++;
 			    last unless $ra->[$m] == $rb->[$m];
 			}
-		    } elsif ($cfg->{wertungsmodus} == 2) {
+		    } elsif ($args{cfg}{wertungsmodus} == 2) {
 			for (my $m = $runden - 1; $m >= 0; $m--) {
 			    $rn++;
 			    last unless $ra->[$m] == $rb->[$m];
@@ -451,7 +453,7 @@ sub tageswertung($$$$$$$) {
 	    }
 	    push @$row, $fahrer->{startnummer};
 	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
-	    foreach my $spalte (@$spalten) {
+	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, defined $fahrer->{$spalte} ?
 			    $fahrer->{$spalte} : "";
 	    }
@@ -461,8 +463,8 @@ sub tageswertung($$$$$$$) {
 
 		if ($fahrer->{runden} > $n) {
 		    $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
-		    if ($alle_punkte) {
-			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $cfg);
+		    if ($args{alle_punkte}) {
+			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
 			push @$fmt, "title=\"$punkte_pro_sektion\"";
 		    }
 		} elsif ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
@@ -470,9 +472,9 @@ sub tageswertung($$$$$$$) {
 		}
 
 		if (!defined $fahrer->{rn} ||
-		    ($cfg->{wertungsmodus} == 0 ||
-		     ($cfg->{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
-		     ($cfg->{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
+		    ($args{cfg}{wertungsmodus} == 0 ||
+		     ($args{cfg}{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
+		     ($args{cfg}{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
 		     $fahrer->{ausfall} != 0)) {
 		    push @$fmt, "class=\"info\"";
 		} else {
@@ -504,13 +506,13 @@ sub tageswertung($$$$$$$) {
 		if ($stechen) {
 		    my $x = $fahrer->{stechen} ? "$fahrer->{stechen}." : undef;
 		    $x = [ $x, "r1", "class=\"info2\"" ]
-			if $x && $nach_relevanz;
+			if $x && $args{nach_relevanz};
 		    push @$row, $x;
 		}
 	    }
 
-	    push @$row, wertungspunkte($fahrer->{wertungspunkte}[$wertung - 1],
-				       $cfg->{punkteteilung})
+	    push @$row, wertungspunkte($fahrer->{wertungspunkte}[$args{wertung} - 1],
+				       $args{cfg}{punkteteilung})
 		if $wertungspunkte;
 	    push @$body, $row;
 	}

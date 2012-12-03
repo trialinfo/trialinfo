@@ -237,8 +237,14 @@ unless ($animiert) {
 	doc_h2 "$cfg->{titel}[$wertung - 1]";
     }
 }
-tageswertung $cfg, $fahrer_nach_startnummer, $wertung, [ @spalten ], $klassenfarben,
-	     $alle_punkte, $nach_relevanz;
+
+tageswertung cfg => $cfg,
+	     fahrer_nach_startnummer => $fahrer_nach_startnummer,
+	     wertung => $wertung,
+	     spalten => [ @spalten ],
+	     $klassenfarben ? (klassenfarben => $klassenfarben) : (),
+	     alle_punkte => $alle_punkte,
+	     nach_relevanz => $nach_relevanz;
 
 print "<p>Letzte Änderung: $zeit</p>\n"
     unless $animiert;

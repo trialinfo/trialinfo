@@ -191,8 +191,14 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]";
     doc_h2 doc_text "$cfg->{titel}[$wertung - 1]\n$cfg->{subtitel}[$wertung - 1]";
-    tageswertung $cfg, $fahrer_nach_startnummer, $wertung, $spalten,
-		 $klassenfarben, $alle_punkte, $nach_relevanz;
+
+    tageswertung cfg => $cfg,
+		 fahrer_nach_startnummer => $fahrer_nach_startnummer,
+		 wertung => $wertung,
+		 spalten => $spalten,
+		 $klassenfarben ? (klassenfarben => $klassenfarben) : (),
+		 alle_punkte => $alle_punkte,
+		 nach_relevanz => $nach_relevanz;
 
     if ($RenderOutput::html) {
 	print "<p>Letzte Änderung: $zeit</p>\n";
