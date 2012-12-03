@@ -674,7 +674,7 @@ sub jahreswertung_zusammenfassung($$$$) {
 
 sub jahreswertung(@) {
     # veranstaltungen wertung laeufe_gesamt streichresultate klassenfarben
-    # spalten
+    # spalten klassen
     my %args = (
 	klassenfarben => $TrialToolkit::klassenfarben,
 	@_,
@@ -683,6 +683,18 @@ sub jahreswertung(@) {
     my $idx = $args{wertung} - 1;
     undef $args{streichresultate}
 	unless defined $args{laeufe_gesamt};
+
+    if ($args{klassen}) {
+	my $klassen = { map { $_ => 1 } @{$args{klassen}} };
+	foreach my $veranstaltung (@{$args{veranstaltungen}}) {
+	    my $fahrer_nach_startnummer = $veranstaltung->[1];
+	    foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+		my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+		delete $fahrer_nach_startnummer->{$startnummer}
+		    unless exists $klassen->{$fahrer->{klasse}};
+	    }
+	}
+    }
 
     my $laeufe_pro_klasse;
     foreach my $veranstaltung (@{$args{veranstaltungen}}) {

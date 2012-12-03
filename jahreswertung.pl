@@ -110,7 +110,7 @@ if (defined $streichresultate && !defined $laeufe) {
     exit 1;
 }
 
-$klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
+$klassen = [ map { split /,/, $_ } @$klassen ];
 
 $farben = [ map { split /,/, $_ } @$farben ];
 my $klassenfarben;
@@ -176,14 +176,6 @@ foreach my $veranstaltung (@$veranstaltungen) {
 		$fahrer_nach_startnummer->{$fahrer->{startnummer}} = $fahrer;
 	}
     }
-
-    if (%$klassen) {
-	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
-	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	    delete $fahrer_nach_startnummer->{$startnummer}
-		unless exists $klassen->{$fahrer->{klasse}};
-	}
-    }
 }
 
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
@@ -209,7 +201,8 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      laeufe_gesamt => $laeufe,
 	      streichresultate => $streichresultate,
 	      klassenfarben => $klassenfarben,
-	      spalten => $spalten;
+	      spalten => $spalten,
+	      @$klassen ? (klassen => $klassen) : ();
 
 if ($RenderOutput::html) {
     print "<p>Letzte Änderung: $zeit</p>\n";
