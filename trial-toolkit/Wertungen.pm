@@ -341,11 +341,11 @@ sub tageswertung($$$$$$$) {
 		  @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
 
-	    my $stechen;
-	    foreach my $fahrer (@$fahrer_in_klasse) {
-		$stechen = 1
-		   if $fahrer->{stechen};
-	    }
+	my $stechen = 0;
+	foreach my $fahrer (@$fahrer_in_klasse) {
+	    $stechen = 1
+	       if $fahrer->{stechen};
+	}
 
 	my $wertungspunkte;
 	foreach my $fahrer (@$fahrer_in_klasse) {
@@ -420,7 +420,8 @@ sub tageswertung($$$$$$$) {
 		    my $rb = $b->{punkte_pro_runde};
 
 		    if ($cfg->{wertungsmodus} == 1) {
-			for (my $m = 0; $m < 5; $m++) {
+			$rn = 5 - $runden;
+			for (my $m = 0; $m < $runden; $m++) {
 			    $rn++;
 			    last unless $ra->[$m] == $rb->[$m];
 			}
