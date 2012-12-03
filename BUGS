@@ -1,10 +1,8 @@
 Tageswertung:
 * Das Bewerber-Feld wird momentan nie ausgegeben.
-* Das CGI-Script kann nicht nur bestimmte Klassen anzeigen.
 
 Jahreswertung:
 * Es gibt keinen Mechanismus ähnlich Stechen, um bei Punktegleichheit
   die Reihung festzulegen.
 * Die Reihung in der Jahreswertung bei Punktegleichheit (und die Einfärbung)
   ist nicht dokumentiert.
-* Das CGI-Script kann nicht nur bestimmte Klassen anzeigen.

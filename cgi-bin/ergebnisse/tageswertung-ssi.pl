@@ -36,6 +36,7 @@ my $id = $q->param('id'); # veranstaltung
 my $wereihe = $q->param('wereihe');
 my $animiert = defined $q->param('animiert');
 my $wertung = $q->param('wertung') || 1;
+my @klassen = $q->param('klasse');
 
 # Unterstützte Spalten:
 # club fahrzeug lizenznummer geburtsdatum
@@ -244,7 +245,8 @@ tageswertung cfg => $cfg,
 	     spalten => [ @spalten ],
 	     $klassenfarben ? (klassenfarben => $klassenfarben) : (),
 	     alle_punkte => $alle_punkte,
-	     nach_relevanz => $nach_relevanz;
+	     nach_relevanz => $nach_relevanz,
+	     @klassen ? (klassen => \@klassen) : ();
 
 print "<p>Letzte Änderung: $zeit</p>\n"
     unless $animiert;

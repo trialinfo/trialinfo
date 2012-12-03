@@ -33,6 +33,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 
 my $q = CGI->new;
 my $wereihe = $q->param('wereihe');
+my @klassen = $q->param('klasse');
 
 # Unterstützte Spalten:
 # club fahrzeug lizenznummer geburtsdatum
@@ -169,6 +170,7 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      laeufe_gesamt => $laeufe,
 	      streichresultate => $streichresultate,
 	      $klassenfarben ? (klassenfarben => $klassenfarben) : (),
-	      spalten => [ @spalten ];
+	      spalten => [ @spalten ],
+	      @klassen ? (klassen => \@klassen ) : ();
 
 print "<p>Letzte Änderung: $zeit</p>\n";
