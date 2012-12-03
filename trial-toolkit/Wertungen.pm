@@ -516,7 +516,7 @@ sub tageswertung(@) {
 		if $wertungspunkte;
 	    push @$body, $row;
 	}
-	doc_table $header, $body, undef, $format;
+	doc_table header => $header, body => $body, format => $format;
 	print "</div>\n"
 	    if $RenderOutput::html;
     }
@@ -845,7 +845,7 @@ sub jahreswertung(@) {
 	    push @$row, wertungspunkte($fahrerwertung->{gesamtpunkte}, $punkteteilung);
 	    push @$body, $row;
 	}
-	doc_table $header, $body, undef, $format;
+	doc_table header => $header, body => $body, format => $format;
     }
 
     doc_h3 "Veranstaltungen:";
@@ -857,7 +857,7 @@ sub jahreswertung(@) {
 	#push @$body, [ $label, "$cfg->{titel}[$idx]: $cfg->{subtitel}[$idx]" ];
 	push @$body, [ $label, $cfg->{titel}[$idx] ];
     }
-    doc_table ["", "Name"], $body, undef, ["r", "l"];
+    doc_table header => ["", "Name"], body => $body, format => ["r", "l"];
 }
 
 sub max_time($$) {

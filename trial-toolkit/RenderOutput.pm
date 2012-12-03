@@ -26,14 +26,15 @@ require Exporter;
 use List::Util qw(max);
 use strict;
 
-sub render_text_table($$$$) {
-    my ($header, $body, $footer, $format) = @_;
+sub render_text_table(@) {
+    # header body footer format
+    my %args = @_;
     my $f;
     my $width;
 
-    foreach my $row ((defined $header ? $header : (),
-		      @$body,
-		      defined $footer ? $footer : ())) {
+    foreach my $row ((defined $args{header} ? $args{header} : (),
+		      @{$args{body}},
+		      defined $args{footer} ? $args{footer} : ())) {
 	for (my $n = 0; $n < @$row; $n++) {
 	    my $w = defined $row->[$n] ? length $row->[$n] : 0;
 	    $width->[$n] = defined $width->[$n] ?
@@ -41,18 +42,18 @@ sub render_text_table($$$$) {
 	}
     }
 
-    for (my $n = 0; $n < @$format; $n++) {
-	$format->[$n] =~ /^(l|r)(\d*)/
-	    or die "Format specifier $format->[$n] not understood\n";
+    for (my $n = 0; $n < @{$args{format}}; $n++) {
+	$args{format}[$n] =~ /^(l|r)(\d*)/
+	    or die "Format specifier $args{format}[$n] not understood\n";
 	$width->[$n] = $2
 	    if $2 ne "";
 	$width->[$n] = -$width->[$n]
 	    if $1 eq "l";
     }
 
-    foreach my $row ((defined $header ? $header : (),
-		      @$body,
-		      defined $footer ? $footer : ())) {
+    foreach my $row ((defined $args{header} ? $args{header} : (),
+		      @{$args{body}},
+		      defined $args{footer} ? $args{footer} : ())) {
 	if (ref $row->[0]) {
 	    printf " %*s", $width->[0], $row->[0][0];
 	} else {
@@ -98,34 +99,35 @@ sub html_cell_format(@) {
 	   (defined $attrs ? " $attrs" : "");
 }
 
-sub render_html_table($$$$) {
-    my ($header, $body, $footer, $format) = @_;
+sub render_html_table(@) {
+    # header body footer format
+    my %args = @_;
     my $f;
     my $r;
 
     print "<table class=\"wertung\" style=\"empty-cells:show;\">\n";
     print "<colgroup>\n";
-    for (my $n = 0; $n < @$format; $n++) {
-	print "<col" . html_col_format($format->[$n]) . ">\n";
+    for (my $n = 0; $n < @{$args{format}}; $n++) {
+	print "<col" . html_col_format($args{format}[$n]) . ">\n";
     }
     print "</colgroup>\n";
-    if ($header) {
+    if ($args{header}) {
 	print "<thead>\n";
 	print "<tr>";
-	for (my $n = 0; $n < @$header; $n++) {
-	    if (ref $header->[$n]) {
-		print "<th" . html_cell_format(@{$header->[$n]}) . ">" .
-		      $header->[$n][0] . "</th>";
+	for (my $n = 0; $n < @{$args{header}}; $n++) {
+	    if (ref $args{header}[$n]) {
+		print "<th" . html_cell_format(@{$args{header}[$n]}) . ">" .
+		      $args{header}[$n][0] . "</th>";
 	    } else {
-		print "<th" . html_column_format($format->[$n]) . ">" .
-		      $header->[$n] . "</th>"
+		print "<th" . html_column_format($args{format}[$n]) . ">" .
+		      $args{header}[$n] . "</th>"
 	    }
 	}
 	print "</tr>\n";
 	print "</thead>\n";
     }
     #print "<tbody>\n";
-    foreach my $row (@$body) {
+    foreach my $row (@{$args{body}}) {
 	if (@$row) {
 	    print "<tr" . ( $r++ % 2 ? ' class="alt"' : '') . ">";
 	    for (my $n = 0; $n < @$row; $n++) {
@@ -136,7 +138,7 @@ sub render_html_table($$$$) {
 		    print "<td " . html_cell_format(@{$row->[$n]}) . ">" .
 			  $x . "</td>";
 		} else {
-		    print "<td" . html_column_format($format->[$n]) . ">" .
+		    print "<td" . html_column_format($args{format}[$n]) . ">" .
 			  $x . "</td>";
 		}
 	    }
@@ -144,16 +146,16 @@ sub render_html_table($$$$) {
 	}
     }
     #print "</tbody>\n";
-    if ($footer) {
+    if ($args{footer}) {
 	#print "<tfoot>\n";
 	print "<tr class=\"footer\">";
-	for (my $n = 0; $n < @$footer; $n++) {
-	    if (ref $footer->[$n]) {
-		print "<td" . html_cell_format(@{$footer->[$n]}) . ">" .
-		      $footer->[$n][0] . "</td>";
+	for (my $n = 0; $n < @{$args{footer}}; $n++) {
+	    if (ref $args{footer}[$n]) {
+		print "<td" . html_cell_format(@{$args{footer}[$n]}) . ">" .
+		      $args{footer}[$n][0] . "</td>";
 	    } else {
-		print "<td" . html_column_format($format->[$n]) . ">" .
-		      $footer->[$n] . "</td>"
+		print "<td" . html_column_format($args{format}[$n]) . ">" .
+		      $args{footer}[$n] . "</td>"
 	    }
 	}
 	print "</tr>\n";
@@ -206,12 +208,12 @@ sub doc_h3($) {
    }
 }
 
-sub doc_table($$$$) {
-    my ($header, $body, $footer, $format) = @_;
+sub doc_table(@) {
+    # header body footer format
     if ($html) {
-	render_html_table $header, $body, $footer, $format;
+	render_html_table @_;
     } else {
-	render_text_table $header, $body, $footer, $format;
+	render_text_table @_;
     }
 }
 

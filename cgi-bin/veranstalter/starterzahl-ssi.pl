@@ -147,7 +147,7 @@ foreach my $id (sort { $a <=> $b } keys %$starter) {
 }
 
 doc_h2 "Starterzahlen";
-doc_table $header, $body, undef, $format;
+doc_table header => $header, body => $body, format => $format;
 
 $body = [];
 foreach my $id (sort { $a <=> $b } keys %$starter) {
@@ -160,11 +160,11 @@ foreach my $id (sort { $a <=> $b } keys %$starter) {
 }
 
 doc_h2 "Vergebene Startnummern";
-doc_table [ "Veranstaltung", "" ], $body, undef, $format;
+doc_table header => [ "Veranstaltung", "" ], body => $body, format => $format;
 
 $body = [];
 foreach my $klasse (@$klassen) {
     push @$body, [ $klasse, $klassenbezeichnung->{$klasse} ];
 }
 doc_h2 "Klassen";
-doc_table [ qw(Kl. Bezeichnung) ], $body, undef, [ qw(r2 l) ];
+doc_table header => [ qw(Kl. Bezeichnung) ], body => $body, format => [ qw(r2 l) ];

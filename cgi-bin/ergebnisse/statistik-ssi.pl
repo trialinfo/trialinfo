@@ -179,7 +179,8 @@ if ($nach_sektionen) {
 	    push @$body, $row;
 	}
 	my $footer = [ "", x($alle_punkte) ];
-	doc_table $header, $body, $footer, $format;
+	doc_table header => $header, body => $body, footer => $footer,
+		  format => $format;
     }
     verteilung_legende;
 } else {
@@ -209,7 +210,8 @@ if ($nach_sektionen) {
 	push @$body, [ $n, x($punkte) ];
     }
     my $footer = [ "", x($alle_punkte) ];
-    doc_table $header, $body, $footer, $format;
+    doc_table header => $header, body => $body, footer => $footer,
+	      format => $format;
     verteilung_legende;
 
     print "<p><a href=\"statistik.shtml?id=$id&nach_sektionen\">Nach Sektionen</a></p>\n";
