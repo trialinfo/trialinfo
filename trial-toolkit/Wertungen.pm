@@ -301,7 +301,7 @@ sub wertungspunkte($$) {
 
 sub tageswertung(@) {
   # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
-  # nach_relevanz
+  # nach_relevanz klassen
     my %args = (
 	klassenfarben => $TrialToolkit::klassenfarben,
 	@_,
@@ -313,6 +313,16 @@ sub tageswertung(@) {
 	5 => "nicht gestartet",
 	6 => "nicht gestartet, entschuldigt"
     };
+
+    # Nur bestimmte Klassen anzeigen?
+    if ($args{klassen}) {
+	my $klassen = { map { $_ => 1 } @{$args{klassen}} };
+	foreach my $startnummer (keys %{$args{fahrer_nach_startnummer}}) {
+	    my $fahrer = $args{fahrer_nach_startnummer}{$startnummer};
+	    delete $args{fahrer_nach_startnummer}{$startnummer}
+		unless exists $klassen->{$fahrer->{klasse}};
+	}
+    }
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;

@@ -118,7 +118,7 @@ if (!$RenderOutput::html) {
     $nach_relevanz = 0;
 }
 
-$klassen = { map { $_ => 1 } (map { split /,/, $_ } @$klassen) };
+$klassen = [ map { split /,/, $_ } @$klassen ];
 
 $farben = [ map { split /,/, $_ } @$farben ];
 my $klassenfarben;
@@ -181,14 +181,6 @@ foreach my $name (trialtool_dateien @ARGV) {
     $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
-    if (%$klassen) {
-	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
-	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	    delete $fahrer_nach_startnummer->{$startnummer}
-		unless exists $klassen->{$fahrer->{klasse}};
-	}
-    }
-
     doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]";
     doc_h2 doc_text "$cfg->{titel}[$wertung - 1]\n$cfg->{subtitel}[$wertung - 1]";
 
@@ -198,7 +190,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 		 spalten => $spalten,
 		 $klassenfarben ? (klassenfarben => $klassenfarben) : (),
 		 alle_punkte => $alle_punkte,
-		 nach_relevanz => $nach_relevanz;
+		 nach_relevanz => $nach_relevanz,
+		 @$klassen ? (klassen => $klassen) : ();
 
     if ($RenderOutput::html) {
 	print "<p>Letzte Änderung: $zeit</p>\n";
