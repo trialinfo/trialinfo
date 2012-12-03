@@ -204,8 +204,12 @@ EOF
 }
 
 doc_h1 $letzte_cfg->{wertungen}[$wertung - 1];
-jahreswertung $veranstaltungen, $wertung, $laeufe, $streichresultate,
-	      $klassenfarben, $spalten;
+jahreswertung veranstaltungen => $veranstaltungen,
+	      wertung => $wertung,
+	      laeufe_gesamt => $laeufe,
+	      streichresultate => $streichresultate,
+	      klassenfarben => $klassenfarben,
+	      spalten => $spalten;
 
 if ($RenderOutput::html) {
     print "<p>Letzte Änderung: $zeit</p>\n";

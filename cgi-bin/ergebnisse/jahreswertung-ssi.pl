@@ -164,7 +164,11 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung $veranstaltungen, $wertung, $laeufe, $streichresultate,
-	      $klassenfarben, [ @spalten ];
+jahreswertung veranstaltungen => $veranstaltungen,
+	      wertung => $wertung,
+	      laeufe_gesamt => $laeufe,
+	      streichresultate => $streichresultate,
+	      $klassenfarben ? (klassenfarben => $klassenfarben) : (),
+	      spalten => [ @spalten ];
 
 print "<p>Letzte Änderung: $zeit</p>\n";

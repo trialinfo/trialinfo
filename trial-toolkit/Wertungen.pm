@@ -662,19 +662,20 @@ sub jahreswertung_zusammenfassung($$$$) {
     return @l ? (join(", ", @l) . ".") : "";
 }
 
-sub jahreswertung($$$$$$) {
-    my ($veranstaltungen, $wertung, $laeufe_gesamt, $streichresultate,
-	$klassenfarben, $spalten) = @_;
+sub jahreswertung(@) {
+    # veranstaltungen wertung laeufe_gesamt streichresultate klassenfarben
+    # spalten
+    my %args = (
+	klassenfarben => $TrialToolkit::klassenfarben,
+	@_,
+    );
 
-    my $idx = $wertung - 1;
-    undef $streichresultate
-	unless defined $laeufe_gesamt;
-
-    $klassenfarben = $TrialToolkit::klassenfarben
-	unless defined $klassenfarben;
+    my $idx = $args{wertung} - 1;
+    undef $args{streichresultate}
+	unless defined $args{laeufe_gesamt};
 
     my $laeufe_pro_klasse;
-    foreach my $veranstaltung (@$veranstaltungen) {
+    foreach my $veranstaltung (@{$args{veranstaltungen}}) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
@@ -689,7 +690,7 @@ sub jahreswertung($$$$$$) {
     }
 
     my $punkteteilung;
-    foreach my $veranstaltung (@$veranstaltungen) {
+    foreach my $veranstaltung (@{$args{veranstaltungen}}) {
 	my $cfg = $veranstaltung->[0];
 	$punkteteilung++
 	    if $cfg->{punkteteilung};
@@ -710,7 +711,7 @@ sub jahreswertung($$$$$$) {
     }
 
     my $spaltenbreite = 2;
-    #foreach my $veranstaltung (@$veranstaltungen) {
+    #foreach my $veranstaltung (@{$args{veranstaltungen}}) {
     #	my $cfg = $veranstaltung->[0];
     #	my $l = length $cfg->{label};
     #	$spaltenbreite = $l
@@ -720,7 +721,7 @@ sub jahreswertung($$$$$$) {
     my $alle_fahrer;
 
     my $jahreswertung;
-    foreach my $veranstaltung (@$veranstaltungen) {
+    foreach my $veranstaltung (@{$args{veranstaltungen}}) {
 	my $fahrer_nach_startnummer = $veranstaltung->[1];
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
@@ -737,9 +738,9 @@ sub jahreswertung($$$$$$) {
 	}
     }
 
-    my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
+    my $letzte_cfg = $args{veranstaltungen}[@{$args{veranstaltungen}} - 1][0];
 
-    jahreswertung_berechnen $jahreswertung, $laeufe_gesamt, $streichresultate;
+    jahreswertung_berechnen $jahreswertung, $args{laeufe_gesamt}, $args{streichresultate};
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
@@ -750,7 +751,7 @@ sub jahreswertung($$$$$$) {
     }
 
     doc_p jahreswertung_zusammenfassung(undef, $laeufe_bisher,
-					$laeufe_gesamt, $streichresultate)
+					$args{laeufe_gesamt}, $args{streichresultate})
 	if $gemeinsame_zusammenfassung;
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
@@ -760,9 +761,10 @@ sub jahreswertung($$$$$$) {
 		(sort jahreswertung_anzeige_cmp values %$klassenwertung) ];
 
 	my $hat_streichpunkte;
-	if (defined $streichresultate) {
+	if (defined $args{streichresultate}) {
 	    my $laeufe_bisher = $laeufe_pro_klasse->{$klasse};
-	    my $streichen = streichen($laeufe_bisher, $laeufe_gesamt, $streichresultate);
+	    my $streichen = streichen($laeufe_bisher, $args{laeufe_gesamt},
+				      $args{streichresultate});
 	    $hat_streichpunkte = $streichen > 0;
 	    #foreach my $fahrer (@$fahrer_in_klasse) {
 	    #	my $startnummer = $fahrer->{startnummer};
@@ -776,23 +778,24 @@ sub jahreswertung($$$$$$) {
 
 	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
 
-	doc_p jahreswertung_zusammenfassung($klasse, $laeufe_pro_klasse->{$klasse},
-					    $laeufe_gesamt, $streichresultate)
+	doc_p jahreswertung_zusammenfassung($klasse,
+		$laeufe_pro_klasse->{$klasse}, $args{laeufe_gesamt},
+		$args{streichresultate})
 	    unless $gemeinsame_zusammenfassung;
 
 	my ($header, $body, $format);
 	my $farbe = "";
-	if ($RenderOutput::html && exists $klassenfarben->{$klasse}) {
-	    $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span>";
+	if ($RenderOutput::html && exists $args{klassenfarben}{$klasse}) {
+	    $farbe = "<span style=\"color:$args{klassenfarben}{$klasse}\">◼</span>";
 	}
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
-	foreach my $spalte (@$spalten) {
+	foreach my $spalte (@{$args{spalten}}) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
 	}
-	for (my $n = 0; $n < @$veranstaltungen; $n++) {
-	    my $cfg = $veranstaltungen->[$n][0];
+	for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
+	    my $cfg = $args{veranstaltungen}[$n][0];
 	    my $gewertet = $cfg->{gewertet}[$klasse - 1];
 	    if ($gewertet) {
 		push @$format, "r$spaltenbreite";
@@ -814,12 +817,12 @@ sub jahreswertung($$$$$$) {
 	    push @$row, $startnummer,
 			$alle_fahrer->{$startnummer}{nachname} . ", " .
 			$alle_fahrer->{$startnummer}{vorname};
-	    foreach my $spalte (@$spalten) {
+	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, defined $fahrer->{$spalte} ?
 			    $fahrer->{$spalte} : "";
 	    }
-	    for (my $n = 0; $n < @$veranstaltungen; $n++) {
-		my $veranstaltung = $veranstaltungen->[$n];
+	    for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
+		my $veranstaltung = $args{veranstaltungen}[$n];
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
@@ -847,8 +850,8 @@ sub jahreswertung($$$$$$) {
 
     doc_h3 "Veranstaltungen:";
     my $body;
-    for (my $n = 0; $n < @$veranstaltungen; $n++) {
-	my $cfg = $veranstaltungen->[$n][0];
+    for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
+	my $cfg = $args{veranstaltungen}[$n][0];
 	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
 	#push @$body, [ $label, "$cfg->{titel}[$idx]: $cfg->{subtitel}[$idx]" ];
