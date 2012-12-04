@@ -5,6 +5,12 @@
 <title>ÖTSV Jahreswertung</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
+
+<!--
+  Datenerfassung über TrialTool, http://www.ortwinsann.de/trialtool/.
+  Aufbereitung über TrialToolkit, https://github.com/andreas-gruenbacher/trial-toolkit.
+-->
+
 </head>
 <body>
 <!--#set var="which" value="$QUERY_STRING" -->

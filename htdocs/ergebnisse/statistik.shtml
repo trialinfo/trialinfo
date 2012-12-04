@@ -5,6 +5,12 @@
 <title>ÖTSV Veranstaltungsstatistik</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
+
+<!--
+  Datenerfassung über TrialTool, http://www.ortwinsann.de/trialtool/.
+  Aufbereitung über TrialToolkit, https://github.com/andreas-gruenbacher/trial-toolkit.
+-->
+
 </head>
 <body>
 <h1>Österreichischer Trialsport Verband</h1>

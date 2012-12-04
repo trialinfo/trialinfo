@@ -6,6 +6,11 @@
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 
+<!--
+  Datenerfassung über TrialTool, http://www.ortwinsann.de/trialtool/.
+  Aufbereitung über TrialToolkit, https://github.com/andreas-gruenbacher/trial-toolkit.
+-->
+
 <!--#if expr="$QUERY_STRING=/animiert/" -->
 <!--#if expr="$QUERY_STRING=/debug/" -->
 <script type="text/javascript" src="../js/jquery.js"></script>
