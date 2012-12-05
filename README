@@ -234,8 +234,8 @@ TrialTool-Dateien *SN:987* - Codes enthalten, werden diese beim Import
 automatisch übernommen.
 
 
-Reihung in der Jahreswertung
-----------------------------
+Reihung und Punkteverlust in der Jahreswertung
+----------------------------------------------
 
 Fahrer werden zunächst anhand ihrer Gesamtpunkteanzahl gereiht, wobei die
 Punkte aus Streichresultaten abgezogen sind.
@@ -249,6 +249,11 @@ Danach gewinnt der Fahrer mit mehr Streichpunkten.
 
 Wenn danach immer noch Gleichstand herrscht, werden beide Fahrer momentan
 gleich gereiht.
+
+Wenn ein Fahrer im laufenden Jahr die Wertugspunkte aus einer Veranstaltung
+verlieren soll, weil er z.B. die Klasse wechselt, kann man das im
+Bemerkung-Feld in den Fahrerstammdaten mit dem Code *KW* markieren.  Die
+nachfolgenden Fahrer rücken dabei nicht auf.
 
 
 Lizenz
