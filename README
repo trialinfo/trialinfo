@@ -214,6 +214,43 @@ Beispiele zur Verwendung
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
 
 
+Jahreswertung und Startnummernänderungen
+----------------------------------------
+
+Es kommt manchmal vor, dass sich die Startnummer eines Fahrers zwischen
+Wettbewerben ändert.  Das ist für die Jahreswerung ein Problem, die über die
+Startnummer geht.  Es wäre möglich, die Startnummern in den einzelnen
+Veranstaltungen nachträglich abzupassen, das würde aber auch die Ergebislisten
+verändern.  Stattdessen gibt es die Möglichkeit, Startnummern nur für die
+Jahreswertung umzuschreiben:
+
+Um die Jahreswertung direkt aus den TrialTool-Dateien zu erstellen, schreibt
+man irgendwo in das Bemerkung-Feld in den Fahrerstammdaten den Code *SN:987*
+(wobei 987 durch die Startnummer in der Jahreswertung ersetzt wird).
+
+Um die Jahreswertung aus der Datenbank zu erstellen, definiert man die
+Startnummernänderungen in der Tabelle neue_startnummer.  Wenn die
+TrialTool-Dateien *SN:987* - Codes enthalten, werden diese beim Import
+automatisch übernommen.
+
+
+Reihung in der Jahreswertung
+----------------------------
+
+Fahrer werden zunächst anhand ihrer Gesamtpunkteanzahl gereiht, wobei die
+Punkte aus Streichresultaten abgezogen sind.
+
+Bei gleichem Punktestand werden alle erzielten Ergebnisse inklusive der
+Streichresultate verglichen.  Der Fahrer mit mehr guten Platzierungen, also mit
+mehr ersten Plätzen, oder mit mehr zweiten Plätzen bei gleicher Anzahl erster
+Plätze, usw., gewinnt.
+
+Danach gewinnt der Fahrer mit mehr Streichpunkten.
+
+Wenn danach immer noch Gleichstand herrscht, werden beide Fahrer momentan
+gleich gereiht.
+
+
 Lizenz
 ------
 
