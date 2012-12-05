@@ -45,6 +45,7 @@ my $farben = [];
 my $laeufe;
 my $streichresultate;
 my $anzeigen_mit;
+my $nach_relevanz = 1;
 
 my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,
@@ -55,6 +56,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"anzeigen-mit=s" => \$anzeigen_mit,
 			"punkteteilung" => \$punkteteilung,
 			"keine-punkteteilung" => sub () { undef $punkteteilung },
+			"nicht-nach-relevanz" => sub () { $nach_relevanz = 0 },
 
 			"club" => sub { push @$spalten, $_[0] },
 			"fahrzeug" => sub { push @$spalten, $_[0] },
@@ -85,6 +87,12 @@ Optionen:
   --laeufe=N, --streichresultate=N
     Anzahl der Läufe und der Streichresultate.  Wenn nicht angegeben, wird ohne
     Streichresultate gerechnet.
+
+  --nicht-nach-relevanz
+    Wenn Fahrer gleich viele Gesamtpunkte haben, werden sie nach Anzahl der
+    ersten Plätze usw. gereiht.  In der Jahreswertung wird versucht, den Grund
+    der Reihung bei Punktegleichstand farblich klar zu machen.  Diese Option
+    deaktiviert das.  Nur für das HTML-Format relevant.
 
   --club, --lizenznummer, --fahrzeug, --geburtsdatum
     Zusätzliche Anzeige einer Spalte für den Club, die Lizenznummer, das
@@ -202,6 +210,7 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      streichresultate => $streichresultate,
 	      klassenfarben => $klassenfarben,
 	      spalten => $spalten,
+	      nach_relevanz => $nach_relevanz,
 	      @$klassen ? (klassen => $klassen) : ();
 
 if ($RenderOutput::html) {

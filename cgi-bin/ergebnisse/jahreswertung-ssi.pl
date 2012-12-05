@@ -171,6 +171,7 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      streichresultate => $streichresultate,
 	      $klassenfarben ? (klassenfarben => $klassenfarben) : (),
 	      spalten => [ @spalten ],
+	      nach_relevanz => 1,
 	      @klassen ? (klassen => \@klassen ) : ();
 
 print "<p>Letzte Änderung: $zeit</p>\n";

@@ -43,7 +43,7 @@ my $klassen = [];
 my $farben = [];
 my $anzeigen_mit;
 my $alle_punkte = 1;  # Punkte in den Sektionen als ToolTip
-my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Ergebnis egal
+my $nach_relevanz = 1;
 
 my $result = GetOptions("wertung=i" => \$wertung,
 			"klassen=s@" => \@$klassen,

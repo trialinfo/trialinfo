@@ -674,7 +674,7 @@ sub jahreswertung_zusammenfassung($$$$) {
 
 sub jahreswertung(@) {
     # veranstaltungen wertung laeufe_gesamt streichresultate klassenfarben
-    # spalten klassen
+    # spalten klassen nach_relevanz
     my %args = (
 	klassenfarben => $TrialToolkit::klassenfarben,
 	@_,
@@ -854,14 +854,17 @@ sub jahreswertung(@) {
 				$RenderOutput::html ? "" : "-";
 		    my $rang = $fahrer->{wertungsrang}[$idx];
 		    $feld = [ $feld, "r", "class=\"text2\"" ]
-			if defined $rang && $fahrerwertung->{rang_wichtig}{$rang};
+			if defined $rang &&
+			   $fahrerwertung->{rang_wichtig}{$rang} &&
+			   $args{nach_relevanz};
 		    push @$row, $feld;
 		}
 	    }
 	    if ($hat_streichpunkte) {
 		my $feld = wertungspunkte($fahrerwertung->{streichpunkte}, $punkteteilung);
 		$feld = [ $feld, "r", "class=\"text2\"" ]
-		    if $fahrerwertung->{streichpunkte_wichtig};
+		    if $fahrerwertung->{streichpunkte_wichtig} &&
+		       $args{nach_relevanz};
 		push @$row, $feld;
 	    }
 	    push @$row, wertungspunkte($fahrerwertung->{gesamtpunkte}, $punkteteilung);
