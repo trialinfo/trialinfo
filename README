@@ -62,6 +62,26 @@ Wenn die CGI-Scripts werwendet werden sollen, sind die nötigen Schritte unter
 Web Server-Konfiguration beschrieben.
 
 
+Konfiguration
+-------------
+
+Die Scripts lassen sich über die Datei trial-toolkit/TrialToolkit.pm
+konfigurieren.  Die Einstellungen dort betreffen Dinge wir den Datenbankzugang
+(nur benötigt, wenn eine Datenbank eingesetzt wird) und die Spurfarben der
+einzelnen Klassen.  (Viele dieser Einstellungen können auch auf der
+Kommandozeile überschrieben werden.)
+
+Achtung: Diese Datei muss per Hand erzeugt werden, BEVOR DIE SCRIPTS VERWENDET
+WERDEN KÖNNEN.
+
+Eine Vorlage befindet sich in der Datei trial-toolkit/TrialToolkit.pm.txt.
+
+Die Option --create-tables von db-sync.pl erstellt auch eine
+Veranstaltungsreihe und zwei Wertugsreihen mit Zuweisung der Klassen zu den
+Wertungsreihen.  Das ist als Beispiel gedacht, und kann entweder in db-sync.pl
+oder in der Datenbank angepasst werden.
+
+
 Datenbank - Konfiguration
 -------------------------
 

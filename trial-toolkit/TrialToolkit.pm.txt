@@ -5,21 +5,29 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw($database $username $password $txt $punkteteilung);
 
+# Datenbankzugang für die Kommandozeilen-Utilities und die CGI-Scripts.  (Bei
+# den Kommandozeilen-Utilities kann das auch explizit angegeben werden.)
 $database = 'mysql:database;host=mysql.example.com';
 $username = 'username';
 $password = 'password';
 
+# Titel von lokal (ohne Datenbank) erzeugten Tageswertungs- und
+# Jahreswertungs-Seiten
 $txt = {
     'tageswertung-titel' => 'Tageswertung',
     'jahreswertung-titel' => 'Jahreswertung',
 };
 
-# HTML5-Farbnamen oder Farbcodes
+# Standard-Klassenfarben als HTML5-Farbnamen oder Farbcodes.  (Bei den
+# Kommandozeilen-Utilities können die Farben auch explizit angegeben werden.)
+# (Achtung, nicht vergessen, die #-Zeichen am Zeilenanfang zu entfernen!)
 $klassenfarben = {
      #1 => "red",
      #2 => "blue",
 };
 
+# Werden die Wertungspunkte bei Gleichstand aufgeteilt?  (Siehe Option
+# --punkteteilung in tageswertung.pl.)
 $punkteteilung = undef;
 
 1;
