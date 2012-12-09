@@ -741,8 +741,6 @@ my $result = GetOptions("db=s" => \$database,
 			"log=s" => \$log);
 
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
-$vareihe = [ 1 ]
-    unless @$vareihe;
 
 $farben = [ map { split /,/, $_ } @$farben ];
 if (@$farben) {
