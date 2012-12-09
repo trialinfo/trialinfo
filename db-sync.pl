@@ -161,7 +161,7 @@ CREATE TABLE veranstaltung (
 DROP TABLE IF EXISTS nennungsmaske_feld;
 CREATE TABLE nennungsmaske_feld (
   id INT, -- veranstaltung
-  feld INT,
+  feld VARCHAR(20),
   PRIMARY KEY (id, feld)
 );
 
@@ -320,10 +320,8 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	INSERT INTO nennungsmaske_feld (id, feld)
 	VALUES (?, ?)
     });
-    for (my $n = 0; $n < @{$cfg->{nennungsmaske_felder}}; $n++) {
-	if ($cfg->{nennungsmaske_felder}[$n]) {
-	    $sth->execute($id, $n + 1);
-	}
+    foreach my $feld (@{$cfg->{nennungsmaske_felder}}) {
+	$sth->execute($id, $feld);
     }
 
     $sth = $dbh->prepare(qq{

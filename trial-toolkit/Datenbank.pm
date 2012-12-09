@@ -106,8 +106,9 @@ sub cfg_aus_datenbank($$) {
 	WHERE id = ?
     });
     $sth->execute($id);
+    $cfg->{nennungsmaske_felder} = [];
     while (my @row = $sth->fetchrow_array) {
-	$cfg->{nennungsmaske_felder}[$row[0] - 1] = 1;
+	push @{$cfg->{nennungsmaske_felder}}, $row[0];
     }
     return $cfg;
 }

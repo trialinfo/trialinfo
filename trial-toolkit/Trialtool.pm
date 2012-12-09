@@ -36,7 +36,8 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime);
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime
+	     nennungsmaske_feld);
 
 use File::stat;
 use POSIX qw(strftime);
@@ -77,9 +78,40 @@ my $cfg_format = [
     "nennungsmaske_felder1:S<:6",	# 1973: Felder Nennungsmaske (0, 1)
     "auswertung_klasse:S<:15",		# 1985: Klasse in Auswertungsmenü ausgewählt (0, 1)?
     ":a110",				# 2015: ?
-    "nennungsmaske_felder2:S<:16",	# 2125: Felder Nennungsmaske (0, 1, letzter Wert immer 1)
+    "nennungsmaske_felder2:S<:15",	# 2125: Felder Nennungsmaske (0, 1)
+    "_1:S<",				# 2155: ? (immer 1)
     "runden:A:15",			# 2157: Anzahl der Runden je Klasse ("4")
     ":A15",				# 2172: ?
+];
+
+# (Die folgenden Felder sind immer in der Eingabemaske sichtbar:
+# startnummer klasse nachname vorname wertung1 nennungseingang papierabnahme)
+
+my $nennungsmaske_felder1 = [
+     "kennzeichen",
+     "land",
+     "rahmennummer",
+     "lizenznummer",
+     "hubraum",
+     "bemerkung",
+];
+
+my $nennungsmaske_felder2 = [
+    "strasse",
+    "plz",
+    "wohnort",
+    "telefon",
+    "geburtsdatum",
+    "bewerber",
+    "club",
+    "fahrzeug",
+    "startzeit",
+    "zielzeit",
+    "wertung2",
+    "wertung3",
+    "wertung4",
+    "nenngeld",
+    "versicherung",
 ];
 
 my $dat_format = [
@@ -177,12 +209,17 @@ sub cfg_datei_parsen($) {
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
     $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
 
-    $cfg->{nennungsmaske_felder} = [
-	@{$cfg->{nennungsmaske_felder1}},
-        @{$cfg->{nennungsmaske_felder2}}
-    ];
+    for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
+	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder1->[$n]
+	    if $cfg->{nennungsmaske_felder1}[$n];
+    }
+    for (my $n = 0; $n < @$nennungsmaske_felder2; $n++) {
+	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder2->[$n]
+	    if $cfg->{nennungsmaske_felder2}[$n];
+    }
     delete $cfg->{nennungsmaske_felder1};
     delete $cfg->{nennungsmaske_felder2};
+    delete $cfg->{_1};
 
     return $cfg;
 }
@@ -196,9 +233,20 @@ sub cfg_datei_schreiben($$) {
     $cfg = { %{$cfg} };
     encode_strings($cfg, $cfg_format);
 
-    $cfg->{nennungsmaske_felder1} = [ @{$cfg->{nennungsmaske_felder}}[0 .. 5] ];
-    $cfg->{nennungsmaske_felder2} = [ @{$cfg->{nennungsmaske_felder}}[6 .. 21] ];
+    my $felder = { map { $_ => 1 } @{$cfg->{nennungsmaske_felder}} };
+
+    $cfg->{nennungsmaske_felder1} = [];
+    for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
+	$cfg->{nennungsmaske_felder1}[$n] =
+	    exists $felder->{$nennungsmaske_felder1->[$n]};
+    }
+    $cfg->{nennungsmaske_felder2} = [];
+    for (my $n = 0; $n < @$nennungsmaske_felder2; $n++) {
+	$cfg->{nennungsmaske_felder2}[$n] =
+	    exists $felder->{$nennungsmaske_felder2->[$n]};
+    }
     delete $cfg->{nennungsmaske_felder};
+    $cfg->{_1} = 1;
 
     # Pad arrays; otherwise pack() writes variable-length records
     foreach my $fmt (@$cfg_format) {
