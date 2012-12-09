@@ -87,12 +87,14 @@ erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen und
 Wertungsreihen definiert werden, siehe dazu die Tabellen vareihe, wereihe, und
 wereihe_klasse:
 
- * Eine Veranstaltungsreihe zeichnet sich dadurch aus, dass es eine
-   oder mehrere Gesamtwertungen über die Veranstaltungen in der Reihe gibt.
+ * Eine Veranstaltungsreihe zeichnet sich dadurch aus, dass es eine oder
+   mehrere Gesamtwertungen über die Veranstaltungen in der Reihe gibt.
 
- * Eine Wertungsreihe ist eine solche Gesamtwertung.  Sie bezieht sich auf
-   bestimmte Klassen in den Veranstaltungen einer Veranstaltungsreihe und hat
-   eine definierte Anzahl an Läufen und Streichresultaten.
+ * Eine Wertungsreihe ist eine solche Gesamtwertung.  Sie umfasst bestimmte
+   Klassen in den Veranstaltungen einer Veranstaltungsreihe.  Sie hat eine
+   definierte Anzahl an Läufen und Streichresultaten.
+
+Eine Veranstaltung kann Teil einer oder mehrerer Veranstaltungsreihen sein.
 
 Das verwendete Datenmodell in der Datenbank ist in der Datei
 doc/eer-diagramm.pdf dargestellt.  Das Diagramm wurde mit MySQL Workbench
