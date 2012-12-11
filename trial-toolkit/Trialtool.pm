@@ -84,35 +84,45 @@ my $cfg_format = [
     ":A15",				# 2172: ?
 ];
 
-# (Die folgenden Felder sind immer in der Eingabemaske sichtbar:
-# startnummer klasse nachname vorname wertung1 nennungseingang papierabnahme)
+# Diese Felder sind in der Eingabemaske immer sichtbar:
+my $nennungsmaske_felder = [ qw(
+    startnummer
+    klasse
+    nachname
+    vorname
+    wertung1
+    nennungseingang
+    papierabnahme
+) ];
 
-my $nennungsmaske_felder1 = [
-     "kennzeichen",
-     "land",
-     "rahmennummer",
-     "lizenznummer",
-     "hubraum",
-     "bemerkung",
-];
+# Belegung von $cfg->{nennungsmaske_felder1}:
+my $nennungsmaske_felder1 = [ qw(
+    kennzeichen
+    land
+    rahmennummer
+    lizenznummer
+    hubraum
+    bemerkung
+) ];
 
-my $nennungsmaske_felder2 = [
-    "strasse",
-    "plz",
-    "wohnort",
-    "telefon",
-    "geburtsdatum",
-    "bewerber",
-    "club",
-    "fahrzeug",
-    "startzeit",
-    "zielzeit",
-    "wertung2",
-    "wertung3",
-    "wertung4",
-    "nenngeld",
-    "versicherung",
-];
+# Belegung von $cfg->{nennungsmaske_felder2}:
+my $nennungsmaske_felder2 = [ qw(
+    strasse
+    plz
+    wohnort
+    telefon
+    geburtsdatum
+    bewerber
+    club
+    fahrzeug
+    startzeit
+    zielzeit
+    wertung2
+    wertung3
+    wertung4
+    nenngeld
+    versicherung
+) ];
 
 my $dat_format = [
     "klasse:S<",			#   0: 99 = keine Klasse zugeordnet, 100 = Helfer
@@ -209,6 +219,7 @@ sub cfg_datei_parsen($) {
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
     $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
 
+    $cfg->{nennungsmaske_felder} = [ @$nennungsmaske_felder ];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
 	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder1->[$n]
 	    if $cfg->{nennungsmaske_felder1}[$n];
