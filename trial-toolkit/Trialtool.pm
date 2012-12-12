@@ -321,6 +321,8 @@ sub dat_datei_parsen($$) {
 	delete $fahrer->{''};
 	decode_strings($fahrer, $dat_format);
 	$fahrer->{startnummer} = $n + 1;
+	$fahrer->{klasse} = undef
+	    if $fahrer->{klasse} == 99;
 	$fahrer->{helfer} = undef
 	    if $fahrer->{helfer} == 0;
 	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
@@ -394,6 +396,8 @@ sub dat_datei_schreiben($$) {
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
 	    encode_strings($fahrer, $dat_format);
+	    $fahrer->{klasse} = 99
+		unless defined $fahrer->{klasse};
 	    my $nachname_vorname = "$fahrer->{nachname}, $fahrer->{vorname}";
 	    $nachname_vorname = substr($nachname_vorname, 0, 19) . '.'
 		if length $nachname_vorname > 20;
