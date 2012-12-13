@@ -93,6 +93,7 @@ my $nennungsmaske_felder = [ qw(
     wertung1
     nennungseingang
     papierabnahme
+    helfer
 ) ];
 
 # Belegung von $cfg->{nennungsmaske_felder1}:
