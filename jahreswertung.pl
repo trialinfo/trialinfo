@@ -175,13 +175,7 @@ foreach my $veranstaltung (@$veranstaltungen) {
 		my $cfg = $veranstaltung->[0];
 		print STDERR "Veranstaltung $cfg->{label}: Startnummer " .
 			     "$fahrer->{startnummer} -> " .
-			     "$fahrer->{neue_startnummer}\n";
-		$fahrer->{alte_startnummer} = $fahrer->{startnummer};
-		$fahrer->{startnummer} = $fahrer->{neue_startnummer};
-		delete $fahrer->{neue_startnummer};
-
-		delete $fahrer_nach_startnummer->{$fahrer->{alte_startnummer}};
-		$fahrer_nach_startnummer->{$fahrer->{startnummer}} = $fahrer;
+			     ($fahrer->{neue_startnummer} // '') . "\n";
 	}
     }
 }

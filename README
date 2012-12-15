@@ -236,28 +236,34 @@ Beispiele zur Verwendung
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
 
 
-Jahreswertung und Startnummernänderungen
-----------------------------------------
+Jahreswertung und Startnummern-Änderungen, Wertungspunkte ignorieren
+--------------------------------------------------------------------
 
 Es kommt manchmal vor, dass sich die Startnummer eines Fahrers zwischen
 Wettbewerben ändert.  Das ist für die Jahreswerung ein Problem, die über die
 Startnummer geht.  Es wäre möglich, die Startnummern in den einzelnen
 Veranstaltungen nachträglich abzupassen, das würde aber auch die Ergebislisten
-verändern.  Stattdessen gibt es die Möglichkeit, Startnummern nur für die
-Jahreswertung umzuschreiben:
+dieser Veranstaltungen verändern.  Stattdessen gibt es die Möglichkeit,
+Startnummern nur für die Jahreswertung umzuschreiben:
 
-Um die Jahreswertung direkt aus den TrialTool-Dateien zu erstellen, schreibt
-man irgendwo in das Bemerkung-Feld in den Fahrerstammdaten den Code *SN:987*
+Soll die Jahreswertung direkt aus den TrialTool-Dateien erstellt werden,
+schreibt man in das Bemerkung-Feld der Fahrerstammdaten den Code *JW:987*
 (wobei 987 durch die Startnummer in der Jahreswertung ersetzt wird).
 
-Um die Jahreswertung aus der Datenbank zu erstellen, definiert man die
+Soll die Jahreswertung aus der Datenbank zu erstellen, definiert man die
 Startnummernänderungen in der Tabelle neue_startnummer.  Wenn die
-TrialTool-Dateien *SN:987* - Codes enthalten, werden diese beim Import
-automatisch übernommen.
+TrialTool-Dateien bereits die *JW:987* - Codes enthalten, werden diese beim
+Import berücksichtigt, und die Tabelle wird automatisch befüllt.
+
+Wenn der Code *JW:* verwendet wird (also ohne Startnummer), oder das Feld
+neue_startnummer in der Datenbank NULL wird, werden die Wertungspunkte des
+Fahrers in der Jahreswertung nicht berücksichtigt.  Das kann sinnvoll sein,
+wenn ein Fahrer durch Klassenwechsel seine bisherigen Wertungspunkte verlieren
+soll.
 
 
-Reihung und Punkteverlust in der Jahreswertung
-----------------------------------------------
+Reihung der Jahreswertung
+-------------------------
 
 Fahrer werden zunächst anhand ihrer Gesamtpunkteanzahl gereiht, wobei die
 Punkte aus Streichresultaten abgezogen sind.
@@ -271,11 +277,6 @@ Danach gewinnt der Fahrer mit mehr Streichpunkten.
 
 Wenn danach immer noch Gleichstand herrscht, werden beide Fahrer momentan
 gleich gereiht.
-
-Wenn ein Fahrer im laufenden Jahr die Wertugspunkte aus einer Veranstaltung
-verlieren soll, weil er z.B. die Klasse wechselt, kann man das im
-Bemerkung-Feld in den Fahrerstammdaten mit dem Code *KW* markieren.  Die
-nachfolgenden Fahrer rücken dabei nicht auf.
 
 
 Lizenz

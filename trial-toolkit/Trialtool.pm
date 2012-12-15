@@ -314,14 +314,14 @@ sub dat_datei_parsen($$) {
     my $fahrer_nach_startnummern;
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
-    for (my $n = 0; $n < $startnummern; $n++) {
-	my $fahrer_binaer = substr($dat, $n * 847, 847);
+    for (my $startnummer = 1; $startnummer <= $startnummern; $startnummer++) {
+	my $fahrer_binaer = substr($dat, ($startnummer - 1) * 847, 847);
 	my $klasse = unpack "S<", $fahrer_binaer;
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
 	delete $fahrer->{''};
 	decode_strings($fahrer, $dat_format);
-	$fahrer->{startnummer} = $n + 1;
+	$fahrer->{startnummer} = $startnummer;
 	$fahrer->{klasse} = undef
 	    if $fahrer->{klasse} == 99;
 	$fahrer->{helfer} = undef
@@ -365,19 +365,16 @@ sub dat_datei_parsen($$) {
 	$fahrer->{versicherung} = $fahrer->{versicherung} - '0';
 	delete $fahrer->{versicherung}
 	    if $fahrer->{versicherung} == 0;
-	if ($fahrer->{bemerkung} =~ s/\s*\*SN:(\d+)\*\s*//) {
+
+	if ($fahrer->{bemerkung} =~ s/\s*\*JW:(\d*)\*\s*//) {
 	    # Falls für die Jahreswerung eine andere Startnummer verwendet
 	    # werden soll, kann das im Feld Bemerkung vermerkt werden,
-	    # z.B.:  *SN:987*
-	    $fahrer->{neue_startnummer} = $1;
+	    # z.B.:  *JW:987*.  Wenn keine Startnummer angegeben ist
+	    # (*JW:*), werden die Wertungspunkte in der Jahreswertung
+	    # ignoriert.
+	    $fahrer->{neue_startnummer} = $1 || undef;
 	}
-	if ($fahrer->{bemerkung} =~ s/\s*\*KW\*\s*//) {
-	    # Falls der Fahrer seine Punkte in der Jahreswertung verliert
-	    # (durch Klassenwechsel), kann das im Feld Bemerkung vermerkt
-	    # werden:  *KW*
-	    $fahrer->{keine_wertungspunkte} = 1;
-	}
-	$fahrer_nach_startnummern->{$fahrer->{startnummer}} = $fahrer;
+	$fahrer_nach_startnummern->{$startnummer} = $fahrer;
     }
 
     return $fahrer_nach_startnummern;
@@ -422,11 +419,9 @@ sub dat_datei_schreiben($$) {
 	    } else {
 		delete $fahrer->{zielzeit};
 	    }
-	    if (defined $fahrer->{neue_startnummer}) {
-		$fahrer->{bemerkung} .= " *SN:$fahrer->{neue_startnummer}*";
-	    }
-	    if (defined $fahrer->{keine_wertungspunkte}) {
-		$fahrer->{bemerkung} .= " *KW*";
+	    if (exists $fahrer->{neue_startnummer}) {
+		$fahrer->{bemerkung} .= " *JW:" .
+		    ($fahrer->{neue_startnummer} // '') . "*";
 	    }
 
 	    my $punkte_pro_sektion;

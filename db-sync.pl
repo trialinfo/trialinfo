@@ -197,7 +197,7 @@ CREATE TABLE neue_startnummer (
   id INT, -- veranstaltung
   startnummer INT,
   neue_startnummer INT,
-  PRIMARY KEY (id, startnummer, neue_startnummer)
+  PRIMARY KEY (id, startnummer)
 );
 
 DROP TABLE IF EXISTS vareihe_veranstaltung;

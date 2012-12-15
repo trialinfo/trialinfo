@@ -209,10 +209,6 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			$fahrer->{wertungspunkte}[$idx] = $wertungspunkte->[$x - 1] || undef;
 		    }
 		}
-		foreach my $fahrer (@$fahrer_in_klasse) {
-		    $fahrer->{wertungspunkte}[$idx] = undef
-			if $fahrer->{keine_wertungspunkte};
-		}
 	    }
 	}
     }
@@ -693,6 +689,44 @@ sub jahreswertung(@) {
 		delete $fahrer_nach_startnummer->{$startnummer}
 		    unless exists $klassen->{$fahrer->{klasse}};
 	    }
+	}
+    }
+
+    for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
+	my $veranstaltung = $args{veranstaltungen}[$n];
+	if (grep { exists $_->{neue_startnummer} } values %{$veranstaltung->[1]}) {
+	    # Startnummern umschreiben und kontrollieren, ob Startnummern
+	    # doppelt verwendet wurden
+
+	    my $fahrer_nach_startnummer;
+	    foreach my $fahrer (values %{$veranstaltung->[1]}) {
+		if (exists $fahrer->{neue_startnummer}) {
+		    my $neue_startnummer = $fahrer->{neue_startnummer};
+		    next unless defined $neue_startnummer;
+
+		    $fahrer->{alte_startnummer} = $fahrer->{startnummer};
+		    $fahrer->{startnummer} = $neue_startnummer;
+		    delete $fahrer->{neue_startnummer};
+		}
+		my $startnummer = $fahrer->{startnummer};
+		if (exists $fahrer_nach_startnummer->{$startnummer}) {
+		    my $cfg = $veranstaltung->[0];
+		    my $fahrer2 = $fahrer_nach_startnummer->{$startnummer};
+
+		    if (defined $fahrer2->{wertungspunkte}[$idx]) {
+			next unless defined $fahrer->{wertungspunkte}[$idx];
+			doc_p "Veranstaltung " . ($n + 1) . ": Fahrer " .
+			      ($fahrer->{alte_startnummer} // $fahrer->{startnummer}) .
+			      " und " .
+			      ($fahrer2->{alte_startnummer} // $fahrer2->{startnummer}) .
+			      " verwenden beide die Startnummer $startnummer in der " .
+			      "Jahreswertung!";
+			return;
+		    }
+		}
+		$fahrer_nach_startnummer->{$startnummer} = $fahrer;
+	    }
+	    $veranstaltung->[1] = $fahrer_nach_startnummer;
 	}
     }
 

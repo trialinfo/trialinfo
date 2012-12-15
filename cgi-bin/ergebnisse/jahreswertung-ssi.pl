@@ -96,7 +96,9 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, klasse, startnummer, neue_startnummer, vorname, nachname,
+    SELECT id, klasse, startnummer,
+	   CASE WHEN definiert THEN neue_startnummer ELSE startnummer END as neue_startnummer,
+	   vorname, nachname,
 	   wertungspunkte, wertungsrang
     } . ( @spalten ? ", " . join(", ", @spalten) : "") . q{
     FROM fahrer_wertung
@@ -104,7 +106,7 @@ $sth = $dbh->prepare(q{
     JOIN vareihe_veranstaltung USING (id)
     JOIN wereihe USING (vareihe)
     JOIN wereihe_klasse USING (wereihe, klasse)
-    LEFT JOIN neue_startnummer USING (id, startnummer)
+    LEFT JOIN (SELECT *, 1 AS definiert FROM neue_startnummer) AS neue_startnummer USING (id, startnummer)
     WHERE wereihe = ?;
 });
 $sth->execute($wereihe);
@@ -120,11 +122,9 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     $fahrer->{wertungsrang} = [];
     $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
 
-    if (defined $fahrer->{neue_startnummer}) {
-	$fahrer->{alte_startnummer} = $fahrer->{startnummer};
-	$fahrer->{startnummer} = $fahrer->{neue_startnummer};
-	delete $fahrer->{neue_startnummer};
-    }
+    delete $fahrer->{neue_startnummer}
+	if $fahrer->{startnummer} == $fahrer->{neue_startnummer};
+
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
 }
@@ -134,6 +134,12 @@ foreach my $id (keys %$veranstaltungen) {
 	unless exists $veranstaltungen->{$id}{fahrer};
 }
 
+unless (%$veranstaltungen) {
+    doc_p "Für diese Wertungreihe sind keine Ergebnisse vorhanden.";
+    exit;
+}
+
+# FIXME: nach Datum sortieren!
 $veranstaltungen = [ map { [ $_->{cfg}, $_->{fahrer} ] }
 			 sort { $a->{cfg}{id} <=> $b->{cfg}{id} }
 			      values %$veranstaltungen ];
