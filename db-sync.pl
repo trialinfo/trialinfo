@@ -285,9 +285,9 @@ sub veranstaltung_loeschen($$$) {
     }
 }
 
-sub in_datenbank_schreiben($$$$$$$$) {
+sub in_datenbank_schreiben($$$$$$$$$) {
     my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
-	$cfg, $vareihe) = @_;
+	$cfg, $vareihe, $features) = @_;
     my $sth;
     my $datum;
 
@@ -320,8 +320,17 @@ sub in_datenbank_schreiben($$$$$$$$) {
 	INSERT INTO veranstaltung_feature (id, feature)
 	VALUES (?, ?)
     });
-    foreach my $feld (@{$cfg->{nennungsmaske_felder}}) {
-	$sth->execute($id, $feld);
+    my $f = { %$features };
+    foreach my $feature (@{$cfg->{nennungsmaske_felder}}) {
+	unless (exists $f->{$feature} && !$f->{$feature}) {
+	    $sth->execute($id, $feature);
+	    delete $f->{$feature};
+	}
+    }
+    foreach my $feature (keys %$f) {
+	if ($f->{$feature}) {
+	    $sth->execute($id, $feature);
+	}
     }
 
     $sth = $dbh->prepare(qq{
@@ -720,6 +729,7 @@ my $farben = [];
 my $delete;
 my $log;
 my $nur_fahrer = 1;
+my $features_list = [];
 my $result = GetOptions("db=s" => \$database,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -736,7 +746,8 @@ my $result = GetOptions("db=s" => \$database,
 			"keine-punkteteilung" => sub () { undef $punkteteilung },
 			"alle-fahrer" => sub () { undef $nur_fahrer; },
 			"delete" => \$delete,
-			"log=s" => \$log);
+			"log=s" => \$log,
+			"features=s" => \@$features_list);
 
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
 
@@ -745,6 +756,16 @@ if (@$farben) {
     for (my $n = 0; $n < @$farben; $n++) {
 	$klassenfarben->{$n + 1} = $farben->[$n]
 	    if $farben->[$n] ne "";
+    }
+}
+
+my $features = $veranstaltungsfeatures;
+foreach my $feature (map { split /,/, $_ } @$features_list) {
+    if ($feature =~ /^([-+])(.*)/) {
+	$features->{$2} = ($1 eq '+');
+    } else {
+	$result = 0;
+	last;
     }
 }
 
@@ -825,6 +846,10 @@ Optionen:
   --temp-db=dateiname
     Die intern verwendete SQLite-Datenbank in die angegebene Datei schrieben.
     Diese Option ist zur Fehlersuche gedacht.
+
+  --feature=-feature,+feature,...
+    Feature in der Datenbank ignorieren (-) oder hinzufügen (+).  Momentan sind
+    die Features die Namen der Felder, die im Nennformular aktiviert sind.
 EOF
     exit $result ? 0 : 1;
 }
@@ -968,7 +993,7 @@ do {
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer,
-						     $cfg, $vareihe;
+						     $cfg, $vareihe, $features;
 
 			print "\n";
 			eval {

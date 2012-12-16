@@ -3,7 +3,8 @@ package TrialToolkit;
 use utf8;
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw($database $username $password $txt $punkteteilung);
+@EXPORT = qw($database $username $password $txt $klassenfarben $punkteteilung
+	     $veranstaltungsfeatures);
 
 # Datenbankzugang für die Kommandozeilen-Utilities und die CGI-Scripts.  (Bei
 # den Kommandozeilen-Utilities kann das auch explizit angegeben werden.)
@@ -29,5 +30,13 @@ $klassenfarben = {
 # Werden die Wertungspunkte bei Gleichstand aufgeteilt?  (Siehe Option
 # --punkteteilung in tageswertung.pl.)
 $punkteteilung = undef;
+
+# Features, die bei der Datenübertragung zusätzlich gesetzt oder entfernt
+# werden sollen.
+$veranstaltungsfeatures = {
+    neue_startnummer => 1,
+    #helfer => 0,
+    #nennungseingang => 0,
+};
 
 1;
