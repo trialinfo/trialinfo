@@ -158,11 +158,11 @@ CREATE TABLE veranstaltung (
   PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS nennungsmaske_feld;
-CREATE TABLE nennungsmaske_feld (
+DROP TABLE IF EXISTS veranstaltung_feature;
+CREATE TABLE veranstaltung_feature (
   id INT, -- veranstaltung
-  feld VARCHAR(20),
-  PRIMARY KEY (id, feld)
+  feature VARCHAR(20),
+  PRIMARY KEY (id, feature)
 );
 
 DROP TABLE IF EXISTS kartenfarbe;
@@ -317,7 +317,7 @@ sub in_datenbank_schreiben($$$$$$$$) {
 		  (map { $cfg->{$_} } @cfg_felder));
 
     $sth = $dbh->prepare(qq{
-	INSERT INTO nennungsmaske_feld (id, feld)
+	INSERT INTO veranstaltung_feature (id, feature)
 	VALUES (?, ?)
     });
     foreach my $feld (@{$cfg->{nennungsmaske_felder}}) {
