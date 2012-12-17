@@ -36,6 +36,8 @@ my $wereihe = $q->param('wereihe');
 my @spalten = $q->param('spalte');
 my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
 
+my $url = $q->param('url') // 'tageswertung.shtml';
+
 print "Content-type: text/html; charset=utf-8\n\n";
 
 my $sth = $dbh->prepare(q{
@@ -65,7 +67,7 @@ if (my @row = $sth->fetchrow_array) {
     print "<p>\n";
     while (my@row = $sth2->fetchrow_array) {
 	my ($id, $titel) = @row;
-	print "<a href=\"tageswertung.shtml?wereihe=$wereihe&id=$id$spalten\">$titel</a><br>\n";
+	print "<a href=\"$url?wereihe=$wereihe&id=$id$spalten\">$titel</a><br>\n";
     }
     print "</p>\n";
     print "\n";
