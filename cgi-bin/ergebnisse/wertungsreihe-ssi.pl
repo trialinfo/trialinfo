@@ -68,9 +68,6 @@ if (my @row = $sth->fetchrow_array) {
 	print "<a href=\"tageswertung.shtml?wereihe=$wereihe&id=$id$spalten\">$titel</a><br>\n";
     }
     print "</p>\n";
-    print "<p>\n";
-    print "<a href=\"jahreswertung.shtml?wereihe=$wereihe$spalten\">Jahreswertung</a><br>\n";
-    print "</p>\n";
     print "\n";
 } else {
     doc_h2 "Wertungsreihe nicht gefunden.";
