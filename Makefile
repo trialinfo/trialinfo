@@ -13,6 +13,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/jquery.min.js \
 	htdocs/js/raphael.js \
 	htdocs/js/raphael-min.js \
+	htdocs/js/jquery.transform2d.js \
 
 COMMON_FILES = \
 	$(UPPER_COMMON_FILES) \
@@ -63,6 +64,8 @@ WEB_FILES = \
 
 all:
 
+download: $(DOWNLOAD_FILES)
+
 htdocs/js/jquery.js htdocs/js/jquery.min.js:
 	@mkdir -p $(dir $@)
 	$(CURL) -o $@ --fail --silent --location http://code.jquery.com/$(notdir $@)
@@ -71,6 +74,11 @@ htdocs/js/raphael.js htdocs/js/raphael-min.js:
 	@mkdir -p $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		http://github.com/DmitryBaranovskiy/raphael/raw/master/$(notdir $@)
+
+htdocs/js/jquery.transform2d.js:
+	@mkdir -p $(dir $@)
+	 $(CURL) -o $@ --fail --silent --location \
+		http://github.com/louisremi/jquery.transform.js/raw/master/$(notdir $@)
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \
