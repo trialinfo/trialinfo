@@ -69,9 +69,9 @@ my $cfg_format = [
     "wertungspunkte:S<:20",		# 1684: Wertungspunkte für Rang 1 - 20
     "sektionen:A15:15",			# 1724: Gefahrene Sektionen pro Klasse
     "wertungspunkte_markiert:S<",	# 1949: Feld "Wertungspunkte" markiert?
-    "versicherung:S<",			# 1951: Versicherungsart (0 = Keine, 1 = ADAC-Versicherung,
-					#       2 = DMV-Versicherung, 3 = KFZ-Versicherung,
-					#       4 = Tagesversicherung)
+    "versicherung:S<",			# 1951: Versicherungsart-Vorwahl (0 = Keine,
+					#	1 = ADAC-Versicherung, 2 = DMV-Versicherung,
+					#	3 = KFZ-Versicherung, 4 = Tagesversicherung)
     ":a10",				# 1953: ?
     "ergebnislistenbreite:S<",		# 1963: Ergebnislistenbreite (7, 8, 9, 10, 12)
     ":a8",				# 1965: ?
