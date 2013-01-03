@@ -220,6 +220,11 @@ sub cfg_datei_parsen($) {
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
     $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
 
+    for (my $n = @{$cfg->{wertungspunkte}}; $n > 0; $n--) {
+	pop @{$cfg->{wertungspunkte}}
+	    if $cfg->{wertungspunkte}[$n] == $cfg->{wertungspunkte}[$n - 1];
+    }
+
     $cfg->{nennungsmaske_felder} = [ @$nennungsmaske_felder ];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
 	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder1->[$n]
@@ -246,6 +251,10 @@ sub cfg_datei_schreiben($$) {
     encode_strings($cfg, $cfg_format);
 
     my $felder = { map { $_ => 1 } @{$cfg->{nennungsmaske_felder}} };
+
+    for (my $n = @{$cfg->{wertungspunkte}}; $n < 20; $n++) {
+	$cfg->{wertungspunkte}[$n] = $cfg->{wertungspunkte}[$n - 1];
+    }
 
     $cfg->{nennungsmaske_felder1} = [];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {

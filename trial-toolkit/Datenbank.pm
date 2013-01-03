@@ -99,6 +99,8 @@ sub cfg_aus_datenbank($$) {
     while (my @row = $sth->fetchrow_array) {
 	$cfg->{wertungspunkte}[$row[0] - 1] = $row[1];
     }
+    push @{$cfg->{wertungspunkte}}, 0
+	unless @{$cfg->{wertungspunkte}};
 
     $sth = $dbh->prepare(q{
 	SELECT feld

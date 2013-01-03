@@ -366,9 +366,16 @@ sub in_datenbank_schreiben($$$$$$$$$) {
 	INSERT INTO wertungspunkte (id, rang, punkte)
 	VALUES (?, ?, ?)
     });
-    for (my $n = 0; $n < @{$cfg->{wertungspunkte}}; $n++) {
-	next unless $cfg->{wertungspunkte}[$n] != 0;
-	$sth->execute($id, $n + 1, $cfg->{wertungspunkte}[$n]);
+    {
+	# Gleiche Werte am Ende der Tabelle zusammenfassen: der letzte Wert
+	# gilt für alle weiteren Plätze.
+	my $n;
+	for ($n = @{$cfg->{wertungspunkte}} - 1; $n > 0; $n--) {
+	    last if $cfg->{wertungspunkte}[$n] != $cfg->{wertungspunkte}[$n - 1];
+	}
+	for (; $n >= 0; $n--) {
+	    $sth->execute($id, $n + 1, $cfg->{wertungspunkte}[$n]);
+	}
     }
     $sth = $dbh->prepare(qq{
 	INSERT INTO sektion (id, klasse, sektion)
