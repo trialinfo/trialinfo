@@ -35,6 +35,13 @@ LOCAL_FILES = \
 	./trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
 	./trial-toolkit/Trialtool.pm \
+	Windows/jahreswertung-osk.bat \
+	Windows/jahreswertung-otsv.bat \
+	Windows/loeschen.bat \
+	Windows/sync-jetzt.bat \
+	Windows/sync-laufend.bat \
+	Windows/tageswertung.bat \
+	./trial-toolkit/TrialToolkit.pm.txt \
 
 WEB_FILES = \
 	$(UPPER_WEB_FILES) \
@@ -79,10 +86,10 @@ dist: $(COMMON_FILES) $(LOCAL_FILES)
 	mkdir $(NAME)-$(VERSION); \
 	for file in $^; do \
 	    original=$$file; \
-	    file=$$(echo "$$original" | sed -e 's:^trial-toolkit/::'); \
+	    file=$$(echo "$$original" | sed -e 's:^trial-toolkit/::' -e 's:Windows/::'); \
 	    mkdir -p "$(NAME)-$(VERSION)/$$(dirname "$$file")"; \
 	    case "$$file" in \
-		*.pl | *.pm | README | Makefile) \
+		*.pl | *.pm | *.pm.txt | README | Makefile) \
 		    recode ../CR-LF < "$$original" > "$(NAME)-$(VERSION)/$$file" ;; \
 		*) \
 		    cat "$$original" > "$(NAME)-$(VERSION)/$$file" ;; \
