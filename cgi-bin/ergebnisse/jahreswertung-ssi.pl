@@ -123,7 +123,8 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
 
     delete $fahrer->{neue_startnummer}
-	if $fahrer->{startnummer} == $fahrer->{neue_startnummer};
+	if defined $fahrer->{neue_startnummer} &&
+	   $fahrer->{startnummer} == $fahrer->{neue_startnummer};
 
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
