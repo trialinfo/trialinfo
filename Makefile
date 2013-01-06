@@ -108,7 +108,7 @@ upload:
 	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='cp -v "$$$$original" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
 
 upload-diff:
-	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='diff -Nu "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$original" || true'
+	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='diff -Nup "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$original" || true'
 
 do-upload: $(COMMON_FILES) $(WEB_FILES)
 	@set -e; \
