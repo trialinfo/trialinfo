@@ -46,11 +46,12 @@ LOCAL_FILES = \
 WEB_FILES = \
 	$(UPPER_WEB_FILES) \
 	$(DOWNLOAD_FILES) \
-	cgi-bin/ergebnisse/index-ssi.pl \
+	cgi-bin/ergebnisse/wereihen-ssi.pl \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
-	cgi-bin/ergebnisse/wertungsreihe-ssi.pl \
+	cgi-bin/ergebnisse/vareihe-ssi.pl \
+	cgi-bin/ergebnisse/wereihe-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/.htaccess \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
@@ -60,7 +61,7 @@ WEB_FILES = \
 	htdocs/ergebnisse/statistik.shtml \
 	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
-	htdocs/ergebnisse/wertungsreihe.shtml \
+	htdocs/ergebnisse/wereihe.shtml \
 	htdocs/.htaccess \
 	htdocs/js/jquery.polartimer.js \
 	htdocs/veranstalter/.htaccess \

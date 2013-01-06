@@ -8,7 +8,7 @@
 </head>
 <body>
 <!--#set var="which" value="$QUERY_STRING" -->
-<!--#include virtual="/cgi-bin/ergebnisse/wertungsreihe-ssi.pl?$which" -->
+<!--#include virtual="/cgi-bin/ergebnisse/wereihe-ssi.pl?$which" -->
 <p>
 <a href="jahreswertung.shtml?<!--#echo var="which" -->">Jahreswertung</a><br>
 </p>

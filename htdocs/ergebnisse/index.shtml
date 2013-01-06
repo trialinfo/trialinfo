@@ -7,10 +7,20 @@
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 </head>
 <body>
-<h1>ÖTSV Veranstaltungsergebnisse</h1>
-<!--#include virtual="/cgi-bin/ergebnisse/index-ssi.pl?vareihe=1" -->
+<h1>ÖTSV Cup + OSK Staatsmeisterschaft 2012</h1>
+
+<h2>Veranstaltungen</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=1&spalte=fahrzeug" -->
+
+<h2>Jahreswertungen</h2>
 <p>
-<a href="statistik.shtml">Punktestatistiken</a>
+<a href="jahreswertung.shtml?wereihe=1&spalte=fahrzeug">ÖTSV Cup 2012</a><br>
+<a href="jahreswertung.shtml?wereihe=2&spalte=fahrzeug">OSK Staatsmeisterschaft 2012</a>
+</p>
+<p>
+
+<h2>Sonstiges</h2>
+<a href="statistik.shtml?vareihe=1">Punktestatistiken</a>
 </p>
 <p>
 © Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;

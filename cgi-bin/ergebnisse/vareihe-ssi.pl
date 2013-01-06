@@ -1,6 +1,6 @@
 #! /usr/bin/perl -w -I../../trial-toolkit
 
-# Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
+# Copyright (C) 2013  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free Software
@@ -32,42 +32,40 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 
 my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
-my $sth;
+my $wertung = $q->param('wertung') // 1;
+
+my @spalten = $q->param('spalte');
+my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
+
+my $url = $q->param('url') // 'tageswertung.shtml';
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
-if (defined $vareihe) {
-    $sth = $dbh->prepare(q{
-	SELECT bezeichnung
-	FROM vareihe
-	WHERE vareihe = ?
+my $sth = $dbh->prepare(q{
+    SELECT bezeichnung
+    FROM vareihe
+    WHERE vareihe = ?
+});
+$sth->execute($vareihe);
+if (my @row = $sth->fetchrow_array) {
+    my ($bezeichnung) = @row;
+    #doc_h1 $bezeichnung;
+    my $sth2 = $dbh->prepare(q{
+	SELECT id, titel
+	FROM vareihe_veranstaltung
+	JOIN wertung USING (id)
+	JOIN veranstaltung USING (id)
+	WHERE vareihe = ? AND wertung = ?
+	ORDER BY datum;
     });
-    $sth->execute($vareihe);
-    if (my @row = $sth->fetchrow_array) {
-	doc_h2 $row[0];
-    } else {
-	doc_p "Veranstaltungsreihe nicht gefunden";
-	exit;
+    $sth2->execute($vareihe, $wertung);
+    print "<p>\n";
+    while (my@row = $sth2->fetchrow_array) {
+	my ($id, $titel) = @row;
+	print "<a href=\"$url?id=$id$spalten\">$titel</a><br>\n";
     }
-    $sth = $dbh->prepare(q{
-	SELECT wereihe, bezeichnung
-	FROM wereihe
-	WHERE vareihe = ?
-	ORDER BY wereihe
-    });
-    $sth->execute($vareihe);
+    print "</p>\n";
+    print "\n";
 } else {
-    $sth = $dbh->prepare(q{
-	SELECT wereihe, bezeichnung
-	FROM wereihe
-	ORDER BY wereihe
-    });
-    $sth->execute;
+    doc_h2 "Veranstaltungsreihe nicht gefunden.";
 }
-
-print "<p>\n";
-while (my @row =  $sth->fetchrow_array) {
-    my ($wereihe, $bezeichnung) = @row;
-    print "<a href=\"wertungsreihe.shtml?wereihe=$wereihe&spalte=fahrzeug\">$bezeichnung</a><br>\n";
-}
-print "</p>\n";

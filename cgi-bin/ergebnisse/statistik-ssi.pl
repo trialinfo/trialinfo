@@ -31,6 +31,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
+my $vareihe = $q->param('vareihe');
 my $id = $q->param('id'); # veranstaltung
 my $nach_sektionen = defined $q->param('nach_sektionen');
 my $verteilung = 1;
@@ -96,15 +97,27 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 unless (defined $id) {
-    doc_h2 "Punktestatistiken";
-    $sth = $dbh->prepare(q{
-	SELECT id, titel
-	FROM veranstaltung
-	JOIN wertung USING (id)
-	WHERE wertung = ?
-	ORDER BY datum
-    });
-    $sth->execute($wertung);
+    #doc_h2 "Punktestatistiken";
+    if ($vareihe) {
+	$sth = $dbh->prepare(q{
+	    SELECT id, titel
+	    FROM vareihe_veranstaltung
+	    JOIN veranstaltung USING (id)
+	    JOIN wertung USING (id)
+	    WHERE vareihe = ? AND wertung = ?
+	    ORDER BY datum
+	});
+	$sth->execute($vareihe, $wertung);
+    } else {
+	$sth = $dbh->prepare(q{
+	    SELECT id, titel
+	    FROM veranstaltung
+	    JOIN wertung USING (id)
+	    WHERE wertung = ?
+	    ORDER BY datum
+	});
+	$sth->execute($wertung);
+    }
     print "<p>\n";
     while (my @row = $sth->fetchrow_array) {
 	my ($id, $titel) = @row;
