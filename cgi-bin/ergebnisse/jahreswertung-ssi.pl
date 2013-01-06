@@ -52,13 +52,13 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT vareihe, bezeichnung, laeufe, streichresultate
+    SELECT vareihe, bezeichnung
     FROM wereihe
     WHERE wereihe = ?
 });
 $sth->execute($wereihe);
 if (my @row =  $sth->fetchrow_array) {
-    ($vareihe, $bezeichnung, $laeufe, $streichresultate) = @row;
+    ($vareihe, $bezeichnung) = @row;
 } else {
     doc_h2 "Wertungsreihe nicht gefunden.\n";
     exit;
@@ -147,7 +147,7 @@ $veranstaltungen = [ map { [ $_->{cfg}, $_->{fahrer} ] }
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, bezeichnung, farbe
+    SELECT klasse, bezeichnung, farbe, laeufe, streichresultate
     FROM klasse
     JOIN wereihe_klasse USING (klasse)
     WHERE wereihe = ? AND id = ?
@@ -157,6 +157,8 @@ while (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{klassen}[$row[0] - 1] = $row[1];
     $klassenfarben->{$row[0]} = $row[2]
 	if defined $row[2];
+    $laeufe->{$row[0]} = $row[3];
+    $streichresultate->{$row[0]} = $row[4];
 }
 
 $sth = $dbh->prepare(q{

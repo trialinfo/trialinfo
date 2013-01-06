@@ -528,8 +528,13 @@ sub tageswertung(@) {
     }
 }
 
-sub streichen($$$) {
-    my ($laeufe_bisher, $laeufe_gesamt, $streichresultate) = @_;
+sub streichen($$$$) {
+    my ($klasse, $laeufe_bisher, $laeufe_gesamt, $streichresultate) = @_;
+
+    $laeufe_gesamt = $laeufe_gesamt->{$klasse}
+	if ref($laeufe_gesamt) eq 'HASH';
+    $streichresultate = $streichresultate->{$klasse}
+	if ref($streichresultate) eq 'HASH';
 
     $laeufe_gesamt = max($laeufe_bisher, $laeufe_gesamt);
     return $laeufe_bisher - max(0, $laeufe_gesamt - $streichresultate);
@@ -611,7 +616,8 @@ sub jahreswertung_berechnen($$$) {
 	    my $n = 0;
 	    if (defined $streichresultate) {
 		my $laeufe_bisher = @$wertungspunkte;
-		my $streichen = streichen($laeufe_bisher, $laeufe_gesamt, $streichresultate);
+		my $streichen = streichen($klasse, $laeufe_bisher, $laeufe_gesamt,
+					  $streichresultate);
 		if ($streichen > 0) {
 		    $fahrer->{streichpunkte} = 0;
 		    $wertungspunkte = [ sort { $a <=> $b }
@@ -652,16 +658,23 @@ sub jahreswertung_anzeige_cmp($$) {
 sub jahreswertung_zusammenfassung($$$$) {
     my ($klasse, $laeufe_bisher, $laeufe_gesamt, $streichresultate) = @_;
 
+    my $klasse_laeufe_gesamt = ref($laeufe_gesamt) eq 'HASH' ?
+	$laeufe_gesamt->{$klasse} : $laeufe_gesamt;
+    my $klasse_streichresultate = ref($streichresultate) eq 'HASH' ?
+	$streichresultate->{$klasse} : $streichresultate;
+
     my @l;
-    if (defined $laeufe_bisher && defined $laeufe_gesamt) {
-	push @l, "Stand nach $laeufe_bisher von $laeufe_gesamt " .
-		 ($laeufe_gesamt == 1 ? "Lauf" : "Läufen");
+    if (defined $laeufe_bisher && defined $klasse_laeufe_gesamt) {
+	push @l, "Stand nach $laeufe_bisher von $klasse_laeufe_gesamt " .
+		 ($klasse_laeufe_gesamt == 1 ? "Lauf" : "Läufen");
     }
-    if (defined $streichresultate) {
-	my $streichen = streichen($laeufe_bisher, $laeufe_gesamt, $streichresultate);
+    if (defined $klasse_streichresultate) {
+	my $streichen = streichen($klasse, $laeufe_bisher, $laeufe_gesamt,
+				  $streichresultate);
 	if ($streichen > 0) {
-	    push @l, "$streichen von $streichresultate " .
-		     ($streichresultate == 1 ? "Streichresultat" : "Streichresultaten") .
+	    push @l, "$streichen von $klasse_streichresultate " .
+		     ($klasse_streichresultate == 1 ?
+		      "Streichresultat" : "Streichresultaten") .
 		     " berücksichtigt";
 	}
     }
@@ -752,17 +765,22 @@ sub jahreswertung(@) {
 	    if $cfg->{punkteteilung};
     }
 
-    my $gemeinsame_zusammenfassung;
-    my $laeufe_bisher;
+    my $zusammenfassung;
     foreach my $klasse (keys %$laeufe_pro_klasse) {
-	if (defined $laeufe_bisher) {
-	    if ($laeufe_bisher != $laeufe_pro_klasse->{$klasse}) {
+	$zusammenfassung->{$klasse} = jahreswertung_zusammenfassung(
+		$klasse, $laeufe_pro_klasse->{$klasse},
+		$args{laeufe_gesamt}, $args{streichresultate});
+    }
+
+    my $gemeinsame_zusammenfassung;
+    foreach my $klasse (keys %$zusammenfassung) {
+	if (defined $gemeinsame_zusammenfassung) {
+	    if ($gemeinsame_zusammenfassung ne $zusammenfassung->{$klasse}) {
 		$gemeinsame_zusammenfassung = undef;
 		last;
 	    }
 	} else {
-	    $laeufe_bisher = $laeufe_pro_klasse->{$klasse};
-	    $gemeinsame_zusammenfassung = 1;
+	    $gemeinsame_zusammenfassung = $zusammenfassung->{$klasse};
 	}
     }
 
@@ -806,9 +824,8 @@ sub jahreswertung(@) {
 	$namenlaenge = max($n, $namenlaenge);
     }
 
-    doc_p jahreswertung_zusammenfassung(undef, $laeufe_bisher,
-					$args{laeufe_gesamt}, $args{streichresultate})
-	if $gemeinsame_zusammenfassung;
+    doc_p $gemeinsame_zusammenfassung
+	if defined $gemeinsame_zusammenfassung;
 
     foreach my $klasse (sort {$a <=> $b} keys %$jahreswertung) {
 	my $klassenwertung = $jahreswertung->{$klasse};
@@ -819,7 +836,7 @@ sub jahreswertung(@) {
 	my $hat_streichpunkte;
 	if (defined $args{streichresultate}) {
 	    my $laeufe_bisher = $laeufe_pro_klasse->{$klasse};
-	    my $streichen = streichen($laeufe_bisher, $args{laeufe_gesamt},
+	    my $streichen = streichen($klasse, $laeufe_bisher, $args{laeufe_gesamt},
 				      $args{streichresultate});
 	    $hat_streichpunkte = $streichen > 0;
 	    #foreach my $fahrer (@$fahrer_in_klasse) {
@@ -834,10 +851,8 @@ sub jahreswertung(@) {
 
 	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
 
-	doc_p jahreswertung_zusammenfassung($klasse,
-		$laeufe_pro_klasse->{$klasse}, $args{laeufe_gesamt},
-		$args{streichresultate})
-	    unless $gemeinsame_zusammenfassung;
+	doc_p $zusammenfassung->{$klasse}
+	    unless defined $gemeinsame_zusammenfassung;
 
 	my ($header, $body, $format);
 	my $farbe = "";
