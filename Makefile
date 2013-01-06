@@ -62,6 +62,7 @@ WEB_FILES = \
 	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
 	htdocs/ergebnisse/wereihe.shtml \
+	htdocs/ergebnisse/vareihe.shtml \
 	htdocs/.htaccess \
 	htdocs/js/jquery.polartimer.js \
 	htdocs/veranstalter/.htaccess \
