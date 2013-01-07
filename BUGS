@@ -2,12 +2,5 @@ Tageswertung:
 * Das Bewerber-Feld wird momentan nie ausgegeben.
 
 Jahreswertung:
-* In der Online-Version die Veranstaltungen nach Datum statt nach ID sortieren.
-* Die Anzahl der Läufe und Streichresultate ist momentan eine Eigenschaft der
-  Wertungsreihen.  Wenn unterschiedliche Klassen in der selben Wertungsreihe
-  unterschiedlich viele Läufe oder Streichresultate haben, passt das nicht
-  mehr.
 * Es gibt keinen Mechanismus ähnlich Stechen, um bei Punktegleichheit
   die Reihung festzulegen.
-* Die Reihung in der Jahreswertung bei Punktegleichheit (und die Einfärbung)
-  ist nicht dokumentiert.

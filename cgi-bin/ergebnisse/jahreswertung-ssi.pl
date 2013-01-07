@@ -64,6 +64,8 @@ if (my @row =  $sth->fetchrow_array) {
     exit;
 }
 
+my $veranstaltungen_reihenfolge = [];
+
 $sth = $dbh->prepare(q{
     SELECT id, datum, wertung, titel, subtitel, dat_mtime, cfg_mtime, punkteteilung
     FROM wertung
@@ -71,6 +73,7 @@ $sth = $dbh->prepare(q{
     JOIN wereihe USING (vareihe, wertung)
     JOIN veranstaltung USING (id)
     WHERE aktiv AND wereihe = ?
+    ORDER BY datum
 });
 $sth->execute($wereihe);
 my $veranstaltungen;
@@ -93,6 +96,7 @@ while (my @row = $sth->fetchrow_array) {
     $zeit = max_time($zeit, $row[5]);
     $zeit = max_time($zeit, $row[6]);
     $cfg->{punkteteilung} = $row[7];
+    push @$veranstaltungen_reihenfolge, $row[0];
 }
 
 $sth = $dbh->prepare(q{
@@ -141,10 +145,9 @@ unless (%$veranstaltungen) {
     exit;
 }
 
-# FIXME: nach Datum sortieren!
-$veranstaltungen = [ map { [ $_->{cfg}, $_->{fahrer} ] }
-			 sort { $a->{cfg}{id} <=> $b->{cfg}{id} }
-			      values %$veranstaltungen ];
+$veranstaltungen = [ map { [ $veranstaltungen->{$_}{cfg},
+			     $veranstaltungen->{$_}{fahrer} ] }
+			 @$veranstaltungen_reihenfolge ];
 
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
