@@ -70,7 +70,7 @@ $sth = $dbh->prepare(q{
     JOIN vareihe_veranstaltung USING (id)
     JOIN wereihe USING (vareihe, wertung)
     JOIN veranstaltung USING (id)
-    WHERE wereihe = ?
+    WHERE aktiv AND wereihe = ?
 });
 $sth->execute($wereihe);
 my $veranstaltungen;
@@ -107,7 +107,8 @@ $sth = $dbh->prepare(q{
     JOIN wereihe USING (vareihe)
     JOIN wereihe_klasse USING (wereihe, klasse)
     LEFT JOIN (SELECT *, 1 AS definiert FROM neue_startnummer) AS neue_startnummer USING (id, startnummer)
-    WHERE wereihe = ?;
+    JOIN veranstaltung USING (id)
+    WHERE aktiv AND wereihe = ?
 });
 $sth->execute($wereihe);
 while (my $fahrer = $sth->fetchrow_hashref) {

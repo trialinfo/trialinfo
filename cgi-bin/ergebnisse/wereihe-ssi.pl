@@ -55,7 +55,7 @@ if (my @row = $sth->fetchrow_array) {
 	JOIN vareihe_veranstaltung USING (vareihe)
 	JOIN wertung USING (id, wertung)
 	JOIN veranstaltung USING (id)
-	WHERE wereihe = ? AND EXISTS (
+	WHERE aktiv AND wereihe = ? AND EXISTS (
 	    SELECT *
 	    FROM klasse
 	    JOIN wereihe_klasse USING (klasse)

@@ -144,6 +144,7 @@ CREATE TABLE veranstaltung (
   dat_mtime TIMESTAMP NULL,
   cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
+  aktiv BOOLEAN,
   vierpunktewertung BOOLEAN,
   wertungsmodus INT,
   punkteteilung BOOLEAN,
@@ -310,10 +311,10 @@ sub in_datenbank_schreiben($$$$$$$$$) {
 	punkteteilung
     );
     $sth = $dbh->prepare(sprintf qq{
-	INSERT INTO veranstaltung (id, datum, dateiname, cfg_mtime, dat_mtime, %s)
-	VALUES (?, ?, ?, ?, ?, %s)
+	INSERT INTO veranstaltung (id, datum, dateiname, aktiv, cfg_mtime, dat_mtime, %s)
+	VALUES (?, ?, ?, ?, ?, ?, %s)
     }, join(", ", @cfg_felder), join(", ", map { "?" } @cfg_felder));
-    $sth->execute($id, $datum, $basename, $cfg_mtime, $dat_mtime,
+    $sth->execute($id, $datum, $basename, $aktiv, $cfg_mtime, $dat_mtime,
 		  (map { $cfg->{$_} } @cfg_felder));
 
     $sth = $dbh->prepare(qq{
@@ -730,6 +731,7 @@ my $delete;
 my $log;
 my $nur_fahrer = 1;
 my $features_list = [];
+my $aktiv = 1;
 my $result = GetOptions("db=s" => \$database,
 			"username=s" => \$username,
 			"password=s" => \$password,
@@ -747,7 +749,8 @@ my $result = GetOptions("db=s" => \$database,
 			"alle-fahrer" => sub () { undef $nur_fahrer; },
 			"delete" => \$delete,
 			"log=s" => \$log,
-			"features=s" => \@$features_list);
+			"features=s" => \@$features_list,
+			"inaktiv" => sub () { undef $aktiv });
 
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
 
@@ -850,6 +853,10 @@ Optionen:
   --feature=-feature,+feature,...
     Feature in der Datenbank ignorieren (-) oder hinzufügen (+).  Momentan sind
     die Features die Namen der Felder, die im Nennformular aktiviert sind.
+
+  --inaktiv
+    Veranstaltung(en) als inaktiv markieren.  Sie scheinen dann nicht in
+    Veranstaltungslisten auf, und sind in Gesamtwertungen nicht enthalten.
 EOF
     exit $result ? 0 : 1;
 }

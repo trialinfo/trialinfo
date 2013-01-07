@@ -104,7 +104,7 @@ unless (defined $id) {
 	    FROM vareihe_veranstaltung
 	    JOIN veranstaltung USING (id)
 	    JOIN wertung USING (id)
-	    WHERE vareihe = ? AND wertung = ?
+	    WHERE aktiv AND vareihe = ? AND wertung = ?
 	    ORDER BY datum
 	});
 	$sth->execute($vareihe, $wertung);
@@ -113,7 +113,7 @@ unless (defined $id) {
 	    SELECT id, titel
 	    FROM veranstaltung
 	    JOIN wertung USING (id)
-	    WHERE wertung = ?
+	    WHERE aktiv AND wertung = ?
 	    ORDER BY datum
 	});
 	$sth->execute($wertung);

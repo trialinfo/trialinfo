@@ -68,7 +68,7 @@ $sth = $dbh->prepare(q{
     FROM veranstaltung
     JOIN wertung USING (id)
     JOIN vareihe_veranstaltung USING (id)
-    WHERE wertung = 1 AND vareihe = ?
+    WHERE aktiv AND wertung = 1 AND vareihe = ?
 });
 $sth->execute($vareihe);
 while (my @row = $sth->fetchrow_array) {
@@ -84,7 +84,8 @@ $sth = $dbh->prepare(q{
     SELECT id, klasse, count(*)
     FROM fahrer
     JOIN vareihe_veranstaltung USING (id)
-    WHERE vareihe = ? AND papierabnahme
+    JOIN veranstaltung USING (id)
+    WHERE aktiv AND vareihe = ? AND papierabnahme
     GROUP BY id, klasse
 });
 $sth->execute($vareihe);
@@ -110,7 +111,8 @@ $sth = $dbh->prepare(q{
     SELECT id, klasse, count(*)
     FROM fahrer
     JOIN vareihe_veranstaltung USING (id)
-    WHERE vareihe = ? AND startnummer < 1000
+    JOIN veranstaltung USING (id)
+    WHERE aktiv AND vareihe = ? AND startnummer < 1000
     GROUP BY id, klasse
 });
 $sth->execute($vareihe);

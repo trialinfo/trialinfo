@@ -55,7 +55,7 @@ if (my @row = $sth->fetchrow_array) {
 	FROM vareihe_veranstaltung
 	JOIN wertung USING (id)
 	JOIN veranstaltung USING (id)
-	WHERE vareihe = ? AND wertung = ?
+	WHERE aktiv AND vareihe = ? AND wertung = ?
 	ORDER BY datum;
     });
     $sth2->execute($vareihe, $wertung);
