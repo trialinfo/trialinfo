@@ -8,7 +8,7 @@
 </head>
 <body>
 <!--#set var="which" value="$QUERY_STRING" -->
-<h2>ÖTSV Motorrad-Wettbewerbe 2012</h2>
+<h2><!--#include virtual="/cgi-bin/ergebnisse/vareihe-bezeichnung.pl?$which" --></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?$which" -->
 <p>
 © Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;

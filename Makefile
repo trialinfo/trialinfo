@@ -50,6 +50,7 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
+	cgi-bin/ergebnisse/vareihe-bezeichnung.pl \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
 	cgi-bin/ergebnisse/wereihe-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
