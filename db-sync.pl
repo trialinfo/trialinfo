@@ -286,9 +286,9 @@ sub veranstaltung_loeschen($$$) {
     }
 }
 
-sub in_datenbank_schreiben($$$$$$$$$) {
+sub in_datenbank_schreiben($$$$$$$$$$) {
     my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
-	$cfg, $vareihe, $features) = @_;
+	$cfg, $vareihe, $aktiv, $features) = @_;
     my $sth;
     my $datum;
 
@@ -1007,7 +1007,8 @@ do {
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer,
-						     $cfg, $vareihe, $features;
+						     $cfg, $vareihe, $aktiv,
+						     $features;
 
 			print "\n";
 			eval {
