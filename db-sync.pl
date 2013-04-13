@@ -49,7 +49,7 @@ DROP TABLE IF EXISTS fahrer;
 CREATE TABLE fahrer (
   id INT, -- veranstaltung
   startnummer INT,
-  klasse INT NOT NULL,
+  klasse INT,
   helfer INT,
   bewerber VARCHAR(40),
   nenngeld VARCHAR(10),
