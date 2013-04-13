@@ -220,7 +220,7 @@ sub cfg_datei_parsen($) {
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
     $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
 
-    for (my $n = @{$cfg->{wertungspunkte}}; $n > 0; $n--) {
+    for (my $n = @{$cfg->{wertungspunkte}} - 1; $n > 0; $n--) {
 	pop @{$cfg->{wertungspunkte}}
 	    if $cfg->{wertungspunkte}[$n] == $cfg->{wertungspunkte}[$n - 1];
     }
