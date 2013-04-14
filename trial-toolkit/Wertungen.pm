@@ -96,7 +96,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $klasse = $fahrer->{klasse};
 	my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion};
 	my $gefahrene_sektionen = 0;
-	if ($klasse >= 1 && $klasse <= 15) {
+	if (defined $klasse) {
 	    runde: for (my $runde = 0; $runde < @$punkte_pro_sektion; $runde++) {
 		my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$runde];
 		for (my $sektion = 0; $sektion < @$punkte_pro_runde; $sektion++) {
@@ -220,7 +220,8 @@ sub fahrer_nach_klassen($) {
 
     foreach my $fahrer (values %$fahrer_nach_startnummern) {
 	my $klasse = $fahrer->{klasse};
-	push @{$fahrer_nach_klassen->{$klasse}}, $fahrer;
+	push @{$fahrer_nach_klassen->{$klasse}}, $fahrer
+	    if defined $klasse;
     }
     return $fahrer_nach_klassen;
 }
