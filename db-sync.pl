@@ -240,7 +240,7 @@ CREATE TABLE wereihe_klasse (
 INSERT INTO vareihe (vareihe, bezeichnung)
 VALUES (1, 'ÖTSV Cup + OSK Staatsmeisterschaft 2012');
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, laeufe, streichresultate, wertung)
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
     VALUES (1, 1, "ÖTSV Cup 2012", 1);
 INSERT INTO wereihe_klasse (wereihe, klasse, laeufe, streichresultate)
     VALUES (1, 1, 15, 4);
@@ -257,7 +257,7 @@ INSERT INTO wereihe_klasse (wereihe, klasse, laeufe, streichresultate)
 INSERT INTO wereihe_klasse (wereihe, klasse, laeufe, streichresultate)
     VALUES (1, 7, 15, 4);
 
-INSERT INTO wereihe (wereihe, vareihe, bezeichnung, laeufe, streichresultate, wertung)
+INSERT INTO wereihe (wereihe, vareihe, bezeichnung, wertung)
     VALUES (2, 1, "OSK Staatsmeisterschaft 2012", 1);
 INSERT INTO wereihe_klasse (wereihe, klasse, laeufe, streichresultate)
     VALUES (2, 11, 8, 2);
