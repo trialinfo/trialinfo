@@ -103,8 +103,8 @@ sub cfg_aus_datenbank($$) {
 	unless @{$cfg->{wertungspunkte}};
 
     $sth = $dbh->prepare(q{
-	SELECT feld
-	FROM nennungsmaske_feld
+	SELECT feature
+	FROM veranstaltung_feature
 	WHERE id = ?
     });
     $sth->execute($id);
