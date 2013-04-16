@@ -240,9 +240,9 @@ sub spaltentitel($) {
     my ($feld) = @_;
 
     my $titel = {
-	"geburtsdatum" => "Geb.datum",
-	"lizenznummer" => "Lizenz",
-        "bundesland" => "Bl.",
+	"geburtsdatum" => [ "Geb.datum", "l1", "title=\"Geburtsdatum\"" ],
+	"lizenznummer" => [ "Lizenz", "l1", "title=\"Lizenznummer\"" ],
+        "bundesland" =>  [ "Bl.", "l1", "title=\"Bundesland\"" ],
     };
     if (exists $titel->{$feld}) {
 	return $titel->{$feld};
