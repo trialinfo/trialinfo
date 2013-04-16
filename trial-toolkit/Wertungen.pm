@@ -242,6 +242,7 @@ sub spaltentitel($) {
     my $titel = {
 	"geburtsdatum" => "Geb.datum",
 	"lizenznummer" => "Lizenz",
+        "bundesland" => "Bl.",
     };
     if (exists $titel->{$feld}) {
 	return $titel->{$feld};

@@ -68,6 +68,7 @@ CREATE TABLE fahrer (
   hubraum VARCHAR(10),
   bemerkung VARCHAR(150),
   land VARCHAR(15),
+  bundesland VARCHAR(20),
   helfer_nummer VARCHAR(8),
   startzeit TIME,
   zielzeit TIME,
@@ -401,9 +402,9 @@ sub in_datenbank_schreiben($$$$$$$$$$) {
     my @dat_felder = qw(
 	startnummer klasse helfer nenngeld bewerber nachname vorname strasse
 	wohnort plz club fahrzeug telefon lizenznummer rahmennummer kennzeichen
-	hubraum bemerkung land helfer_nummer startzeit zielzeit stechen
-	nennungseingang papierabnahme versicherung runden ausfall zusatzpunkte
-	punkte rang geburtsdatum s0 s1 s2 s3 s4
+	hubraum bemerkung land bundesland helfer_nummer startzeit zielzeit
+	stechen nennungseingang papierabnahme versicherung runden ausfall
+	zusatzpunkte punkte rang geburtsdatum s0 s1 s2 s3 s4
     );
     $sth = $dbh->prepare(sprintf qq{
 	INSERT INTO fahrer (id, %s)

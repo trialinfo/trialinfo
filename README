@@ -236,6 +236,15 @@ Beispiele zur Verwendung
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
 
 
+Bundesland
+----------
+
+In der Datenbank gibt es zusätzlich für Fahrer ein Feld für das Bundesland.  Da
+das Trialtool dieses Feld nicht unterstützt, steht stattdessen im
+Bemerkung-Feld der Code *BL:xxx* mit dem entsprechenden Bundesland anstelle von
+xxx.
+
+
 Jahreswertung und Startnummern-Änderungen, Wertungspunkte ignorieren
 --------------------------------------------------------------------
 

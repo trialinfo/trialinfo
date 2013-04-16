@@ -383,6 +383,9 @@ sub dat_datei_parsen($$) {
 	    # ignoriert.
 	    $fahrer->{neue_startnummer} = $1 || undef;
 	}
+	if ($fahrer->{bemerkung} =~ s/\s*\*BU:([^*]*)\*\s*//) {
+	    $fahrer->{bundesland} = $1;
+	}
 	$fahrer_nach_startnummern->{$startnummer} = $fahrer;
     }
 
@@ -431,6 +434,10 @@ sub dat_datei_schreiben($$) {
 	    if (exists $fahrer->{neue_startnummer}) {
 		$fahrer->{bemerkung} .= " *JW:" .
 		    ($fahrer->{neue_startnummer} // '') . "*";
+	    }
+	    if (exists $fahrer->{bundesland}) {
+		$fahrer->{bemerkung} .= " *BL:" .
+		    ($fahrer->{bundesland} // '') . "*";
 	    }
 
 	    my $punkte_pro_sektion;
