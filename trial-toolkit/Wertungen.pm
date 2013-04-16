@@ -429,7 +429,6 @@ sub tageswertung(@) {
 		    my $rb = $b->{punkte_pro_runde};
 
 		    if ($args{cfg}{wertungsmodus} == 1) {
-			$rn = 5 - $runden;
 			for (my $m = 0; $m < $runden; $m++) {
 			    $rn++;
 			    last unless $ra->[$m] == $rb->[$m];
