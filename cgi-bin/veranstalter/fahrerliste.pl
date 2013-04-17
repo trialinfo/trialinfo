@@ -30,23 +30,32 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
-my $gestartet;
+my $gestartet = $q->param('gestartet') || 0;
+
+unless (defined $id) {
+    my $sth = $dbh->prepare(q{
+	SELECT id, titel
+	FROM veranstaltung
+	JOIN wertung USING (id)
+	WHERE wertung = 1
+	ORDER BY datum
+    });
+    $sth->execute;
+    print $q->header(-type=>'text/html', -charset=>'utf-8');
+    print "<h1>Fahrerliste</h1>\n";
+    print "<p>Format CSV, Zeichensatz UTF-8</p>";
+    print "<p>\n";
+    while (my @row = $sth->fetchrow_array) {
+	my ($id, $titel) = @row;
+	print "<a href=\"?id=$id\">$titel</a> " .
+	      "(<a href=\"?id=$id&gestartet=1\">Starter</a>)<br>\n";
+    }
+    print "</p>\n";
+    exit;
+}
 
 print $q->header(-type=>'text/comma-separated-values', -charset=>'utf-8',
 		 -Content_Disposition=>'attachment; filename="fahrerliste.csv"');
-
-if (defined $id) {
-    $gestartet = 1;
-} else {
-    my $sth = $dbh->prepare(q{
-	SELECT id
-	FROM veranstaltung
-	WHERE datum = (SELECT MAX(datum) FROM veranstaltung)
-    });
-    $sth->execute;
-    ($id) = $sth->fetchrow_array;
-    $gestartet = 0;
-}
 
 my $sth = $dbh->prepare(q{
     SELECT startnummer, klasse, vorname, nachname, strasse, plz AS PLZ,
