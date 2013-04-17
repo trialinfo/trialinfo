@@ -35,9 +35,12 @@ my $q = CGI->new;
 my $wereihe = $q->param('wereihe');
 my @klassen = $q->param('klasse');
 
-# Unterstützte Spalten:
-# club fahrzeug lizenznummer geburtsdatum
 my @spalten = $q->param('spalte');
+
+map {
+    /^(club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land)$/
+	or die die "Invalid column name\n";
+} @spalten;
 
 my $bezeichnung;
 my $vareihe;
