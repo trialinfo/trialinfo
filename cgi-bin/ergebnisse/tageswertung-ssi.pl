@@ -40,9 +40,11 @@ my @klassen = $q->param('klasse');
 
 my @spalten =  $q->param('spalte');
 map {
-    /^(club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land)$/
+    /^(club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land|lbl)$/
 	or die die "Invalid column name\n";
 } @spalten;
+
+my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
 my $bezeichnung;
 my $zeit;
@@ -133,7 +135,7 @@ while (my @row = $sth->fetchrow_array) {
 $sth = $dbh->prepare(q{
     SELECT klasse, } . ($wertung == 1 ? "rang" : "wertungsrang AS rang") . ", " . q{
 	   startnummer, nachname, vorname, zusatzpunkte,
-	   } . ( @spalten ? join(", ", @spalten) . ", " : "") . q{
+	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
 	   s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
 	   papierabnahme
     FROM fahrer} . (defined $wereihe ? q{

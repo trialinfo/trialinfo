@@ -243,6 +243,7 @@ sub spaltentitel($) {
 	"geburtsdatum" => [ "Geb.datum", "l1", "title=\"Geburtsdatum\"" ],
 	"lizenznummer" => [ "Lizenz", "l1", "title=\"Lizenznummer\"" ],
         "bundesland" =>  [ "Bl.", "l1", "title=\"Bundesland\"" ],
+	"lbl" => [ "Land", "l1", "title=\"Land / Bundesland\"" ],
     };
     if (exists $titel->{$feld}) {
 	return $titel->{$feld};
@@ -253,6 +254,23 @@ sub spaltentitel($) {
 
 sub spaltenwert($$) {
     my ($spalte, $fahrer) = @_;
+
+    if ($spalte eq 'lbl') {
+	my @text;
+
+	$fahrer->{bundesland} =~ s/ *$//;
+	if (($fahrer->{land} // '') ne '') {
+	    push @text, $fahrer->{land};
+	}
+	if (($fahrer->{bundesland} // '') ne '') {
+	    if ($RenderOutput::html) {
+		push @text, '<em>' . $fahrer->{bundesland} . '</em>';
+	    } else {
+		push @text, '(' . $fahrer->{bundesland} . ')';
+	    }
+	}
+	return join(' / ', @text);
+    }
 
     return $fahrer->{$spalte} // "";
 }

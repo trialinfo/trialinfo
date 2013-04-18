@@ -38,9 +38,11 @@ my @klassen = $q->param('klasse');
 my @spalten = $q->param('spalte');
 
 map {
-    /^(club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land)$/
+    /^(club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land|lbl)$/
 	or die die "Invalid column name\n";
 } @spalten;
+
+my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
 my $bezeichnung;
 my $vareihe;
@@ -107,7 +109,7 @@ $sth = $dbh->prepare(q{
 	   CASE WHEN definiert THEN neue_startnummer ELSE startnummer END as neue_startnummer,
 	   vorname, nachname,
 	   wertungspunkte, wertungsrang
-    } . ( @spalten ? ", " . join(", ", @spalten) : "") . q{
+    } . ( @db_spalten ? ", " . join(", ", @db_spalten) : "") . q{
     FROM fahrer_wertung
     JOIN fahrer USING (id, startnummer)
     JOIN vareihe_veranstaltung USING (id)
