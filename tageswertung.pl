@@ -54,11 +54,7 @@ my $result = GetOptions("wertung=i" => \$wertung,
 			"nicht-nach-relevanz" => sub () { $nach_relevanz = 0 },
 			"punkteteilung" => \$punkteteilung,
 			"keine-punkteteilung" => sub () { undef $punkteteilung },
-
-			"club" => sub { push @$spalten, $_[0] },
-			"fahrzeug" => sub { push @$spalten, $_[0] },
-			"geburtsdatum" => sub { push @$spalten, $_[0] },
-			"lizenznummer" => sub { push @$spalten, $_[0] });
+			"spalte=s@" => \@$spalten);
 unless ($result && @ARGV) {
     print <<EOF;
 VERWENDUNG: $0 [optionen] {datei|verzeichnis} ...
@@ -95,9 +91,9 @@ Optionen:
     bei Punktegleichstand farblich klar zu machen.  Diese Option deaktiviert
     das.  Nur für das HTML-Format relevant.
 
-  --club, --lizenznummer, --fahrzeug, --geburtsdatum
+  --spalte={club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land|lbl}
     Zusätzliche Anzeige einer Spalte für den Club, die Lizenznummer, das
-    Fahrzeug und/oder das Geburtsdatum.
+    Fahrzeug, Geburtsdatum, Bundesland, Land, oder Land und Bundesland.
 
   --punkteteilung, --keine-punkteteilung
     Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
