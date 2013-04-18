@@ -383,7 +383,7 @@ sub dat_datei_parsen($$) {
 	    # ignoriert.
 	    $fahrer->{neue_startnummer} = $1 || undef;
 	}
-	if ($fahrer->{bemerkung} =~ s/\s*\*BU:([^*]*)\*\s*//) {
+	if ($fahrer->{bemerkung} =~ s/\s*\*BL:([^*]*)\*\s*//) {
 	    $fahrer->{bundesland} = $1;
 	}
 	$fahrer_nach_startnummern->{$startnummer} = $fahrer;
