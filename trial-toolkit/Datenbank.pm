@@ -123,9 +123,9 @@ sub fahrer_aus_datenbank($$) {
 	SELECT startnummer, klasse, helfer, nenngeld, bewerber, nachname,
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
-	       bemerkung, land, helfer_nummer, startzeit, zielzeit, stechen,
-	       papierabnahme, versicherung, runden, zusatzpunkte, punkte,
-	       ausfall, nennungseingang
+	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
+	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
+	       punkte, ausfall, nennungseingang
 	FROM fahrer
 	WHERE id = ?
     });
