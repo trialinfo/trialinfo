@@ -405,6 +405,10 @@ sub dat_datei_schreiben($$) {
 	my $startnummer = $n + 1;
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
+	    if (exists $fahrer->{bundesland}) {
+		$fahrer->{bemerkung} .= " *BL:" .
+		    ($fahrer->{bundesland} // '') . "*";
+	    }
 	    encode_strings($fahrer, $dat_format);
 	    $fahrer->{klasse} = 99
 		unless defined $fahrer->{klasse};
@@ -434,10 +438,6 @@ sub dat_datei_schreiben($$) {
 	    if (exists $fahrer->{neue_startnummer}) {
 		$fahrer->{bemerkung} .= " *JW:" .
 		    ($fahrer->{neue_startnummer} // '') . "*";
-	    }
-	    if (exists $fahrer->{bundesland}) {
-		$fahrer->{bemerkung} .= " *BL:" .
-		    ($fahrer->{bundesland} // '') . "*";
 	    }
 
 	    my $punkte_pro_sektion;
