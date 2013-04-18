@@ -251,6 +251,12 @@ sub spaltentitel($) {
     }
 }
 
+sub spaltenwert($$) {
+    my ($spalte, $fahrer) = @_;
+
+    return $fahrer->{$spalte} // "";
+}
+
 sub punkte_pro_sektion($$$) {
     my ($fahrer, $runde, $cfg) = @_;
     my $punkte_pro_sektion;
@@ -461,8 +467,7 @@ sub tageswertung(@) {
 	    push @$row, $fahrer->{startnummer};
 	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
 	    foreach my $spalte (@{$args{spalten}}) {
-		push @$row, defined $fahrer->{$spalte} ?
-			    $fahrer->{$spalte} : "";
+		push @$row, spaltenwert($spalte, $fahrer);
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
 		my $punkte;
@@ -890,8 +895,7 @@ sub jahreswertung(@) {
 			$alle_fahrer->{$startnummer}{nachname} . ", " .
 			$alle_fahrer->{$startnummer}{vorname};
 	    foreach my $spalte (@{$args{spalten}}) {
-		push @$row, defined $fahrer->{$spalte} ?
-			    $fahrer->{$spalte} : "";
+		push @$row, spaltenwert($spalte, $fahrer);
 	    }
 	    for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
 		my $veranstaltung = $args{veranstaltungen}[$n];
