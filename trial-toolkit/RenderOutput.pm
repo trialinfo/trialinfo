@@ -29,14 +29,15 @@ use strict;
 sub render_text_table(@) {
     # header body footer format
     my %args = @_;
-    my $f;
     my $width;
 
     foreach my $row ((defined $args{header} ? $args{header} : (),
 		      @{$args{body}},
 		      defined $args{footer} ? $args{footer} : ())) {
 	for (my $n = 0; $n < @$row; $n++) {
-	    my $w = defined $row->[$n] ? length $row->[$n] : 0;
+	    my $f = defined $row->[$n] ?
+		    (ref $row->[$n] ? $row->[$n][0] : $row->[$n]) : '';
+	    my $w = length $f;
 	    $width->[$n] = defined $width->[$n] ?
 		max($w, $width->[$n]) : $w;
 	}
