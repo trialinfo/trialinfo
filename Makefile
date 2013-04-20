@@ -29,6 +29,13 @@ LOCAL_FILES = \
 	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
 	trial-toolkit/Trialtool.pm \
+	Windows/jahreswertung-osk.bat \
+	Windows/jahreswertung-otsv1.bat \
+	Windows/jahreswertung-otsv2.bat \
+	Windows/loeschen.bat \
+	Windows/sync-jetzt.bat \
+	Windows/sync-laufend.bat \
+	Windows/tageswertung.bat \
 
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \
