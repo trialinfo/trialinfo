@@ -1,0 +1,3 @@
+#! /bin/sh
+
+./db-sync.pl --farben=white,blue,green,red,yellow --vareihe=7 --alle-fahrer "$@"
