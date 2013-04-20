@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>ÖTSV Veranstaltungsergebnisse</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+<link rel="icon" type="image/icon" href="/favicon.ico" />
+</head>
+<body>
+<h1>ÖTSV Cup + OSK Staatsmeisterschaft 2013</h1>
+
+<h2>Veranstaltungen</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=6&spalte=lbl&spalte=fahrzeug" -->
+
+<h2>Jahreswertungen</h2>
+<p>
+<a href="jahreswertung.shtml?wereihe=5&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2013</a><br>
+<a href="jahreswertung.shtml?wereihe=6&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2013</a>
+</p>
+<p>
+
+<h2>Sonstiges</h2>
+<p>
+<a href="statistik.shtml?vareihe=6">Punktestatistiken</a><br>
+<a href="2012.shtml">Ergebnisse 2012</a>
+</p>
+<p>
+© Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+</p>
+</body>
+</html>

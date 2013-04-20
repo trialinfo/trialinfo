@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>ÖTSV Veranstaltungsstatistik</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+<link rel="icon" type="image/icon" href="/favicon.ico" />
+
+<!--
+  Datenerfassung über TrialTool, http://www.ortwinsann.de/trialtool/.
+  Aufbereitung über TrialToolkit, https://github.com/andreas-gruenbacher/trial-toolkit.
+-->
+
+</head>
+<body>
+<h2>Punktestatistiken</h2>
+<!--#set var="which" value="$QUERY_STRING" -->
+<!--#include virtual="/cgi-bin/ergebnisse/statistik-ssi.pl?$which" -->
+<p>
+© Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+</p>
+</body>
+</html>

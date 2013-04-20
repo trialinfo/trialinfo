@@ -50,8 +50,26 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
 	cgi-bin/ergebnisse/wereihe-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
+	cgi-bin/veranstalter/.htaccess \
+	cgi-bin/veranstalter/nenngeld-ssi.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
+	htdocs/apple-touch-icon.png \
+	htdocs/ergebnisse/.htaccess \
+	htdocs/ergebnisse/index.shtml \
+	htdocs/ergebnisse/2012.shtml \
+	htdocs/ergebnisse/jahreswertung.shtml \
+	htdocs/ergebnisse/statistik.shtml \
+	htdocs/ergebnisse/tageswertung.js \
+	htdocs/ergebnisse/tageswertung.shtml \
+	htdocs/ergebnisse/wereihe.shtml \
+	htdocs/ergebnisse/vareihe.shtml \
+	htdocs/.htaccess \
+	htdocs/favicon.ico \
 	htdocs/js/jquery.polartimer.js \
+	htdocs/veranstalter/.htaccess \
+	htdocs/veranstalter/index.shtml \
+	htdocs/veranstalter/nenngeld.shtml \
+	htdocs/veranstalter/starterzahl.shtml \
 
 all:
 
