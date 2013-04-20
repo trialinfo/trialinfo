@@ -736,6 +736,7 @@ my $force;
 my $vareihe;
 my $farben = [];
 my $delete;
+my $delete_id;
 my $log;
 my $nur_fahrer = 1;
 my $features_list = [];
@@ -756,6 +757,7 @@ my $result = GetOptions("db=s" => \$database,
 			"keine-punkteteilung" => sub () { undef $punkteteilung },
 			"alle-fahrer" => sub () { undef $nur_fahrer; },
 			"delete" => \$delete,
+			"delete-id" => \$delete_id,
 			"log=s" => \$log,
 			"features=s" => \@$features_list,
 			"inaktiv" => sub () { undef $aktiv });
@@ -814,6 +816,9 @@ Optionen:
 
   --delete
     Lösche die angegebenen Veranstaltungen aus der Datenbank.
+
+  --delete-id
+    Lösche die Veranstaltungen mit den angegebenen IDs aus der Datenbank.
 
   --alle-fahrer
     Alle Fahrerdaten übertragen, auch von Fahrern, denen keine Startnummern
@@ -969,6 +974,13 @@ do {
 		tabelle_kopieren "veranstaltung", $dbh, $tmp_dbh, undef, 0;
 		tabelle_kopieren "vareihe_veranstaltung", $dbh, $tmp_dbh, undef, 0;
 		$erster_check = 1;
+	    }
+
+	    if ($delete_id) {
+		foreach my $id (@ARGV) {
+		    veranstaltung_loeschen $dbh, $id, 1;
+		}
+		exit;
 	    }
 
 	    while ($erster_check || $neu_uebertragen || $poll_interval) {
