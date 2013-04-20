@@ -1,7 +1,0 @@
-DirectoryIndex index.shtml
-Options Indexes Includes
-
-AuthUserFile /srv/www/4571/www/www2.otsv.at/htdocs/.htpasswd
-AuthName "Protected"
-AuthType Basic
-Require Valid-User

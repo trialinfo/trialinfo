@@ -1,9 +1,6 @@
 NAME = trial-toolkit
 VERSION = 0.16
 
-MOUNTPOINT ?= /mnt/easyserver
-SUBDIR ?= www2.otsv.at
-
 VPATH = trial-toolkit
 
 CURL = curl
@@ -31,16 +28,9 @@ LOCAL_FILES = \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
-	otsv-check.pl \
 	./trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
 	./trial-toolkit/Trialtool.pm \
-	Windows/jahreswertung-osk.bat \
-	Windows/jahreswertung-otsv.bat \
-	Windows/loeschen.bat \
-	Windows/sync-jetzt.bat \
-	Windows/sync-laufend.bat \
-	Windows/tageswertung.bat \
 	./trial-toolkit/TrialToolkit.pm.txt \
 
 WEB_FILES = \
@@ -54,21 +44,8 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
 	cgi-bin/ergebnisse/wereihe-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
-	cgi-bin/veranstalter/.htaccess \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
-	htdocs/ergebnisse/.htaccess \
-	htdocs/ergebnisse/index.shtml \
-	htdocs/ergebnisse/jahreswertung.shtml \
-	htdocs/ergebnisse/statistik.shtml \
-	htdocs/ergebnisse/tageswertung.js \
-	htdocs/ergebnisse/tageswertung.shtml \
-	htdocs/ergebnisse/wereihe.shtml \
-	htdocs/ergebnisse/vareihe.shtml \
-	htdocs/.htaccess \
 	htdocs/js/jquery.polartimer.js \
-	htdocs/veranstalter/.htaccess \
-	htdocs/veranstalter/index.shtml \
-	htdocs/veranstalter/starterzahl.shtml \
 	./trial-toolkit/TrialToolkit.pm.txt \
 
 all:
@@ -105,23 +82,6 @@ dist: $(COMMON_FILES) $(LOCAL_FILES)
 	rm -f $(NAME)-$(VERSION).zip
 	zip -r $(NAME)-$(VERSION).zip $(NAME)-$(VERSION)/
 	rm -rf $(NAME)-$(VERSION)
-
-upload:
-	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='cp -v "$$$$original" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
-
-upload-diff:
-	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='diff -Nup "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$original" || true'
-
-do-upload: $(COMMON_FILES) $(WEB_FILES)
-	@set -e; \
-	for file in $^; do \
-	    original=$$file; \
-	    file=$$(echo "$$original" | sed -e 's:^trial-toolkit/::'); \
-	    if ! test -f "$(MOUNTPOINT)/$(SUBDIR)/$$file" || \
-	       ! cmp -s "$$original" "$(MOUNTPOINT)/$(SUBDIR)/$$file"; then \
-		$(CMD); \
-	    fi; \
-	done
 
 clean:
 	rm -f $(DOWNLOAD)
