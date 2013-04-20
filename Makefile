@@ -1,6 +1,9 @@
 NAME = trial-toolkit
 VERSION = 0.16
 
+MOUNTPOINT ?= /mnt/easyserver
+SUBDIR ?= www2.otsv.at
+
 CURL = curl
 
 DOWNLOAD_FILES = \
@@ -84,6 +87,24 @@ dist: $(COMMON_FILES) $(LOCAL_FILES)
 	rm -f $(NAME)-$(VERSION).zip
 	zip -r $(NAME)-$(VERSION).zip $(NAME)-$(VERSION)/
 	rm -rf $(NAME)-$(VERSION)
+
+mount:
+	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT)
+
+upload:
+	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
+
+upload-diff:
+	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='diff -Nup "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
+
+do-upload: $(COMMON_FILES) $(WEB_FILES)
+	@set -e; \
+	for file in $^; do \
+	    if ! test -f "$(MOUNTPOINT)/$(SUBDIR)/$$file" || \
+	       ! cmp -s "$$file" "$(MOUNTPOINT)/$(SUBDIR)/$$file"; then \
+		$(CMD); \
+	    fi; \
+	done
 
 clean:
 	rm -f $(DOWNLOAD)
