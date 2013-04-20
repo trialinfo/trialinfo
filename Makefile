@@ -1,8 +1,6 @@
 NAME = trial-toolkit
 VERSION = 0.16
 
-VPATH = trial-toolkit
-
 CURL = curl
 
 DOWNLOAD_FILES = \
@@ -12,15 +10,13 @@ DOWNLOAD_FILES = \
 	htdocs/js/raphael-min.js \
 
 COMMON_FILES = \
-	$(UPPER_COMMON_FILES) \
-	./trial-toolkit/Datenbank.pm \
-	./trial-toolkit/RenderOutput.pm \
-	./trial-toolkit/Wertungen.pm \
+	trial-toolkit/Datenbank.pm \
+	trial-toolkit/RenderOutput.pm \
+	trial-toolkit/Wertungen.pm \
 	htdocs/ergebnisse.css \
-	./trial-toolkit/TrialToolkit.pm.txt \
+	trial-toolkit/TrialToolkit.pm.txt \
 
 LOCAL_FILES = \
-	$(UPPER_LOCAL_FILES) \
 	db-sync.pl \
 	db-export.pl \
 	doc/eer-diagramm.mwb \
@@ -29,12 +25,11 @@ LOCAL_FILES = \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
-	./trial-toolkit/Parse/Binary/FixedFormat.pm \
+	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
-	./trial-toolkit/Trialtool.pm \
+	trial-toolkit/Trialtool.pm \
 
 WEB_FILES = \
-	$(UPPER_WEB_FILES) \
 	$(DOWNLOAD_FILES) \
 	cgi-bin/ergebnisse/wereihen-ssi.pl \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
@@ -65,7 +60,7 @@ dist: $(COMMON_FILES) $(LOCAL_FILES)
 	mkdir $(NAME)-$(VERSION); \
 	for file in $^; do \
 	    original=$$file; \
-	    file=$$(echo "$$original" | sed -e 's:^trial-toolkit/::' -e 's:Windows/::'); \
+	    file=$$(echo "$$original" | sed -e 's:Windows/::'); \
 	    mkdir -p "$(NAME)-$(VERSION)/$$(dirname "$$file")"; \
 	    case "$$file" in \
 		*.pl | *.pm | *.pm.txt | README | Makefile) \
