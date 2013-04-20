@@ -61,6 +61,12 @@ sub lizenzfahrer($) {
     return $fahrer->{startnummer} < 100;
 }
 
+sub lizenzklasse($) {
+    my ($klasse) = @_;
+
+    return $klasse == 11 || $klasse == 12 || $klasse == 13;
+}
+
 sub alter($) {
     my ($fahrer) = @_;
 
@@ -337,8 +343,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    !$klassen_adjw->[$fahrer->{klasse} - 1] &&
 	    !$fahrer->{ausfall}) {
 	    my $zusatzinfo = "";
-	    if ($fahrer->{klasse} == 11 || $fahrer->{klasse} == 12 ||
-		$fahrer->{klasse} == 13) {
+	    if (lizenzklasse($fahrer->{klasse})) {
 		$zusatzinfo = " Bei ausländischen Lizenzfahrern ist das korrekt.";
 	    }
 	    print "Warnung: Fahrer $startnummer " .
@@ -357,7 +362,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if (lizenzfahrer($fahrer) && !$fahrer->{startzeit}) {
+	if (lizenzklasse($fahrer->{klasse}) && !$fahrer->{startzeit}) {
 	    print "Fehler: Bei Lizenzfahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} ist keine Startzeit eingetragen.\n";
 	    $fehler++;
