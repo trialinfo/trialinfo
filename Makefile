@@ -17,6 +17,7 @@ COMMON_FILES = \
 	./trial-toolkit/RenderOutput.pm \
 	./trial-toolkit/Wertungen.pm \
 	htdocs/ergebnisse.css \
+	./trial-toolkit/TrialToolkit.pm.txt \
 
 LOCAL_FILES = \
 	$(UPPER_LOCAL_FILES) \
@@ -31,7 +32,6 @@ LOCAL_FILES = \
 	./trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
 	./trial-toolkit/Trialtool.pm \
-	./trial-toolkit/TrialToolkit.pm.txt \
 
 WEB_FILES = \
 	$(UPPER_WEB_FILES) \
@@ -46,7 +46,6 @@ WEB_FILES = \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/js/jquery.polartimer.js \
-	./trial-toolkit/TrialToolkit.pm.txt \
 
 all:
 
