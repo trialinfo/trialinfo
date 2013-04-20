@@ -25,6 +25,7 @@ LOCAL_FILES = \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
+	otsv-check.pl \
 	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
 	trial-toolkit/Trialtool.pm \

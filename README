@@ -186,6 +186,16 @@ Beispiele zur Verwendung
     jahreswertung.pl --html 2012-* > jahreswertung.html
 
 
+ Die ÖTSV-Konventionen in den Daten einer Veranstaltung überprüfen:
+
+    otsv-check.pl "2012-04-22 Steinbach ÖTSV + OSK.cfg"
+
+
+ Die ÖTSV-Konventionen in der aktuellen Veranstaltung überprüfen:
+
+    otsv-check.pl "C:\TrialTool 3.12"
+
+
  In der MySQL-Datenbank "datenbank" die Tabellen für den Import erzeugen
  (Achtung: bestehende Daten gehen ohne Nachfrage verloren!)
 
