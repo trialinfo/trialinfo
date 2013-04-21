@@ -110,10 +110,12 @@ mount:
 	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT)
 
 upload:
-	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
+	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
+	$(MAKE) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
 
 upload-diff:
-	@$(MAKE) -f $(MAKEFILE_LIST) do-upload CMD='diff -Nup "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
+	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
+	$(MAKE) do-upload CMD='diff -Nup "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
 
 do-upload: $(COMMON_FILES) $(WEB_FILES)
 	@set -e; \
