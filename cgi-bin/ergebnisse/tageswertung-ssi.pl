@@ -71,7 +71,7 @@ if (defined $wereihe) {
 } elsif (defined $id) {
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime,
-	       wertungsmodus, vierpunktewertung
+	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE id = ? AND wertung = ?
@@ -250,7 +250,9 @@ tageswertung cfg => $cfg,
 	     $klassenfarben ? (klassenfarben => $klassenfarben) : (),
 	     alle_punkte => $alle_punkte,
 	     nach_relevanz => $nach_relevanz,
-	     @klassen ? (klassen => \@klassen) : ();
+	     @klassen ? (klassen => \@klassen) : (),
+	     statistik_gesamt => !$animiert,
+	     statistik_pro_klasse => $animiert;
 
 print "<p>Letzte Änderung: $zeit</p>\n"
     unless $animiert;

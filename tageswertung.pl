@@ -187,7 +187,9 @@ foreach my $name (trialtool_dateien @ARGV) {
 		 $klassenfarben ? (klassenfarben => $klassenfarben) : (),
 		 alle_punkte => $alle_punkte,
 		 nach_relevanz => $nach_relevanz,
-		 @$klassen ? (klassen => $klassen) : ();
+		 @$klassen ? (klassen => $klassen) : (),
+		 statistik_gesamt => 1,
+		 statistik_pro_klasse => 0;
 
     if ($RenderOutput::html) {
 	print "<p>Letzte Änderung: $zeit</p>\n";

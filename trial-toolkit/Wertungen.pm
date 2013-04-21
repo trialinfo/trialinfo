@@ -317,9 +317,48 @@ sub wertungspunkte($$) {
     return sprintf("%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
 }
 
+sub klassenstatistik($$$) {
+    my ($fahrer_in_klasse, $fahrer_gesamt, $ausfall) = @_;
+
+    foreach my $fahrer (@$fahrer_in_klasse) {
+	if ($fahrer->{papierabnahme}) {
+	    $$fahrer_gesamt++;
+	    $ausfall->{$fahrer->{ausfall}}++;
+	}
+    }
+}
+
+sub fahrerstatistik($$) {
+    my ($fahrer_nach_klassen, $klasse) = @_;
+
+    my $fahrer_gesamt = 0;
+    my $ausfall = {};
+
+    if (defined $klasse) {
+	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
+	klassenstatistik $fahrer_in_klasse, \$fahrer_gesamt, $ausfall;
+   } else {
+	foreach my $klasse (keys %$fahrer_nach_klassen) {
+	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
+	    klassenstatistik $fahrer_in_klasse, \$fahrer_gesamt, $ausfall;
+	}
+    }
+
+    my @details;
+    push @details, (($ausfall->{5} // 0) + ($ausfall->{6} // 0)) .
+		   " nicht gestartet"
+	if $ausfall->{5} || $ausfall->{6};
+    push @details, "$ausfall->{3} ausgefallen"
+	if $ausfall->{3};
+    push @details, "$ausfall->{4} aus der Wertung"
+	if $ausfall->{4};
+    return "$fahrer_gesamt Fahrer" .
+	(@details ? " (" . join(", ", @details) . ")" : "") . ".";
+}
+
 sub tageswertung(@) {
   # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
-  # nach_relevanz klassen
+  # nach_relevanz klassen statistik_pro_klasse statistik_gesamt
     my %args = (
 	klassenfarben => $TrialToolkit::klassenfarben,
 	@_,
@@ -359,6 +398,8 @@ sub tageswertung(@) {
     }
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($args{fahrer_nach_startnummer});
+    doc_p fahrerstatistik($fahrer_nach_klassen, undef)
+	if $args{statistik_gesamt};
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 	my $idx = $klasse - 1;
@@ -543,6 +584,8 @@ sub tageswertung(@) {
 	    push @$body, $row;
 	}
 	doc_table header => $header, body => $body, format => $format;
+	doc_p fahrerstatistik($fahrer_nach_klassen, $klasse)
+	    if $args{statistik_pro_klasse};
 	print "</div>\n"
 	    if $RenderOutput::html;
     }
