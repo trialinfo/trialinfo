@@ -358,7 +358,7 @@ sub fahrerstatistik($$) {
 
 sub tageswertung(@) {
   # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
-  # nach_relevanz klassen
+  # nach_relevanz klassen statistik_pro_klasse statistik_gesamt
     my %args = (
 	klassenfarben => $TrialToolkit::klassenfarben,
 	@_,
@@ -398,7 +398,8 @@ sub tageswertung(@) {
     }
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($args{fahrer_nach_startnummer});
-    doc_p fahrerstatistik($fahrer_nach_klassen, undef);
+    doc_p fahrerstatistik($fahrer_nach_klassen, undef)
+	if $args{statistik_gesamt};
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 	my $idx = $klasse - 1;
@@ -583,7 +584,8 @@ sub tageswertung(@) {
 	    push @$body, $row;
 	}
 	doc_table header => $header, body => $body, format => $format;
-	#doc_p fahrerstatistik($fahrer_nach_klassen, $klasse);
+	doc_p fahrerstatistik($fahrer_nach_klassen, $klasse)
+	    if $args{statistik_pro_klasse};
 	print "</div>\n"
 	    if $RenderOutput::html;
     }
