@@ -40,7 +40,7 @@ my @klassen = $q->param('klasse');
 
 my @spalten =  $q->param('spalte');
 map {
-    /^(club|fahrzeug|lizenznummer|geburtsdatum|bundesland|land|lbl)$/
+    /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
 	or die die "Invalid column name\n";
 } @spalten;
 
