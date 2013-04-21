@@ -18,20 +18,21 @@
 package Datenbank;
 
 use Encode qw(_utf8_on);
+use POSIX qw(mktime);
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8 force_utf8_on);
 
-sub cfg_aus_datenbank($$) {
-    my ($dbh, $id) = @_;
+sub cfg_aus_datenbank($$;$$) {
+    my ($dbh, $id, $cfg_mtime, $dat_mtime) = @_;
     my $cfg;
 
     my $sth = $dbh->prepare(q{
 	SELECT vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
 	       wertungspunkte_234, rand_links, rand_oben,
 	       wertungspunkte_markiert, versicherung, ergebnislistenbreite,
-	       ergebnisliste_feld
+	       ergebnisliste_feld, dat_mtime, cfg_mtime
 	FROM veranstaltung
 	WHERE id = ?
     });
@@ -39,6 +40,16 @@ sub cfg_aus_datenbank($$) {
     unless ($cfg = $sth->fetchrow_hashref) {
 	return undef;
     }
+
+    my $re = '^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$';
+    if (defined $cfg_mtime && $cfg->{cfg_mtime} =~ $re) {
+	$$cfg_mtime = mktime($6, $5, $4, $3, $2 - 1, $1 - 1900);
+    }
+    delete $cfg->{cfg_mtime};
+    if (defined $dat_mtime && $cfg->{dat_mtime} =~ $re) {
+	$$dat_mtime = mktime($6, $5, $4, $3, $2 - 1, $1 - 1900);
+    }
+    delete $cfg->{dat_mtime};
 
     $sth = $dbh->prepare(q{
 	SELECT wertung, titel, subtitel, bezeichnung
