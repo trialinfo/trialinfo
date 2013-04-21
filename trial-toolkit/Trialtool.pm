@@ -405,7 +405,7 @@ sub dat_datei_schreiben($$) {
 	my $startnummer = $n + 1;
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
-	    if (exists $fahrer->{bundesland}) {
+	    if (defined $fahrer->{bundesland}) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";
 	    }
