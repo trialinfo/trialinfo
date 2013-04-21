@@ -353,7 +353,7 @@ sub fahrerstatistik($$) {
     push @details, "$ausfall->{4} aus der Wertung"
 	if $ausfall->{4};
     return "$fahrer_gesamt Fahrer" .
-	(@details ? " (" . join(", ", @details) . ")" : "") . ".";
+	(@details ? " (davon " . join(", ", @details) . ")" : "") . ".";
 }
 
 sub tageswertung(@) {
