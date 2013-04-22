@@ -83,7 +83,7 @@ if ($^O =~ /win/i) {
     @ARGV = map { bsd_glob($_, GLOB_NOCASE) } @ARGV;
 }
 
-sub local_rename($) {
+sub local_rename($$) {
     my ($from, $to) = @_;
 
     return rename(encode(locale_fs => $from),
