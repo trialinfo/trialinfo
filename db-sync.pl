@@ -836,8 +836,8 @@ Optionen:
 
   --vareihe=N,...
     Die angegebenen Veranstaltung(en) in die angegebenen Veranstaltungsreihe(n)
-    eintragen.  Wenn nicht anders angegeben, wird Veranstaltungsreihe 1
-    verwendet.
+    eintragen.  Wenn nicht angegeben, wird Veranstaltung in keine
+    Veranstaltungsreihe eingetragen.
 
   --farben=...,...
     Spurfarben der einzelnen Klassen als HTML Farbname oder Farbcode.
@@ -860,7 +860,7 @@ Optionen:
     (kein Commit).
 
   --temp-db=dateiname
-    Die intern verwendete SQLite-Datenbank in die angegebene Datei schrieben.
+    Die intern verwendete SQLite-Datenbank in die angegebene Datei schreiben.
     Diese Option ist zur Fehlersuche gedacht.
 
   --feature=-feature,+feature,...
