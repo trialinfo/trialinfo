@@ -53,10 +53,10 @@ Installation
 
 Einige der Scripts sind direkt von der Kommandozeile verwendbar. Diese Scripts
 erfordern keine besondere Konfiguration oder Installation; die notwendigen
-Parameter werden auf der Kommandozeile übergeben.
+Parameter können auf der Kommandozeile übergeben werden.
 
 Wenn eine Datenbank verwendet werden soll, sind die nötigen Schritte unter dem
-Punkte Datenbank-Konfiguration beschrieben.
+Punkt Datenbank-Konfiguration beschrieben.
 
 Wenn die CGI-Scripts werwendet werden sollen, sind die nötigen Schritte unter
 Web Server-Konfiguration beschrieben.
@@ -68,18 +68,17 @@ Konfiguration
 Die Scripts lassen sich über die Datei trial-toolkit/TrialToolkit.pm
 konfigurieren.  Die Einstellungen dort betreffen Dinge wir den Datenbankzugang
 (nur benötigt, wenn eine Datenbank eingesetzt wird) und die Spurfarben der
-einzelnen Klassen.  (Viele dieser Einstellungen können auch auf der
-Kommandozeile überschrieben werden.)
+einzelnen Klassen.  Viele dieser Einstellungen können auch auf der
+Kommandozeile überschrieben werden.
 
 Achtung: Diese Datei muss per Hand erzeugt werden, BEVOR DIE SCRIPTS VERWENDET
-WERDEN KÖNNEN.
-
-Eine Vorlage befindet sich in der Datei trial-toolkit/TrialToolkit.pm.txt.
+WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in der Datei
+trial-toolkit/TrialToolkit.pm.txt.
 
 Die Option --create-tables von db-sync.pl erstellt auch eine
 Veranstaltungsreihe und zwei Wertugsreihen mit Zuweisung der Klassen zu den
 Wertungsreihen.  Das ist als Beispiel gedacht, und kann entweder in db-sync.pl
-oder in der Datenbank angepasst werden.
+oder danach in der Datenbank angepasst werden.
 
 
 Datenbank - Konfiguration
@@ -90,10 +89,10 @@ unterstützt.  In den Scripts wird recht einfacher SQL-Code verwendet, sodass
 hoffentlich einige Datenbanken damit umgehen können.  Momentan ist aber nur
 MySQL gestestet.
 
-Es ist zu beachten, dass die Synchronisation in die Datenbank (db-sync)
+Es ist zu beachten, dass die Synchronisation in die Datenbank (db-sync.pl)
 Datenbank-Transaktionen voraussetzt.  Das können fast alle Datenbanken.
 
-Bei MySQL ist aber wichtig, dass eine transaktionsfähige Datenbank-Engine
+Bei MySQL ist wichtig, dass eine transaktionsfähige Datenbank-Engine
 verwendet wird (z.B. InnoDB, nicht MyISAM).  Ist das nicht der Fall, kann es
 bei Ereignissen wie Verbindungsabbruch bei der Datenübertragung zu
 Inkonsistenzen kommen.
@@ -107,14 +106,15 @@ erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen und
 Wertungsreihen definiert werden, siehe dazu die Tabellen vareihe, wereihe, und
 wereihe_klasse:
 
- * Eine Veranstaltungsreihe zeichnet sich dadurch aus, dass es eine oder
-   mehrere Gesamtwertungen über die Veranstaltungen in der Reihe gibt.
+ * Eine Veranstaltungsreihe zeichnet sich dadurch aus, dass es verschiedene
+   Gesamtwertungen über die Veranstaltungen in der Reihe gibt.  Eine
+   Veranstaltung kann Teil einer oder mehrerer Veranstaltungsreihen sein.
 
  * Eine Wertungsreihe ist eine solche Gesamtwertung.  Sie umfasst bestimmte
-   Klassen in den Veranstaltungen einer Veranstaltungsreihe.  Sie hat eine
-   definierte Anzahl an Läufen und Streichresultaten.
+   Klassen in den Veranstaltungen einer Veranstaltungsreihe.
 
-Eine Veranstaltung kann Teil einer oder mehrerer Veranstaltungsreihen sein.
+ * Die Anzahl der Läufe und Streichresultate kann pro Wertungsreihe und Klasse
+   definiert werden.
 
 Das verwendete Datenmodell in der Datenbank ist in der Datei
 doc/eer-diagramm.pdf dargestellt.  Das Diagramm wurde mit MySQL Workbench
