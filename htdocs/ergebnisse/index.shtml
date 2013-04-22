@@ -9,19 +9,15 @@
 <body>
 <h1>ÖTSV Veranstaltungsergebnisse 2013</h1>
 
-<h2>ÖTSV Cup + OSK Staatsmeisterschaft</h2>
+<h2>Veranstaltungen</h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=6&spalte=lbl&spalte=fahrzeug" -->
 
-<h2>Bike Trial Cup</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=7" -->
-
-<h2>Austrian Classic-Trial A-Cup</h2>
-<p>Siehe <a href="http://www.a-trial.info/a-cup/">http://www.a-trial.info/a-cup/</a>.</p>
+<p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
 
 <h2>Jahreswertungen</h2>
 <p>
 <a href="jahreswertung.shtml?wereihe=5&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2013</a><br>
-<a href="jahreswertung.shtml?wereihe=7">Bike Trial Cup 2013</a><br>
+<a href="jahreswertung.shtml?wereihe=7">ÖTSV Bike Trial Cup 2013</a><br>
 <a href="jahreswertung.shtml?wereihe=6&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2013</a>
 </p>
 <p>

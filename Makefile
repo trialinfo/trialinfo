@@ -71,6 +71,8 @@ WEB_FILES = \
 	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
 
+MAKEFLAGS = --no-print-directory
+
 all:
 
 htdocs/js/jquery.js htdocs/js/jquery.min.js:
