@@ -36,6 +36,7 @@ my $wertung = $q->param('wertung') // 1;
 
 my @spalten = $q->param('spalte');
 my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
+my $mit_kuerzel = $q->param('kuerzel');
 
 my $url = $q->param('url') // 'tageswertung.shtml';
 
@@ -51,18 +52,30 @@ if (my @row = $sth->fetchrow_array) {
     my ($bezeichnung) = @row;
     #doc_h1 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
-	SELECT id, titel
+	SELECT id, titel,
+	       GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	FROM vareihe_veranstaltung
 	JOIN wertung USING (id)
 	JOIN veranstaltung USING (id)
+	LEFT JOIN (
+	    SELECT DISTINCT id, wereihe, wereihe.kuerzel
+	    FROM vareihe_veranstaltung
+	    JOIN wereihe USING (vareihe)
+	    JOIN wereihe_klasse USING (wereihe)
+	    JOIN klasse USING (id, klasse)
+	    WHERE klasse.gestartet) AS _ USING (id)
 	WHERE aktiv AND vareihe = ? AND wertung = ?
+	GROUP BY id
 	ORDER BY datum;
     });
     $sth2->execute($vareihe, $wertung);
     print "<p>\n";
     while (my@row = $sth2->fetchrow_array) {
-	my ($id, $titel) = @row;
-	print "<a href=\"$url?id=$id$spalten\">$titel</a><br>\n";
+	my ($id, $titel, $kuerzel) = @row;
+	print "<a href=\"$url?id=$id$spalten\">$titel</a>";
+	print " ($kuerzel)"
+	    if defined $kuerzel && defined $mit_kuerzel;
+	print "<br>\n";
     }
     print "</p>\n";
     print "\n";
