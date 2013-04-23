@@ -32,6 +32,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 
 my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
+my $mit_kuerzel = $q->param('kuerzel');
 my $id = $q->param('id'); # veranstaltung
 my $nach_sektionen = defined $q->param('nach_sektionen');
 my $verteilung = 1;
@@ -100,28 +101,48 @@ unless (defined $id) {
     #doc_h2 "Punktestatistiken";
     if ($vareihe) {
 	$sth = $dbh->prepare(q{
-	    SELECT id, titel
+	    SELECT id, titel,
+		   GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	    FROM vareihe_veranstaltung
 	    JOIN veranstaltung USING (id)
 	    JOIN wertung USING (id)
+	    LEFT JOIN (
+		SELECT DISTINCT id, wereihe, wereihe.kuerzel
+		FROM vareihe_veranstaltung
+		JOIN wereihe USING (vareihe)
+		JOIN wereihe_klasse USING (wereihe)
+		JOIN klasse USING (id, klasse)
+		WHERE klasse.gestartet) AS _ USING (id)
 	    WHERE aktiv AND vareihe = ? AND wertung = ?
+	    GROUP BY id
 	    ORDER BY datum
 	});
 	$sth->execute($vareihe, $wertung);
     } else {
 	$sth = $dbh->prepare(q{
-	    SELECT id, titel
-	    FROM veranstaltung
+	    SELECT id, titel,
+		   GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	    JOIN wertung USING (id)
+	    LEFT JOIN (
+		SELECT DISTINCT id, wereihe, wereihe.kuerzel
+		FROM vareihe_veranstaltung
+		JOIN wereihe USING (vareihe)
+		JOIN wereihe_klasse USING (wereihe)
+		JOIN klasse USING (id, klasse)
+		WHERE klasse.gestartet) AS _ USING (id)
 	    WHERE aktiv AND wertung = ?
+	    GROUP BY id
 	    ORDER BY datum
 	});
 	$sth->execute($wertung);
     }
     print "<p>\n";
     while (my @row = $sth->fetchrow_array) {
-	my ($id, $titel) = @row;
-	print "<a href=\"statistik.shtml?id=$id\">$titel</a><br>\n";
+	my ($id, $titel, $kuerzel) = @row;
+	print "<a href=\"statistik.shtml?id=$id\">$titel</a>";
+	print " ($kuerzel)"
+	    if defined $kuerzel && defined $mit_kuerzel;
+	print "<br>\n";
     }
     print "</p>\n";
     exit;
