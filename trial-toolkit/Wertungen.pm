@@ -84,6 +84,12 @@ sub rang_vergleich($$$) {
     return 0;
 }
 
+sub hat_wertung($$) {
+    my ($cfg, $wertung) = @_;
+
+    grep(/^wertung$wertung$/, @{$cfg->{nennungsmaske_felder}});
+}
+
 sub rang_und_wertungspunkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
     my $wertungspunkte = $cfg->{wertungspunkte};
@@ -140,7 +146,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
     }
 
-    for (my $idx = 0; $idx < @{$cfg->{wertungen}}; $idx++) {
+    for (my $idx = 0; hat_wertung($cfg, $idx + 1); $idx++) {
 	my $wertungspunkte_vergeben =
 	    $idx == 0 || $cfg->{wertungspunkte_234};
 
