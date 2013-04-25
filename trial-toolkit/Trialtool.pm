@@ -303,16 +303,6 @@ sub punkte_aufteilen($) {
 	     [@$punkte[60..74]] ];
 }
 
-sub rundenstatistik_aufteilen($) {
-	my ($r) = @_;
-
-	return [ [@$r[0..5]],
-		 [@$r[6..11]],
-		 [@$r[12..17]],
-		 [@$r[18..23]],
-		 [@$r[24..29]] ];
-}
-
 sub dat_datei_parsen($$) {
     my ($dateiname, $nur_fahrer) = @_;
 
@@ -343,7 +333,7 @@ sub dat_datei_parsen($$) {
 	# ausgelassen hat.
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
-	$fahrer->{r} = rundenstatistik_aufteilen($fahrer->{r});
+	delete $fahrer->{r};
 	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
 	    my $jahr;
 	    if ($3 > 100) {
@@ -440,23 +430,24 @@ sub dat_datei_schreiben($$) {
 		    ($fahrer->{neue_startnummer} // '') . "*";
 	    }
 
-	    my $punkte_pro_sektion;
+	    my $p;
+	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion};
 	    for (my $runde = 0; $runde < 5; $runde++) {
 		for (my $sektion = 0; $sektion < 15; $sektion++) {
-		    $punkte_pro_sektion->[$runde * 15 + $sektion] =
+		    $p->[$runde * 15 + $sektion] =
 			$fahrer->{punkte_pro_sektion}[$runde][$sektion] // 6;
 		}
 	    }
-	    $fahrer->{punkte_pro_sektion} = $punkte_pro_sektion;
+	    $fahrer->{punkte_pro_sektion} = $p;
 
-	    # Rundenstatistik
+
 	    my $r;
 	    for (my $runde = 0; $runde < 5; $runde++) {
-		for (my $punkte = 0; $punkte < 5; $punkte++) {
-		    $r->[$runde * 6 + $punkte] =
-			$fahrer->{r}[$runde][$punkte];
+		for (my $sektion = 0; $sektion < 15; $sektion++) {
+		    my $punkte = $punkte_pro_sektion->[$runde][$sektion];
+		    $r->[$runde * 6 + $punkte]++
+			if defined $punkte && $punkte < 5;
 		}
-		$r->[$runde * 6 + 5] = 0;
 	    }
 	    $fahrer->{r} = $r;
 

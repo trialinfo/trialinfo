@@ -159,8 +159,6 @@ sub fahrer_aus_datenbank($$) {
 	$fahrer_nach_startnummer->{$startnummer}{punkte_pro_runde}
 	    [$row[1] - 1] += $row[3];
 	if ($row[3] < 5) {
-	    $fahrer_nach_startnummer->{$startnummer}{r}
-		[$row[1] - 1][$row[3]]++;
 	    $fahrer_nach_startnummer->{$startnummer}{s}
 		[$row[3]]++;
 	}
