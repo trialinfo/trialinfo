@@ -24,6 +24,43 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8 force_utf8_on);
 
+sub wertungspunkte_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+    my $wertungspunkte;
+
+    $sth = $dbh->prepare(q{
+	SELECT rang, punkte
+	FROM wertungspunkte
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	$wertungspunkte->[$row[0] - 1] = $row[1];
+    }
+    push @$wertungspunkte, 0
+	unless @$wertungspunkte;
+    return $wertungspunkte;
+}
+
+sub sektionen_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+    my $sektionen = [];
+
+    for (my $n = 0; $n < 15; $n++) {
+	push @$sektionen, 'N' x 15;
+    }
+    $sth = $dbh->prepare(q{
+	SELECT klasse, sektion
+	FROM sektion
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	substr($sektionen->[$row[0] - 1], $row[1] - 1, 1) = 'J';
+    }
+    return $sektionen;
+}
+
 sub cfg_aus_datenbank($$;$$) {
     my ($dbh, $id, $cfg_mtime, $dat_mtime) = @_;
     my $cfg;
@@ -32,7 +69,7 @@ sub cfg_aus_datenbank($$;$$) {
 	SELECT vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
 	       wertungspunkte_234, rand_links, rand_oben,
 	       wertungspunkte_markiert, versicherung, ergebnislistenbreite,
-	       ergebnisliste_feld, dat_mtime, cfg_mtime
+	       ergebnisliste_feld, dat_mtime, cfg_mtime, punkteteilung
 	FROM veranstaltung
 	WHERE id = ?
     });
@@ -77,19 +114,7 @@ sub cfg_aus_datenbank($$;$$) {
 	$cfg->{runden}[$n] = $row[3];
     }
 
-    $cfg->{sektionen} = [];
-    for (my $n = 0; $n < 15; $n++) {
-	push @{$cfg->{sektionen}}, 'N' x 15;
-    }
-    $sth = $dbh->prepare(q{
-	SELECT klasse, sektion
-	FROM sektion
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	substr($cfg->{sektionen}[$row[0] - 1], $row[1] - 1, 1) = 'J';
-    }
+    $cfg->{sektionen} = sektionen_aus_datenbank($dbh, $id);
 
     $sth = $dbh->prepare(q{
 	SELECT runde, farbe
@@ -101,17 +126,7 @@ sub cfg_aus_datenbank($$;$$) {
 	$cfg->{kartenfarben}[$row[0] - 1] = $row[1];
     }
 
-    $sth = $dbh->prepare(q{
-	SELECT rang, punkte
-	FROM wertungspunkte
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	$cfg->{wertungspunkte}[$row[0] - 1] = $row[1];
-    }
-    push @{$cfg->{wertungspunkte}}, 0
-	unless @{$cfg->{wertungspunkte}};
+    $cfg->{wertungspunkte} = wertungspunkte_aus_datenbank($dbh, $id);
 
     $sth = $dbh->prepare(q{
 	SELECT feature
@@ -123,7 +138,61 @@ sub cfg_aus_datenbank($$;$$) {
     while (my @row = $sth->fetchrow_array) {
 	push @{$cfg->{nennungsmaske_felder}}, $row[0];
     }
+
     return $cfg;
+}
+
+sub wertungen_aus_datenbank($$$) {
+    my ($dbh, $id, $fahrer_nach_startnummer) = @_;
+
+    $sth = $dbh->prepare(q{
+	SELECT startnummer, wertung, wertungsrang, wertungspunkte
+	FROM fahrer_wertung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	my $startnummer = $row[0];
+	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
+	$$fahrer->{startnummer} = $startnummer;
+	$$fahrer->{wertungen}[$row[1] - 1] = 1;
+	$$fahrer->{wertungsrang}[$row[1] - 1] = $row[2];
+	$$fahrer->{wertungspunkte}[$row[1] - 1] = $row[3];
+    }
+}
+
+sub punkte_aus_datenbank($$$) {
+    my ($dbh, $id, $fahrer_nach_startnummer) = @_;
+
+    $sth = $dbh->prepare(q{
+	SELECT startnummer, runde, sektion, punkte
+	FROM punkte
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	my $startnummer = $row[0];
+	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
+	$$fahrer->{startnummer} = $startnummer;
+	$$fahrer->{punkte_pro_sektion}[$row[1] - 1][$row[2] - 1] = $row[3];
+    }
+}
+
+sub runden_aus_datenbank($$$) {
+    my ($dbh, $id, $fahrer_nach_startnummer) = @_;
+
+    $sth = $dbh->prepare(q{
+	SELECT startnummer, runde, punkte
+	FROM runde
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	my $startnummer = $row[0];
+	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
+	$$fahrer->{startnummer} = $startnummer;
+	$$fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
+    }
 }
 
 sub fahrer_aus_datenbank($$) {
@@ -136,45 +205,26 @@ sub fahrer_aus_datenbank($$) {
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
 	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
-	       punkte, ausfall, nennungseingang
+	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, rang
 	FROM fahrer
 	WHERE id = ?
     });
     $sth->execute($id);
     while (my $fahrer = $sth->fetchrow_hashref) {
+	my $s;
+	for (my $n = 0; $n < 5; $n++) {
+	    push @$s, $fahrer->{"s$n"};
+	    delete $fahrer->{"s$n"};
+	}
+	$fahrer->{s} = $s;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
     }
 
-    $sth = $dbh->prepare(q{
-	SELECT startnummer, runde, sektion, punkte
-	FROM punkte
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	my $startnummer = $row[0];
-	$fahrer_nach_startnummer->{$startnummer}{punkte_pro_sektion}
-	    [$row[1] - 1][$row[2] - 1] = $row[3];
-	$fahrer_nach_startnummer->{$startnummer}{punkte_pro_runde}
-	    [$row[1] - 1] += $row[3];
-	if ($row[3] < 5) {
-	    $fahrer_nach_startnummer->{$startnummer}{s}
-		[$row[3]]++;
-	}
-    }
+    punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
 
-    $sth = $dbh->prepare(q{
-	SELECT startnummer, wertung
-	FROM fahrer_wertung
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	my $startnummer = $row[0];
-	$fahrer_nach_startnummer->{$startnummer}{wertungen}
-	    [$row[1] - 1] = 1;
-    }
     return $fahrer_nach_startnummer;
 }
 
