@@ -41,7 +41,9 @@ sub rang_vergleich($$$) {
 	    if ($a->{ausfall} == 4) != ($b->{ausfall} == 4);
     }
 
-    # Abfallend nach gefahrenen Sektionen
+    # Abfallend nach gefahrenen Sektionen: dadurch werden die Fahrer auf dann
+    # richtig gereiht, wenn die Punkte sektionsweise statt rundenweise
+    # eingegeben werden.
     return $b->{gefahrene_sektionen} <=> $a->{gefahrene_sektionen}
 	if $a->{gefahrene_sektionen} != $b->{gefahrene_sektionen};
 
@@ -61,8 +63,8 @@ sub rang_vergleich($$$) {
 
     # Aufsteigend nach der besten Runde?
     if ($cfg->{wertungsmodus} != 0) {
-	my $ax = $a->{punkte_pro_runde};
-	my $bx = $b->{punkte_pro_runde};
+	my $ax = $a->{punkte_pro_runde} // [];
+	my $bx = $b->{punkte_pro_runde} // [];
 	if ($cfg->{wertungsmodus} == 1) {
 	    for (my $n = 0; $n < @$ax; $n++) {
 		last unless defined $ax->[$n];
@@ -95,41 +97,46 @@ sub punkte_berechnen($$) {
 
     # Trialtool summiert die Punkte pro Runden auch dann auf, wenn eine Runde
     # nicht vollständig gefahren wurde, oder eine Sektion nicht eingegeben
-    # wurde.  Wir setzen die Punkte pro Runde auf undef.
+    # wurde.  Wir setzen die Punkte pro Runde auf undef, dann sieht man in der
+    # Datenbank wann eine Runde nicht vollständig gefahren wurde, ohne auf die
+    # einzelnen Punkte in den Sektionen schauen zu müssen.
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
-	my $punkte_pro_runde = [];
-	my $punkte = 0;
-	my $s = [(0) x 6];  # 0er, 1er, 2er, 3er, 4er, 5er
-	my $gefahrene_sektionen = 0;
-	my $runde = 0;
+	my $punkte_pro_runde;
+	my $gesamtpunkte;
+	my $s;  # 0er, 1er, 2er, 3er, 4er, 5er
+	my $gefahrene_sektionen;
+	my $runde;
 
-	if (defined $fahrer->{klasse}) {
+	if (defined $fahrer->{klasse} && $fahrer->{papierabnahme}) {
+	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
+	    $gesamtpunkte = 0;
+	    $s = [(0) x 6];
+	    $gefahrene_sektionen = 0;
+	    $runde = 0;
+
 	    my $sektionen = $cfg->{sektionen}[$fahrer->{klasse} - 1] // '';
 
-	    runde: for (; $runde < @$punkte_pro_sektion; $runde++) {
+	    runde: for ($runde = 0; $runde < @$punkte_pro_sektion; $runde++) {
 		my $punkte = $punkte_pro_sektion->[$runde] // [];
 		for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
 		    if (substr($sektionen, $sektion, 1) eq "J") {
 			last runde unless defined $punkte->[$sektion];
 			$gefahrene_sektionen++;
+			my $p = $punkte->[$sektion];
+			$gesamtpunkte += $p;
+			$s->[$p]++;
 		    }
 		}
 		for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
 		    if (substr($sektionen, $sektion, 1) eq "J") {
-			my $p = $punkte->[$sektion];
-			$punkte_pro_runde->[$runde] += $p;
-			$s->[$p]++;
+			$punkte_pro_runde->[$runde] += $punkte->[$sektion];
 		    }
 		}
 	    }
-	    foreach my $p (@$punkte_pro_runde) {
-		$punkte += $p // 0;
-	    }
 	}
 
-	$fahrer->{punkte} = $punkte;
+	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;
 	$fahrer->{s} = $s;
 	$fahrer->{runden} = $runde;
