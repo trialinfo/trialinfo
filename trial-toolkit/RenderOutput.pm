@@ -35,11 +35,9 @@ sub render_text_table(@) {
 		      @{$args{body}},
 		      defined $args{footer} ? $args{footer} : ())) {
 	for (my $n = 0; $n < @$row; $n++) {
-	    my $f = defined $row->[$n] ?
-		    (ref $row->[$n] ? $row->[$n][0] : $row->[$n]) : '';
+	    my $f = (ref $row->[$n] ? $row->[$n][0] : $row->[$n]) // "";
 	    my $w = length $f;
-	    $width->[$n] = defined $width->[$n] ?
-		max($w, $width->[$n]) : $w;
+	    $width->[$n] = max($w, $width->[$n] // 0);
 	}
     }
 
@@ -61,9 +59,7 @@ sub render_text_table(@) {
 	    printf " %*s", $width->[0], $row->[0];
 	}
 	for (my $n = 1; $n < @$row; $n++) {
-	    my $x = ref $row->[$n] ? $row->[$n][0] : $row->[$n];
-	    $x = ""
-		unless defined $x;
+	    my $x = (ref $row->[$n] ? $row->[$n][0] : $row->[$n]) // "";
 	    printf "  %*s", $width->[$n], $x;
 	}
 	print "\n";
@@ -132,9 +128,7 @@ sub render_html_table(@) {
 	if (@$row) {
 	    print "<tr" . ( $r++ % 2 ? ' class="alt"' : '') . ">";
 	    for (my $n = 0; $n < @$row; $n++) {
-		my $x = ref $row->[$n] ? $row->[$n][0] : $row->[$n];
-		$x = ""
-		    unless defined $x;
+		my $x = (ref $row->[$n] ? $row->[$n][0] : $row->[$n]) // "";
 		if (ref $row->[$n]) {
 		    print "<td " . html_cell_format(@{$row->[$n]}) . ">" .
 			  $x . "</td>";
