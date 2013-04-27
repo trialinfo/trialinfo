@@ -736,6 +736,7 @@ my $reconnect_interval;  # Sekunden
 my $force;
 my $vareihe;
 my $farben = [];
+my $list;
 my $delete;
 my $delete_id;
 my $log;
@@ -757,6 +758,7 @@ my $result = GetOptions("db=s" => \$database,
 			"punkteteilung" => \$punkteteilung,
 			"keine-punkteteilung" => sub () { undef $punkteteilung },
 			"alle-fahrer" => sub () { undef $nur_fahrer; },
+			"list" => \$list,
 			"delete" => \$delete,
 			"delete-id" => \$delete_id,
 			"log=s" => \$log,
@@ -789,7 +791,7 @@ if ($^O =~ /win/i) {
 
 decode_argv;
 
-unless ($result && $database && ($create_tables || @ARGV)) {
+unless ($result && $database && ($create_tables || $list || @ARGV)) {
     print <<EOF;
 VERWENDUNG: $0 [optionen] {datei|verzeichnis} ...
 
@@ -817,6 +819,9 @@ Optionen:
 
   --delete
     Lösche die angegebenen Veranstaltungen aus der Datenbank.
+
+  --list
+    Liste der Veranstaltungen in der Datenbank anzeigen.
 
   --delete-id
     Lösche die Veranstaltungen mit den angegebenen IDs aus der Datenbank.
@@ -949,6 +954,24 @@ do {
 		    return;
 		},
 	     };
+	}
+
+	if ($list) {
+	    my $sth = $dbh->prepare(q{
+		SELECT id, dateiname
+		FROM veranstaltung
+		ORDER BY dateiname
+	    });
+	    $sth->execute;
+	    my $header_printed;
+	    while (my @row = $sth->fetchrow_array) {
+		unless ($header_printed) {
+		    printf "%3s  %s\n", "id", "dateiname";
+		    $header_printed = 1;
+		}
+		printf "%3d  %s\n", @row;
+	    }
+	    exit;
 	}
 
 	print "Connected to $database ...\n";
