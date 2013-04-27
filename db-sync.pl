@@ -677,7 +677,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    }
 	    if (@columns) {
 		print "    # UPDATE FROM " . join(", ", @old), "\n"
-		   if $trace_sql;
+		   if defined $trace_sql;
 		$sql2 = "UPDATE $table " .
 			"SET " . join(", ", map { "$_ = ?" } @columns) . " " .
 			"WHERE " .  join(" AND ",
@@ -750,7 +750,7 @@ my $result = GetOptions("db=s" => \$database,
 			"poll:i" => \$poll_interval,
 			"reconnect:i" => \$reconnect_interval,
 			"force" => \$force,
-			"trace-sql" => \$trace_sql,
+			"trace-sql:s" => \$trace_sql,
 			"dry-run" => \$dry_run,
 			"temp-db=s" => \$temp_db,
 			"vareihe=s" => \@$vareihe,
@@ -855,8 +855,9 @@ Optionen:
     Punkteteilung werden stattdessen die Wertungspunkte für den ersten und
     zweiten Platz unter den beiden Ersten aufgeteilt.
 
-  --trace-sql
-    Die ausgeführten SQL-Befehle mitprotokollieren.
+  --trace-sql[=all]
+    Die ausgeführten SQL-Befehle mitprotokollieren (alle wenn all angegeben,
+    sonst alle außer den SELECT-Befehlen).
 
   --log=datei
     Die Ausgaben des Programms zusätzlich an die angegebene Datei anhängen.
@@ -939,18 +940,22 @@ do {
 	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
 	}
 
-	if ($trace_sql) {
+	if (defined $trace_sql) {
 	    $dbh->{Callbacks} = {
 		ChildCallbacks => {
 		    execute => sub {
 			my ($sth, @bind_values) = @_;
-			log_sql_statement $sth->{Statement}, @bind_values;
+			log_sql_statement $sth->{Statement}, @bind_values
+			    if $sth->{Statement} !~ /^\s*SELECT/i ||
+			       $trace_sql eq 'all';
 			return;
 		    },
 		},
 		do => sub {
 		    my ($dbh, $statement, $attr, @bind_values) = @_;
-		    log_sql_statement $statement, @bind_values;
+		    log_sql_statement $statement, @bind_values
+			    if $statement !~ /^\s*SELECT/i ||
+			       $trace_sql eq 'all';
 		    return;
 		},
 	     };
