@@ -26,6 +26,7 @@ use File::Glob ':glob';
 use File::Basename;
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
+use Storable qw(dclone);
 use POSIX qw(strftime);
 use IO::Tee;
 use Datenbank;
@@ -699,6 +700,120 @@ sub tabellen_aktualisieren {
     }
 }
 
+# datensatz_aktualisieren  -  Datensatz aktualisieren
+#
+#  table: Tabellenname
+#  keys: Namen der Schlüsselfelder
+#  kval: Werte der Schlüsselfelder
+#  nonkeys: Namen der weiteren Felder
+#  old: Alte Werte (oder undef, wenn kein Datensatz)
+#  new: Neue Werte (oder undef, wenn kein Datensatz)
+#
+# Abhängig von den alten und neuen Werten für die einzelnen Felder wird er alte
+# Datensatz gelöscht, aktualisiert, oder ein neuer Datensatz eingefügt.
+#
+sub datensatz_aktualisieren($$$$$$$) {
+    my ($dbh, $table, $keys, $kval, $nonkeys, $old, $new) = @_;
+    my $sql;
+    my @args;
+
+    if (defined $old) {
+	if (defined $new) {
+	    my $modified_nonkeys = [];
+	    my $modified_old;
+	    my $modified_new;
+	    for (my $n = 0; $n < @$nonkeys; $n++) {
+		unless ($old->[$n] ~~ $new->[$n]) {
+		    push @$modified_nonkeys, $nonkeys->[$n];
+		    push @$modified_old, $old->[$n];
+		    push @$modified_new, $new->[$n];
+		}
+	    }
+	    $nonkeys = $modified_nonkeys;
+	    $old = $modified_old;
+	    $new = $modified_new;
+	    return unless @$nonkeys;
+
+	    my @from;
+	    for (my $n = 0; $n < @$nonkeys; $n++) {
+		push @from, $nonkeys->[$n] . " = " . sql_value($old->[$n]);
+	    }
+	    print "    # UPDATE FROM ".  join(", ", @from) . "\n"
+		if defined $trace_sql;
+
+	    $sql = "UPDATE $table " .
+		"SET " . join(", ", map { "$_ = ?" } @$nonkeys) . " " .
+		"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
+	    @args = (@$new, @$kval);
+	} else {
+	    $sql = "DELETE FROM $table " .
+		"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
+	    @args = @$kval;
+	}
+    } elsif (defined $new) {
+	$sql = "INSERT INTO $table (" . join(", ", @$keys, @$nonkeys) . ") " .
+	    "VALUES (" . join(", ", map { "?" } (@$keys, @$nonkeys)) . ")";
+	@args = (@$kval, @$new);
+    }
+    $dbh->do($sql, undef, @args)
+	if defined $sql;
+}
+
+sub wertung_aktualisieren($$) {
+    my ($dbh, $id) = @_;
+    my ($cfg, $fahrer_nach_startnummer0, $fahrer_nach_startnummer1);
+
+    $cfg = cfg_aus_datenbank($dbh, $id);
+    $fahrer_nach_startnummer0 = wertung_aus_datenbank($dbh, $id);
+    $fahrer_nach_startnummer1 = dclone $fahrer_nach_startnummer0;
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
+
+    foreach my $fahrer (values %$fahrer_nach_startnummer1) {
+	my $startnummer = $fahrer->{startnummer};
+	my $fahrer0 = $fahrer_nach_startnummer0->{$startnummer};
+
+	datensatz_aktualisieren(
+	    $dbh, "fahrer",
+	    [qw(id startnummer)],
+	    [$id, $startnummer],
+	    [qw(s0 s1 s2 s3 s4 punkte runden rang)],
+	    [@{$fahrer0->{s}}[0 .. 4],
+	     $fahrer0->{punkte}, $fahrer0->{runden}, $fahrer0->{rang}],
+	    [@{$fahrer->{s}}[0 .. 4],
+	     $fahrer->{punkte}, $fahrer->{runden}, $fahrer->{rang}]);
+
+	for (my $idx = 0; $idx < 5; $idx++) {
+	    my $punkte1 = $fahrer->{punkte_pro_runde}[$idx];
+	    my $punkte0 = $fahrer0->{punkte_pro_runde}[$idx];
+	    datensatz_aktualisieren(
+		$dbh, "runde",
+		[qw(id startnummer runde)],
+		[$id, $startnummer, $idx + 1],
+		[qw(punkte)],
+		defined $punkte0 ? [$punkte0] : undef,
+		defined $punkte1 ? [$punkte1] : undef);
+	}
+
+	my $eps = 1 / (1 << 13);
+	for (my $idx = 0; $idx < 4; $idx++) {
+	    my $wp1 = $fahrer->{wertungspunkte}[$idx];
+	    my $wp0 = $fahrer0->{wertungspunkte}[$idx];
+	    if (defined $wp1 && defined $wp0) {
+		$wp1 = $wp0
+		    if abs($wp1 - $wp0) < $eps;
+	    }
+
+	    datensatz_aktualisieren(
+		$dbh, "fahrer_wertung",
+		[qw(id startnummer wertung)],
+		[$id, $startnummer, $idx + 1],
+		[qw(wertungsrang wertungspunkte)],
+		[$fahrer0->{wertungsrang}[$idx], $wp0],
+		[$fahrer->{wertungsrang}[$idx], $wp1]);
+	}
+    }
+}
+
 sub veranstaltung_umnummerieren($$) {
     my ($dbh, $id) = @_;
     my $sth;
@@ -737,6 +852,7 @@ my $force;
 my $vareihe;
 my $farben = [];
 my $list;
+my $recalc;
 my $delete;
 my $delete_id;
 my $log;
@@ -759,6 +875,7 @@ my $result = GetOptions("db=s" => \$database,
 			"keine-punkteteilung" => sub () { undef $punkteteilung },
 			"alle-fahrer" => sub () { undef $nur_fahrer; },
 			"list" => \$list,
+			"recalc" => \$recalc,
 			"delete" => \$delete,
 			"delete-id" => \$delete_id,
 			"log=s" => \$log,
@@ -822,6 +939,9 @@ Optionen:
 
   --list
     Liste der Veranstaltungen in der Datenbank anzeigen.
+
+  --recalc
+    Wertung von Veranstaltungen in der Datenbank neu berechnen.
 
   --delete-id
     Lösche die Veranstaltungen mit den angegebenen IDs aus der Datenbank.
@@ -980,6 +1100,15 @@ do {
 	}
 
 	print "Connected to $database ...\n";
+
+	if ($recalc) {
+	    foreach my $id (@ARGV) {
+		$dbh->begin_work;
+		wertung_aktualisieren $dbh, $id;
+		commit_or_rollback $dbh;
+	    }
+	    exit;
+	}
 
 	if ($create_tables) {
 	    print "Creating tables ...\n";
