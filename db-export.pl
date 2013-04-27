@@ -87,8 +87,6 @@ my $dbh = DBI->connect("DBI:$database", $username, $password,
 
 my $status = 0;
 
-use Encode qw(is_utf8);
-
 if ($list) {
     my $sth = $dbh->prepare(q{
 	SELECT id, dateiname
