@@ -391,6 +391,17 @@ sub fahrerstatistik($$) {
 	(@details ? " (davon " . join(", ", @details) . ")" : "") . ".";
 }
 
+sub punkte_in_runde($) {
+    my ($runde) = @_;
+
+    if (defined $runde) {
+	foreach my $punkte (@$runde) {
+	    return 1 if defined $punkte;
+	}
+    }
+    return "";
+}
+
 sub tageswertung(@) {
   # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
   # nach_relevanz klassen statistik_pro_klasse statistik_gesamt
@@ -563,7 +574,7 @@ sub tageswertung(@) {
 		my $punkte;
 		my $fmt;
 
-		if ($fahrer->{runden} > $n) {
+		if (punkte_in_runde($fahrer->{punkte_pro_sektion}[$n])) {
 		    $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
 		    if ($args{alle_punkte}) {
 			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
