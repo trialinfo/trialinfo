@@ -22,7 +22,8 @@ use POSIX qw(mktime);
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8 force_utf8_on);
+@EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
+	     db_utf8 force_utf8_on);
 
 sub wertungspunkte_aus_datenbank($$) {
     my ($dbh, $id) = @_;
@@ -142,7 +143,7 @@ sub cfg_aus_datenbank($$;$$) {
     return $cfg;
 }
 
-sub wertungen_aus_datenbank($$$) {
+sub fahrer_wertungen_aus_datenbank($$$) {
     my ($dbh, $id, $fahrer_nach_startnummer) = @_;
 
     $sth = $dbh->prepare(q{
@@ -195,6 +196,16 @@ sub runden_aus_datenbank($$$) {
     }
 }
 
+sub punkteverteilung_umwandeln($) {
+    my ($fahrer) = @_;
+    my $s;
+    for (my $n = 0; $n < 5; $n++) {
+	push @$s, $fahrer->{"s$n"};
+	delete $fahrer->{"s$n"};
+    }
+    $fahrer->{s} = $s;
+}
+
 sub fahrer_aus_datenbank($$) {
     my ($dbh, $id) = @_;
     my $fahrer_nach_startnummer;
@@ -211,19 +222,38 @@ sub fahrer_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my $fahrer = $sth->fetchrow_hashref) {
-	my $s;
-	for (my $n = 0; $n < 5; $n++) {
-	    push @$s, $fahrer->{"s$n"};
-	    delete $fahrer->{"s$n"};
-	}
-	$fahrer->{s} = $s;
+	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
     }
 
     punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
     runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
-    wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+
+    return $fahrer_nach_startnummer;
+}
+
+sub wertung_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+    my $fahrer_nach_startnummer;
+
+    my $sth = $dbh->prepare(q{
+	SELECT startnummer, klasse, stechen, papierabnahme, ausfall,
+	       zusatzpunkte, s0, s1, s2, s3, s4, punkte, runden, rang
+	FROM fahrer
+	WHERE id = ? and papierabnahme
+    });
+    $sth->execute($id);
+    while (my $fahrer = $sth->fetchrow_hashref) {
+	punkteverteilung_umwandeln $fahrer;
+	my $startnummer = $fahrer->{startnummer};
+	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
+    }
+
+    punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
 
     return $fahrer_nach_startnummer;
 }
