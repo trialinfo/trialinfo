@@ -9,7 +9,7 @@
 <body>
 <h1>ÖTSV Veranstalterseite</h1>
 <p>
-<a href="../ergebnisse/statistik.shtml">Punktestatistiken</a><br>
+<a href="export.shtml">Wiederherstellung</a><br>
 <a href="../veranstalter/starterzahl.shtml">Starterzahlen</a><br>
 <a href="nenngeld.shtml">Nenngeldlisten</a><br>
 <a href="/cgi-bin/veranstalter/fahrerliste.pl">Aktuelle Fahrerliste (CSV, Zeichensatz UTF-8)</a><br>

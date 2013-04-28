@@ -70,6 +70,7 @@ WEB_FILES = \
 	htdocs/js/jquery.polartimer.js \
 	htdocs/veranstalter/.htaccess \
 	htdocs/veranstalter/index.shtml \
+	htdocs/veranstalter/export.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
 
