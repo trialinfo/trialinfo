@@ -10,6 +10,8 @@ DOWNLOAD_FILES = \
 	htdocs/js/raphael-min.js \
 
 COMMON_FILES = \
+	trial-toolkit/Trialtool.pm \
+	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	trial-toolkit/Datenbank.pm \
 	trial-toolkit/RenderOutput.pm \
 	trial-toolkit/Wertungen.pm \
@@ -25,9 +27,7 @@ LOCAL_FILES = \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
-	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	tageswertung.pl \
-	trial-toolkit/Trialtool.pm \
 
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \
@@ -38,6 +38,8 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/vareihe-bezeichnung.pl \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
 	cgi-bin/ergebnisse/wereihe-ssi.pl \
+	cgi-bin/veranstalter/export.pl \
+	cgi-bin/veranstalter/export-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/js/jquery.polartimer.js \
