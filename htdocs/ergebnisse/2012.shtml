@@ -7,10 +7,10 @@
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 </head>
 <body>
-<h1>ÖTSV Cup + OSK Staatsmeisterschaft 2012</h1>
+<h1>ÖTSV Veranstaltungsergebnisse 2012</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=4&spalte=fahrzeug" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=4&spalte=fahrzeug&kuerzel" -->
 
 <h2>Jahreswertungen</h2>
 <p>
