@@ -116,7 +116,7 @@ mount:
 
 upload:
 	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
-	$(MAKE) do-upload CMD='cp -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file"'
+	$(MAKE) do-upload CMD='cp --parents -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/"'
 
 upload-diff:
 	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
