@@ -175,11 +175,19 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
     }
 
-    for (my $idx = 0; hat_wertung($cfg, $idx + 1); $idx++) {
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{wertungsrang} = [];
+	$fahrer->{wertungspunkte} = [];
+    }
+
+    for (my $idx = 0; $idx < 4; $idx++) {
+	next unless hat_wertung($cfg, $idx + 1);
+
 	my $wertungspunkte_vergeben =
 	    $idx == 0 || $cfg->{wertungspunkte_234};
 
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
+	    my $runden = $cfg->{runden}[$klasse - 1];
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	    # $fahrer->{wertungsrang}[] ist der Rang in der jeweiligen
@@ -207,6 +215,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		    for ($m = 0; $m < @$fahrer_in_klasse; $m = $n) {
 			my $fahrer_m = $fahrer_in_klasse->[$m];
 			if ($fahrer_m->{ausfall} ||
+			    $fahrer_m->{runden} < $runden ||
 			    !defined $fahrer_m->{wertungsrang}[$idx]) {
 			    $n = $m + 1;
 			    next;
@@ -239,7 +248,9 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		} else {
 		    foreach my $fahrer (@$fahrer_in_klasse) {
 			my $wr = $fahrer->{wertungsrang}[$idx];
-			next if $fahrer->{ausfall} || !defined $wr;
+			next if $fahrer->{ausfall} ||
+				$fahrer->{runden} < $runden ||
+				!defined $wr;
 			my $x = min($wr, scalar @$wertungspunkte);
 			$fahrer->{wertungspunkte}[$idx] = $wertungspunkte->[$x - 1] || undef;
 		    }
