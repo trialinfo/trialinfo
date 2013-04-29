@@ -40,6 +40,7 @@ binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
 my $trace_sql;
+my $trace_all_sql;
 my $dry_run;
 my $klassenfarben;
 
@@ -678,7 +679,7 @@ sub tabelle_aktualisieren($$$$$) {
 	    }
 	    if (@columns) {
 		print "    # UPDATE FROM " . join(", ", @old), "\n"
-		   if defined $trace_sql;
+		   if $trace_sql;
 		$sql2 = "UPDATE $table " .
 			"SET " . join(", ", map { "$_ = ?" } @columns) . " " .
 			"WHERE " .  join(" AND ",
@@ -739,7 +740,7 @@ sub datensatz_aktualisieren($$$$$$$) {
 		push @from, $nonkeys->[$n] . " = " . sql_value($old->[$n]);
 	    }
 	    print "    # UPDATE FROM ".  join(", ", @from) . "\n"
-		if defined $trace_sql;
+		if $trace_sql;
 
 	    $sql = "UPDATE $table " .
 		"SET " . join(", ", map { "$_ = ?" } @$nonkeys) . " " .
@@ -866,7 +867,8 @@ my $result = GetOptions("db=s" => \$database,
 			"poll:i" => \$poll_interval,
 			"reconnect:i" => \$reconnect_interval,
 			"force" => \$force,
-			"trace-sql:s" => \$trace_sql,
+			"trace-sql" => \$trace_sql,
+			"trace-all-sql" => sub () { $trace_sql = 1; $trace_all_sql = 1; },
 			"dry-run" => \$dry_run,
 			"temp-db=s" => \$temp_db,
 			"vareihe=s" => \@$vareihe,
@@ -975,9 +977,9 @@ Optionen:
     Punkteteilung werden stattdessen die Wertungspunkte für den ersten und
     zweiten Platz unter den beiden Ersten aufgeteilt.
 
-  --trace-sql[=all]
-    Die ausgeführten SQL-Befehle mitprotokollieren (alle wenn all angegeben,
-    sonst alle außer den SELECT-Befehlen).
+  --trace-sql, --trace-all-sql
+    Die ausgeführten SQL-Befehle mitprotokollieren (alle oder alle außer den
+    SELECT-Befehlen).
 
   --log=datei
     Die Ausgaben des Programms zusätzlich an die angegebene Datei anhängen.
@@ -1060,22 +1062,20 @@ do {
 	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
 	}
 
-	if (defined $trace_sql) {
+	if ($trace_sql) {
 	    $dbh->{Callbacks} = {
 		ChildCallbacks => {
 		    execute => sub {
 			my ($sth, @bind_values) = @_;
 			log_sql_statement $sth->{Statement}, @bind_values
-			    if $sth->{Statement} !~ /^\s*SELECT/i ||
-			       $trace_sql eq 'all';
+			    if $sth->{Statement} !~ /^\s*SELECT/i || $trace_all_sql;
 			return;
 		    },
 		},
 		do => sub {
 		    my ($dbh, $statement, $attr, @bind_values) = @_;
 		    log_sql_statement $statement, @bind_values
-			    if $statement !~ /^\s*SELECT/i ||
-			       $trace_sql eq 'all';
+			    if $statement !~ /^\s*SELECT/i || $trace_all_sql;
 		    return;
 		},
 	     };
