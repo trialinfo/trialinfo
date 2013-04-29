@@ -92,14 +92,54 @@ sub hat_wertung($$) {
     grep(/^wertung$wertung$/, @{$cfg->{nennungsmaske_felder}});
 }
 
+# Ermitteln, welche Klassen in welchen Sektionen und Runden überhaupt gefahren
+# sind: wenn eine Klasse eine Sektion und Runde befahren hat, kann die Sektion
+# und Runde nicht aus der Wertung sein, und alle Fahrer dieser Klasse müssen
+# diese Sektion befahren.  Wenn eine Sektion nicht oder noch nicht befahren
+# wurde, hat sie auch keinen Einfluss auf das Ergebnis.
+sub befahrene_sektionen($) {
+    my ($fahrer_nach_startnummer) = @_;
+    my $befahren;
+
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	my $klasse = $fahrer->{klasse};
+	if (defined $klasse && $fahrer->{papierabnahme}) {
+	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
+	    for (my $runde = 0; $runde < @$punkte_pro_sektion; $runde++) {
+		my $punkte = $punkte_pro_sektion->[$runde] // [];
+		for (my $sektion = 0; $sektion < @$punkte; $sektion++) {
+		    $befahren->[$klasse - 1][$runde][$sektion]++
+			if defined $punkte->[$sektion];
+		}
+	    }
+	}
+    }
+    return $befahren;
+}
+
 sub punkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
+    my $befahren;
 
-    # Trialtool summiert die Punkte pro Runden auch dann auf, wenn eine Runde
-    # nicht vollständig gefahren wurde, oder eine Sektion nicht eingegeben
-    # wurde.  Wir setzen die Punkte pro Runde auf undef, dann sieht man in der
-    # Datenbank wann eine Runde nicht vollständig gefahren wurde, ohne auf die
-    # einzelnen Punkte in den Sektionen schauen zu müssen.
+    # Das Trialtool erlaubt es, Sektionen in der Punkte-Eingabemaske auszulassen.
+    # Die ausgelassenen Sektionen sind danach "leer" (in den Trialtool-Dateien
+    # wird der Wert 6 verwendet, in Perl übersetzen wir das auf undef, und in der
+    # Datenbank verwenden wir NULL).  Für die Punkteanzahl des Fahrers zählen
+    # diese Sektionen wie eine 0, was zu einer falschen Bewertung führt.  Für
+    # den Anwender ist es schwer, dieses Problem zu erkennen und zu finden.
+    #
+    # Leider wird derselbe Wert auch für Sektionen verwendet, die (für eine
+    # bestimmte Klasse und Runde) aus der Wertung genommen werden.  In diesem
+    # Fall soll die Sektion ignoriert werden.
+    #
+    # Um diese Situation besser zu behandeln, überprüfen wir wenn wir eine
+    # "leere" Sektion finden, ob die Sektion für alle Fahrer "leer" ist.  Das
+    # ist dann der Fall, wenn die Sektion noch nicht befahren oder aus der
+    # Wertung genommen wurde.  (In beiden Fällen können wir die Sektion
+    # ignorieren.)  Wenn die Sektion für manche Fahrer nicht "leer" ist, muss
+    # sie offensichtlich befahren werden.  Wir zählen dann die Punkte des
+    # Fahrers nicht mehr weiter, und zählen die unvollständig gefahrene Runde
+    # nicht als gefahren mit.
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $punkte_pro_runde;
@@ -108,32 +148,45 @@ sub punkte_berechnen($$) {
 	my $gefahrene_sektionen;
 	my $runde;
 
-	if (defined $fahrer->{klasse} && $fahrer->{papierabnahme}) {
+	my $klasse = $fahrer->{klasse};
+	if (defined $klasse && $fahrer->{papierabnahme}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
 	    $gesamtpunkte = 0;
 	    $s = [(0) x 6];
 	    $gefahrene_sektionen = 0;
 	    $runde = 0;
 
-	    my $sektionen = $cfg->{sektionen}[$fahrer->{klasse} - 1] // '';
+	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // '';
 
 	    runde: for ($runde = 0; $runde < @$punkte_pro_sektion; $runde++) {
-		my $punkte = $punkte_pro_sektion->[$runde] // [];
-		for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
+		my $punkte_in_runde = $punkte_pro_sektion->[$runde] // [];
+		sektion: for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
 		    if (substr($sektionen, $sektion, 1) eq "J") {
-			last runde unless defined $punkte->[$sektion];
+			my $p = $punkte_in_runde->[$sektion];
+			unless (defined $p) {
+			    $befahren = befahrene_sektionen($fahrer_nach_startnummer)
+				unless defined $befahren;
+			    last runde
+				if defined $befahren->[$klasse - 1][$runde][$sektion];
+			    next sektion;
+			}
 			$gefahrene_sektionen++;
-			my $p = $punkte->[$sektion];
-			$gesamtpunkte += $p;
-			$s->[$p]++;
-		    }
-		}
-		for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
-		    if (substr($sektionen, $sektion, 1) eq "J") {
-			$punkte_pro_runde->[$runde] += $punkte->[$sektion];
+			$punkte_pro_runde->[$runde] += $p;
+			$s->[$p]++
+			    if $p <= 5;
 		    }
 		}
 	    }
+	    foreach my $punkte (@$punkte_pro_runde) {
+		$gesamtpunkte += $punkte;
+	    }
+	    if ($runde < $fahrer->{runden}) {
+		for (my $r = $runde + 1; $r <= $fahrer->{runden}; $r++) {
+		    print STDERR "Ergebnisse von Fahrer $fahrer->{startnummer} " .
+				 "in Runde $r sind unvollständig!\n";
+		}
+	    }
+	    $punkte_pro_runde = [ @$punkte_pro_runde[0 .. $runde - 1] ];
 	}
 
 	$fahrer->{punkte} = $gesamtpunkte;
