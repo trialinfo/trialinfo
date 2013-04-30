@@ -18,6 +18,7 @@ COMMON_FILES = \
 	trial-toolkit/Datenbank.pm \
 	trial-toolkit/RenderOutput.pm \
 	trial-toolkit/Wertungen.pm \
+	htdocs/ergebnisse.css \
 	trial-toolkit/TrialToolkit.pm.txt \
 
 LOCAL_FILES = \
