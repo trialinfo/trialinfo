@@ -180,10 +180,11 @@ sub punkte_berechnen($$) {
 	    foreach my $punkte (@$punkte_pro_runde) {
 		$gesamtpunkte += $punkte;
 	    }
-	    if ($runde < $fahrer->{runden}) {
-		for (my $r = $runde + 1; $r <= $fahrer->{runden}; $r++) {
+	    if ($runde < @$punkte_pro_sektion) {
+		for (my $r = $runde; $r < @$punkte_pro_sektion; $r++) {
+		    last unless grep { defined $_ } @{$punkte_pro_sektion->[$r]};
 		    print STDERR "Ergebnisse von Fahrer $fahrer->{startnummer} " .
-				 "in Runde $r sind unvollständig!\n";
+				 "in Runde " . ($r + 1) . " sind unvollständig!\n";
 		}
 	    }
 	    $punkte_pro_runde = [ @$punkte_pro_runde[0 .. $runde - 1] ];
