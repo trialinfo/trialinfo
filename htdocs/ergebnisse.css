@@ -41,3 +41,7 @@ table.wertung td.info2
 {
 color:#A11111;
 }
+table.wertung .incomplete
+{
+font-style:italic;
+}
