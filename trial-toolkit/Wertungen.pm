@@ -180,13 +180,13 @@ sub punkte_berechnen($$) {
 	    foreach my $punkte (@$punkte_pro_runde) {
 		$gesamtpunkte += $punkte;
 	    }
-	    if ($runde < $fahrer->{runden}) {
-		for (my $r = $runde + 1; $r <= $fahrer->{runden}; $r++) {
-		    print STDERR "Ergebnisse von Fahrer $fahrer->{startnummer} " .
-				 "in Runde $r sind unvollständig!\n";
+	    if ($runde < @$punkte_pro_sektion) {
+		for (my $r = $runde; $r < @$punkte_pro_sektion; $r++) {
+		    last unless grep { defined $_ } @{$punkte_pro_sektion->[$r]};
+		    print STDERR "Warnung: Ergebnisse von Fahrer $fahrer->{startnummer} " .
+				 "in Runde " . ($r + 1) . " sind unvollständig!\n";
 		}
 	    }
-	    $punkte_pro_runde = [ @$punkte_pro_runde[0 .. $runde - 1] ];
 	}
 
 	$fahrer->{punkte} = $gesamtpunkte;
@@ -637,9 +637,13 @@ sub tageswertung(@) {
 	    for (my $n = 0; $n < $runden; $n++) {
 		my $punkte;
 		my $fmt;
+		my $class;
 
 		if (punkte_in_runde($fahrer->{punkte_pro_sektion}[$n])) {
 		    $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
+		    if ($n >= $fahrer->{runden} && $RenderOutput::html) {
+			push @$class, "incomplete";
+		    }
 		    if ($args{alle_punkte}) {
 			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
 			push @$fmt, "title=\"$punkte_pro_sektion\"";
@@ -653,11 +657,13 @@ sub tageswertung(@) {
 		     ($args{cfg}{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
 		     ($args{cfg}{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
 		     $fahrer->{ausfall} != 0)) {
-		    push @$fmt, "class=\"info\"";
+		    push @$class, "info";
 		} else {
-		    push @$fmt, "class=\"info2\"";
+		    push @$class, "info2";
 		}
 
+		push @$fmt, "class=\"" . join(" ", @$class) . "\""
+		    if $class;
 		if ($fmt) {
 		    push @$row, [ $punkte, "r1", join(" ", @$fmt) ];
 		} else {
