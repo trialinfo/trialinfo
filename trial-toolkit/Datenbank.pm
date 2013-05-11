@@ -26,7 +26,7 @@ use Wertungen;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
-	     db_utf8 force_utf8_on sql_value log_sql_statement);
+	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql);
 use strict;
 
 sub wertungspunkte_aus_datenbank($$) {
@@ -314,9 +314,30 @@ sub sql_value($) {
 }
 
 sub log_sql_statement($@) {
-    my ($statement, @bind_values) = @_;
+    my ($fh, $statement, @bind_values) = @_;
     $statement =~ s/^\s*(.*?)\s*$/$1/s;
     $statement =~ s/^/    /mg;
     $statement =~ s/\?/sql_value shift @bind_values/ge;
-    print "$statement;\n";
+    print $fh "$statement;\n";
+}
+
+sub trace_sql($$$) {
+    my ($dbh, $trace_sql, $fh) = @_;
+
+    $dbh->{Callbacks} = {
+	ChildCallbacks => {
+	    execute => sub {
+		my ($sth, @bind_values) = @_;
+		log_sql_statement $fh, $sth->{Statement}, @bind_values
+		    if $sth->{Statement} !~ /^\s*SELECT/i || $trace_sql > 1;
+		return;
+	    },
+	},
+	do => sub {
+	    my ($dbh, $statement, $attr, @bind_values) = @_;
+	    log_sql_statement $fh, $statement, @bind_values
+		    if $statement !~ /^\s*SELECT/i || $trace_sql > 1;
+	    return;
+	},
+     };
 }

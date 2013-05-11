@@ -40,8 +40,7 @@ binmode(STDIN, ":encoding(console_in)");
 binmode(STDOUT, ":encoding($STDOUT_encoding)");
 binmode(STDERR, ":encoding($STDERR_encoding)");
 
-my $trace_sql;
-my $trace_all_sql;
+my $trace_sql = 0;
 my $dry_run;
 
 my $veranstaltungen;
@@ -426,8 +425,8 @@ my $result = GetOptions("db=s" => \$database,
 			"poll:i" => \$poll_interval,
 			"reconnect:i" => \$reconnect_interval,
 			"force" => \$force,
-			"trace-sql" => \$trace_sql,
-			"trace-all-sql" => sub () { $trace_sql = 1; $trace_all_sql = 1; },
+			"trace-sql" => sub () { $trace_sql = 1; },
+			"trace-all-sql" => sub () { $trace_sql = 2; },
 			"dry-run" => \$dry_run,
 			"vareihe=s" => \@$vareihe,
 			"farben=s@" => \@$farben,
@@ -604,24 +603,8 @@ do {
 	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
 	}
 
-	if ($trace_sql) {
-	    $dbh->{Callbacks} = {
-		ChildCallbacks => {
-		    execute => sub {
-			my ($sth, @bind_values) = @_;
-			log_sql_statement $sth->{Statement}, @bind_values
-			    if $sth->{Statement} !~ /^\s*SELECT/i || $trace_all_sql;
-			return;
-		    },
-		},
-		do => sub {
-		    my ($dbh, $statement, $attr, @bind_values) = @_;
-		    log_sql_statement $statement, @bind_values
-			    if $statement !~ /^\s*SELECT/i || $trace_all_sql;
-		    return;
-		},
-	     };
-	}
+	trace_sql $dbh, $trace_sql, \*STDOUT
+	    if $trace_sql;
 
 	if ($list) {
 	    my $sth = $dbh->prepare(q{
