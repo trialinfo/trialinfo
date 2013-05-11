@@ -18,7 +18,7 @@
 # <http://www.gnu.org/licenses/>.
 
 use utf8;
-use DBI qw(looks_like_number);
+use DBI;
 use Trialtool;
 use Wertungen;
 use Getopt::Long;
@@ -585,17 +585,6 @@ if (defined $log) {
 # Daten am Server löschen und komplett neu übertragen?
 my $neu_uebertragen = $force;
 
-sub sql_value($) {
-    my ($_) = @_;
-
-    return "NULL"
-	unless defined $_;
-    return $_
-	if looks_like_number $_;
-    s/'/''/g;
-    return "'$_'";
-}
-
 sub sql_aktualisieren($$$) {
     my ($sql, $args, $davor) = @_;
 
@@ -615,14 +604,6 @@ sub wertung_aktualisieren($$) {
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
     fahrer_aktualisieren \&sql_aktualisieren, $id,
 			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, 0;
-}
-
-sub log_sql_statement($@) {
-    my ($statement, @bind_values) = @_;
-    $statement =~ s/^\s*(.*?)\s*$/$1/s;
-    $statement =~ s/^/    /mg;
-    $statement =~ s/\?/sql_value shift @bind_values/ge;
-    print "$statement;\n";
 }
 
 do {

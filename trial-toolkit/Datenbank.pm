@@ -19,11 +19,12 @@ package Datenbank;
 
 use Encode qw(_utf8_on);
 use POSIX qw(mktime);
+use DBI qw(looks_like_number);
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
-	     db_utf8 force_utf8_on);
+	     db_utf8 force_utf8_on sql_value log_sql_statement);
 use strict;
 
 sub wertungspunkte_aus_datenbank($$) {
@@ -297,4 +298,23 @@ sub force_utf8_on(@) {
     my @l = @_;
     map { _utf8_on  $_ } @l;
     return @l;
+}
+
+sub sql_value($) {
+    my ($_) = @_;
+
+    return "NULL"
+	unless defined $_;
+    return $_
+	if looks_like_number $_;
+    s/'/''/g;
+    return "'$_'";
+}
+
+sub log_sql_statement($@) {
+    my ($statement, @bind_values) = @_;
+    $statement =~ s/^\s*(.*?)\s*$/$1/s;
+    $statement =~ s/^/    /mg;
+    $statement =~ s/\?/sql_value shift @bind_values/ge;
+    print "$statement;\n";
 }
