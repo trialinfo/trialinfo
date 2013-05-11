@@ -26,7 +26,6 @@ use File::Glob ':glob';
 use File::Basename;
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
-use Storable qw(dclone);
 use POSIX qw(strftime);
 use List::Util qw(max);
 use IO::Tee;
@@ -594,18 +593,6 @@ sub sql_aktualisieren($$$) {
     $dbh->do($sql, undef, @$args);
 }
 
-sub wertung_aktualisieren($$) {
-    my ($dbh, $id) = @_;
-    my ($cfg, $fahrer_nach_startnummer0, $fahrer_nach_startnummer1);
-
-    $cfg = cfg_aus_datenbank($dbh, $id);
-    $fahrer_nach_startnummer0 = wertung_aus_datenbank($dbh, $id);
-    $fahrer_nach_startnummer1 = dclone $fahrer_nach_startnummer0;
-    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
-    fahrer_aktualisieren \&sql_aktualisieren, $id,
-			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, 0;
-}
-
 do {
     eval {
 	$dbh = DBI->connect("DBI:$database", $username, $password,
@@ -659,7 +646,7 @@ do {
 	if ($recalc) {
 	    foreach my $id (@ARGV) {
 		$dbh->begin_work;
-		wertung_aktualisieren $dbh, $id;
+		wertung_aktualisieren $dbh, \&sql_aktualisieren, $id;
 		commit_or_rollback $dbh;
 	    }
 	    exit;

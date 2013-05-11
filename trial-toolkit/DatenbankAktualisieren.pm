@@ -17,10 +17,13 @@
 
 package DatenbankAktualisieren;
 use Trialtool qw(gestartete_klassen);
+use Datenbank qw(cfg_aus_datenbank wertung_aus_datenbank);
+use Wertungen qw(rang_und_wertungspunkte_berechnen);
+use Storable qw(dclone);
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(fahrer_aktualisieren veranstaltung_aktualisieren);
+@EXPORT = qw(fahrer_aktualisieren veranstaltung_aktualisieren wertung_aktualisieren);
 use strict;
 
 # datensatz_aktualisieren
@@ -536,4 +539,16 @@ sub veranstaltung_aktualisieren($$$$) {
 	and $changed = 1;
     $neu->{version} = $version;
     return $changed;
+}
+
+sub wertung_aktualisieren($$$) {
+    my ($dbh, $callback, $id) = @_;
+    my ($cfg, $fahrer_nach_startnummer0, $fahrer_nach_startnummer1);
+
+    $cfg = cfg_aus_datenbank($dbh, $id);
+    $fahrer_nach_startnummer0 = wertung_aus_datenbank($dbh, $id);
+    $fahrer_nach_startnummer1 = dclone $fahrer_nach_startnummer0;
+    rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
+    fahrer_aktualisieren $callback, $id,
+			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, 0;
 }

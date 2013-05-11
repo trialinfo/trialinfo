@@ -20,6 +20,8 @@ package Datenbank;
 use Encode qw(_utf8_on);
 use POSIX qw(mktime);
 use DBI qw(looks_like_number);
+use Storable qw(dclone);
+use Wertungen;
 
 require Exporter;
 @ISA = qw(Exporter);
