@@ -98,6 +98,21 @@ bei Ereignissen wie Verbindungsabbruch bei der Datenübertragung zu
 Inkonsistenzen kommen.
 
 
+  Beispiel
+  --------
+
+  $ mysqladmin --user=root password
+  New password: 
+  Confirm new password: 
+
+  $ mysql --user=root --password
+  Enter password: 
+  > CREATE DATABASE trials CHARACTER SET utf8;
+  > CREATE USER 'admin'@'localhost' IDENTIFIED BY 'password';
+  > CREATE USER 'admin'@'%' IDENTIFIED BY 'password';
+  > GRANT ALL PRIVILEGES ON trials.* TO 'admin'@'%';
+
+
 Datenmodell
 -----------
 
@@ -120,6 +135,13 @@ Das verwendete Datenmodell in der Datenbank ist in der Datei
 doc/eer-diagramm.pdf dargestellt.  Das Diagramm wurde mit MySQL Workbench
 erstellt.  Das Diagramm muss nicht immer ganz aktuell sein; im Zweifelsfall
 schadet ein Blick auf die Definitionen der Tabellen in db-sync.pl nicht.
+
+  Beispiel
+  --------
+  $ ./db-sync.pl --db='mysql:trials;host=localhost' \
+		 --user=admin \
+		 --password=password \
+		 --create-tables
 
 
 Web Server - Konfiguration

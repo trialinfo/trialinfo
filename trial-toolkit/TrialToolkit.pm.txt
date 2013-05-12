@@ -35,6 +35,7 @@ $punkteteilung = undef;
 # werden sollen.
 $veranstaltungsfeatures = {
     neue_startnummer => 1,
+    #bundesland => 1,
     #helfer => 0,
     #nennungseingang => 0,
 };
