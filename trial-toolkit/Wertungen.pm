@@ -187,6 +187,7 @@ sub punkte_berechnen($$) {
 				 "in Runde " . ($r + 1) . " sind unvollständig!\n";
 		}
 	    }
+	    $gesamtpunkte += $fahrer->{zusatzpunkte};
 	}
 
 	$fahrer->{punkte} = $gesamtpunkte;

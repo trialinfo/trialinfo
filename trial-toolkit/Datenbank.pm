@@ -242,7 +242,7 @@ sub wertung_aus_datenbank($$) {
 	SELECT startnummer, klasse, stechen, papierabnahme, ausfall,
 	       zusatzpunkte, s0, s1, s2, s3, s4, punkte, runden, rang
 	FROM fahrer
-	WHERE id = ? and papierabnahme
+	WHERE id = ? /* and papierabnahme */
     });
     $sth->execute($id);
     while (my $fahrer = $sth->fetchrow_hashref) {
