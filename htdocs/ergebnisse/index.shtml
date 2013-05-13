@@ -16,15 +16,15 @@
 
 <h2>Jahreswertungen</h2>
 <p>
-<a href="jahreswertung.shtml?wereihe=5&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2013</a><br>
-<a href="jahreswertung.shtml?wereihe=7">ÖTSV Bike Trial Cup 2013</a><br>
-<a href="jahreswertung.shtml?wereihe=6&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2013</a>
+<a href="jahreswertung.shtml?vareihe=5&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2013</a><br>
+<a href="jahreswertung.shtml?vareihe=7">ÖTSV Bike Trial Cup 2013</a><br>
+<a href="jahreswertung.shtml?vareihe=9&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2013</a>
 </p>
 <p>
 
 <h2>Sonstiges</h2>
 <p>
-<a href="statistik.shtml?vareihe=6">Punktestatistiken</a><br>
+<a href="statistik.shtml?vareihe=6&kuerzel">Punktestatistiken</a><br>
 <a href="2012.shtml">Ergebnisse 2012</a>
 </p>
 <p>

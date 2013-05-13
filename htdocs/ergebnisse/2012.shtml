@@ -14,13 +14,13 @@
 
 <h2>Jahreswertungen</h2>
 <p>
-<a href="jahreswertung.shtml?wereihe=1&spalte=fahrzeug">ÖTSV Cup 2012</a><br>
-<a href="jahreswertung.shtml?wereihe=2&spalte=fahrzeug">OSK Staatsmeisterschaft 2012</a>
+<a href="jahreswertung.shtml?vareihe=1&spalte=fahrzeug">ÖTSV Cup 2012</a><br>
+<a href="jahreswertung.shtml?vareihe=8&spalte=fahrzeug">OSK Staatsmeisterschaft 2012</a>
 </p>
 <p>
 
 <h2>Sonstiges</h2>
-<a href="statistik.shtml?vareihe=4">Punktestatistiken</a>
+<a href="statistik.shtml?vareihe=4&kuerzel">Punktestatistiken</a>
 </p>
 <p>
 © Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
