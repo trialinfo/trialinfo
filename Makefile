@@ -30,13 +30,11 @@ LOCAL_FILES = \
 
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \
-	cgi-bin/ergebnisse/wereihen-ssi.pl \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
 	cgi-bin/ergebnisse/vareihe-bezeichnung.pl \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
-	cgi-bin/ergebnisse/wereihe-ssi.pl \
 	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/export-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
