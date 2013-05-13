@@ -61,7 +61,6 @@ WEB_FILES = \
 	htdocs/ergebnisse/statistik.shtml \
 	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
-	htdocs/ergebnisse/wereihe.shtml \
 	htdocs/ergebnisse/vareihe.shtml \
 	htdocs/.htaccess \
 	htdocs/favicon.ico \
