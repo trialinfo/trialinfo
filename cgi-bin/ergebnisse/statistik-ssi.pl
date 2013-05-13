@@ -107,10 +107,10 @@ unless (defined $id) {
 	    JOIN veranstaltung USING (id)
 	    JOIN wertung USING (id)
 	    LEFT JOIN (
-		SELECT DISTINCT id, wereihe, wereihe.kuerzel
+		SELECT DISTINCT id, vareihe.kuerzel
 		FROM vareihe_veranstaltung
-		JOIN wereihe USING (vareihe)
-		JOIN wereihe_klasse USING (wereihe)
+		JOIN vareihe USING (vareihe)
+		JOIN vareihe_klasse USING (vareihe)
 		JOIN klasse USING (id, klasse)
 		WHERE klasse.gestartet) AS _ USING (id)
 	    WHERE aktiv AND vareihe = ? AND wertung = ?
@@ -124,10 +124,10 @@ unless (defined $id) {
 		   GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	    JOIN wertung USING (id)
 	    LEFT JOIN (
-		SELECT DISTINCT id, wereihe, wereihe.kuerzel
+		SELECT DISTINCT id, vareihe.kuerzel
 		FROM vareihe_veranstaltung
-		JOIN wereihe USING (vareihe)
-		JOIN wereihe_klasse USING (wereihe)
+		JOIN vareihe USING (vareihe)
+		JOIN vareihe_klasse USING (vareihe)
 		JOIN klasse USING (id, klasse)
 		WHERE klasse.gestartet) AS _ USING (id)
 	    WHERE aktiv AND wertung = ?

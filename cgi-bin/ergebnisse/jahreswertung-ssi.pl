@@ -32,7 +32,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
     or die "Could not connect to database: $DBI::errstr\n";
 
 my $q = CGI->new;
-my $wereihe = $q->param('wereihe');
+my $vareihe = $q->param('vareihe');
 my @klassen = $q->param('klasse');
 
 my @spalten = $q->param('spalte');
@@ -45,7 +45,6 @@ map {
 my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
 my $bezeichnung;
-my $vareihe;
 my $laeufe;
 my $streichresultate;
 my $wertung;
@@ -57,15 +56,15 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT vareihe, bezeichnung
-    FROM wereihe
-    WHERE wereihe = ?
+    SELECT bezeichnung
+    FROM vareihe
+    WHERE vareihe = ?
 });
-$sth->execute($wereihe);
+$sth->execute($vareihe);
 if (my @row =  $sth->fetchrow_array) {
-    ($vareihe, $bezeichnung) = @row;
+    ($bezeichnung) = @row;
 } else {
-    doc_h2 "Wertungsreihe nicht gefunden.\n";
+    doc_h2 "Veranstaltungsreihe nicht gefunden.\n";
     exit;
 }
 
@@ -75,12 +74,12 @@ $sth = $dbh->prepare(q{
     SELECT id, datum, wertung, titel, subtitel, dat_mtime, cfg_mtime, punkteteilung
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe, wertung)
+    JOIN vareihe USING (vareihe, wertung)
     JOIN veranstaltung USING (id)
-    WHERE aktiv AND wereihe = ?
+    WHERE aktiv AND vareihe = ?
     ORDER BY datum
 });
-$sth->execute($wereihe);
+$sth->execute($vareihe);
 my $veranstaltungen;
 my $n = 1;
 while (my @row = $sth->fetchrow_array) {
@@ -113,13 +112,13 @@ $sth = $dbh->prepare(q{
     FROM fahrer_wertung
     JOIN fahrer USING (id, startnummer)
     JOIN vareihe_veranstaltung USING (id)
-    JOIN wereihe USING (vareihe)
-    JOIN wereihe_klasse USING (wereihe, klasse)
+    /* JOIN vareihe USING (vareihe) */
+    JOIN vareihe_klasse USING (vareihe, klasse)
     LEFT JOIN (SELECT *, 1 AS definiert FROM neue_startnummer) AS neue_startnummer USING (id, startnummer)
     JOIN veranstaltung USING (id)
-    WHERE aktiv AND wereihe = ?
+    WHERE aktiv AND vareihe = ?
 });
-$sth->execute($wereihe);
+$sth->execute($vareihe);
 while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
@@ -146,7 +145,7 @@ foreach my $id (keys %$veranstaltungen) {
 }
 
 unless (%$veranstaltungen) {
-    doc_p "Für diese Wertungreihe sind keine Ergebnisse vorhanden.";
+    doc_p "Für diese Veranstaltungreihe sind keine Ergebnisse vorhanden.";
     exit;
 }
 
@@ -159,10 +158,10 @@ my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 $sth = $dbh->prepare(q{
     SELECT klasse, bezeichnung, farbe, laeufe, streichresultate
     FROM klasse
-    JOIN wereihe_klasse USING (klasse)
-    WHERE wereihe = ? AND id = ?
+    JOIN vareihe_klasse USING (klasse)
+    WHERE vareihe = ? AND id = ?
 });
-$sth->execute($wereihe, $letzte_cfg->{id});
+$sth->execute($vareihe, $letzte_cfg->{id});
 while (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{klassen}[$row[0] - 1] = $row[1];
     $klassenfarben->{$row[0]} = $row[2]

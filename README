@@ -75,10 +75,8 @@ Achtung: Diese Datei muss per Hand erzeugt werden, BEVOR DIE SCRIPTS VERWENDET
 WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in der Datei
 trial-toolkit/TrialToolkit.pm.txt.
 
-Die Option --create-tables von db-sync.pl erstellt auch eine
-Veranstaltungsreihe und zwei Wertugsreihen mit Zuweisung der Klassen zu den
-Wertungsreihen.  Das ist als Beispiel gedacht, und kann entweder in db-sync.pl
-oder danach in der Datenbank angepasst werden.
+Die Option --create-tables von db-sync.pl erstellt auch Veranstaltungsreihen,
+die als Beispiel gedacht sind.
 
 
 Datenbank - Konfiguration
@@ -117,19 +115,14 @@ Datenmodell
 -----------
 
 Die anfängliche Datenbankstruktur lässt sich mit "db-sync --create-tables"
-erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen und
-Wertungsreihen definiert werden, siehe dazu die Tabellen vareihe, wereihe, und
-wereihe_klasse:
+erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen definiert
+werden; siehe dazu die Tabellen vareihe und vareihe_klasse:
 
- * Eine Veranstaltungsreihe zeichnet sich dadurch aus, dass es verschiedene
-   Gesamtwertungen über die Veranstaltungen in der Reihe gibt.  Eine
-   Veranstaltung kann Teil einer oder mehrerer Veranstaltungsreihen sein.
-
- * Eine Wertungsreihe ist eine solche Gesamtwertung.  Sie umfasst bestimmte
-   Klassen in den Veranstaltungen einer Veranstaltungsreihe.
-
- * Die Anzahl der Läufe und Streichresultate kann pro Wertungsreihe und Klasse
-   definiert werden.
+  Eine Veranstaltungsreihe fasst einzelne Veranstaltungen zusammen, entweder um
+  sie auflisten zu können (z.B. alle Fahrrad- und Motorrad-Veranstaltungen im
+  Jahr 2012), oder um eine Gesamtwertung zu definieren.  Für eine Gesamtwertung
+  definiert die Tabelle vareihe_klasse die in der Gesamtwertung enthaltenen
+  Klassen und die Anzahl der Läufe und Streichresultate.
 
 Das verwendete Datenmodell in der Datenbank ist in der Datei
 doc/eer-diagramm.pdf dargestellt.  Das Diagramm wurde mit MySQL Workbench
