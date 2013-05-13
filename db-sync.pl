@@ -1103,8 +1103,10 @@ do {
 
 	if ($create_tables) {
 	    print "Creating tables ...\n";
+	    $dbh->begin_work;
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
 	    sql_ausfuehren $dbh, @create_reihen_tables;
+	    commit_or_rollback $dbh;
 	    undef $create_tables;
 	}
 
