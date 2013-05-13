@@ -58,10 +58,10 @@ if (my @row = $sth->fetchrow_array) {
 	JOIN wertung USING (id)
 	JOIN veranstaltung USING (id)
 	LEFT JOIN (
-	    SELECT DISTINCT id, wereihe, wereihe.kuerzel
+	    SELECT DISTINCT id, vareihe.kuerzel
 	    FROM vareihe_veranstaltung
-	    JOIN wereihe USING (vareihe)
-	    JOIN wereihe_klasse USING (wereihe)
+	    JOIN vareihe USING (vareihe)
+	    JOIN vareihe_klasse USING (vareihe)
 	    JOIN klasse USING (id, klasse)
 	    WHERE klasse.gestartet) AS _ USING (id)
 	WHERE aktiv AND vareihe = ? AND wertung = ?
