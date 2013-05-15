@@ -61,6 +61,12 @@ sub lizenzfahrer($) {
     return $fahrer->{startnummer} < 100;
 }
 
+sub hat_osk_lizenz($) {
+    my ($fahrer) = @_;
+
+    return scalar $fahrer->{lizenznummer} =~ /^(JM|JMJ)/i;
+}
+
 sub lizenzklasse($) {
     my ($klasse) = @_;
 
@@ -238,7 +244,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    $fahrer->{lizenznummer} eq "") {
 	    print "Warnung: Fahrer $startnummer $fahrer->{nachname} " .
 		  "$fahrer->{vorname} hat eine Startnummer aus einer " .
-		  "OSK-Lizenz-Klasse, es ist aber keine Lizenznummer " .
+		  "Lizenzklasse, es ist aber keine Lizenznummer " .
 		  "eingetragen.\n";
 	    $fehler++;
 	}
@@ -251,7 +257,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     # Startet ein OSK-Lizenzfahrer in der falschen Klasse?
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if (lizenzfahrer($fahrer) &&
+	if (lizenzfahrer($fahrer) && hat_osk_lizenz($fahrer) &&
 	    !$klassen_fuer_lizenzfahrer->[$fahrer->{klasse} - 1] &&
 	    !$fahrer->{ausfall}) {
 	    print "Fehler: OSK-Lizenzfahrer $startnummer " .
@@ -267,8 +273,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     # Hat ein Fahrer eine Klasse, die nicht startet?
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if (!lizenzfahrer($fahrer) &&
-	    !$startende_klassen->[$fahrer->{klasse} - 1]) {
+	if (!$startende_klassen->[$fahrer->{klasse} - 1]) {
 	    print "Fehler: Fahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} ist in Klasse " .
 		  "$fahrer->{klasse}, diese Klasse startet aber " .
@@ -315,13 +320,29 @@ foreach my $name (trialtool_dateien @ARGV) {
 	$fehler = 0;
     }
 
-    if (!$osk) {
+    if ($osk) {
 	foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	    if (lizenzfahrer($fahrer) &&
+	    if (lizenzfahrer($fahrer) && $fahrer->{lizenznummer} ne "" &&
+		!hat_osk_lizenz($fahrer) &&
 		$fahrer->{wertungen}[$wertung - 1] &&
 		!$fahrer->{ausfall}) {
 		print "Fehler: Lizenzfahrer $startnummer " .
+		      "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
+		      "$fahrer->{klasse} hat keine OSK-Lizenz " .
+		      "(beginnend mit JM oder JMJ) und darf daher " .
+		      "nicht an der $cfg->{wertungen}[$wertung - 1] " .
+		      "teilnehmen.\n";
+		$fehler++;
+	    }
+	}
+    } else {
+	foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	    if (lizenzfahrer($fahrer) && hat_osk_lizenz($fahrer) &&
+		$fahrer->{wertungen}[$wertung - 1] &&
+		!$fahrer->{ausfall}) {
+		print "Fehler: OSK-Lizenzfahrer $startnummer " .
 		      "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
 		      "$fahrer->{klasse} ist in der " .
 		      "$cfg->{wertungen}[$wertung - 1], darf aber nicht an " .
@@ -329,11 +350,11 @@ foreach my $name (trialtool_dateien @ARGV) {
 		$fehler++;
 	    }
 	}
-	if ($fehler) {
-	    print "=> Bitte deaktivieren Sie das $cfg->{wertungen}[$wertung - 1]-" .
-		  "Häkchen dieser Fahrer.\n\n";
-	    $fehler = 0;
-	}
+    }
+    if ($fehler) {
+	print "=> Bitte deaktivieren Sie das $cfg->{wertungen}[$wertung - 1]-" .
+	      "Häkchen dieser Fahrer.\n\n";
+	$fehler = 0;
     }
 
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
@@ -343,15 +364,14 @@ foreach my $name (trialtool_dateien @ARGV) {
 	    !$klassen_adjw->[$fahrer->{klasse} - 1] &&
 	    !$fahrer->{ausfall}) {
 	    my $zusatzinfo = "";
-	    if (lizenzklasse($fahrer->{klasse})) {
-		$zusatzinfo = " Bei ausländischen Lizenzfahrern ist das korrekt.";
+	    if (!lizenzklasse($fahrer->{klasse}) || hat_osk_lizenz($fahrer)) {
+		print "Warnung: Fahrer $startnummer " .
+		      "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
+		      "$fahrer->{klasse} ist nicht in der " .
+		      "$cfg->{wertungen}[$wertung - 1], diese Klasse nimmt aber " .
+		      "an der Wertung teil.$zusatzinfo\n";
+		$fehler++;
 	    }
-	    print "Warnung: Fahrer $startnummer " .
-		  "$fahrer->{nachname} $fahrer->{vorname} in Klasse " .
-		  "$fahrer->{klasse} ist nicht in der " .
-		  "$cfg->{wertungen}[$wertung - 1], diese Klasse nimmt aber " .
-		  "an der Wertung teil.$zusatzinfo\n";
-	    $fehler++;
 	}
     }
     if ($fehler) {
@@ -362,7 +382,8 @@ foreach my $name (trialtool_dateien @ARGV) {
 
     foreach my $startnummer (sort { $a <=> $b } keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if (lizenzklasse($fahrer->{klasse}) && !$fahrer->{startzeit}) {
+	if (lizenzklasse($fahrer->{klasse}) && $fahrer->{runden} > 1 &&
+	    !$fahrer->{startzeit}) {
 	    print "Fehler: Bei Lizenzfahrer $startnummer " .
 		  "$fahrer->{nachname} $fahrer->{vorname} ist keine Startzeit eingetragen.\n";
 	    $fehler++;
