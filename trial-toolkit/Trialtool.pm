@@ -411,8 +411,8 @@ sub dat_datei_schreiben($$) {
 	    } else {
 		delete $fahrer->{geburtsdatum};
 	    }
-	    $fahrer->{runden} = 'J' x $fahrer->{runden} .
-				'N' x (5 - $fahrer->{runden});
+	    my $runden = $fahrer->{runden} // 0;
+	    $fahrer->{runden} = 'J' x $runden . 'N' x (5 - $runden);
 	    $fahrer->{versicherung} = '0' + ($fahrer->{versicherung} // 0);
 
 	    if (defined $fahrer->{startzeit} && $fahrer->{startzeit} =~ /(..):(..):(..)/) {
