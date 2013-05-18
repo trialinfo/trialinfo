@@ -1,5 +1,5 @@
 NAME = trial-toolkit
-VERSION = 0.16
+VERSION = 0.17
 
 MOUNTPOINT ?= /mnt/easyserver
 SUBDIR ?= www2.otsv.at
@@ -31,6 +31,7 @@ LOCAL_FILES = \
 	jahreswertung.pl \
 	Makefile \
 	otsv-check.pl \
+	otsv-init.pl \
 	tageswertung.pl \
 	Windows/jahreswertung-osk.bat \
 	Windows/jahreswertung-otsv1.bat \
