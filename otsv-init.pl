@@ -23,6 +23,7 @@ use File::Glob ':glob';
 use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
+use Encode qw(encode decode);
 use Encode::Locale qw(decode_argv);
 use strict;
 
@@ -174,8 +175,9 @@ eval {
 	    $fahrer->{s} = [(0) x 6];
 	}
 
-	my ($cfgfh, $cfgname) = tempfile("$name-XXXXXX", UNLINK => 1)
+	my ($cfgfh, $cfgname) = tempfile(encode(locale_fs => "$name-XXXXXX"), UNLINK => 1)
 	    or die "$!\n";
+	$cfgname = decode(locale_fs => $cfgname);
 	binmode $cfgfh;
 	cfg_datei_schreiben $cfgfh, $cfg;
 	$cfgfh->flush;
@@ -185,8 +187,9 @@ eval {
 	}
 	$cfgfh->close;
 
-	my ($datfh, $datname) = tempfile("$name-XXXXXX", UNLINK => 1)
+	my ($datfh, $datname) = tempfile(encode(locale_fs => "$name-XXXXXX"), UNLINK => 1)
 	    or die "$!\n";
+	$datname = decode(locale_fs => $datname);
 	binmode $datfh;
 	dat_datei_schreiben $datfh, $fahrer_nach_startnummer;
 	$datfh->flush;
