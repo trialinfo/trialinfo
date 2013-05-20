@@ -1,5 +1,5 @@
 db-sync.pl ^
-	--vareihe=5,6 ^
+	--vareihe=5,6,9 ^
 	--alle-fahrer ^
 	--trace-sql ^
 	--log="C:\TrialTool 3.12\db-sync-laufend.log" ^
