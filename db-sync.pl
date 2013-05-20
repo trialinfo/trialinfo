@@ -431,7 +431,7 @@ sub in_datenbank_schreiben($$$$$$$$$$) {
 		$sth2->execute($id, $startnummer, $m + 1, $n + 1,
 			       $punkte->[$n]);
 	    }
-	    if ($m < $fahrer->{runden}) {
+	    if ($m < ($fahrer->{runden} // 0)) {
 		next unless defined $fahrer->{punkte_pro_runde}[$m];
 		$sth3->execute($id, $startnummer, $m + 1,
 			       $fahrer->{punkte_pro_runde}[$m]);
