@@ -39,6 +39,7 @@ LOCAL_FILES = \
 	Windows/loeschen.bat \
 	Windows/sync-jetzt.bat \
 	Windows/sync-laufend.bat \
+	Windows/sync-laufend-fahrrad.bat \
 	Windows/tageswertung.bat \
 
 WEB_FILES = \
