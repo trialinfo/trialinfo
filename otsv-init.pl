@@ -171,6 +171,7 @@ eval {
 	    $fahrer->{runden} = 0;
 	    $fahrer->{punkte_pro_runde} = [ (0) x 5 ];
 	    $fahrer->{punkte_pro_sektion} = [ ([ (undef) x 15 ]) x 5 ];
+	    $fahrer->{s} = [(0) x 6];
 	}
 
 	my ($cfgfh, $cfgname) = tempfile("$name-XXXXXX", UNLINK => 1)
