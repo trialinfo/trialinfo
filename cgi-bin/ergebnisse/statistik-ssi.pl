@@ -72,6 +72,7 @@ sub x($) {
 		    $code .= "<img src=\"$n.png\" title=\"$n\" height=\"$verteilung_hoehe\" width=\"$w\" />";
 		}
 	}
+	$code = "<span style=\"display:inline-block; width: ${verteilung_breite}px\">$code</span>";
 	push @rest, [ $code, "l" ];
     }
 
