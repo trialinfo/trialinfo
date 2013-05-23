@@ -1105,6 +1105,8 @@ sub jahreswertung(@) {
     my $body;
     for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
 	my $cfg = $args{veranstaltungen}[$n][0];
+	next unless exists $cfg->{gewertet} && @{$cfg->{gewertet}};
+
 	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
 	#push @$body, [ $label, "$cfg->{titel}[$idx]: $cfg->{subtitel}[$idx]" ];
