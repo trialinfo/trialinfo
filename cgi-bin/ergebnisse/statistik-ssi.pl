@@ -34,6 +34,7 @@ my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
 my $mit_kuerzel = $q->param('kuerzel');
 my $id = $q->param('id'); # veranstaltung
+my $nach_klassen = defined $q->param('nach_klassen');
 my $nach_sektionen = defined $q->param('nach_sektionen');
 my $verteilung = 1;
 my $verteilung_hoehe = 10;
@@ -186,7 +187,7 @@ while (my @row = $sth->fetchrow_array) {
     $cfg->{klassen}[$row[0] - 1] = $row[1];
 }
 
-if ($nach_sektionen) {
+if ($nach_klassen) {
     doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Sektion 0 1 2 3) ];
@@ -211,6 +212,46 @@ if ($nach_sektionen) {
 	    push @$alle_punkte, @$punkte;
 	    my $row;
 	    push @$row, $sektion, x($punkte);
+	    push @$body, $row;
+	}
+	my $footer = [ "", x($alle_punkte) ];
+	doc_table header => $header, body => $body, footer => $footer,
+		  format => $format;
+    }
+    verteilung_legende;
+} elsif ($nach_sektionen) {
+    doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
+    my $format = [ qw(r3 r3 r3 r3 r3) ];
+    my $header = [ qw(Klasse 0 1 2 3) ];
+    if ($cfg->{vierpunktewertung}) {
+	push @$format, "r3";
+	push @$header, "4";
+    }
+    push @$format, qw(r3 r);
+    push @$header, qw(5 ⌀);
+    if ($verteilung) {
+	push @$format, "l";
+	push @$header, "";
+    }
+
+    my $sektionen;
+    foreach my $klasse (keys %$klassen) {
+	foreach my $sektion (keys %{$klassen->{$klasse}}) {
+	    $sektionen->{$sektion}{$klasse} = $klassen->{$klasse}{$sektion};
+	}
+    }
+
+    foreach my $n (sort { $a <=> $b } keys %$sektionen) {
+	my $sektion = $sektionen->{$n};
+	my $alle_punkte;
+
+	doc_h3 "Sektion $n";
+	my $body;
+	foreach my $klasse (sort { $a <=> $b } keys %$sektion) {
+	    my $punkte = $sektion->{$klasse};
+	    push @$alle_punkte, @$punkte;
+	    my $row;
+	    push @$row, $klasse, x($punkte);
 	    push @$body, $row;
 	}
 	my $footer = [ "", x($alle_punkte) ];
@@ -249,5 +290,6 @@ if ($nach_sektionen) {
 	      format => $format;
     verteilung_legende;
 
-    print "<p><a href=\"statistik.shtml?id=$id&nach_sektionen\">Nach Sektionen</a></p>\n";
+    print "<p><a href=\"?id=$id&nach_klassen\">Nach Klassen</a> " .
+	  "<a href=\"?id=$id&nach_sektionen\">Nach Sektionen</a></p>\n";
 }
