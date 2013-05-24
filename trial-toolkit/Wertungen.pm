@@ -158,7 +158,8 @@ sub punkte_berechnen($$) {
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // '';
 
-	    runde: for ($runde = 0; $runde < @$punkte_pro_sektion; $runde++) {
+	    my $runden = $cfg->{runden}[$klasse - 1];
+	    runde: for ($runde = 0; $runde < $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde] // [];
 		sektion: for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
 		    if (substr($sektionen, $sektion, 1) eq "J") {
@@ -193,7 +194,6 @@ sub punkte_berechnen($$) {
 	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;
 	$fahrer->{s} = $s;
-	$fahrer->{runden} = $runde;
 	$fahrer->{gefahrene_sektionen} = $gefahrene_sektionen;
     }
 }
