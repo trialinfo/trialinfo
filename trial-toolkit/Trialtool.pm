@@ -313,13 +313,23 @@ sub dat_datei_parsen($$) {
     my $fahrer_nach_startnummern;
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
-    for (my $startnummer = 1; $startnummer <= $startnummern; $startnummer++) {
-	my $fahrer_binaer = substr($dat, ($startnummer - 1) * 847, 847);
+    for (my $n = 1; $n <= $startnummern; $n++) {
+	my $startnummer = $n;
+	my $fahrer_binaer = substr($dat, ($n - 1) * 847, 847);
 	my $klasse = unpack "S<", $fahrer_binaer;
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
 	delete $fahrer->{''};
 	decode_strings($fahrer, $dat_format);
+
+	if ($startnummer >= 1000 && $startnummer < 1400) {
+	    # Dast Trialtool verwendet dir Startnummern 1000 - 1399 für Fahrer,
+	    # denen keine Startnummer zugeordnet ist.  Um in der internen
+	    # Darstellung auch mehr als 400 Fahrer ohne Startnummer darstellen
+	    # zu können, ändern wir diesen Bereich auf -1 .. -400.
+	    $startnummer = 999 - $startnummer;
+	}
+
 	$fahrer->{startnummer} = $startnummer;
 	$fahrer->{klasse} = undef
 	    if $fahrer->{klasse} == 99;
@@ -393,6 +403,11 @@ sub dat_datei_schreiben($$) {
 
     for (my $n = 0; $n < 1600; $n++) {
 	my $startnummer = $n + 1;
+	if ($startnummer >= 1000 && $startnummer < 1400) {
+	    # Fahrer ohne Startnummer: siehe dat_datei_parsen().
+	    $startnummer = 999 - $startnummer;
+	}
+
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
 	    if (defined $fahrer->{bundesland}) {
@@ -439,7 +454,6 @@ sub dat_datei_schreiben($$) {
 		}
 	    }
 	    $fahrer->{punkte_pro_sektion} = $p;
-
 
 	    my $r;
 	    for (my $runde = 0; $runde < 5; $runde++) {
