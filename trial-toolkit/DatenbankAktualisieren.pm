@@ -28,8 +28,8 @@ use strict;
 # Abhängig von den alten und neuen Werten für die einzelnen Felder wird er alte
 # Datensatz gelöscht, aktualisiert, oder ein neuer Datensatz eingefügt.
 #
-sub datensatz_aktualisieren($$$$$$$) {
-    my ($callback, $tabelle, $keys, $nonkeys, $kval, $alt, $neu) = @_;
+sub datensatz_aktualisieren($$$$$$$$$) {
+    my ($callback, $tabelle, $version_ref, $changed, $keys, $nonkeys, $kval, $alt, $neu) = @_;
     my ($sql, $args, $davor);
 
     if (defined $alt) {
@@ -47,27 +47,52 @@ sub datensatz_aktualisieren($$$$$$$) {
 	    $nonkeys = $modified_nonkeys;
 	    $alt = $modified_old;
 	    $neu = $modified_new;
-	    if (@$nonkeys) {
+	    if (($version_ref && $changed) || @$nonkeys) {
 		for (my $n = 0; $n < @$nonkeys; $n++) {
 		    push @$davor, [ $nonkeys->[$n], $alt->[$n] ];
 		}
-		$sql = "UPDATE $tabelle " .
-		    "SET " . join(", ", map { "$_ = ?" } @$nonkeys) . " " .
-		    "WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
-		$args = [@$neu, @$kval];
+		if ($version_ref) {
+		    $sql = "UPDATE $tabelle " .
+			"SET " . join(", ", (
+			    "version = CASE WHEN version = ? THEN version + 1 ELSE -1 END",
+			    map { "$_ = ?" } @$nonkeys)) . " " .
+			"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
+		    $args = [$$version_ref, @$neu, @$kval];
+		} else {
+		    $sql = "UPDATE $tabelle " .
+			"SET " . join(", ", map { "$_ = ?" } @$nonkeys) . " " .
+			"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
+		    $args = [@$neu, @$kval];
+		}
 	    }
 	} else {
+	    if ($version_ref) {
+		push @$keys, 'version';
+		push @$kval, $$version_ref;
+	    }
 	    $sql = "DELETE FROM $tabelle " .
 		"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
 	    $args = $kval;
+	    # FIXME: Gibt es eine vernünftige Möglichkeit festzustellen, ob der
+	    # Datensatz mit einer anderen Version existiert?
 	}
     } elsif (defined $neu) {
+	if ($version_ref) {
+	    $nonkeys = [ @$nonkeys, 'version' ];
+	    $neu = [ @$neu, 1 ];
+	}
 	$sql = "INSERT INTO $tabelle (" . join(", ", @$keys, @$nonkeys) . ") " .
 	    "VALUES (" . join(", ", map { "?" } (@$keys, @$nonkeys)) . ")";
 	$args = [@$kval, @$neu];
     }
     if (defined $sql) {
-	&$callback($sql, $args, $davor);
+	my $affected_rows = &$callback($sql, $args, $davor);
+	if ($affected_rows != 1) {
+	    die "'$sql': $affected_rows statt 1 Datensatz betroffen" .
+		($neu ? "" : "; Version vermutlich ungültig") . "\n";
+	}
+	$$version_ref = $neu ? $$version_ref + 1 : 0
+	    if $version_ref;
 	return 1;
     }
     return undef;
@@ -98,6 +123,7 @@ sub hash_aktualisieren($$$$$$$) {
     my ($deletes, $updates, $inserts) = deletes_updates_inserts($alt, $neu);
     foreach my $hashkey (@$deletes) {
 	datensatz_aktualisieren $callback, $tabelle,
+		undef, undef,
 		$keys, $nonkeys,
 		[@$const_keys, split(/:/, $hashkey)],
 		$alt->{$hashkey},
@@ -106,6 +132,7 @@ sub hash_aktualisieren($$$$$$$) {
     }
     foreach my $hashkey (@$updates) {
 	datensatz_aktualisieren $callback, $tabelle,
+		undef, undef,
 		$keys, $nonkeys,
 		[@$const_keys, split(/:/, $hashkey)],
 		$alt->{$hashkey},
@@ -114,6 +141,7 @@ sub hash_aktualisieren($$$$$$$) {
     }
     foreach my $hashkey (@$inserts) {
 	datensatz_aktualisieren $callback, $tabelle,
+		undef, undef,
 		$keys, $nonkeys,
 		[@$const_keys, split(/:/, $hashkey)],
 		undef,
@@ -170,8 +198,8 @@ sub fahrer_wertungen_hash($) {
     return $hash;
 }
 
-sub einen_fahrer_aktualisieren($$$$) {
-    my ($callback, $id, $alt, $neu) = @_;
+sub einen_fahrer_aktualisieren($$$$$) {
+    my ($callback, $id, $alt, $neu, $versionierung) = @_;
     my $startnummer = $alt ? $alt->{startnummer} : $neu->{startnummer};
     my $changed;
 
@@ -241,36 +269,43 @@ sub einen_fahrer_aktualisieren($$$$) {
 	}
     }
 
+    my $version = $alt ? $alt->{version} : 0;
     datensatz_aktualisieren $callback, 'fahrer',
+	    $versionierung ? \$version : undef, $changed,
 	    [qw(id startnummer)], $felder,
 	    [$id, $startnummer],
 	    $felder_alt,
 	    $felder_neu
 	and $changed = 1;
+    $neu->{version} = $version
+	if $neu;
     return $changed;
 }
 
-sub fahrer_aktualisieren($$$$) {
-    my ($callback, $id, $alt, $neu) = @_;
+sub fahrer_aktualisieren($$$$$) {
+    my ($callback, $id, $alt, $neu, $versionierung) = @_;
     my $changed;
 
     my ($deletes, $updates, $inserts) =
 	deletes_updates_inserts($alt, $neu);
     if (@$deletes) {
 	foreach my $startnummer (@$deletes) {
-	    einen_fahrer_aktualisieren $callback, $id, $alt->{$startnummer}, undef
+	    einen_fahrer_aktualisieren $callback, $id, $alt->{$startnummer},
+		    undef, $versionierung
 		and $changed = 1;
 	}
     }
     if (@$updates) {
 	foreach my $startnummer (@$updates) {
-	    einen_fahrer_aktualisieren $callback, $id, $alt->{$startnummer}, $neu->{$startnummer}
+	    einen_fahrer_aktualisieren $callback, $id, $alt->{$startnummer},
+		    $neu->{$startnummer}, $versionierung
 		and $changed = 1;
 	}
     }
     if (@$inserts) {
 	foreach my $startnummer (@$inserts) {
-	    einen_fahrer_aktualisieren $callback, $id, undef, $neu->{$startnummer}
+	    einen_fahrer_aktualisieren $callback, $id, undef,
+		    $neu->{$startnummer}, $versionierung
 		and $changed = 1;
 	}
     }
@@ -491,11 +526,14 @@ sub veranstaltung_aktualisieren($$$$) {
 	}
     }
 
+    my $version = $alt ? $alt->{version} : 0;
     datensatz_aktualisieren $callback, 'veranstaltung',
+	    \$version, $changed,
 	    [qw(id)], $felder,
 	    [$id],
 	    $felder_alt,
 	    $felder_neu
 	and $changed = 1;
+    $neu->{version} = $version;
     return $changed;
 }

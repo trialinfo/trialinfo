@@ -51,6 +51,7 @@ my $dbh;
 my @create_veranstaltung_tables = split /;/, q{
 DROP TABLE IF EXISTS fahrer;
 CREATE TABLE fahrer (
+  version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
   startnummer INT,
   klasse INT,
@@ -81,28 +82,30 @@ CREATE TABLE fahrer (
   papierabnahme BOOLEAN,
   versicherung INT,
   runden INT,
-  s0 INT,
-  s1 INT,
-  s2 INT,
-  s3 INT,
-  s4 INT,
+  s0 INT, -- nicht in version berücksichtigt (berechnet)
+  s1 INT, -- nicht in version berücksichtigt (berechnet)
+  s2 INT, -- nicht in version berücksichtigt (berechnet)
+  s3 INT, -- nicht in version berücksichtigt (berechnet)
+  s4 INT, -- nicht in version berücksichtigt (berechnet)
   ausfall INT,
   zusatzpunkte INT,
-  punkte INT,
-  rang INT,
+  punkte INT, -- nicht in version berücksichtigt (berechnet)
+  rang INT, -- nicht in version berücksichtigt (berechnet)
   PRIMARY KEY (id, startnummer)
 );
 
+-- In fahrer.version berücksichtigt
 DROP TABLE IF EXISTS fahrer_wertung;
 CREATE TABLE fahrer_wertung (
   id INT, -- veranstaltung
   startnummer INT,
   wertung INT,
-  wertungsrang INT,
-  wertungspunkte REAL,
+  wertungsrang INT, -- nicht in fahrer.version berücksichtigt (berechnet)
+  wertungspunkte REAL, -- nicht fahrer.in version berücksichtigt (berechnet)
   PRIMARY KEY (id, startnummer, wertung)
 );
 
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS klasse;
 CREATE TABLE klasse (
   id INT, -- veranstaltung
@@ -115,6 +118,7 @@ CREATE TABLE klasse (
   PRIMARY KEY (id, klasse)
 );
 
+-- In fahrer.version berücksichtigt
 DROP TABLE IF EXISTS punkte;
 CREATE TABLE punkte (
   id INT, -- veranstaltung
@@ -125,15 +129,17 @@ CREATE TABLE punkte (
   PRIMARY KEY (id, startnummer, runde, sektion)
 );
 
+-- In fahrer.version berücksichtigt
 DROP TABLE IF EXISTS runde;
 CREATE TABLE runde (
   id INT, -- veranstaltung
   startnummer INT,
   runde INT,
-  punkte INT NOT NULL,
+  punkte INT NOT NULL, -- nicht in fahrer.version berücksichtigt (berechnet)
   PRIMARY KEY (id, startnummer, runde)
 );
 
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS sektion;
 CREATE TABLE sektion (
   id INT, -- veranstaltung
@@ -144,6 +150,7 @@ CREATE TABLE sektion (
 
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
+  version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
   datum DATE,
   dat_mtime TIMESTAMP NULL,
@@ -164,6 +171,7 @@ CREATE TABLE veranstaltung (
   PRIMARY KEY (id)
 );
 
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS veranstaltung_feature;
 CREATE TABLE veranstaltung_feature (
   id INT, -- veranstaltung
@@ -171,6 +179,7 @@ CREATE TABLE veranstaltung_feature (
   PRIMARY KEY (id, feature)
 );
 
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS kartenfarbe;
 CREATE TABLE kartenfarbe (
   id INT, -- veranstaltung
@@ -179,6 +188,7 @@ CREATE TABLE kartenfarbe (
   PRIMARY KEY (id, runde)
 );
 
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS wertung;
 CREATE TABLE wertung (
   id INT, -- veranstaltung
@@ -189,6 +199,7 @@ CREATE TABLE wertung (
   PRIMARY KEY (id, wertung)
 );
 
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS wertungspunkte;
 CREATE TABLE wertungspunkte (
   id INT, -- veranstaltung
@@ -198,6 +209,7 @@ CREATE TABLE wertungspunkte (
 );
 
 -- Geänderte Startnummern in der Jahreswertung
+-- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS neue_startnummer;
 CREATE TABLE neue_startnummer (
   id INT, -- veranstaltung
@@ -206,6 +218,7 @@ CREATE TABLE neue_startnummer (
   PRIMARY KEY (id, startnummer)
 );
 
+-- In vareihe.version berücksichtigt
 DROP TABLE IF EXISTS vareihe_veranstaltung;
 CREATE TABLE vareihe_veranstaltung (
   vareihe INT,
@@ -221,6 +234,7 @@ my @create_reihen_tables = split /;/, q{
 -- Veranstaltungsreihe
 DROP TABLE IF EXISTS vareihe;
 CREATE TABLE vareihe (
+  version INT NOT NULL DEFAULT 1,
   vareihe INT,
   wertung INT, -- Wertung im Trialtool
   bezeichnung VARCHAR(40),
@@ -228,6 +242,7 @@ CREATE TABLE vareihe (
   PRIMARY KEY (vareihe)
 );
 
+-- In vareihe.version berücksichtigt
 DROP TABLE IF EXISTS vareihe_klasse;
 CREATE TABLE vareihe_klasse (
   vareihe INT,
@@ -237,11 +252,13 @@ CREATE TABLE vareihe_klasse (
   PRIMARY KEY (vareihe, klasse)
 );
 
-INSERT INTO vareihe (vareihe, bezeichnung)
-    VALUES (1, 'ÖTSV Cup + OSK Staatsmeisterschaft 2012');
+INSERT INTO vareihe (version, vareihe, bezeichnung)
+    VALUES (1, 1, 'ÖTSV Cup + OSK Staatsmeisterschaft 2012');
+INSERT INTO vareihe (version, vareihe, wertung, bezeichnung, kuerzel)
+    VALUES (1, 2, 1, 'ÖTSV Cup 2012', 'ÖTSV');
+INSERT INTO vareihe (version, vareihe, wertung, bezeichnung, kuerzel)
+    VALUES (1, 3, 1, 'OSK Staatsmeisterschaft 2012', 'OSK');
 
-INSERT INTO vareihe (vareihe, wertung, bezeichnung, kuerzel)
-    VALUES (2, 1, 'ÖTSV Cup 2012', 'ÖTSV');
 INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
     VALUES (2, 1, 15, 4);
 INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
@@ -257,8 +274,6 @@ INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
 INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
     VALUES (2, 7, 15, 4);
 
-INSERT INTO vareihe (vareihe, wertung, bezeichnung, kuerzel)
-    VALUES (3, 1, 'OSK Staatsmeisterschaft 2012', 'OSK');
 INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
     VALUES (3, 11, 8, 2);
 INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
@@ -270,10 +285,49 @@ INSERT INTO vareihe_klasse (vareihe, klasse, laeufe, streichresultate)
 sub sql_ausfuehren($@) {
     my ($dbh, @sql) = @_;
 
+    my $affected_rows;
     foreach my $statement (@sql) {
 	next if $statement =~ /^\s*$/;
-	$dbh->do($statement);
+	$affected_rows = $dbh->do($statement);
     }
+    return $affected_rows;
+}
+
+sub create_version_trigger($$) {
+    my ($dbh, $table) = @_;
+
+    if ($dbh->{Driver}{Name} ne "mysql") {
+	print STDERR "Tabelle $table: Trigger zur Überprüfung der Version werden nicht erzeugt!\n";
+	return;
+    }
+
+    sql_ausfuehren $dbh, split /\n\n/, qq[
+	DROP TRIGGER IF EXISTS ${table}_insert
+
+	CREATE TRIGGER ${table}_insert BEFORE INSERT ON ${table}
+	  FOR EACH ROW
+	  BEGIN
+	  IF new.version <> 1 THEN
+	    -- The SIGNAL statement is only supported from MySQL 5.5 on; call
+	    -- an undefined procedure instead to be compatible with older versions.
+	    -- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Row Version';
+	    CALL \`Invalid Row Version\`;
+	  END IF;
+	END
+
+	DROP TRIGGER IF EXISTS ${table}_update
+
+	CREATE TRIGGER ${table}_update BEFORE UPDATE ON ${table}
+	  FOR EACH ROW
+	  BEGIN
+	  IF new.version < old.version OR new.version > old.version + 1 THEN
+	    -- The SIGNAL statement is only supported from MySQL 5.5 on; call
+	    -- an undefined procedure instead to be compatible with older versions.
+	    -- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Row Version';
+	    CALL \`Invalid Row Version\`;
+	  END IF;
+	END
+	];
 }
 
 sub veranstaltung_loeschen($$$) {
@@ -562,7 +616,7 @@ sub wertung_aktualisieren($$) {
     $fahrer_nach_startnummer1 = dclone $fahrer_nach_startnummer0;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
     fahrer_aktualisieren \&sql_aktualisieren, $id,
-			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1;
+			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, 0;
 }
 
 sub log_sql_statement($@) {
@@ -578,7 +632,7 @@ do {
 			    { RaiseError => 1, AutoCommit => 1, db_utf8($database) })
 	    or die "Could not connect to database: $DBI::errstr\n";
 
-	if ($dbh->{Driver}->{Name} eq "mysql") {
+	if ($dbh->{Driver}{Name} eq "mysql") {
 	    $dbh->do("SET storage_engine=InnoDB");  # We need transactions!
 	}
 
@@ -635,6 +689,9 @@ do {
 	    $dbh->begin_work;
 	    sql_ausfuehren $dbh, @create_veranstaltung_tables;
 	    sql_ausfuehren $dbh, @create_reihen_tables;
+	    create_version_trigger $dbh, 'vareihe';
+	    create_version_trigger $dbh, 'veranstaltung';
+	    create_version_trigger $dbh, 'fahrer';
 	    commit_or_rollback $dbh;
 	    undef $create_tables;
 	}
@@ -703,7 +760,7 @@ do {
 			veranstaltung_aktualisieren \&sql_aktualisieren, $id,
 						    $veranstaltung->{cfg}, $cfg;
 			fahrer_aktualisieren \&sql_aktualisieren, $id,
-					     $veranstaltung->{fahrer}, $fahrer_nach_startnummer;
+					     $veranstaltung->{fahrer}, $fahrer_nach_startnummer, 1;
 			commit_or_rollback $dbh;
 			unless ($dry_run) {
 			    $veranstaltungen->{$id} = {

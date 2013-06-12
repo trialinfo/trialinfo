@@ -66,7 +66,7 @@ sub cfg_aus_datenbank($$) {
     my $cfg;
 
     my $sth = $dbh->prepare(q{
-	SELECT dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
+	SELECT version, dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
 	       punkte_sektion_auslassen, wertungspunkte_234, rand_links,
 	       rand_oben, wertungspunkte_markiert, versicherung,
 	       ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime,
@@ -231,7 +231,7 @@ sub fahrer_aus_datenbank($$) {
     my $fahrer_nach_startnummer;
 
     my $sth = $dbh->prepare(q{
-	SELECT startnummer, klasse, helfer, nenngeld, bewerber, nachname,
+	SELECT version, startnummer, klasse, helfer, nenngeld, bewerber, nachname,
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
