@@ -66,11 +66,11 @@ sub cfg_aus_datenbank($$) {
     my $cfg;
 
     my $sth = $dbh->prepare(q{
-	SELECT dateiname, vierpunktewertung, wertungsmodus,
+	SELECT dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
 	       punkte_sektion_auslassen, wertungspunkte_234, rand_links,
 	       rand_oben, wertungspunkte_markiert, versicherung,
 	       ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime,
-	       aktiv, punkteteilung
+	       punkteteilung
 	FROM veranstaltung
 	WHERE id = ?
     });
