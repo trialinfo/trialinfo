@@ -396,6 +396,16 @@ sub in_datenbank_schreiben($$$$$$$$$) {
 	$sth->execute($id, $n + 1, $cfg->{runden}[$n], $cfg->{klassen}[$n],
 		      $gestartete_klassen->[$n], $farbe, $cfg->{fahrzeiten}[$n]);
     }
+    my $neue_startnummern = $cfg->{neue_startnummern};
+    if (%$neue_startnummern) {
+	$sth = $dbh->prepare(qq{
+	    INSERT INTO neue_startnummer (id, startnummer, neue_startnummer)
+	    VALUES (?, ?, ?)
+	});
+	foreach my $startnummer (keys %$neue_startnummern) {
+	    $sth->execute($id, $startnummer, $neue_startnummern->{$startnummer});
+	}
+    }
 
     my @dat_felder = qw(
 	startnummer klasse helfer nenngeld bewerber nachname vorname strasse
@@ -446,12 +456,6 @@ sub in_datenbank_schreiben($$$$$$$$$) {
 	    $sth4->execute($id, $startnummer, $n + 1,
 			   $fahrer->{wertungsrang}[$n],
 			   $fahrer->{wertungspunkte}[$n]);
-	}
-	if (exists $fahrer->{neue_startnummer}) {
-	    $dbh->do(qq{
-		INSERT INTO neue_startnummer (id, startnummer, neue_startnummer)
-		VALUES (?, ?, ?)
-	}, undef, $id, $startnummer, $fahrer->{neue_startnummer});
 	}
     }
     return $id;
@@ -1165,6 +1169,7 @@ do {
 		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
 			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", $nur_fahrer);
+			neue_startnummern_von_fahrern $cfg, $fahrer_nach_startnummer;
 			$cfg->{punkteteilung} = $punkteteilung;
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 

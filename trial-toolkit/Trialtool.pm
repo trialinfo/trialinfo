@@ -37,7 +37,8 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
 	     dat_datei_schreiben trialtool_dateien gestartete_klassen
-	     mtime_timestamp);
+	     mtime_timestamp neue_startnummern_von_fahrern
+	     neue_startnummern_zu_fahrern);
 
 use File::stat;
 use POSIX qw(strftime);
@@ -539,6 +540,30 @@ sub mtime_timestamp($) {
     my $stat = stat(encode(locale_fs => "$dateiname"))
 	or die "$dateiname: $!\n";
     return strftime("%Y-%m-%d %H:%M:%S", @{localtime($stat->mtime)});
+}
+
+sub neue_startnummern_von_fahrern($$) {
+    my ($cfg, $fahrer_nach_startnummer) = @_;
+
+    my $neue_startnummern = {};
+    foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	if (exists $fahrer->{neue_startnummer}) {
+	    $neue_startnummern->{$startnummer} = $fahrer->{neue_startnummer};
+	    delete $fahrer->{neue_startnummer};
+	}
+    }
+    $cfg->{neue_startnummern} = $neue_startnummern;
+}
+
+sub neue_startnummern_zu_fahrern($$) {
+    my ($cfg, $fahrer_nach_startnummer) = @_;
+
+    my $neue_startnummern = $cfg->{neue_startnummern};
+    foreach my $startnummer (keys %$neue_startnummern) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	$fahrer->{neue_startnummer} = $neue_startnummern->{$startnummer};
+    }
 }
 
 1;

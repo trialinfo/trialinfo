@@ -105,7 +105,6 @@ while (my @row = $sth->fetchrow_array) {
 
 $sth = $dbh->prepare(q{
     SELECT id, klasse, startnummer,
-	   CASE WHEN definiert THEN neue_startnummer ELSE startnummer END as neue_startnummer,
 	   vorname, nachname,
 	   wertungspunkte, wertungsrang
     } . ( @db_spalten ? ", " . join(", ", @db_spalten) : "") . q{
@@ -114,7 +113,6 @@ $sth = $dbh->prepare(q{
     JOIN vareihe_veranstaltung USING (id)
     /* JOIN vareihe USING (vareihe) */
     JOIN vareihe_klasse USING (vareihe, klasse)
-    LEFT JOIN (SELECT *, 1 AS definiert FROM neue_startnummer) AS neue_startnummer USING (id, startnummer)
     JOIN veranstaltung USING (id)
     WHERE aktiv AND vareihe = ?
 });
@@ -131,12 +129,22 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     $fahrer->{wertungsrang} = [];
     $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
 
-    delete $fahrer->{neue_startnummer}
-	if defined $fahrer->{neue_startnummer} &&
-	   $fahrer->{startnummer} == $fahrer->{neue_startnummer};
-
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
+}
+
+$sth = $dbh->prepare(q{
+    SELECT id, startnummer, neue_startnummer
+    FROM vareihe_veranstaltung
+    /* JOIN vareihe USING (vareihe) */
+    JOIN neue_startnummer USING (id)
+    JOIN veranstaltung USING (id)
+    WHERE aktiv AND vareihe = ?
+});
+$sth->execute($vareihe);
+while (my @row = $sth->fetchrow_array) {
+    $veranstaltungen->{$row[0]}{cfg}{neue_startnummern}{$row[1]} = $row[2]
+	unless defined $row[2] && $row[1] == $row[2];
 }
 
 foreach my $id (keys %$veranstaltungen) {

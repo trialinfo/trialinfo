@@ -127,6 +127,7 @@ sub cfg_aus_datenbank($$;$$) {
     }
 
     $cfg->{wertungspunkte} = wertungspunkte_aus_datenbank($dbh, $id);
+    $cfg->{neue_startnummern} = neue_startnummern_aus_datenbank($dbh, $id);
 
     $sth = $dbh->prepare(q{
 	SELECT feature
@@ -195,6 +196,23 @@ sub runden_aus_datenbank($$$) {
     }
 }
 
+sub neue_startnummern_aus_datenbank($$$) {
+    my ($dbh, $id, $cfg) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT startnummer, neue_startnummer
+	FROM neue_startnummer
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    my $neue_startnummern = {};
+    while (my @row = $sth->fetchrow_array) {
+	$neue_startnummern->{$row[0]} = $row[1]
+	    unless $row[0] ~~ $row[1];
+    }
+    return $neue_startnummern;
+}
+
 sub punkteverteilung_umwandeln($) {
     my ($fahrer) = @_;
     my $s;
@@ -224,18 +242,6 @@ sub fahrer_aus_datenbank($$) {
 	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
-    }
-
-    $sth = $dbh->prepare(q{
-	SELECT startnummer, neue_startnummer
-	FROM neue_startnummer
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	my $fahrer = $fahrer_nach_startnummer->{$row[0]};
-	$fahrer->{neue_startnummer} = $row[1]
-	    unless !$fahrer || (defined $row[1] && $row[0] == $row[1]);
     }
 
     punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;

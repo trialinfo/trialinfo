@@ -34,7 +34,6 @@ $punkteteilung = undef;
 # Features, die bei der Datenübertragung zusätzlich gesetzt oder entfernt
 # werden sollen.
 $veranstaltungsfeatures = {
-    neue_startnummer => 1,
     #bundesland => 1,
     #helfer => 0,
     #nennungseingang => 0,

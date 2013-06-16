@@ -159,20 +159,19 @@ foreach my $name (trialtool_dateien @ARGV) {
     }
     $n++;
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+    neue_startnummern_von_fahrern $cfg, $fahrer_nach_startnummer;
     $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
 foreach my $veranstaltung (@$veranstaltungen) {
-    my $fahrer_nach_startnummer = $veranstaltung->[1];
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	if (exists $fahrer->{neue_startnummer}) {
-		my $cfg = $veranstaltung->[0];
-		print STDERR "Veranstaltung $cfg->{label}: Startnummer " .
-			     "$fahrer->{startnummer} -> " .
-			     ($fahrer->{neue_startnummer} // '') . "\n";
-	}
+    my $cfg = $veranstaltung->[0];
+    my $neue_startnummern = $cfg->{neue_startnummern};
+    foreach my $startnummer (sort keys %$neue_startnummern) {
+	print STDERR "Veranstaltung $cfg->{label}: Startnummer " .
+		     "$startnummer -> " .
+		     ($neue_startnummern->{$startnummer} // '') . "\n";
     }
 }
 

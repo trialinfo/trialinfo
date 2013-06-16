@@ -909,23 +909,24 @@ sub jahreswertung(@) {
 
     for (my $n = 0; $n < @{$args{veranstaltungen}}; $n++) {
 	my $veranstaltung = $args{veranstaltungen}[$n];
-	if (grep { exists $_->{neue_startnummer} } values %{$veranstaltung->[1]}) {
+	my $cfg = $veranstaltung->[0];
+	my $neue_startnummern = $cfg->{neue_startnummern};
+	if ($neue_startnummern && %$neue_startnummern) {
 	    # Startnummern umschreiben und kontrollieren, ob Startnummern
 	    # doppelt verwendet wurden
 
 	    my $fahrer_nach_startnummer;
 	    foreach my $fahrer (values %{$veranstaltung->[1]}) {
-		if (exists $fahrer->{neue_startnummer}) {
-		    my $neue_startnummer = $fahrer->{neue_startnummer};
+		my $startnummer = $fahrer->{startnummer};
+		if (exists $neue_startnummern->{$startnummer}) {
+		    my $neue_startnummer = $neue_startnummern->{$startnummer};
 		    next unless defined $neue_startnummer;
 
 		    $fahrer->{alte_startnummer} = $fahrer->{startnummer};
 		    $fahrer->{startnummer} = $neue_startnummer;
-		    delete $fahrer->{neue_startnummer};
+		    $startnummer = $neue_startnummer;
 		}
-		my $startnummer = $fahrer->{startnummer};
 		if (exists $fahrer_nach_startnummer->{$startnummer}) {
-		    my $cfg = $veranstaltung->[0];
 		    my $fahrer2 = $fahrer_nach_startnummer->{$startnummer};
 
 		    if (defined $fahrer2->{wertungspunkte}[$idx]) {
