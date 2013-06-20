@@ -280,9 +280,23 @@ sub veranstaltung_loeschen($$$) {
     }
 }
 
-sub in_datenbank_schreiben($$$$$$$$$$) {
+sub features_aktualisieren($$) {
+    my ($cfg, $features) = @_;
+
+    my $f = { map { $_ => 1 } @{$cfg->{nennungsmaske_felder}} };
+    foreach my $feature (keys %$features) {
+	if ($features->{$feature}) {
+	    $f->{$feature} = 1;
+	} else {
+	    delete $f->{$feature};
+	}
+    }
+    $cfg->{nennungsmaske_felder} = [keys %$f];
+}
+
+sub in_datenbank_schreiben($$$$$$$$$) {
     my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
-	$cfg, $vareihe, $aktiv, $features) = @_;
+	$cfg, $vareihe, $aktiv) = @_;
     my $sth;
     my $datum;
 
@@ -315,17 +329,8 @@ sub in_datenbank_schreiben($$$$$$$$$$) {
 	INSERT INTO veranstaltung_feature (id, feature)
 	VALUES (?, ?)
     });
-    my $f = { %$features };
     foreach my $feature (@{$cfg->{nennungsmaske_felder}}) {
-	unless (exists $f->{$feature} && !$f->{$feature}) {
-	    $sth->execute($id, $feature);
-	    delete $f->{$feature};
-	}
-    }
-    foreach my $feature (keys %$f) {
-	if ($f->{$feature}) {
-	    $sth->execute($id, $feature);
-	}
+	$sth->execute($id, $feature);
     }
 
     $sth = $dbh->prepare(qq{
@@ -1167,11 +1172,11 @@ do {
 			my $tmp_id;
 			$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id
 			    if defined $id;
+			features_aktualisieren $cfg, $features;
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
 						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer,
-						     $cfg, $vareihe, $aktiv,
-						     $features;
+						     $cfg, $vareihe, $aktiv;
 
 			print "\n";
 			eval {
