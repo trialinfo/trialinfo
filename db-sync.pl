@@ -294,9 +294,8 @@ sub features_aktualisieren($$) {
     $cfg->{nennungsmaske_felder} = [keys %$f];
 }
 
-sub in_datenbank_schreiben($$$$$$$$$) {
-    my ($dbh, $id, $basename, $cfg_mtime, $dat_mtime, $fahrer_nach_startnummer,
-	$cfg, $vareihe, $aktiv) = @_;
+sub in_datenbank_schreiben($$$$$) {
+    my ($dbh, $id, $basename, $fahrer_nach_startnummer, $cfg) = @_;
     my $sth;
     my $datum;
 
@@ -316,14 +315,13 @@ sub in_datenbank_schreiben($$$$$$$$$) {
 	vierpunktewertung wertungsmodus punkte_sektion_auslassen
 	wertungspunkte_234 ergebnisliste_feld wertungspunkte_markiert
 	versicherung rand_links rand_oben ergebnislistenbreite
-	punkteteilung
+	punkteteilung cfg_mtime dat_mtime aktiv
     );
     $sth = $dbh->prepare(sprintf qq{
-	INSERT INTO veranstaltung (id, datum, dateiname, aktiv, cfg_mtime, dat_mtime, %s)
-	VALUES (?, ?, ?, ?, ?, ?, %s)
+	INSERT INTO veranstaltung (id, datum, dateiname, %s)
+	VALUES (?, ?, ?, %s)
     }, join(", ", @cfg_felder), join(", ", map { "?" } @cfg_felder));
-    $sth->execute($id, $datum, $basename, $aktiv, $cfg_mtime, $dat_mtime,
-		  (map { $cfg->{$_} } @cfg_felder));
+    $sth->execute($id, $datum, $basename, (map { $cfg->{$_} } @cfg_felder));
 
     $sth = $dbh->prepare(qq{
 	INSERT INTO veranstaltung_feature (id, feature)
@@ -347,7 +345,7 @@ sub in_datenbank_schreiben($$$$$$$$$) {
 	INSERT INTO vareihe_veranstaltung(vareihe, id)
 	VALUES (?, ?)
     });
-    foreach my $vareihe (@$vareihe) {
+    foreach my $vareihe (@{$cfg->{vareihen}}) {
 	$sth->execute($vareihe, $id);
     }
 
@@ -1177,11 +1175,14 @@ do {
 			my $tmp_id;
 			$tmp_id = veranstaltung_umnummerieren $tmp_dbh, $id
 			    if defined $id;
+			$cfg->{cfg_mtime} = $cfg_mtime;
+			$cfg->{dat_mtime} = $dat_mtime;
+			$cfg->{aktiv} = $aktiv;
+			$cfg->{vareihen} = $vareihe;
 			features_aktualisieren $cfg, $features;
 			$id = in_datenbank_schreiben $tmp_dbh, $id, $basename,
-						     $cfg_mtime, $dat_mtime,
 						     $fahrer_nach_startnummer,
-						     $cfg, $vareihe, $aktiv;
+						     $cfg;
 
 			print "\n";
 			eval {

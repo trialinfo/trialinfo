@@ -61,15 +61,16 @@ sub sektionen_aus_datenbank($$) {
     return $sektionen;
 }
 
-sub cfg_aus_datenbank($$;$$) {
-    my ($dbh, $id, $cfg_mtime, $dat_mtime) = @_;
+sub cfg_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
     my $cfg;
 
     my $sth = $dbh->prepare(q{
-	SELECT vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
-	       wertungspunkte_234, rand_links, rand_oben,
-	       wertungspunkte_markiert, versicherung, ergebnislistenbreite,
-	       ergebnisliste_feld, dat_mtime, cfg_mtime, punkteteilung
+	SELECT dateiname, vierpunktewertung, wertungsmodus,
+	       punkte_sektion_auslassen, wertungspunkte_234, rand_links,
+	       rand_oben, wertungspunkte_markiert, versicherung,
+	       ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime,
+	       aktiv, punkteteilung
 	FROM veranstaltung
 	WHERE id = ?
     });
@@ -77,16 +78,6 @@ sub cfg_aus_datenbank($$;$$) {
     unless ($cfg = $sth->fetchrow_hashref) {
 	return undef;
     }
-
-    my $re = '^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$';
-    if (defined $cfg_mtime && $cfg->{cfg_mtime} =~ $re) {
-	$$cfg_mtime = mktime($6, $5, $4, $3, $2 - 1, $1 - 1900);
-    }
-    delete $cfg->{cfg_mtime};
-    if (defined $dat_mtime && $cfg->{dat_mtime} =~ $re) {
-	$$dat_mtime = mktime($6, $5, $4, $3, $2 - 1, $1 - 1900);
-    }
-    delete $cfg->{dat_mtime};
 
     $sth = $dbh->prepare(q{
 	SELECT wertung, titel, subtitel, bezeichnung
@@ -139,6 +130,17 @@ sub cfg_aus_datenbank($$;$$) {
     $cfg->{nennungsmaske_felder} = [];
     while (my @row = $sth->fetchrow_array) {
 	push @{$cfg->{nennungsmaske_felder}}, $row[0];
+    }
+
+    $sth = $dbh->prepare(q{
+	SELECT vareihe
+	FROM vareihe_veranstaltung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    $cfg->{vareihen} = [];
+    while (my @row = $sth->fetchrow_array) {
+	push @{$cfg->{vareihen}}, $row[0];
     }
 
     return $cfg;
