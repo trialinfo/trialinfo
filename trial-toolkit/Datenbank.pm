@@ -24,12 +24,13 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
 	     db_utf8 force_utf8_on);
+use strict;
 
 sub wertungspunkte_aus_datenbank($$) {
     my ($dbh, $id) = @_;
     my $wertungspunkte = [];
 
-    $sth = $dbh->prepare(q{
+    my $sth = $dbh->prepare(q{
 	SELECT rang, punkte
 	FROM wertungspunkte
 	WHERE id = ?
@@ -48,7 +49,7 @@ sub sektionen_aus_datenbank($$) {
     for (my $n = 0; $n < 15; $n++) {
 	push @$sektionen, 'N' x 15;
     }
-    $sth = $dbh->prepare(q{
+    my $sth = $dbh->prepare(q{
 	SELECT klasse, sektion
 	FROM sektion
 	WHERE id = ?
@@ -146,7 +147,7 @@ sub cfg_aus_datenbank($$;$$) {
 sub fahrer_wertungen_aus_datenbank($$$) {
     my ($dbh, $id, $fahrer_nach_startnummer) = @_;
 
-    $sth = $dbh->prepare(q{
+    my $sth = $dbh->prepare(q{
 	SELECT startnummer, wertung, wertungsrang, wertungspunkte
 	FROM fahrer_wertung
 	WHERE id = ?
@@ -165,7 +166,7 @@ sub fahrer_wertungen_aus_datenbank($$$) {
 sub punkte_aus_datenbank($$$) {
     my ($dbh, $id, $fahrer_nach_startnummer) = @_;
 
-    $sth = $dbh->prepare(q{
+    my $sth = $dbh->prepare(q{
 	SELECT startnummer, runde, sektion, punkte
 	FROM punkte
 	WHERE id = ?
@@ -182,7 +183,7 @@ sub punkte_aus_datenbank($$$) {
 sub runden_aus_datenbank($$$) {
     my ($dbh, $id, $fahrer_nach_startnummer) = @_;
 
-    $sth = $dbh->prepare(q{
+    my $sth = $dbh->prepare(q{
 	SELECT startnummer, runde, punkte
 	FROM runde
 	WHERE id = ?
