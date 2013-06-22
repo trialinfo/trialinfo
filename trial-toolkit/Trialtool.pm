@@ -36,7 +36,8 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime);
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen
+	     mtime_timestamp);
 
 use File::stat;
 use POSIX qw(strftime);
@@ -532,7 +533,7 @@ sub gestartete_klassen($) {
     return $gestartet;
 }
 
-sub mtime($) {
+sub mtime_timestamp($) {
     my ($dateiname) = @_;
 
     my $stat = stat(encode(locale_fs => "$dateiname"))

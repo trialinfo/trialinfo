@@ -97,8 +97,8 @@ while (my @row = $sth->fetchrow_array) {
     $cfg->{titel}[$wertung - 1] = $row[3];
     $cfg->{subtitel}[$wertung - 1] = $row[4];
     $veranstaltungen->{$id}{cfg} = $cfg;
-    $zeit = max_time($zeit, $row[5]);
-    $zeit = max_time($zeit, $row[6]);
+    $zeit = max_timestamp($zeit, $row[5]);
+    $zeit = max_timestamp($zeit, $row[6]);
     $cfg->{punkteteilung} = $row[7];
     push @$veranstaltungen_reihenfolge, $row[0];
 }

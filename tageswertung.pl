@@ -158,7 +158,7 @@ EOF
 }
 
 foreach my $name (trialtool_dateien @ARGV) {
-    my $zeit = max_time(mtime("$name.cfg"), mtime("$name.dat"));
+    my $zeit = max_timestamp(mtime_timestamp("$name.cfg"), mtime_timestamp("$name.dat"));
 
     my $cfg = cfg_datei_parsen("$name.cfg");
     my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);

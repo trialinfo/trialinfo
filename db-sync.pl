@@ -506,8 +506,8 @@ sub status($$) {
     my $sth;
     my @row;
 
-    my $cfg_mtime = mtime("$dateiname.cfg");
-    my $dat_mtime = mtime("$dateiname.dat");
+    my $cfg_mtime = mtime_timestamp("$dateiname.cfg");
+    my $dat_mtime = mtime_timestamp("$dateiname.dat");
 
     $sth = $dbh->prepare(qq{
 	SELECT id, (cfg_mtime != ? OR dat_mtime != ?)

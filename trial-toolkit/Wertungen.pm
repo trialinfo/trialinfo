@@ -19,7 +19,7 @@ package Wertungen;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_time);
+@EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_timestamp);
 
 use utf8;
 use List::Util qw(min max);
@@ -1136,7 +1136,7 @@ sub jahreswertung(@) {
     doc_table header => ["", "Name"], body => $body, format => ["r", "l"];
 }
 
-sub max_time($$) {
+sub max_timestamp($$) {
     my ($a, $b) = @_;
     my ($ta, $tb);
 

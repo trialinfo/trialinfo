@@ -146,8 +146,8 @@ decode_argv;
 
 my $n = 1;
 foreach my $name (trialtool_dateien @ARGV) {
-    $zeit = max_time($zeit, mtime("$name.cfg"));
-    $zeit = max_time($zeit, mtime("$name.dat"));
+    $zeit = max_timestamp($zeit, mtime_timestamp("$name.cfg"));
+    $zeit = max_timestamp($zeit, mtime_timestamp("$name.dat"));
 
     my $cfg = cfg_datei_parsen("$name.cfg");
     if ($RenderOutput::html &&
