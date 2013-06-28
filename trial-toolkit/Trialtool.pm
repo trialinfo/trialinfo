@@ -359,25 +359,25 @@ sub dat_datei_parsen($$) {
 		$jahr = $3 + int(localtime->year() / 100) * 100 + 1900;
 	    }
 	    $fahrer->{geburtsdatum} = sprintf("%04d-%02d-%02d", $jahr, $2, $1);
-	    delete $fahrer->{geburtsdatum}
+	    $fahrer->{geburtsdatum} = undef
 		if $fahrer->{geburtsdatum} eq "1901-01-01";
 	} else {
-	    delete $fahrer->{geburtsdatum};
+	    $fahrer->{geburtsdatum} = undef;
 	}
 	if ($fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/ &&
 	    "$1:$2" ne "00:00") {
 	    $fahrer->{startzeit} = "$1:$2:00";
 	} else {
-	    delete $fahrer->{startzeit};
+	    $fahrer->{startzeit} = undef;
 	}
 	if ($fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/ &&
 	    "$1:$2" ne "00:00") {
 	    $fahrer->{zielzeit} = "$1:$2:00";
 	} else {
-	    delete $fahrer->{zielzeit};
+	    $fahrer->{zielzeit} = undef;
 	}
 	$fahrer->{versicherung} = $fahrer->{versicherung} - '0';
-	delete $fahrer->{versicherung}
+	$fahrer->{versicherung} = undef
 	    if $fahrer->{versicherung} == 0;
 
 	if ($fahrer->{bemerkung} =~ s/\s*\*JW:\s*(\d*)\s*\*\s*//) {
@@ -388,8 +388,11 @@ sub dat_datei_parsen($$) {
 	    # ignoriert.
 	    $fahrer->{neue_startnummer} = $1 || undef;
 	}
+
 	if ($fahrer->{bemerkung} =~ s/\s*\*BL:\s*([^*]*?)\s*\*\s*//) {
 	    $fahrer->{bundesland} = $1;
+	} else {
+	    $fahrer->{bundesland} = undef;
 	}
 	$fahrer_nach_startnummern->{$startnummer} = $fahrer;
     }
@@ -428,7 +431,7 @@ sub dat_datei_schreiben($$) {
 	    if (defined $fahrer->{geburtsdatum} && $fahrer->{geburtsdatum} =~ /^(....)-(..)-(..)$/) {
 		$fahrer->{geburtsdatum} = "$3.$2.$1";
 	    } else {
-		delete $fahrer->{geburtsdatum};
+		$fahrer->{geburtsdatum} = undef;
 	    }
 	    my $runden = $fahrer->{runden} // 0;
 	    $fahrer->{runden} = 'J' x $runden . 'N' x (5 - $runden);
@@ -437,12 +440,12 @@ sub dat_datei_schreiben($$) {
 	    if (defined $fahrer->{startzeit} && $fahrer->{startzeit} =~ /(..):(..):(..)/) {
 		$fahrer->{startzeit} = "$1.$2";
 	    } else {
-		delete $fahrer->{startzeit};
+		$fahrer->{startzeit} = undef;
 	    }
 	    if (defined $fahrer->{zielzeit} && $fahrer->{zielzeit} =~ /(..):(..):(..)/) {
 		$fahrer->{zielzeit} = "$1.$2";
 	    } else {
-		delete $fahrer->{zielzeit};
+		$fahrer->{zielzeit} = undef;
 	    }
 	    if (exists $fahrer->{neue_startnummer}) {
 		$fahrer->{bemerkung} .= " *JW:" .
