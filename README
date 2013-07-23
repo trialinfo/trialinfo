@@ -208,37 +208,43 @@ Beispiele zur Verwendung
 	--username=... --password=... \
 	--create-tables
 
+ Wenn die Datenbank nicht explizit angegeben wird, wird auf die in
+ trial-toolkit/TrialToolkit.pm definierte Datenbank zugegriffen.
+
 
  Einmaliger Import der Daten von 2012 in die Datenbank:
 
-    db-sync.pl --db='mysql:datenbank' \
-	--username=... --password=... \
-	2012-*
+    db-sync.pl 2012-*
 
 
  Neuimport der kompletten Daten von 2012 erzwingen:
 
-    db-sync.pl --db='mysql:datenbank' \
-	--username=... --password=... \
-	--force \
-	2012-*
-
-
- Löschen einer Veranstaltung aus der Datenbank:
-
-    db-sync.pl --db='mysql:datenbank' \
-	--username=... --password=... --delete \
-	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
+    db-sync.pl --force 2012-*
 
 
  Kontinuierlicher Import der Daten einer Veranstaltung in die Datenbank,
  per Default alle 30 Sekunden, mit erneutem Verbindungsaufbau, falls die
  Verbindung zur Datenbank abreißt:
 
-    db-sync.pl --db='mysql:datenbank' \
-	--username=... --password=... \
-	--poll --reconnect \
+    db-sync.pl --poll --reconnect \
 	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
+
+
+ Die Veranstaltungen in der Datenbank auflisten (mit ihren IDs):
+
+    db-export.pl --list
+
+
+ Löschen einer Veranstaltung aus der Datenbank (über Dateiname oder ID):
+
+    db-sync.pl --delete \
+	"2012-04-22 Steinbach ÖTSV + OSK.cfg"
+    db-sync.pl --delete-id 4711
+
+
+ Die Daten einer Veranstaltung über ihre ID aus der Datenbank exportieren:
+
+    db-export.pl 4711
 
 
 Bundesland
