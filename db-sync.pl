@@ -741,6 +741,8 @@ do {
 			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", $nur_fahrer);
 			neue_startnummern_von_fahrern $cfg, $fahrer_nach_startnummer;
 			$cfg->{dateiname} = basename $dateiname;
+			$cfg->{datum} = $1
+			    if $cfg->{dateiname} =~ /^(\d{4}-\d{2}-\d{2}) /;
 			$cfg->{punkteteilung} = $punkteteilung;
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
