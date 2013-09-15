@@ -205,6 +205,16 @@ my %ergebnisliste_felder = (
     map { $ergebnisliste_felder[$_] => $_ }
         (0 .. $#ergebnisliste_felder) );
 
+my %kartenfarben_in = (
+    'Blau' => '#0000ff',
+    'Braun' => '#a52a2a',
+    'Gelb' => '#ffff00',
+    'Grün' => '#008000',
+    'Rot' => '#ff0000',
+    'Weiss' => '#ffffff',
+);
+my %kartenfarben_out = map { $kartenfarben_in{$_} => $_ } keys %kartenfarben_in;
+
 sub cfg_datei_parsen($) {
     my ($dateiname) = @_;
 
@@ -219,7 +229,7 @@ sub cfg_datei_parsen($) {
     $cfg->{fahrzeiten} = [ map { $_ eq "00:00" ? undef : "$_:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
-    $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
+    $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $kartenfarben_in{$_} } @{$cfg->{kartenfarben}} ];
 
     for (my $n = @{$cfg->{wertungspunkte}} - 1; $n > 0; $n--) {
 	pop @{$cfg->{wertungspunkte}}
@@ -277,7 +287,7 @@ sub cfg_datei_schreiben($$) {
 	}
     }
 
-    $cfg->{kartenfarben} = [ map { defined $_ ? $_ : "Keine" } @{$cfg->{kartenfarben}} ];
+    $cfg->{kartenfarben} = [ map { defined $_ ? $kartenfarben_out{$_} : "Keine" } @{$cfg->{kartenfarben}} ];
     $cfg->{runden} = [ map { "0" + ($_ // 0) } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
