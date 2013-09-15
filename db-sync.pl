@@ -1040,7 +1040,7 @@ sub log_sql_statement($@) {
     my ($statement, @bind_values) = @_;
     $statement =~ s/^\s*(.*)\s*$/$1/;
     $statement =~ s/\?/sql_value shift @bind_values/ge;
-    print "    $statement\n";
+    print "    $statement;\n";
 }
 
 do {
