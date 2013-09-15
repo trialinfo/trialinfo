@@ -123,6 +123,7 @@ sub cfg_aus_datenbank($$;$$) {
 	WHERE id = ?
     });
     $sth->execute($id);
+    $cfg->{kartenfarben} = [];
     while (my @row = $sth->fetchrow_array) {
 	$cfg->{kartenfarben}[$row[0] - 1] = $row[1];
     }
