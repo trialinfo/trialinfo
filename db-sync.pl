@@ -42,7 +42,6 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $trace_sql;
 my $trace_all_sql;
 my $dry_run;
-my $klassenfarben;
 
 my @tables;  # Liste der Tabellen in der Datenbank
 
@@ -1040,7 +1039,7 @@ sub log_sql_statement($@) {
     my ($statement, @bind_values) = @_;
     $statement =~ s/^\s*(.*)\s*$/$1/;
     $statement =~ s/\?/sql_value shift @bind_values/ge;
-    print "    $statement\n";
+    print "    $statement;\n";
 }
 
 do {
