@@ -42,7 +42,6 @@ binmode(STDERR, ":encoding($STDERR_encoding)");
 my $trace_sql;
 my $trace_all_sql;
 my $dry_run;
-my $klassenfarben;
 
 my @tables;  # Liste der Tabellen in der Datenbank
 
