@@ -363,17 +363,17 @@ sub sektionen_hash($) {
     return $hash;
 }
 
-sub klassen_hash($$) {
-    my ($cfg, $klassenfarben) = @_;
+sub klassen_hash($) {
+    my ($cfg) = @_;
 
     my $hash = {};
     if ($cfg && $cfg->{runden} && $cfg->{klassen} &&
 		$cfg->{fahrzeiten} && $cfg->{sektionen}) {
 	my $gestartete_klassen = gestartete_klassen($cfg);
 	for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
-	    my $farbe = defined $klassenfarben ? $klassenfarben->{$n + 1} : undef;
 	    $hash->{$n + 1} = [$cfg->{runden}[$n], $cfg->{klassen}[$n],
-			       $gestartete_klassen->[$n], $farbe,
+			       $gestartete_klassen->[$n],
+			       $cfg->{klassenfarben} ? $cfg->{klassenfarben}[$n] : undef,
 			       $cfg->{fahrzeiten}[$n]];
 	}
     }
@@ -432,7 +432,7 @@ sub neue_startnummern_hash($) {
 }
 
 sub veranstaltung_aktualisieren($$$$) {
-    my ($callback, $id, $alt, $neu, $klassenfarben) = @_;
+    my ($callback, $id, $alt, $neu) = @_;
     my $changed;
 
     if (!$neu || (exists $neu->{titel} &&
@@ -467,8 +467,8 @@ sub veranstaltung_aktualisieren($$$$) {
 	hash_aktualisieren $callback, 'klasse',
 		[qw(id klasse)], [qw(runden bezeichnung gestartet farbe fahrzeit)],
 		[$id],
-		klassen_hash($alt, $klassenfarben),
-		klassen_hash($neu, $klassenfarben)
+		klassen_hash($alt),
+		klassen_hash($neu)
 	    and $changed = 1;
     }
 

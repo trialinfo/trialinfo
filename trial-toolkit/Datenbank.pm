@@ -93,7 +93,7 @@ sub cfg_aus_datenbank($$) {
     }
 
     $sth = $dbh->prepare(q{
-	SELECT klasse, bezeichnung, fahrzeit, runden
+	SELECT klasse, bezeichnung, fahrzeit, runden, farbe
 	FROM klasse
 	WHERE id = ?
     });
@@ -103,6 +103,7 @@ sub cfg_aus_datenbank($$) {
 	$cfg->{klassen}[$n] = $row[1];
 	$cfg->{fahrzeiten}[$n] = $row[2];
 	$cfg->{runden}[$n] = $row[3];
+	$cfg->{klassenfarben}[$n] = $row[4];
     }
 
     $cfg->{sektionen} = sektionen_aus_datenbank($dbh, $id);

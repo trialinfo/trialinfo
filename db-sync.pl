@@ -446,12 +446,10 @@ my $result = GetOptions("db=s" => \$database,
 $vareihe = [ map { split /,/, $_ } @$vareihe ];
 
 $farben = [ map { split /,/, $_ } @$farben ];
-if (@$farben) {
-    for (my $n = 0; $n < @$farben; $n++) {
-	$klassenfarben->{$n + 1} = $farben->[$n]
-	    if $farben->[$n] ne "";
-    }
+unless (@$farben) {
+    map { $farben->[$_ - 1] = $klassenfarben->{$_} } keys %$klassenfarben;
 }
+$klassenfarben = $farben;
 
 my $features = $veranstaltungsfeatures;
 foreach my $feature (map { split /,/, $_ } @$features_list) {
@@ -751,6 +749,7 @@ do {
 			$cfg->{aktiv} = $aktiv;
 			$cfg->{vareihen} = $vareihe;
 			features_aktualisieren $cfg, $features;
+			$cfg->{klassenfarben} = $klassenfarben;
 
 			print "\n";
 			$id = naechste_id($veranstaltungen)
