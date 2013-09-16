@@ -150,15 +150,14 @@ sub cfg_aus_datenbank($$) {
     return $cfg;
 }
 
-sub fahrer_wertungen_aus_datenbank($$$) {
-    my ($dbh, $id, $fahrer_nach_startnummer) = @_;
+sub fahrer_wertungen_aus_datenbank($$$;$) {
+    my ($dbh, $id, $fahrer_nach_startnummer, $startnummer) = @_;
 
     my $sth = $dbh->prepare(q{
 	SELECT startnummer, wertung, wertungsrang, wertungspunkte
 	FROM fahrer_wertung
-	WHERE id = ?
-    });
-    $sth->execute($id);
+	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
+    $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my @row = $sth->fetchrow_array) {
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
@@ -173,15 +172,14 @@ sub fahrer_wertungen_aus_datenbank($$$) {
     }
 }
 
-sub punkte_aus_datenbank($$$) {
-    my ($dbh, $id, $fahrer_nach_startnummer) = @_;
+sub punkte_aus_datenbank($$$;$) {
+    my ($dbh, $id, $fahrer_nach_startnummer, $startnummer) = @_;
 
     my $sth = $dbh->prepare(q{
 	SELECT startnummer, runde, sektion, punkte
 	FROM punkte
-	WHERE id = ?
-    });
-    $sth->execute($id);
+	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
+    $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my @row = $sth->fetchrow_array) {
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
@@ -194,15 +192,14 @@ sub punkte_aus_datenbank($$$) {
     }
 }
 
-sub runden_aus_datenbank($$$) {
-    my ($dbh, $id, $fahrer_nach_startnummer) = @_;
+sub runden_aus_datenbank($$$;$) {
+    my ($dbh, $id, $fahrer_nach_startnummer, $startnummer) = @_;
 
     my $sth = $dbh->prepare(q{
 	SELECT startnummer, runde, punkte
 	FROM runde
-	WHERE id = ?
-    });
-    $sth->execute($id);
+	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
+    $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my @row = $sth->fetchrow_array) {
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
@@ -242,8 +239,8 @@ sub punkteverteilung_umwandeln($) {
     $fahrer->{s} = $s;
 }
 
-sub fahrer_aus_datenbank($$) {
-    my ($dbh, $id) = @_;
+sub fahrer_aus_datenbank($$;$) {
+    my ($dbh, $id, $startnummer) = @_;
     my $fahrer_nach_startnummer;
 
     my $sth = $dbh->prepare(q{
@@ -254,18 +251,17 @@ sub fahrer_aus_datenbank($$) {
 	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
 	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, rang
 	FROM fahrer
-	WHERE id = ?
-    });
-    $sth->execute($id);
+	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
+    $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my $fahrer = $sth->fetchrow_hashref) {
 	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
     }
 
-    punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
-    runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
-    fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
+    runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
+    fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
 
     return $fahrer_nach_startnummer;
 }

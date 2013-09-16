@@ -23,7 +23,7 @@ use Storable qw(dclone);
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(fahrer_aktualisieren veranstaltung_aktualisieren wertung_aktualisieren);
+@EXPORT = qw(einen_fahrer_aktualisieren fahrer_aktualisieren veranstaltung_aktualisieren wertung_aktualisieren);
 use strict;
 
 # datensatz_aktualisieren
@@ -187,15 +187,18 @@ sub punkte_pro_runde_hash($) {
     return $hash;
 }
 
-sub fahrer_wertungen_hash($) {
-    my ($fahrer) = @_;
+sub fahrer_wertungen_hash($$) {
+    my ($fahrer, $wertungsfelder) = @_;
 
     my $hash = {};
     if ($fahrer) {
 	my $wertungen = $fahrer->{wertungen} // [];
 	for (my $n = 0; $n < @$wertungen; $n++) {
 	    next unless $wertungen->[$n];
-	    $hash->{$n + 1} = [ $fahrer->{wertungsrang}[$n], $fahrer->{wertungspunkte}[$n] ];
+	    $hash->{$n + 1} = [];
+	    foreach my $feld (@$wertungsfelder) {
+		push @{$hash->{$n + 1}}, $fahrer->{$feld}[$n];
+	    }
 	}
     }
     return $hash;
@@ -222,7 +225,7 @@ sub einen_fahrer_aktualisieren($$$$$) {
 		punkte_pro_runde_hash($neu)
 	    and $changed = 1;
     }
-    if (!$neu || exists $neu->{wertungen}) {
+    if (!$neu || exists $neu->{wertungspunkte}) {
 	if ($alt && $neu) {
 	    # Die Datenbank speichert Fließkommazahlen wahrscheinlich nicht mit
 	    # derselben Genauigkeit, die Perl für die Berechnung verwendet.
@@ -240,11 +243,16 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	    }
 	}
 
+	my $wertungsfelder = [];
+	foreach my $feld (qw(wertungsrang wertungspunkte)) {
+	    push @$wertungsfelder, $feld
+		if !$neu || exists $neu->{$feld};
+	}
 	hash_aktualisieren $callback, 'fahrer_wertung',
-		[qw(id startnummer wertung)], [qw(wertungsrang wertungspunkte)],
+		[qw(id startnummer wertung)], $wertungsfelder,
 		[$id, $startnummer],
-		fahrer_wertungen_hash($alt),
-		fahrer_wertungen_hash($neu)
+		fahrer_wertungen_hash($alt, $wertungsfelder),
+		fahrer_wertungen_hash($neu, $wertungsfelder)
 	    and $changed = 1;
     }
 
