@@ -36,8 +36,7 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime
-	     nennungsmaske_feld);
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime);
 
 use File::stat;
 use POSIX qw(strftime);
