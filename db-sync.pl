@@ -619,15 +619,17 @@ sub wertung_aktualisieren($$) {
 
 sub log_sql_statement($@) {
     my ($statement, @bind_values) = @_;
-    $statement =~ s/^\s*(.*)\s*$/$1/;
+    $statement =~ s/^\s*(.*?)\s*$/$1/s;
+    $statement =~ s/^/    /mg;
     $statement =~ s/\?/sql_value shift @bind_values/ge;
-    print "    $statement;\n";
+    print "$statement;\n";
 }
 
 do {
     eval {
 	$dbh = DBI->connect("DBI:$database", $username, $password,
-			    { RaiseError => 1, AutoCommit => 1, db_utf8($database) })
+			    { PrintError => 1, RaiseError => 1,
+			      AutoCommit => 1, db_utf8($database) })
 	    or die "Could not connect to database: $DBI::errstr\n";
 
 	if ($dbh->{Driver}{Name} eq "mysql") {
@@ -782,13 +784,11 @@ do {
 	}
     };
     if ($@) {
-	warn $@;
-	if ($@ =~ /Duplicate entry .* for key/) {
-	    # Der Datenstand am Server scheint nicht mehr mit dem lokal
-	    # zwischengespeicherten Datenstand übereinzustimmen.
-	    # Reparaturversuch über Neuübertragung der Daten vom Server.
-	    undef $veranstaltungen;
-	}
+	$dbh->disconnect;
+	# Der Datenstand am Server stimmt vielleicht nicht mehr mit dem
+	# lokal zwischengespeicherten Datenstand übereinzustimmen.
+	# Reparaturversuch über Neuübertragung der Daten vom Server.
+	undef $veranstaltungen;
     }
     if ($reconnect_interval) {
 	print "Waiting for $reconnect_interval seconds...\n";
