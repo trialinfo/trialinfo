@@ -27,7 +27,7 @@ require Exporter;
 
 sub wertungspunkte_aus_datenbank($$) {
     my ($dbh, $id) = @_;
-    my $wertungspunkte;
+    my $wertungspunkte = [];
 
     $sth = $dbh->prepare(q{
 	SELECT rang, punkte
@@ -38,8 +38,6 @@ sub wertungspunkte_aus_datenbank($$) {
     while (my @row = $sth->fetchrow_array) {
 	$wertungspunkte->[$row[0] - 1] = $row[1];
     }
-    push @$wertungspunkte, 0
-	unless @$wertungspunkte;
     return $wertungspunkte;
 }
 

@@ -222,6 +222,9 @@ sub punkte_berechnen($$) {
 sub rang_und_wertungspunkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
     my $wertungspunkte = $cfg->{wertungspunkte};
+    unless (@$wertungspunkte) {
+	$wertungspunkte = [0];
+    }
 
     punkte_berechnen $fahrer_nach_startnummer, $cfg;
 
