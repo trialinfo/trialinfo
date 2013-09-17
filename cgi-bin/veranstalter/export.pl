@@ -20,7 +20,6 @@ use CGI;
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use Datenbank;
-use Datenbank;
 use TrialToolkit;
 use Trialtool;
 use strict;

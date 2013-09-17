@@ -36,8 +36,7 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime
-	     nennungsmaske_feld);
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime);
 
 use File::stat;
 use POSIX qw(strftime);
@@ -375,7 +374,7 @@ sub dat_datei_parsen($$) {
 	delete $fahrer->{versicherung}
 	    if $fahrer->{versicherung} == 0;
 
-	if ($fahrer->{bemerkung} =~ s/\s*\*JW:(\d*)\*\s*//) {
+	if ($fahrer->{bemerkung} =~ s/\s*\*JW:\s*(\d*)\s*\*\s*//) {
 	    # Falls für die Jahreswerung eine andere Startnummer verwendet
 	    # werden soll, kann das im Feld Bemerkung vermerkt werden,
 	    # z.B.:  *JW:987*.  Wenn keine Startnummer angegeben ist
@@ -383,7 +382,7 @@ sub dat_datei_parsen($$) {
 	    # ignoriert.
 	    $fahrer->{neue_startnummer} = $1 || undef;
 	}
-	if ($fahrer->{bemerkung} =~ s/\s*\*BL:([^*]*)\*\s*//) {
+	if ($fahrer->{bemerkung} =~ s/\s*\*BL:\s*([^*]*?)\s*\*\s*//) {
 	    $fahrer->{bundesland} = $1;
 	}
 	$fahrer_nach_startnummern->{$startnummer} = $fahrer;
