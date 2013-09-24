@@ -709,9 +709,9 @@ do {
 			print "\n";
 			$id = naechste_id($veranstaltungen)
 			    unless defined $id;
-			my $veranstaltung = $veranstaltungen->{$id};
+			my $veranstaltung = $neu_uebertragen ? undef : $veranstaltungen->{$id};
 			$dbh->begin_work;
-			veranstaltung_loeschen $dbh, $id, 0
+			veranstaltung_loeschen $dbh, $id, 1
 			    if $neu_uebertragen;
 			veranstaltung_aktualisieren \&sql_aktualisieren, $id,
 						    $veranstaltung->{cfg}, $cfg;
