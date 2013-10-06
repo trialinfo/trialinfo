@@ -75,7 +75,7 @@ CREATE TABLE fahrer (
   helfer_nummer VARCHAR(8),
   startzeit TIME,
   zielzeit TIME,
-  stechen INT,
+  stechen INT DEFAULT 0,
   nennungseingang BOOLEAN,
   papierabnahme BOOLEAN,
   versicherung INT,
@@ -85,8 +85,8 @@ CREATE TABLE fahrer (
   s2 INT, -- nicht in version berücksichtigt (berechnet)
   s3 INT, -- nicht in version berücksichtigt (berechnet)
   s4 INT, -- nicht in version berücksichtigt (berechnet)
-  ausfall INT,
-  zusatzpunkte INT,
+  ausfall INT DEFAULT 0,
+  zusatzpunkte INT DEFAULT 0,
   punkte INT, -- nicht in version berücksichtigt (berechnet)
   rang INT, -- nicht in version berücksichtigt (berechnet)
   PRIMARY KEY (id, startnummer)
