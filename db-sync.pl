@@ -161,7 +161,7 @@ CREATE TABLE veranstaltung (
   punkte_sektion_auslassen INT,
   wertungspunkte_234 BOOLEAN,
   ergebnisliste_feld INT,
-  wertungspunkte_markiert BOOLEAN,
+  wertung1_markiert BOOLEAN,
   versicherung INT,
   rand_links INT,
   rand_oben INT,
@@ -341,7 +341,7 @@ sub veranstaltung_loeschen($$$) {
 sub features_aktualisieren($$) {
     my ($cfg, $features) = @_;
 
-    my $f = { map { $_ => 1 } @{$cfg->{nennungsmaske_felder}} };
+    my $f = { map { $_ => 1 } @{$cfg->{features}} };
     foreach my $feature (keys %$features) {
 	if ($features->{$feature}) {
 	    $f->{$feature} = 1;
@@ -349,7 +349,7 @@ sub features_aktualisieren($$) {
 	    delete $f->{$feature};
 	}
     }
-    $cfg->{nennungsmaske_felder} = [keys %$f];
+    $cfg->{features} = [keys %$f];
 }
 
 sub status($) {

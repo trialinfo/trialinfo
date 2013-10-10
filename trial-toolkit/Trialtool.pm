@@ -69,7 +69,7 @@ my $cfg_format = [
     "fahrzeiten:A5:15",			# 1609:
     "wertungspunkte:S<:20",		# 1684: Wertungspunkte für Rang 1 - 20
     "sektionen:A15:15",			# 1724: Gefahrene Sektionen pro Klasse
-    "wertungspunkte_markiert:S<",	# 1949: Feld "Wertungspunkte" markiert?
+    "wertung1_markiert:S<",		# 1949: Feld "Wertungspunkte" markiert?
     "versicherung:S<",			# 1951: Versicherungsart-Vorwahl (0 = Keine,
 					#	1 = ADAC-Versicherung, 2 = DMV-Versicherung,
 					#	3 = KFZ-Versicherung, 4 = Tagesversicherung)
@@ -223,8 +223,8 @@ sub cfg_datei_parsen($) {
     my $cfg = do { local $/; <$fh> };
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
     $cfg = $cfg_parser->unformat($cfg);
-    delete $cfg->{''};
     decode_strings($cfg, $cfg_format);
+    delete $cfg->{''};
     $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { $_ eq "00:00" ? undef : "$_:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
@@ -236,13 +236,13 @@ sub cfg_datei_parsen($) {
 	    if $cfg->{wertungspunkte}[$n] == $cfg->{wertungspunkte}[$n - 1];
     }
 
-    $cfg->{nennungsmaske_felder} = [ @$nennungsmaske_felder ];
+    $cfg->{features} = [ @$nennungsmaske_felder ];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
-	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder1->[$n]
+	push @{$cfg->{features}}, $nennungsmaske_felder1->[$n]
 	    if $cfg->{nennungsmaske_felder1}[$n];
     }
     for (my $n = 0; $n < @$nennungsmaske_felder2; $n++) {
-	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder2->[$n]
+	push @{$cfg->{features}}, $nennungsmaske_felder2->[$n]
 	    if $cfg->{nennungsmaske_felder2}[$n];
     }
     delete $cfg->{nennungsmaske_felder1};
@@ -261,7 +261,7 @@ sub cfg_datei_schreiben($$) {
     $cfg = { %{$cfg} };
     encode_strings($cfg, $cfg_format);
 
-    my $felder = { map { $_ => 1 } @{$cfg->{nennungsmaske_felder}} };
+    my $features = { map { $_ => 1 } @{$cfg->{features}} };
 
     for (my $n = @{$cfg->{wertungspunkte}}; $n < 20; $n++) {
 	$cfg->{wertungspunkte}[$n] = $cfg->{wertungspunkte}[$n - 1];
@@ -270,14 +270,14 @@ sub cfg_datei_schreiben($$) {
     $cfg->{nennungsmaske_felder1} = [];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
 	$cfg->{nennungsmaske_felder1}[$n] =
-	    exists $felder->{$nennungsmaske_felder1->[$n]};
+	    exists $features->{$nennungsmaske_felder1->[$n]};
     }
     $cfg->{nennungsmaske_felder2} = [];
     for (my $n = 0; $n < @$nennungsmaske_felder2; $n++) {
 	$cfg->{nennungsmaske_felder2}[$n] =
-	    exists $felder->{$nennungsmaske_felder2->[$n]};
+	    exists $features->{$nennungsmaske_felder2->[$n]};
     }
-    delete $cfg->{nennungsmaske_felder};
+    delete $cfg->{features};
     $cfg->{_1} = 1;
 
     # Pad arrays; otherwise pack() writes variable-length records
@@ -330,8 +330,8 @@ sub dat_datei_parsen($$) {
 	my $klasse = unpack "S<", $fahrer_binaer;
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
-	delete $fahrer->{''};
 	decode_strings($fahrer, $dat_format);
+	delete $fahrer->{''};
 
 	if ($startnummer >= 1000 && $startnummer < 1400) {
 	    # Dast Trialtool verwendet dir Startnummern 1000 - 1399 für Fahrer,

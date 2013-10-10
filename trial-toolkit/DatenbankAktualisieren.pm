@@ -402,7 +402,7 @@ sub feature_hash($) {
 
     my $hash = {};
     if ($cfg) {
-	foreach my $feature (@{$cfg->{nennungsmaske_felder}}) {
+	foreach my $feature (@{$cfg->{features}}) {
 	    $hash->{$feature} = [];
 	}
     }
@@ -484,7 +484,7 @@ sub veranstaltung_aktualisieren($$$$) {
 	    and $changed = 1;
     }
 
-    if (!$neu || exists $neu->{nennungsmaske_felder}) {
+    if (!$neu || exists $neu->{features}) {
 	hash_aktualisieren $callback, 'veranstaltung_feature',
 		[qw(id feature)], [],
 		[$id],
@@ -518,7 +518,7 @@ sub veranstaltung_aktualisieren($$$$) {
 	foreach my $feld (qw(
 	    dateiname datum aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
-	    wertungspunkte_markiert versicherung ergebnislistenbreite
+	    wertung1_markiert versicherung ergebnislistenbreite
 	    ergebnisliste_feld dat_mtime cfg_mtime punkteteilung)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;

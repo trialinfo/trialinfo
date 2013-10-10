@@ -89,7 +89,7 @@ sub rang_vergleich($$$) {
 sub hat_wertung($$) {
     my ($cfg, $wertung) = @_;
 
-    grep(/^wertung$wertung$/, @{$cfg->{nennungsmaske_felder}});
+    grep(/^wertung$wertung$/, @{$cfg->{features}});
 }
 
 # Ermitteln, welche Klassen in welchen Sektionen und Runden überhaupt gefahren

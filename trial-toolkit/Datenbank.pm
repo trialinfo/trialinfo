@@ -71,7 +71,7 @@ sub cfg_aus_datenbank($$) {
     my $sth = $dbh->prepare(q{
 	SELECT version, dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
 	       punkte_sektion_auslassen, wertungspunkte_234, rand_links,
-	       rand_oben, wertungspunkte_markiert, versicherung,
+	       rand_oben, wertung1_markiert, versicherung,
 	       ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime,
 	       punkteteilung
 	FROM veranstaltung
@@ -131,9 +131,9 @@ sub cfg_aus_datenbank($$) {
 	WHERE id = ?
     });
     $sth->execute($id);
-    $cfg->{nennungsmaske_felder} = [];
+    $cfg->{features} = [];
     while (my @row = $sth->fetchrow_array) {
-	push @{$cfg->{nennungsmaske_felder}}, $row[0];
+	push @{$cfg->{features}}, $row[0];
     }
 
     $sth = $dbh->prepare(q{
