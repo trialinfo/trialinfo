@@ -177,8 +177,8 @@ foreach my $name (trialtool_dateien @ARGV) {
     $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
-    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]";
-    doc_h2 doc_text "$cfg->{titel}[$wertung - 1]\n$cfg->{subtitel}[$wertung - 1]";
+    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]{bezeichnung}";
+    doc_h2 doc_text "$cfg->{wertungen}[$wertung - 1]{titel}\n$cfg->{wertungen}[$wertung - 1]{subtitel}";
 
     tageswertung cfg => $cfg,
 		 fahrer_nach_startnummer => $fahrer_nach_startnummer,

@@ -192,7 +192,7 @@ if ($RenderOutput::html) {
 EOF
 }
 
-doc_h1 $letzte_cfg->{wertungen}[$wertung - 1];
+doc_h1 $letzte_cfg->{wertungen}[$wertung - 1]{bezeichnung};
 jahreswertung veranstaltungen => $veranstaltungen,
 	      wertung => $wertung,
 	      laeufe_gesamt => $laeufe,

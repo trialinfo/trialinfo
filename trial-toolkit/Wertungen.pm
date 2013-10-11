@@ -161,28 +161,26 @@ sub punkte_berechnen($$) {
 	    $s = [(0) x 6];
 	    $gefahrene_sektionen = 0;
 
-	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // '';
+	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // [];
 
-	    my $runden = $cfg->{runden}[$klasse - 1];
+	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    runde: for ($runde = 0; $runde < $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde] // [];
-		sektion: for (my $sektion = 0; $sektion < length $sektionen; $sektion++) {
-		    if (substr($sektionen, $sektion, 1) eq "J") {
-			my $p = $punkte_in_runde->[$sektion];
-			unless (defined $p) {
-			    $letzte_vollstaendige_runde = $runde
-				unless defined $letzte_vollstaendige_runde;
-			    $befahren = befahrene_sektionen($fahrer_nach_startnummer)
-				unless defined $befahren;
-			    last runde
-				if defined $befahren->[$klasse - 1][$runde][$sektion];
-			    next sektion;
-			}
-			$gefahrene_sektionen++;
-			$punkte_pro_runde->[$runde] += $p;
-			$s->[$p]++
-			    if $p <= 5;
+		sektion: foreach my $sektion (@$sektionen) {
+		    my $p = $punkte_in_runde->[$sektion - 1];
+		    unless (defined $p) {
+			$letzte_vollstaendige_runde = $runde
+			    unless defined $letzte_vollstaendige_runde;
+			$befahren = befahrene_sektionen($fahrer_nach_startnummer)
+			    unless defined $befahren;
+			last runde
+			    if defined $befahren->[$klasse - 1][$runde][$sektion - 1];
+			next sektion;
 		    }
+		    $gefahrene_sektionen++;
+		    $punkte_pro_runde->[$runde] += $p;
+		    $s->[$p]++
+			if $p <= 5;
 		}
 		$letzte_begonnene_runde = $runde + 1
 		    if defined $punkte_pro_runde->[$runde];
@@ -264,7 +262,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    $idx == 0 || $cfg->{wertungspunkte_234};
 
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
-	    my $runden = $cfg->{runden}[$klasse - 1];
+	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	    # $fahrer->{wertungsrang}[] ist der Rang in der jeweiligen
@@ -400,11 +398,9 @@ sub punkte_pro_sektion($$$) {
 
     my $klasse = $fahrer->{klasse};
     my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$runde];
-    for (my $s = 0; $s < 15; $s++) {
-	if (substr($cfg->{sektionen}[$klasse - 1], $s, 1) eq "J") {
-	    my $p = $punkte_pro_runde->[$s];
-	    push @$punkte_pro_sektion, defined $p ? $p : '-';
-	}
+    foreach my $sektion (@{$cfg->{sektionen}[$klasse - 1]}) {
+	my $p = $punkte_pro_runde->[$sektion - 1];
+	push @$punkte_pro_sektion, defined $p ? $p : '-';
     }
     return join(" ", @$punkte_pro_sektion);
 }
@@ -536,8 +532,7 @@ sub tageswertung(@) {
 	if $args{statistik_gesamt};
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	my $idx = $klasse - 1;
-	my $runden = $args{cfg}{runden}[$idx];
+	my $runden = $args{cfg}{klassen}[$klasse - 1]{runden};
 	my ($header, $body, $format);
 	my $farbe = "";
 
@@ -565,7 +560,7 @@ sub tageswertung(@) {
 
 	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"
 	    if $RenderOutput::html;
-	doc_h3 "$args{cfg}{klassen}[$idx]";
+	doc_h3 "$args{cfg}{klassen}[$klasse - 1]{bezeichnung}";
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ "$farbe", "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
 	foreach my $spalte (@{$args{spalten}}) {
@@ -1051,7 +1046,7 @@ sub jahreswertung(@) {
 	    #}
 	}
 
-	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]";
+	doc_h3 "$letzte_cfg->{klassen}[$klasse - 1]{bezeichnung}";
 
 	doc_p $zusammenfassung->{$klasse}
 	    unless defined $gemeinsame_zusammenfassung;
@@ -1072,7 +1067,7 @@ sub jahreswertung(@) {
 	    my $gewertet = $cfg->{gewertet}[$klasse - 1];
 	    if ($gewertet) {
 		push @$format, "r$spaltenbreite";
-		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{titel}[$idx]\"" ] : "";
+		push @$header,  $gewertet ? [ $cfg->{label}, "r1", "title=\"$cfg->{wertungen}[$idx]{titel}\"" ] : "";
 	    }
 	}
 	if ($hat_streichpunkte) {
@@ -1131,8 +1126,8 @@ sub jahreswertung(@) {
 
 	my $label = defined $cfg->{label2} ? $cfg->{label2} : $cfg->{label};
 
-	#push @$body, [ $label, "$cfg->{titel}[$idx]: $cfg->{subtitel}[$idx]" ];
-	push @$body, [ $label, $cfg->{titel}[$idx] ];
+	#push @$body, [ $label, "$cfg->{wertungen}[$idx]{titel}: $cfg->{wertungen}[$idx]{subtitel}" ];
+	push @$body, [ $label, $cfg->{wertungen}[$idx]{titel} ];
     }
     doc_table header => ["", "Name"], body => $body, format => ["r", "l"];
 }

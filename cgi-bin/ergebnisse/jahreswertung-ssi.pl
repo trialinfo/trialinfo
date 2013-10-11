@@ -171,7 +171,10 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($vareihe, $letzte_cfg->{id});
 while (my @row = $sth->fetchrow_array) {
-    $letzte_cfg->{klassen}[$row[0] - 1] = $row[1];
+    $letzte_cfg->{klassen}[$row[0] - 1] = {
+	bezeichnung => $row[1],
+	farbe => $row[2]
+    };
     $klassenfarben->{$row[0]} = $row[2]
 	if defined $row[2];
     $laeufe->{$row[0]} = $row[3];

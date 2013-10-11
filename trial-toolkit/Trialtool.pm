@@ -231,6 +231,42 @@ sub cfg_datei_parsen($) {
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
     $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $kartenfarben_in{$_} } @{$cfg->{kartenfarben}} ];
 
+    my $klassen = [];
+    for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
+	$klassen->[$n] = {
+	    bezeichnung => $cfg->{klassen}[$n],
+	    runden => $cfg->{runden}[$n],
+	    fahrzeit => $cfg->{fahrzeiten}[$n],
+	    # farbe => ...
+	};
+    }
+    $cfg->{klassen} = $klassen;
+    delete $cfg->{runden};
+    delete $cfg->{fahrzeiten};
+
+    my $wertungen = [];
+    for (my $n = 0; $n < @{$cfg->{titel}}; $n++) {
+	$wertungen->[$n] = {
+	    titel => $cfg->{titel}[$n],
+	    subtitel => $cfg->{subtitel}[$n],
+	    bezeichnung => $cfg->{wertungen}[$n],
+	};
+    }
+    $cfg->{wertungen} = $wertungen;
+    delete $cfg->{titel};
+    delete $cfg->{subtitel};
+
+    my $sektionen = [];
+    for (my $n = 0; $n < @{$cfg->{sektionen}}; $n++) {
+	my $s = $cfg->{sektionen}[$n];
+	$sektionen->[$n] = [];
+	for (my $i = 0; $i < length $s; $i++) {
+	    push @{$sektionen->[$n]}, $i + 1
+		if substr($s, $i, 1) eq 'J';
+	}
+    }
+    $cfg->{sektionen} = $sektionen;
+
     for (my $n = @{$cfg->{wertungspunkte}} - 1; $n > 0; $n--) {
 	pop @{$cfg->{wertungspunkte}}
 	    if $cfg->{wertungspunkte}[$n] == $cfg->{wertungspunkte}[$n - 1];
@@ -259,12 +295,43 @@ sub cfg_datei_schreiben($$) {
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
 
     $cfg = { %{$cfg} };
-    encode_strings($cfg, $cfg_format);
 
     my $features = { map { $_ => 1 } @{$cfg->{features}} };
 
     for (my $n = @{$cfg->{wertungspunkte}}; $n < 20; $n++) {
 	$cfg->{wertungspunkte}[$n] = $cfg->{wertungspunkte}[$n - 1];
+    }
+
+    my $sektionen = $cfg->{sektionen};
+    $cfg->{sektionen} = [];
+    for (my $n = 0; $n < 15; $n++) {
+	my $s = 'N' x 15;
+	foreach my $sektion (@{$sektionen->[$n]}) {
+	    substr($s, $sektion - 1, 1) = 'J';
+	}
+	push @{$cfg->{sektionen}}, $s;
+    }
+
+    my $klassen = $cfg->{klassen};
+    $cfg->{klassen} = [];
+    $cfg->{runden} = [];
+    $cfg->{fahrzeit} = [];
+    for (my $n = 0; $n < 15; $n++) {
+	my $klasse = $klassen->[$n];
+	push @{$cfg->{klassen}}, $klasse->{bezeichnung};
+	push @{$cfg->{runden}}, $klasse->{runden};
+	push @{$cfg->{fahrzeit}}, $klasse->{fahrzeit};
+    }
+
+    my $wertungen = $cfg->{wertungen};
+    $cfg->{titel} = [];
+    $cfg->{subtitel} = [];
+    $cfg->{wertungen} = [];
+    for (my $n = 0; $n < 4; $n++) {
+	my $wertung = $wertungen->[$n];
+	push @{$cfg->{titel}}, $wertung->{titel};
+	push @{$cfg->{subtitel}}, $wertung->{subtitel};
+	push @{$cfg->{wertungen}}, $wertung->{bezeichnung};
     }
 
     $cfg->{nennungsmaske_felder1} = [];
@@ -293,6 +360,7 @@ sub cfg_datei_schreiben($$) {
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
 
+    encode_strings($cfg, $cfg_format);
     print $fh $cfg_parser->format($cfg);
 }
 
@@ -540,9 +608,10 @@ sub gestartete_klassen($) {
     my ($cfg) = @_;
 
     my $sektionen = $cfg->{sektionen};
-    my $gestartet;
+    my $gestartet = [];
     for (my $n = 0; $n < @$sektionen; $n++) {
-	push @$gestartet, index($sektionen->[$n], "J") != -1 ? 1 : 0;
+	$gestartet->[$n] = 1
+	    if $sektionen->[$n] && @{$sektionen->[$n]};
     }
     return $gestartet;
 }

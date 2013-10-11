@@ -49,17 +49,15 @@ sub sektionen_aus_datenbank($$) {
     my ($dbh, $id) = @_;
     my $sektionen = [];
 
-    for (my $n = 0; $n < 15; $n++) {
-	push @$sektionen, 'N' x 15;
-    }
     my $sth = $dbh->prepare(q{
 	SELECT klasse, sektion
 	FROM sektion
 	WHERE id = ?
+	ORDER BY sektion
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
-	substr($sektionen->[$row[0] - 1], $row[1] - 1, 1) = 'J';
+	push @{$sektionen->[$row[0] - 1]}, $row[1];
     }
     return $sektionen;
 }
@@ -89,10 +87,11 @@ sub cfg_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
-	my $n = $row[0] - 1;
-	$cfg->{titel}[$n] = $row[1];
-	$cfg->{subtitel}[$n] = $row[2];
-	$cfg->{wertungen}[$n] = $row[3];
+	$cfg->{wertungen}[$row[0] - 1] = {
+	    titel => $row[1],
+	    subtitel => $row[2],
+	    bezeichnung => $row[3],
+	};
     }
 
     $sth = $dbh->prepare(q{
@@ -102,11 +101,12 @@ sub cfg_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
-	my $n = $row[0] - 1;
-	$cfg->{klassen}[$n] = $row[1];
-	$cfg->{fahrzeiten}[$n] = $row[2];
-	$cfg->{runden}[$n] = $row[3];
-	$cfg->{klassenfarben}[$n] = $row[4];
+	$cfg->{klassen}[$row[0] - 1] = {
+	    bezeichnung => $row[1],
+	    fahrzeit => $row[2],
+	    runden => $row[3],
+	    farbe => $row[4],
+	};
     }
 
     $cfg->{sektionen} = sektionen_aus_datenbank($dbh, $id);
@@ -167,6 +167,10 @@ sub fahrer_wertungen_aus_datenbank($$$) {
 	$$fahrer->{wertungsrang}[$row[1] - 1] = $row[2];
 	$$fahrer->{wertungspunkte}[$row[1] - 1] = $row[3];
     }
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{wertungen} = []
+	    unless exists $fahrer->{wertungen};
+    }
 }
 
 sub punkte_aus_datenbank($$$) {
@@ -184,6 +188,10 @@ sub punkte_aus_datenbank($$$) {
 	$$fahrer->{startnummer} = $startnummer;
 	$$fahrer->{punkte_pro_sektion}[$row[1] - 1][$row[2] - 1] = $row[3];
     }
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{punkte_pro_sektion} = []
+	    unless exists $fahrer->{punkte_pro_sektion};
+    }
 }
 
 sub runden_aus_datenbank($$$) {
@@ -200,6 +208,10 @@ sub runden_aus_datenbank($$$) {
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
 	$$fahrer->{startnummer} = $startnummer;
 	$$fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
+    }
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{punkte_pro_runde} = []
+	    unless exists $fahrer->{punkte_pro_runde};
     }
 }
 

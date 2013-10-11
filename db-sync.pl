@@ -702,7 +702,9 @@ do {
 			$cfg->{aktiv} = $aktiv;
 			$cfg->{vareihen} = $vareihe;
 			features_aktualisieren $cfg, $features;
-			$cfg->{klassenfarben} = $klassenfarben;
+			for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
+			    $cfg->{klassen}[$n]{farbe} = $klassenfarben->[$n];
+			}
 
 			print "\n";
 			$id = naechste_id($veranstaltungen)

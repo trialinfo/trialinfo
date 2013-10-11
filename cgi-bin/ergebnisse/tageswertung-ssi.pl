@@ -127,9 +127,11 @@ if (defined $vareihe) {
 }
 while (my @row = $sth->fetchrow_array) {
     $cfg->{runden}[$row[0] - 1] = $row[1];
-    $cfg->{klassen}[$row[0] - 1] = $row[2];
-    $klassenfarben->{$row[0]} = $row[3]
-	if defined $row[3];
+    $cfg->{klassen}[$row[0] - 1] = {
+	runden => $row[1],
+	bezeichnung => $row[2],
+	farbe => $row[3]
+    };
 }
 
 $sth = $dbh->prepare(q{
@@ -186,14 +188,12 @@ if ($alle_punkte) {
 	SELECT klasse, sektion
 	FROM sektion
 	WHERE id = ?
+	ORDER BY sektion
     });
     $sth->execute($id);
     my $sektionen;
-    for (my $n = 0; $n < 15; $n++) {
-	push @$sektionen, "N" x 15;
-    }
     while (my @row = $sth->fetchrow_array) {
-	substr($sektionen->[$row[0] - 1], $row[1] - 1, 1) = "J";
+	push @{$sektionen->[$row[0] - 1]}, $row[1];
     }
     $cfg->{sektionen} = $sektionen;
 

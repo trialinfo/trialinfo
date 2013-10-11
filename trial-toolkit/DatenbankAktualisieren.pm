@@ -319,11 +319,15 @@ sub veranstaltung_wertungen_hash($) {
     my ($cfg) = @_;
 
     my $hash = {};
-    if ($cfg && $cfg->{titel} && $cfg->{subtitel} && $cfg->{wertungen}) {
-	for (my $n = 0; $n < @{$cfg->{titel}}; $n++) {
-	    next if $cfg->{titel}[$n] eq "" && $cfg->{subtitel}[$n] eq "";
-	    $hash->{$n + 1} = [$cfg->{titel}[$n], $cfg->{subtitel}[$n],
-			       $cfg->{wertungen}[$n]];
+    if ($cfg && $cfg->{wertungen}) {
+	for (my $n = 0; $n < @{$cfg->{wertungen}}; $n++) {
+	    my $wertung = $cfg->{wertungen}[$n];
+	    next if ($wertung->{titel} // "") eq "" &&
+		    ($wertung->{subtitel} // "") eq "" &&
+		    ($wertung->{bezeichnung} // "") eq "";
+	    $hash->{$n + 1} = [$wertung->{titel},
+			       $wertung->{subtitel},
+			       $wertung->{bezeichnung}];
 	}
     }
     return $hash;
@@ -357,9 +361,8 @@ sub sektionen_hash($) {
     my $hash = {};
     if ($cfg && $cfg->{sektionen}) {
 	for (my $m = 0; $m < @{$cfg->{sektionen}}; $m++) {
-	    for (my $n = 0; $n < length $cfg->{sektionen}[$m]; $n++) {
-		next if substr($cfg->{sektionen}[$m], $n, 1) eq "N";
-		$hash->{($m + 1) . ':' . ($n + 1)} = [];
+	    foreach my $sektion (@{$cfg->{sektionen}[$m]}) {
+		$hash->{($m + 1) . ':' . $sektion} = [];
 	    }
 	}
     }
@@ -370,14 +373,16 @@ sub klassen_hash($) {
     my ($cfg) = @_;
 
     my $hash = {};
-    if ($cfg && $cfg->{runden} && $cfg->{klassen} &&
-		$cfg->{fahrzeiten} && $cfg->{sektionen}) {
-	my $gestartete_klassen = gestartete_klassen($cfg);
+    if ($cfg && $cfg->{klassen}) {
+	my $gestartete_klassen =
+	    exists $cfg->{sektionen} ? gestartete_klassen($cfg) : [];
 	for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
-	    $hash->{$n + 1} = [$cfg->{runden}[$n], $cfg->{klassen}[$n],
+	    my $klasse = $cfg->{klassen}[$n];
+	    $hash->{$n + 1} = [$klasse->{runden},
+			       $klasse->{bezeichnung},
 			       $gestartete_klassen->[$n],
-			       $cfg->{klassenfarben} ? $cfg->{klassenfarben}[$n] : undef,
-			       $cfg->{fahrzeiten}[$n]];
+			       $klasse->{farbe},
+			       $klasse->{fahrzeit}];
 	}
     }
     return $hash;
@@ -438,9 +443,7 @@ sub veranstaltung_aktualisieren($$$$) {
     my ($callback, $id, $alt, $neu) = @_;
     my $changed;
 
-    if (!$neu || (exists $neu->{titel} &&
-		  exists $neu->{subtitel} &&
-		  exists $neu->{wertungen})) {
+    if (!$neu || exists $neu->{wertungen}) {
 	hash_aktualisieren $callback, 'wertung',
 		[qw(id wertung)], [qw(titel subtitel bezeichnung)],
 		[$id],
@@ -465,8 +468,7 @@ sub veranstaltung_aktualisieren($$$$) {
 	    and $changed = 1;
     }
 
-    if (!$neu || (exists $neu->{runden} && exists $neu->{klassen} &&
-		  exists $neu->{fahrzeiten} && exists $neu->{sektionen})) {
+    if (!$neu || exists $neu->{klassen}) {
 	hash_aktualisieren $callback, 'klasse',
 		[qw(id klasse)], [qw(runden bezeichnung gestartet farbe fahrzeit)],
 		[$id],
