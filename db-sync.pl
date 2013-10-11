@@ -225,7 +225,7 @@ CREATE TABLE vareihe_veranstaltung (
 );
 };
 
-my @tables = map { /^\s*DROP TABLE IF EXISTS (.*)/ ? $1 : () }
+my @tables = map { /^\s*DROP TABLE IF EXISTS (.*)/m ? $1 : () }
 		 @create_veranstaltung_tables;
 
 my @create_reihen_tables = split /;/, q{
