@@ -47,6 +47,7 @@ use Parse::Binary::FixedFormat;
 use Encode qw(encode decode);
 use Time::localtime;
 use FileHandle;
+use JSON_bool;
 use strict;
 
 my $cfg_format = [
@@ -227,9 +228,10 @@ sub cfg_datei_parsen($) {
     delete $cfg->{''};
     $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { $_ eq "00:00" ? undef : "$_:00" } @{$cfg->{fahrzeiten}} ];
-    $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
+    $cfg->{vierpunktewertung} = json_bool($cfg->{vierpunktewertung} eq "J");
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
     $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $kartenfarben_in{$_} } @{$cfg->{kartenfarben}} ];
+    $cfg->{wertung1_markiert} = json_bool($cfg->{wertung1_markiert});
 
     my $klassen = [];
     for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
@@ -358,6 +360,7 @@ sub cfg_datei_schreiben($$) {
     $cfg->{runden} = [ map { "0" + ($_ // 0) } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
+    $cfg->{wertung1_markiert} = json_unbool($cfg->{wertung1_markiert});
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
 
     encode_strings($cfg, $cfg_format);
@@ -418,7 +421,9 @@ sub dat_datei_parsen($$) {
 	    if $fahrer->{klasse} == 99;
 	$fahrer->{helfer} = undef
 	    if $fahrer->{helfer} == 0;
-	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
+	$fahrer->{wertungen} = [ map { json_bool($_ eq "J") } @{$fahrer->{wertungen}} ];
+	$fahrer->{nennungseingang} = json_bool($fahrer->{nennungseingang});
+	$fahrer->{papierabnahme} = json_bool($fahrer->{papierabnahme});
 	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
 	# wurden, und nicht, wieviele Runden komplett gefahren wurden.
 	# Sektionen können bei der Eingabe übersprungen werden, im Unterschied
@@ -558,6 +563,8 @@ sub dat_datei_schreiben($$) {
 	    }
 
 	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    $fahrer->{nennungseingang} = json_unbool($fahrer->{nennungseingang});
+	    $fahrer->{papierabnahme} = json_unbool($fahrer->{papierabnahme});
 	    encode_strings($fahrer, $dat_format);
 	    print $fh $fahrer_parser->format($fahrer);
 	} else {

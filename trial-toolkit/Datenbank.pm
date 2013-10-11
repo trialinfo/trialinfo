@@ -19,15 +19,64 @@ package Datenbank;
 
 use Encode qw(_utf8_on);
 use POSIX qw(mktime);
-use DBI qw(looks_like_number);
+use DBI qw(:sql_types looks_like_number);
 use Storable qw(dclone);
+use JSON_bool;
 use Wertungen;
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
-	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql);
+	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
+	     equal);
 use strict;
+
+# Vergleicht zwei Werte als Strings, wobei undef == undef.
+sub equal($$) {
+    my ($a, $b) = @_;
+
+    if (defined $a) {
+	return defined $b ? $a eq $b : undef;
+    } else {
+	return !defined $b;
+    }
+}
+
+sub fixup_value($$) {
+    my ($ref, $type) = @_;
+
+    if (defined $$ref) {
+	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_VARCHAR) {
+	} elsif ($type == SQL_TINYINT) {
+	    # FIXME: what other types for boolean?
+	    $$ref = json_bool($$ref);
+	} elsif ($type == SQL_TINYINT || $type == SQL_INTEGER || $type == SQL_DOUBLE || $type == SQL_BIGINT) {
+	    $$ref += 0;
+	} else {
+	    die "SQL type $type not supported; please fix!\n";
+	}
+    }
+}
+
+sub fixup_arrayref($$) {
+    my ($sth, $array) = @_;
+
+    if (defined $sth->{TYPE}) {
+	for (my $n = 0; $n < @{$sth->{TYPE}}; $n++) {
+	    fixup_value(\$array->[$n],  $sth->{TYPE}[$n]);
+	}
+    }
+}
+
+sub fixup_hashref($$) {
+    my ($sth, $hash) = @_;
+
+    if (defined $sth->{TYPE}) {
+	for (my $n = 0; $n < @{$sth->{TYPE}}; $n++) {
+	    fixup_value(\$hash->{$sth->{NAME}[$n]}, $sth->{TYPE}[$n]);
+	}
+    }
+}
 
 sub wertungspunkte_aus_datenbank($$) {
     my ($dbh, $id) = @_;
@@ -40,6 +89,7 @@ sub wertungspunkte_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	$wertungspunkte->[$row[0] - 1] = $row[1];
     }
     return $wertungspunkte;
@@ -57,6 +107,7 @@ sub sektionen_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	push @{$sektionen->[$row[0] - 1]}, $row[1];
     }
     return $sektionen;
@@ -77,6 +128,7 @@ sub cfg_aus_datenbank($$) {
     });
     $sth->execute($id);
     unless ($cfg = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $cfg);
 	return undef;
     }
 
@@ -87,6 +139,7 @@ sub cfg_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	$cfg->{wertungen}[$row[0] - 1] = {
 	    titel => $row[1],
 	    subtitel => $row[2],
@@ -101,6 +154,7 @@ sub cfg_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	$cfg->{klassen}[$row[0] - 1] = {
 	    bezeichnung => $row[1],
 	    fahrzeit => $row[2],
@@ -119,6 +173,7 @@ sub cfg_aus_datenbank($$) {
     $sth->execute($id);
     $cfg->{kartenfarben} = [];
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	$cfg->{kartenfarben}[$row[0] - 1] = $row[1];
     }
 
@@ -133,6 +188,7 @@ sub cfg_aus_datenbank($$) {
     $sth->execute($id);
     $cfg->{features} = [];
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	push @{$cfg->{features}}, $row[0];
     }
 
@@ -144,6 +200,7 @@ sub cfg_aus_datenbank($$) {
     $sth->execute($id);
     $cfg->{vareihen} = [];
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	push @{$cfg->{vareihen}}, $row[0];
     }
 
@@ -159,9 +216,10 @@ sub fahrer_wertungen_aus_datenbank($$$;$) {
 	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
     $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
-	$$fahrer->{startnummer} = $startnummer;
+	$$fahrer->{startnummer} = $row[0];
 	$$fahrer->{wertungen}[$row[1] - 1] = 1;
 	$$fahrer->{wertungsrang}[$row[1] - 1] = $row[2];
 	$$fahrer->{wertungspunkte}[$row[1] - 1] = $row[3];
@@ -181,9 +239,10 @@ sub punkte_aus_datenbank($$$;$) {
 	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
     $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
-	$$fahrer->{startnummer} = $startnummer;
+	$$fahrer->{startnummer} = $row[0];
 	$$fahrer->{punkte_pro_sektion}[$row[1] - 1][$row[2] - 1] = $row[3];
     }
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
@@ -201,9 +260,10 @@ sub runden_aus_datenbank($$$;$) {
 	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
     $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
-	$$fahrer->{startnummer} = $startnummer;
+	$$fahrer->{startnummer} = $row[0];
 	$$fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
     }
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
@@ -223,8 +283,9 @@ sub neue_startnummern_aus_datenbank($$$) {
     $sth->execute($id);
     my $neue_startnummern = {};
     while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
 	$neue_startnummern->{$row[0]} = $row[1]
-	    unless $row[0] ~~ $row[1];
+	    unless equal($row[0], $row[1]);
     }
     return $neue_startnummern;
 }
@@ -254,6 +315,7 @@ sub fahrer_aus_datenbank($$;$) {
 	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
     $sth->execute($id, defined $startnummer ? $startnummer : ());
     while (my $fahrer = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $fahrer);
 	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
@@ -278,6 +340,7 @@ sub wertung_aus_datenbank($$) {
     });
     $sth->execute($id);
     while (my $fahrer = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $fahrer);
 	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;

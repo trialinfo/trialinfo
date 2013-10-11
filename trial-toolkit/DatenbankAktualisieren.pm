@@ -17,9 +17,10 @@
 
 package DatenbankAktualisieren;
 use Trialtool qw(gestartete_klassen);
-use Datenbank qw(cfg_aus_datenbank wertung_aus_datenbank);
+use Datenbank qw(cfg_aus_datenbank wertung_aus_datenbank equal);
 use Wertungen qw(rang_und_wertungspunkte_berechnen);
 use Storable qw(dclone);
+use JSON_bool;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -35,13 +36,19 @@ sub datensatz_aktualisieren($$$$$$$$$) {
     my ($callback, $tabelle, $version_ref, $changed, $keys, $nonkeys, $kval, $alt, $neu) = @_;
     my ($sql, $args, $davor);
 
+    #map { $_ = json_unbool($_) } @$kval;
+    map { $_ = json_unbool($_) } @$alt
+	if defined $alt;
+    map { $_ = json_unbool($_) } @$neu
+	if defined $neu;
+
     if (defined $alt) {
 	if (defined $neu) {
 	    my $modified_nonkeys = [];
-	    my $modified_old;
-	    my $modified_new;
+	    my $modified_old = [];
+	    my $modified_new = [];
 	    for (my $n = 0; $n < @$nonkeys; $n++) {
-		unless ($alt->[$n] ~~ $neu->[$n]) {
+		unless (equal($alt->[$n], $neu->[$n])) {
 		    push @$modified_nonkeys, $nonkeys->[$n];
 		    push @$modified_old, $alt->[$n];
 		    push @$modified_new, $neu->[$n];
@@ -354,7 +361,7 @@ sub wertungspunkte_hash($$) {
 	    # Gleiche Werte am Ende der Tabelle zusammenfassen: der letzte Wert
 	    # gilt für alle weiteren Plätze.
 	    for (; $n > 0; $n--) {
-		last unless $cfg->{wertungspunkte}[$n] ~~ $cfg->{wertungspunkte}[$n - 1];
+		last unless equal($cfg->{wertungspunkte}[$n], $cfg->{wertungspunkte}[$n - 1]);
 	    }
 	}
         for (; $n >= 0; $n--) {
@@ -391,7 +398,7 @@ sub klassen_hash($) {
 	    my $klasse = $cfg->{klassen}[$n];
 	    $hash->{$n + 1} = [$klasse->{runden},
 			       $klasse->{bezeichnung},
-			       $gestartete_klassen->[$n],
+			       json_bool($gestartete_klassen->[$n] // 0),
 			       $klasse->{farbe},
 			       $klasse->{fahrzeit}];
 	}

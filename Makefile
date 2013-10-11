@@ -14,6 +14,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/raphael-min.js \
 
 COMMON_FILES = \
+	trial-toolkit/JSON_bool.pm \
 	trial-toolkit/Trialtool.pm \
 	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	trial-toolkit/Datenbank.pm \
