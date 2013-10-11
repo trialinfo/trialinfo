@@ -195,18 +195,17 @@ sub punkte_pro_runde_hash($) {
     return $hash;
 }
 
-sub fahrer_wertungen_hash($$) {
-    my ($fahrer, $wertungsfelder) = @_;
+sub fahrer_wertungen_hash($) {
+    my ($fahrer) = @_;
 
     my $hash = {};
     if ($fahrer) {
 	my $wertungen = $fahrer->{wertungen} // [];
 	for (my $n = 0; $n < @$wertungen; $n++) {
-	    next unless $wertungen->[$n];
-	    $hash->{$n + 1} = [];
-	    foreach my $feld (@$wertungsfelder) {
-		push @{$hash->{$n + 1}}, $fahrer->{$feld}[$n];
-	    }
+	    my $wertung = $wertungen->[$n];
+	    next unless $wertung->{aktiv};
+	    $hash->{$n + 1} = [ $wertung->{rang},
+				$wertung->{punkte} ];
 	}
     }
     return $hash;
@@ -252,34 +251,29 @@ sub einen_fahrer_aktualisieren($$$$$) {
 		punkte_pro_runde_hash($neu)
 	    and $changed = 1;
     }
-    if (!$neu || exists $neu->{wertungspunkte}) {
+    if (!$neu || exists $neu->{wertungen}) {
 	if ($alt && $neu) {
 	    # Die Datenbank speichert Fließkommazahlen wahrscheinlich nicht mit
 	    # derselben Genauigkeit, die Perl für die Berechnung verwendet.
 	    my $eps = 1 / (1 << 13);
-	    my $wp_alt = $alt->{wertungspunkte};
-	    my $wp_neu = $neu->{wertungspunkte};
-	    for (my $wertung = 1; $wertung <= 4; $wertung++) {
-		if (defined $wp_alt->[$wertung - 1] &&
-		    defined $wp_neu->[$wertung - 1] &&
-		    abs($wp_alt->[$wertung - 1] -
-			$wp_neu->[$wertung - 1]) < $eps) {
-		    $wp_alt->[$wertung - 1] =
-			$wp_neu->[$wertung - 1];
+	    my $w_alt = $alt->{wertungen};
+	    my $w_neu = $neu->{wertungen};
+	    for (my $wertung = 1; $wertung <= @$w_neu; $wertung++) {
+		if (defined $w_alt->[$wertung - 1]{punkte} &&
+		    defined $w_neu->[$wertung - 1]{punkte} &&
+		    abs($w_alt->[$wertung - 1]{punkte} -
+			$w_neu->[$wertung - 1]{punkte}) < $eps) {
+		    $w_alt->[$wertung - 1]{punkte} =
+			$w_neu->[$wertung - 1]{punkte};
 		}
 	    }
 	}
 
-	my $wertungsfelder = [];
-	foreach my $feld (qw(wertungsrang wertungspunkte)) {
-	    push @$wertungsfelder, $feld
-		if !$neu || exists $neu->{$feld};
-	}
 	hash_aktualisieren $callback, 'fahrer_wertung',
-		[qw(id startnummer wertung)], $wertungsfelder,
+		[qw(id startnummer wertung)], [qw(wertungsrang wertungspunkte)],
 		[$id, $startnummer],
-		fahrer_wertungen_hash($alt, $wertungsfelder),
-		fahrer_wertungen_hash($neu, $wertungsfelder)
+		fahrer_wertungen_hash($alt),
+		fahrer_wertungen_hash($neu)
 	    and $changed = 1;
     }
 

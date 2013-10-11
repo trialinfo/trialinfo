@@ -170,7 +170,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	    delete $fahrer_nach_startnummer->{$startnummer}
-		unless $fahrer->{wertungen}[$wertung - 1];
+		unless $fahrer->{wertungen}[$wertung - 1]{aktiv};
 	}
     }
 

@@ -94,8 +94,7 @@ while (my @row = $sth->fetchrow_array) {
 	$cfg->{label} = $n;
     }
     $n++;
-    $cfg->{titel}[$wertung - 1] = $row[3];
-    $cfg->{subtitel}[$wertung - 1] = $row[4];
+    $cfg->{wertungen}[$wertung - 1] = { titel => $row[3], subtitel => $row[4] };
     $veranstaltungen->{$id}{cfg} = $cfg;
     $zeit = max_timestamp($zeit, $row[5]);
     $zeit = max_timestamp($zeit, $row[6]);
@@ -121,13 +120,12 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
 
-    my $wertungspunkte = $fahrer->{wertungspunkte};
-    $fahrer->{wertungspunkte} = [];
-    $fahrer->{wertungspunkte}[$wertung - 1] = $wertungspunkte;
-
-    my $wertungsrang = $fahrer->{wertungsrang};
-    $fahrer->{wertungsrang} = [];
-    $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
+    $fahrer->{wertungen}[$wertung - 1] = {
+	    punkte => $fahrer->{wertungspunkte},
+	    rang => $fahrer->{wertungsrang},
+	};
+    delete $fahrer->{wertungspunkte};
+    delete $fahrer->{wertungsrang};
 
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
@@ -188,7 +186,7 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($letzte_cfg->{id}, $wertung);
 if (my @row = $sth->fetchrow_array) {
-    $letzte_cfg->{wertungen}[$wertung - 1] = $row[0];
+    $letzte_cfg->{wertungen}[$wertung - 1]{bezeichnung} = $row[0];
 }
 
 doc_h1 "$bezeichnung";

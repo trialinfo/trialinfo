@@ -220,9 +220,11 @@ sub fahrer_wertungen_aus_datenbank($$$;$) {
 	my $startnummer = $row[0];
 	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
 	$$fahrer->{startnummer} = $row[0];
-	$$fahrer->{wertungen}[$row[1] - 1] = 1;
-	$$fahrer->{wertungsrang}[$row[1] - 1] = $row[2];
-	$$fahrer->{wertungspunkte}[$row[1] - 1] = $row[3];
+	$$fahrer->{wertungen}[$row[1] - 1] = {
+	    aktiv => json_bool(1),
+	    rang => $row[2],
+	    punkte => $row[3]
+	};
     }
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	$fahrer->{wertungen} = []

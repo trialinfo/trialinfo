@@ -95,7 +95,7 @@ if (my @row = $sth->fetchrow_array) {
     $id = $row[0];
     $bezeichnung = $row[1];
     $wertung = $row[2];
-    $cfg->{titel}[$wertung - 1] = $row[3];
+    $cfg->{wertungen}[$wertung - 1] = { titel => $row[3] };
     $zeit = max_timestamp($row[4], $row[5]);
     $cfg->{wertungsmodus} = $row[6];
     $cfg->{vierpunktewertung} = $row[7];
@@ -152,10 +152,9 @@ while (my $fahrer = $sth->fetchrow_hashref) {
 	delete $fahrer->{"s$n"};
     }
     my $startnummer = $fahrer->{startnummer};
-    my $w = [];
-    $w->[$wertung - 1] = $fahrer->{wertungspunkte}
+    $fahrer->{wertungen} = [];
+    $fahrer->{wertungen}[$wertung - 1] = { punkte => $fahrer->{wertungspunkte} }
 	if defined $fahrer->{wertungspunkte};
-    $fahrer->{wertungspunkte} = $w;
     $fahrer_nach_startnummer->{$startnummer} = $fahrer;
 }
 
@@ -231,12 +230,12 @@ if ($alle_punkte) {
 unless ($animiert) {
     doc_h1 "$bezeichnung"
 	if defined $bezeichnung;
-    doc_h2 "$cfg->{titel}[$wertung - 1]";
+    doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
 } else {
     if (defined $bezeichnung) {
-	doc_h2 "$bezeichnung – $cfg->{titel}[$wertung - 1]";
+	doc_h2 "$bezeichnung – $cfg->{wertungen}[$wertung - 1]{titel}";
     } else {
-	doc_h2 "$cfg->{titel}[$wertung - 1]";
+	doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
     }
 }
 

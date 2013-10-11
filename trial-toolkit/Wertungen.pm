@@ -251,8 +251,10 @@ sub rang_und_wertungspunkte_berechnen($$) {
     }
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	$fahrer->{wertungsrang} = [];
-	$fahrer->{wertungspunkte} = [];
+	foreach my $wertung (values @{$fahrer->{wertungen}}) {
+	    delete $wertung->{rang};
+	    delete $wertung->{punkte};
+	}
     }
 
     for (my $wertung = 1; $wertung <= 4; $wertung++) {
@@ -265,22 +267,22 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
-	    # $fahrer->{wertungsrang}[] ist der Rang in der jeweiligen
+	    # $fahrer->{wertungen}[]{rang} ist der Rang in der jeweiligen
 	    # Teilwertung.
 
-	    my $wertungsrang = 1;
+	    my $rang = 1;
 	    my $vorheriger_fahrer;
 	    foreach my $fahrer (@$fahrer_in_klasse) {
 		next unless defined $fahrer->{rang} &&
-			    $fahrer->{wertungen}[$wertung - 1];
+			    $fahrer->{wertungen}[$wertung - 1]{aktiv};
 		if ($vorheriger_fahrer &&
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
-		    $fahrer->{wertungsrang}[$wertung - 1] =
-			$vorheriger_fahrer->{wertungsrang}[$wertung - 1];
+		    $fahrer->{wertungen}[$wertung - 1]{rang} =
+			$vorheriger_fahrer->{wertungen}[$wertung - 1]{rang};
 		} else {
-		    $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
+		    $fahrer->{wertungen}[$wertung - 1]{rang} = $rang;
 		}
-		$wertungsrang++;
+		$rang++;
 
 		$vorheriger_fahrer = $fahrer;
 	    }
@@ -291,7 +293,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			my $fahrer_m = $fahrer_in_klasse->[$m];
 			if ($fahrer_m->{ausfall} ||
 			    $fahrer_m->{runden} < $runden ||
-			    !defined $fahrer_m->{wertungsrang}[$wertung - 1]) {
+			    !defined $fahrer_m->{wertungen}[$wertung - 1]{rang}) {
 			    $n = $m + 1;
 			    next;
 			}
@@ -300,13 +302,13 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			for ($n = $m + 1; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
 			    next if $fahrer_n->{ausfall} ||
-				    !defined $fahrer_n->{wertungsrang}[$wertung - 1];
-			    last if $fahrer_m->{wertungsrang}[$wertung - 1] !=
-				    $fahrer_n->{wertungsrang}[$wertung - 1];
+				    !defined $fahrer_n->{wertungen}[$wertung - 1]{rang};
+			    last if $fahrer_m->{wertungen}[$wertung - 1]{rang} !=
+				    $fahrer_n->{wertungen}[$wertung - 1]{rang};
 			    $anzahl_fahrer++;
 			}
 			my $summe;
-			my $wr = $fahrer_m->{wertungsrang}[$wertung - 1];
+			my $wr = $fahrer_m->{wertungen}[$wertung - 1]{rang};
 			for (my $i = 0; $i < $anzahl_fahrer; $i++) {
 			    my $x = min($wr + $i, scalar @$wertungspunkte);
 			    $summe += $wertungspunkte->[$x - 1];
@@ -314,21 +316,21 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			for ($n = $m; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
 			    next if $fahrer_n->{ausfall} ||
-				    !defined $fahrer_n->{wertungsrang}[$wertung - 1];
-			    last if $fahrer_m->{wertungsrang}[$wertung - 1] !=
-				    $fahrer_n->{wertungsrang}[$wertung - 1];
-			    $fahrer_n->{wertungspunkte}[$wertung - 1] =
+				    !defined $fahrer_n->{wertungen}[$wertung - 1]{rang};
+			    last if $fahrer_m->{wertungen}[$wertung - 1]{rang} !=
+				    $fahrer_n->{wertungen}[$wertung - 1]{rang};
+			    $fahrer_n->{wertungen}[$wertung - 1]{punkte} =
 				($summe / $anzahl_fahrer) || undef;
 			}
 		    }
 		} else {
 		    foreach my $fahrer (@$fahrer_in_klasse) {
-			my $wr = $fahrer->{wertungsrang}[$wertung - 1];
+			my $wr = $fahrer->{wertungen}[$wertung - 1]{rang};
 			next if $fahrer->{ausfall} ||
 				$fahrer->{runden} < $runden ||
 				!defined $wr;
 			my $x = min($wr, scalar @$wertungspunkte);
-			$fahrer->{wertungspunkte}[$wertung - 1] =
+			$fahrer->{wertungen}[$wertung - 1]{punkte} =
 			    $wertungspunkte->[$x - 1] || undef;
 		    }
 		}
@@ -551,7 +553,7 @@ sub tageswertung(@) {
 	my $wertungspunkte;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $wertungspunkte = 1
-		if defined $fahrer->{wertungspunkte}[$args{wertung} - 1];
+		if defined $fahrer->{wertungen}[$args{wertung} - 1]{punkte};
 	}
 
 	my $ausfall_fmt = "c" . (5 + $vierpunktewertung + $stechen);
@@ -714,7 +716,7 @@ sub tageswertung(@) {
 		}
 	    }
 
-	    push @$row, wertungspunkte($fahrer->{wertungspunkte}[$args{wertung} - 1],
+	    push @$row, wertungspunkte($fahrer->{wertungen}[$args{wertung} - 1]{punkte},
 				       $args{cfg}{punkteteilung})
 		if $wertungspunkte;
 	    push @$body, $row;
@@ -926,8 +928,8 @@ sub jahreswertung(@) {
 		if (exists $fahrer_nach_startnummer->{$startnummer}) {
 		    my $fahrer2 = $fahrer_nach_startnummer->{$startnummer};
 
-		    if (defined $fahrer2->{wertungspunkte}[$wertung - 1]) {
-			next unless defined $fahrer->{wertungspunkte}[$wertung - 1];
+		    if (defined $fahrer2->{wertungen}[$wertung - 1]{punkte}) {
+			next unless defined $fahrer->{wertungen}[$wertung - 1]{punkte};
 			doc_p "Veranstaltung " . ($n + 1) . ": Fahrer " .
 			      ($fahrer->{alte_startnummer} // $fahrer->{startnummer}) .
 			      " und " .
@@ -948,7 +950,7 @@ sub jahreswertung(@) {
 	my $cfg = $veranstaltung->[0];
 	foreach my $fahrer (values %{$veranstaltung->[1]}) {
 	    $cfg->{gewertet}[$fahrer->{klasse} - 1] = 1
-		if defined $fahrer->{wertungspunkte}[$wertung - 1];
+		if defined $fahrer->{wertungen}[$wertung - 1]{punkte};
 	}
 	if (exists $cfg->{gewertet}) {
 	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
@@ -1000,12 +1002,12 @@ sub jahreswertung(@) {
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
-	    if (defined $fahrer->{wertungspunkte}[$wertung - 1]) {
+	    if (defined $fahrer->{wertungen}[$wertung - 1]{punkte}) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
-		    $fahrer->{wertungspunkte}[$wertung - 1];
+		    $fahrer->{wertungen}[$wertung - 1]{punkte};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungsrang}},
-		    $fahrer->{wertungsrang}[$wertung - 1];
+		    $fahrer->{wertungen}[$wertung - 1]{rang};
 	    }
 	    $alle_fahrer->{$startnummer} = $fahrer;
 	}
@@ -1095,14 +1097,15 @@ sub jahreswertung(@) {
 		my $gewertet = $veranstaltung->[0]{gewertet}[$klasse - 1];
 		my $fahrer = $veranstaltung->[1]{$startnummer};
 		if ($gewertet) {
-		    my $feld = (defined $fahrer->{wertungspunkte}[$wertung - 1] &&
-				 $fahrer->{klasse} == $klasse) ?
-				wertungspunkte($fahrer->{wertungspunkte}[$wertung - 1], $punkteteilung) :
+		    my $wertungspunkte = $fahrer->{wertungen}[$wertung - 1]{punkte};
+		    my $feld = (defined $wertungspunkte &&
+				$fahrer->{klasse} == $klasse) ?
+				wertungspunkte($wertungspunkte, $punkteteilung) :
 				$RenderOutput::html ? "" : "-";
-		    my $rang = $fahrer->{wertungsrang}[$wertung - 1];
+		    my $wertungsrang = $fahrer->{wertungen}[$wertung - 1]{rang};
 		    $feld = [ $feld, "r", "class=\"text2\"" ]
-			if defined $rang &&
-			   $fahrerwertung->{rang_wichtig}{$rang} &&
+			if defined $wertungsrang &&
+			   $fahrerwertung->{rang_wichtig}{$wertungsrang} &&
 			   $args{nach_relevanz};
 		    push @$row, $feld;
 		}

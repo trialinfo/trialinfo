@@ -421,7 +421,7 @@ sub dat_datei_parsen($$) {
 	    if $fahrer->{klasse} == 99;
 	$fahrer->{helfer} = undef
 	    if $fahrer->{helfer} == 0;
-	$fahrer->{wertungen} = [ map { json_bool($_ eq "J") } @{$fahrer->{wertungen}} ];
+	$fahrer->{wertungen} = [ map { $_ eq 'J' ? { aktiv => json_bool(1) } : {} } @{$fahrer->{wertungen}} ];
 	$fahrer->{nennungseingang} = json_bool($fahrer->{nennungseingang});
 	$fahrer->{papierabnahme} = json_bool($fahrer->{papierabnahme});
 	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
@@ -562,7 +562,7 @@ sub dat_datei_schreiben($$) {
 		}
 	    }
 
-	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    $fahrer->{wertungen} = [ map { $_ && $_->{aktiv} ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
 	    $fahrer->{nennungseingang} = json_unbool($fahrer->{nennungseingang});
 	    $fahrer->{papierabnahme} = json_unbool($fahrer->{papierabnahme});
 	    encode_strings($fahrer, $dat_format);
