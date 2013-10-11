@@ -327,6 +327,10 @@ sub dat_datei_parsen($$) {
 	    # Darstellung auch mehr als 400 Fahrer ohne Startnummer darstellen
 	    # zu können, ändern wir diesen Bereich auf -1 .. -400.
 	    $startnummer = 999 - $startnummer;
+	    # Sicherstellen, dass Fahrer ohne Startnummer nicht in den
+	    # Starterlisten oder Ergebnissen auftauchen!
+	    $fahrer->{nennungseingang} = 0;
+	    $fahrer->{papierabnahme} = 0;
 	}
 
 	$fahrer->{startnummer} = $startnummer;
