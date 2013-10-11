@@ -302,11 +302,11 @@ sub punkteverteilung_umwandeln($) {
     $fahrer->{s} = $s;
 }
 
-sub fahrer_aus_datenbank($$;$) {
-    my ($dbh, $id, $startnummer) = @_;
+sub fahrer_aus_datenbank($$;$$$) {
+    my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
     my $fahrer_nach_startnummer;
 
-    my $sth = $dbh->prepare(q{
+    my $sql = q{
 	SELECT version, startnummer, klasse, helfer, nenngeld, bewerber, nachname,
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
@@ -314,13 +314,42 @@ sub fahrer_aus_datenbank($$;$) {
 	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
 	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, rang
 	FROM fahrer
-	WHERE id = ? } . (defined $startnummer ? "AND startnummer = ?" : ""));
-    $sth->execute($id, defined $startnummer ? $startnummer : ());
+	WHERE id = ?};
+    my $args = [ $id ];
+    if (defined $startnummer) {
+	if (defined $starter) {
+	    $sql .= q{ AND papierabnahme};
+	}
+	if (!defined $richtung) {
+	    $sql .= q{ AND startnummer = ?};
+	} elsif ($richtung < 0) {
+	    $sql .= q{ AND startnummer < ? AND startnummer > 0
+		ORDER BY startnummer DESC
+		LIMIT 1};
+	    $startnummer = 1000000
+		if $startnummer == 0;
+	} elsif ($richtung > 0) {
+	    $sql .= q{ AND startnummer > ?
+		ORDER BY startnummer
+		LIMIT 1};
+	}
+	push @$args, $startnummer;
+    }
+    my $sth = $dbh->prepare($sql);
+    $sth->execute(@$args);
     while (my $fahrer = $sth->fetchrow_hashref) {
 	fixup_hashref($sth, $fahrer);
 	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
+    }
+    if (defined $startnummer && defined $richtung) {
+	my $startnummern = [ keys %$fahrer_nach_startnummer ];
+	if (@$startnummern == 1) {
+	    $startnummer = $startnummern->[0];
+	} else {
+	    return $fahrer_nach_startnummer;
+	}
     }
 
     punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
