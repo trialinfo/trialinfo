@@ -229,10 +229,13 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	    my $eps = 1 / (1 << 13);
 	    my $wp_alt = $alt->{wertungspunkte};
 	    my $wp_neu = $neu->{wertungspunkte};
-	    for (my $idx = 0; $idx < 4; $idx++) {
-		if (defined $wp_alt->[$idx] && defined $wp_neu->[$idx] &&
-		    abs($wp_alt->[$idx] - $wp_neu->[$idx]) < $eps) {
-		    $wp_alt->[$idx] = $wp_neu->[$idx];
+	    for (my $wertung = 1; $wertung <= 4; $wertung++) {
+		if (defined $wp_alt->[$wertung - 1] &&
+		    defined $wp_neu->[$wertung - 1] &&
+		    abs($wp_alt->[$wertung - 1] -
+			$wp_neu->[$wertung - 1]) < $eps) {
+		    $wp_alt->[$wertung - 1] =
+			$wp_neu->[$wertung - 1];
 		}
 	    }
 	}
