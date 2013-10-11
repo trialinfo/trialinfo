@@ -24,7 +24,8 @@ use JSON_bool;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(einen_fahrer_aktualisieren fahrer_aktualisieren veranstaltung_aktualisieren wertung_aktualisieren);
+@EXPORT = qw(einen_fahrer_aktualisieren fahrer_aktualisieren
+	     veranstaltung_aktualisieren wertung_aktualisieren);
 use strict;
 
 # datensatz_aktualisieren
@@ -211,11 +212,30 @@ sub fahrer_wertungen_hash($$) {
     return $hash;
 }
 
+sub startnummer_aendern($$$$) {
+    my ($callback, $id, $alt, $neu) = @_;
+
+    foreach my $tabelle (qw(fahrer fahrer_wertung punkte runde neue_startnummer)) {
+	&$callback(qq{
+	    UPDATE $tabelle
+	    SET startnummer = ?
+	    WHERE id = ? AND startnummer = ?
+	}, [$neu, $id, $alt], undef);
+    }
+}
+
 sub einen_fahrer_aktualisieren($$$$$) {
     my ($callback, $id, $alt, $neu, $versionierung) = @_;
-    my $startnummer = $alt ? $alt->{startnummer} : $neu->{startnummer};
     my $changed;
 
+    if ($alt && $neu && $alt->{startnummer} != $neu->{startnummer}) {
+	startnummer_aendern $callback, $id, $alt->{startnummer},
+			    $neu->{startnummer};
+	$alt->{startnummer} = $neu->{startnummer};
+	$changed = 1;
+    }
+
+    my $startnummer = $alt ? $alt->{startnummer} : $neu->{startnummer};
     if (!$neu || exists $neu->{punkte_pro_sektion}) {
 	hash_aktualisieren $callback, 'punkte',
 		[qw(id startnummer runde sektion)], [qw(punkte)],
