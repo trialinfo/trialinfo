@@ -141,6 +141,10 @@ sub punkte_berechnen($$) {
     # Fahrers nicht mehr weiter, und zählen die unvollständig gefahrene Runde
     # nicht als gefahren mit.
 
+    # FIXME: Wenn wir in Zukunft speichern welche Sektionen aus der Wertung
+    # genommen wurden, kann die aktuelle Runde immer errmittelt werden -- bzw.
+    # kann ermittelt werden, ob ein Fahrer fertig ist.
+
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $punkte_pro_runde;
 	my $gesamtpunkte;
@@ -151,10 +155,10 @@ sub punkte_berechnen($$) {
 	my $klasse = $fahrer->{klasse};
 	if (defined $klasse && $fahrer->{papierabnahme}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
+	    my $letzte_vollstaendige_runde;
 	    $gesamtpunkte = 0;
 	    $s = [(0) x 6];
 	    $gefahrene_sektionen = 0;
-	    $runde = 0;
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // '';
 
@@ -165,6 +169,8 @@ sub punkte_berechnen($$) {
 		    if (substr($sektionen, $sektion, 1) eq "J") {
 			my $p = $punkte_in_runde->[$sektion];
 			unless (defined $p) {
+			    $letzte_vollstaendige_runde = $runde
+				unless defined $letzte_vollstaendige_runde;
 			    $befahren = befahrene_sektionen($fahrer_nach_startnummer)
 				unless defined $befahren;
 			    last runde
@@ -188,7 +194,17 @@ sub punkte_berechnen($$) {
 				 "in Runde " . ($r + 1) . " sind unvollständig!\n";
 		}
 	    }
+	    # Wenn ein Fahrer alle Sektionen einer Runden gefahren ist,
+	    # kann die Rundenzahl auf jeden Fall zumindest auf diesen Wert
+	    # gesetzt werden.
+	    $letzte_vollstaendige_runde = $runden
+		unless defined $letzte_vollstaendige_runde;
+	    $fahrer->{runden} = $letzte_vollstaendige_runde
+		if !defined $fahrer->{runden} ||
+		   $fahrer->{runden} < $letzte_vollstaendige_runde;
 	    $gesamtpunkte += $fahrer->{zusatzpunkte};
+	} else {
+	    $fahrer->{runden} = undef;
 	}
 
 	$fahrer->{punkte} = $gesamtpunkte;
