@@ -25,7 +25,8 @@ use JSON_bool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(einen_fahrer_aktualisieren fahrer_aktualisieren
-	     veranstaltung_aktualisieren wertung_aktualisieren);
+	     veranstaltung_aktualisieren wertung_aktualisieren
+	     veranstaltung_duplizieren);
 use strict;
 
 # datensatz_aktualisieren
@@ -585,4 +586,42 @@ sub wertung_aktualisieren($$$) {
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
     fahrer_aktualisieren $callback, $id,
 			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, 0;
+}
+
+sub veranstaltung_duplizieren($$$) {
+    my ($callback, $id, $id_neu) = @_;
+
+    foreach my $table (qw(fahrer fahrer_wertung klasse punkte runde sektion
+			  veranstaltung veranstaltung_feature kartenfarbe
+			  wertung wertungspunkte neue_startnummer
+			  vareihe_veranstaltung)) {
+	&$callback(qq{
+	    CREATE TEMPORARY TABLE ${table}_temp AS (SELECT * FROM $table WHERE id = ?)
+	}, [$id], undef);
+	if ($table =~ /^(veranstaltung|fahrer)$/) {
+	    &$callback(qq{
+		UPDATE ${table}_temp
+		SET id = ?, version = 1
+	    }, [$id_neu], undef);
+	} else {
+	    &$callback(qq{
+		UPDATE ${table}_temp
+		SET id = ?
+	    }, [$id_neu], undef);
+	}
+	&$callback(qq{
+	    INSERT INTO $table
+	    SELECT * FROM ${table}_temp
+	}, [], undef);
+	&$callback(qq{
+	    DROP TEMPORARY TABLE ${table}_temp
+	}, [], undef);
+	&$callback(qq{
+	    UPDATE vareihe SET version = version + 1
+	    WHERE vareihe IN
+		( SELECT vareihe
+		FROM vareihe_veranstaltung
+		WHERE id = ? )
+	}, [$id_neu], undef);
+    }
 }
