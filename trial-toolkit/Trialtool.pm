@@ -417,7 +417,6 @@ sub dat_datei_schreiben($$) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";
 	    }
-	    encode_strings($fahrer, $dat_format);
 	    $fahrer->{klasse} = 99
 		unless defined $fahrer->{klasse};
 	    my $nachname_vorname = "$fahrer->{nachname}, $fahrer->{vorname}";
@@ -476,6 +475,7 @@ sub dat_datei_schreiben($$) {
 	    }
 
 	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    encode_strings($fahrer, $dat_format);
 	    print $fh $fahrer_parser->format($fahrer);
 	} else {
 	    print $fh $leerer_fahrer;
