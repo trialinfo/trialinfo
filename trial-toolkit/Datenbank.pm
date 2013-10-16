@@ -228,6 +228,18 @@ sub fahrer_aus_datenbank($$) {
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
     }
 
+    $sth = $dbh->prepare(q{
+	SELECT startnummer, neue_startnummer
+	FROM neue_startnummer
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	my $fahrer = $fahrer_nach_startnummer->{$row[0]};
+	$fahrer->{neue_startnummer} = $row[1]
+	    unless !$fahrer || (defined $row[1] && $row[0] == $row[1]);
+    }
+
     punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
     runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
     fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
