@@ -135,7 +135,7 @@ $sth = $dbh->prepare(q{
     SELECT id, startnummer, neue_startnummer
     FROM vareihe_veranstaltung
     /* JOIN vareihe USING (vareihe) */
-    JOIN neue_startnummer USING (id)
+    JOIN neue_startnummer USING (vareihe, id)
     JOIN veranstaltung USING (id)
     WHERE aktiv AND vareihe = ?
 });

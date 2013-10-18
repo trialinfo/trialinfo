@@ -210,10 +210,11 @@ CREATE TABLE wertungspunkte (
 -- In veranstaltung.version berücksichtigt
 DROP TABLE IF EXISTS neue_startnummer;
 CREATE TABLE neue_startnummer (
+  vareihe INT,
   id INT, -- veranstaltung
   startnummer INT,
   neue_startnummer INT,
-  PRIMARY KEY (id, startnummer)
+  PRIMARY KEY (vareihe, id, startnummer)
 );
 
 -- In vareihe.version berücksichtigt
@@ -692,6 +693,12 @@ do {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
 			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", $nur_fahrer);
 			neue_startnummern_von_fahrern $cfg, $fahrer_nach_startnummer;
+			if (%{$cfg->{neue_startnummern}} && !@$vareihe) {
+				print STDERR "Warnung: Veranstaltung '$dateiname' ist keinen " .
+				    "Serien zugeordnet, daher können die Startnummernänderungen " .
+				    "(*JW:...*) nicht übernommen werden!\n";
+			    delete $cfg->{neue_startnummern};
+			}
 			$cfg->{dateiname} = basename $dateiname;
 			$cfg->{datum} = $1
 			    if $cfg->{dateiname} =~ /^(\d{4}-\d{2}-\d{2}) /;

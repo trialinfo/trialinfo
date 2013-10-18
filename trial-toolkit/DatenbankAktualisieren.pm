@@ -465,8 +465,10 @@ sub neue_startnummern_hash($) {
     my $hash = {};
     if ($cfg) {
 	my $neue_startnummern = $cfg->{neue_startnummern};
-	foreach my $startnummer (keys %$neue_startnummern) {
-	    $hash->{$startnummer} = [$neue_startnummern->{$startnummer}];
+	foreach my $vareihe (@{$cfg->{vareihen}}) {
+	    foreach my $startnummer (keys %$neue_startnummern) {
+		$hash->{"$vareihe:$startnummer"} = [$neue_startnummern->{$startnummer}];
+	    }
 	}
     }
     return $hash;
@@ -539,7 +541,7 @@ sub veranstaltung_aktualisieren($$$$) {
 
     if (!$neu || exists $neu->{neue_startnummern}) {
 	hash_aktualisieren $callback, 'neue_startnummer',
-		[qw(id startnummer)], [qw(neue_startnummer)],
+		[qw(id vareihe startnummer)], [qw(neue_startnummer)],
 		[$id],
 		neue_startnummern_hash($alt),
 		neue_startnummern_hash($neu)
@@ -601,6 +603,18 @@ sub vareihe_veranstaltungen_hash($) {
     return $hash;
 }
 
+sub startnummern_hash($) {
+    my ($vareihe) = @_;
+
+    my $hash = {};
+    if ($vareihe && $vareihe->{startnummern}) {
+	foreach my $data (@{$vareihe->{startnummern}}) {
+	    $hash->{"$data->{id}:$data->{alt}"} = [$data->{neu}];
+	}
+    }
+    return $hash;
+}
+
 sub vareihe_aktualisieren($$$$) {
     my ($callback, $vareihe, $alt, $neu) = @_;
 
@@ -621,6 +635,15 @@ sub vareihe_aktualisieren($$$$) {
 		[$vareihe],
 		vareihe_veranstaltungen_hash($alt),
 		vareihe_veranstaltungen_hash($neu)
+	    and $changed = 1;
+    }
+
+    if (!$neu || exists $neu->{startnummern}) {
+	hash_aktualisieren $callback, 'neue_startnummer',
+		[qw(vareihe id startnummer)], [qw(neue_startnummer)],
+		[$vareihe],
+		startnummern_hash($alt),
+		startnummern_hash($neu)
 	    and $changed = 1;
     }
 

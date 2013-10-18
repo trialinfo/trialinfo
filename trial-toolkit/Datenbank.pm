@@ -278,8 +278,13 @@ sub runden_aus_datenbank($$$;$) {
 sub neue_startnummern_aus_datenbank($$$) {
     my ($dbh, $id, $cfg) = @_;
 
+    # Das Feld neue_startnummer.vareihe wird hier ignoriert.  Damit
+    # werden alle Startnummernänderungen in allen Serien exportiert.
+    # Das führt dann zu Fehlern, wenn es in unterschiedlichen Serien
+    # widersprüchliche Startnummernänderungen gibt.
+    #
     my $sth = $dbh->prepare(q{
-	SELECT startnummer, neue_startnummer
+	SELECT DISTINCT startnummer, neue_startnummer
 	FROM neue_startnummer
 	WHERE id = ?
     });
@@ -423,6 +428,19 @@ sub vareihe_aus_datenbank($$) {
     while (my $klasse = $sth->fetchrow_hashref) {
 	fixup_hashref($sth, $klasse);
 	push @{$result->{klassen}}, $klasse;
+    }
+    $sth = $dbh->prepare(q{
+	SELECT id, startnummer AS alt, neue_startnummer AS neu
+	FROM neue_startnummer
+	JOIN veranstaltung USING (id)
+	WHERE vareihe = ?
+	ORDER BY datum, startnummer
+    });
+    $sth->execute($vareihe);
+    $result->{startnummern} = [];
+    while (my $startnummer = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $startnummer);
+	push @{$result->{startnummern}}, $startnummer;
     }
     return $result;
 }
