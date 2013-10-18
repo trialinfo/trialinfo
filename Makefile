@@ -12,6 +12,9 @@ DOWNLOAD_FILES = \
 	htdocs/js/jquery.min.js \
 	htdocs/js/raphael.js \
 	htdocs/js/raphael-min.js \
+	htdocs/js/angular.js \
+	htdocs/js/angular.min.js \
+	htdocs/js/validate.js \
 
 COMMON_FILES = \
 	trial-toolkit/Datenbank.pm \
@@ -33,7 +36,10 @@ LOCAL_FILES = \
 	tageswertung.pl \
 
 GENERATED_WEB_FILES = \
+	cgi-bin/api/.htaccess \
 	cgi-bin/veranstalter/.htaccess \
+	htdocs/admin/.htaccess \
+	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 
 WEB_FILES = \
@@ -79,6 +85,20 @@ htdocs/js/raphael.js htdocs/js/raphael-min.js:
 	@mkdir -p $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		http://github.com/DmitryBaranovskiy/raphael/raw/master/$(notdir $@)
+
+# AngularJS
+ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
+ANGULAR_VERSION=1.1.5
+htdocs/js/angular%:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
+
+# AngularUI Validate
+htdocs/js/validate.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		https://github.com/angular-ui/ui-utils/raw/master/modules/validate/validate.js
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \

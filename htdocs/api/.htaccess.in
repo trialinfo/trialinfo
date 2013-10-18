@@ -1,0 +1,4 @@
+Options -Indexes
+
+RewriteEngine on
+RewriteRule ^(.+) /cgi-bin/api/api.pl?op=$1 [QSA]

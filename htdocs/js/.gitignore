@@ -1,6 +1,7 @@
+/angular.js
+/angular.min.js
 /jquery.js
 /jquery.min.js
 /raphael.js
 /raphael-min.js
-/jquery.history.js
-/jquery.validate.js
+/validate.js

@@ -1,0 +1,7 @@
+<h1>Serien</h1>
+<p>
+  <span ng-repeat="vareihe in vareihen" ng-style="vareihe.verborgen ? {'text-decoration': 'line-through'} : undefined"><a href="#/serie/{{vareihe.vareihe}}">{{vareihe.bezeichnung}}</a><br></span>
+</p>
+<p>
+  <button ng-click="neue_serie()">Neue Serie</button>
+</p>
