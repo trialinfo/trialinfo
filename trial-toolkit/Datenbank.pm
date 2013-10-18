@@ -27,6 +27,7 @@ use Wertungen;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
+	     vareihe_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
 	     equal);
 use strict;
@@ -382,6 +383,48 @@ sub wertung_aus_datenbank($$) {
     fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
 
     return $fahrer_nach_startnummer;
+}
+
+sub vareihe_aus_datenbank($$) {
+    my ($dbh, $vareihe) = @_;
+    my $result;
+
+    my $sth = $dbh->prepare(q{
+	SELECT version, vareihe, bezeichnung, kuerzel, wertung, verborgen
+	FROM vareihe
+	WHERE vareihe = ?
+    });
+    $sth->execute($vareihe);
+    $result = $sth->fetchrow_hashref;
+    return undef
+	unless $result;
+    fixup_hashref($sth, $result);
+    $sth = $dbh->prepare(q{
+	SELECT id
+	FROM vareihe_veranstaltung
+	JOIN veranstaltung USING (id)
+	WHERE vareihe = ?
+	ORDER BY datum, id
+    });
+    $sth->execute($vareihe);
+    $result->{veranstaltungen} = [];
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	push @{$result->{veranstaltungen}}, $row[0];
+    }
+    $sth = $dbh->prepare(q{
+	SELECT klasse, laeufe, streichresultate
+	FROM vareihe_klasse
+	WHERE vareihe = ?
+	ORDER BY klasse
+    });
+    $sth->execute($vareihe);
+    $result->{klassen} = [];
+    while (my $klasse = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $klasse);
+	push @{$result->{klassen}}, $klasse;
+    }
+    return $result;
 }
 
 sub db_utf8($) {
