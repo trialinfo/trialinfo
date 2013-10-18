@@ -29,7 +29,7 @@ require Exporter;
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
 	     vareihe_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
-	     equal);
+	     equal fixup_arrayref fixup_hashref);
 use strict;
 
 # Vergleicht zwei Werte als Strings, wobei undef == undef.
