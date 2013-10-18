@@ -237,6 +237,7 @@ CREATE TABLE vareihe (
   wertung INT, -- Wertung im Trialtool
   bezeichnung VARCHAR(40),
   kuerzel VARCHAR(10),
+  verborgen BOOL,
   PRIMARY KEY (vareihe)
 );
 
