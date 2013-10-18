@@ -26,7 +26,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(einen_fahrer_aktualisieren fahrer_aktualisieren
 	     veranstaltung_aktualisieren wertung_aktualisieren
-	     veranstaltung_duplizieren);
+	     veranstaltung_duplizieren vareihe_aktualisieren);
 use strict;
 
 # datensatz_aktualisieren
@@ -569,6 +569,80 @@ sub veranstaltung_aktualisieren($$$$) {
 	    \$version, $changed,
 	    [qw(id)], $felder,
 	    [$id],
+	    $felder_alt,
+	    $felder_neu
+	and $changed = 1;
+    $neu->{version} = $version;
+    return $changed;
+}
+
+sub vareihe_klassen_hash($) {
+    my ($vareihe) = @_;
+
+    my $hash = {};
+    if ($vareihe && $vareihe->{klassen}) {
+	foreach my $klasse (@{$vareihe->{klassen}}) {
+	    $hash->{$klasse->{klasse}} =
+		[ $klasse->{laeufe}, $klasse->{streichresultate} ];
+	}
+    }
+    return $hash;
+}
+
+sub vareihe_veranstaltungen_hash($) {
+    my ($vareihe) = @_;
+
+    my $hash = {};
+    if ($vareihe && $vareihe->{veranstaltungen}) {
+	foreach my $id (@{$vareihe->{veranstaltungen}}) {
+	    $hash->{$id} = [];
+	}
+    }
+    return $hash;
+}
+
+sub vareihe_aktualisieren($$$$) {
+    my ($callback, $vareihe, $alt, $neu) = @_;
+
+    my $changed;
+
+    if (!$neu || exists $neu->{klassen}) {
+	hash_aktualisieren $callback, 'vareihe_klasse',
+		[qw(vareihe klasse)], [qw(laeufe streichresultate)],
+		[$vareihe],
+		vareihe_klassen_hash($alt),
+		vareihe_klassen_hash($neu)
+	    and $changed = 1;
+    }
+
+    if (!$neu || exists $neu->{veranstaltungen}) {
+	hash_aktualisieren $callback, 'vareihe_veranstaltung',
+		[qw(vareihe id)], [],
+		[$vareihe],
+		vareihe_veranstaltungen_hash($alt),
+		vareihe_veranstaltungen_hash($neu)
+	    and $changed = 1;
+    }
+
+    my $felder = [];
+    my $felder_alt = $alt ? [] : undef;
+    my $felder_neu = $neu ? [] : undef;
+    if ($neu) {
+	foreach my $feld (qw(wertung bezeichnung kuerzel verborgen)) {
+	    if (exists $neu->{$feld}) {
+		push @$felder, $feld;
+		push @$felder_alt, $alt->{$feld}
+		    if $alt;
+		push @$felder_neu, $neu->{$feld};
+	    }
+	}
+    }
+
+    my $version = $alt ? $alt->{version} : 0;
+    datensatz_aktualisieren $callback, 'vareihe',
+	    \$version, $changed,
+	    [qw(vareihe)], $felder,
+	    [$vareihe],
 	    $felder_alt,
 	    $felder_neu
 	and $changed = 1;
