@@ -568,7 +568,7 @@ if ($op eq 'GET/vareihen') {
 	FROM fahrer
     };
     $result = [];
-    if ($suchbegriff =~ /^\d+$/) {
+    if ($suchbegriff =~ /^-?\d+$/) {
 	my $sth = $dbh->prepare($select_fahrer . q{
 	    WHERE id = ? AND startnummer = ?
 	});
