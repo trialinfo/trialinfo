@@ -47,7 +47,7 @@ sub fixup_value($$) {
     my ($ref, $type) = @_;
 
     if (defined $$ref) {
-	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_VARCHAR) {
+	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_TIMESTAMP || $type == SQL_VARCHAR) {
 	} elsif ($type == SQL_TINYINT) {
 	    # FIXME: what other types for boolean?
 	    $$ref = json_bool($$ref);
@@ -55,6 +55,12 @@ sub fixup_value($$) {
 	    $$ref += 0;
 	} else {
 	    die "SQL type $type not supported; please fix!\n";
+	    # Alle Typen auflisten:
+	    # perl -e '
+	    #   use DBI;
+	    #   foreach (@{$DBI::EXPORT_TAGS{sql_types}}) {
+	    #     printf "%s = %d\n", $_, &{"DBI::$_"};
+	    #   }'
 	}
     }
 }
