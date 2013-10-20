@@ -86,6 +86,7 @@ CREATE TABLE fahrer (
   s2 INT, -- nicht in version berücksichtigt (berechnet)
   s3 INT, -- nicht in version berücksichtigt (berechnet)
   s4 INT, -- nicht in version berücksichtigt (berechnet)
+  s5 INT, -- nicht in version berücksichtigt (berechnet)
   ausfall INT DEFAULT 0,
   zusatzpunkte INT DEFAULT 0,
   punkte INT, -- nicht in version berücksichtigt (berechnet)

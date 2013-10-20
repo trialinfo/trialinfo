@@ -138,7 +138,7 @@ $sth = $dbh->prepare(q{
     SELECT klasse, } . ($wertung == 1 ? "rang" : "wertungsrang AS rang") . ", " . q{
 	   startnummer, nachname, vorname, zusatzpunkte,
 	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
-	   s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
+	   s0, s1, s2, s3, s4, s5, punkte, wertungspunkte, runden, ausfall,
 	   papierabnahme
     FROM fahrer} . (defined $vareihe ? q{
     JOIN vareihe_klasse USING (klasse)} : "") . "\n" .
@@ -147,7 +147,7 @@ $sth = $dbh->prepare(q{
     WHERE papierabnahme AND id = ?} . (defined $vareihe ? " AND vareihe = ?" : ""));
 $sth->execute($wertung, $id, defined $vareihe ? $vareihe : ());
 while (my $fahrer = $sth->fetchrow_hashref) {
-    for (my $n = 0; $n < 5; $n++) {
+    for (my $n = 0; $n <= 5; $n++) {
 	$fahrer->{s}[$n] = $fahrer->{"s$n"};
 	delete $fahrer->{"s$n"};
     }

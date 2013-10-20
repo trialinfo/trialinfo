@@ -307,7 +307,7 @@ sub neue_startnummern_aus_datenbank($$$) {
 sub punkteverteilung_umwandeln($) {
     my ($fahrer) = @_;
     my $s;
-    for (my $n = 0; $n < 5; $n++) {
+    for (my $n = 0; $n <= 5; $n++) {
 	push @$s, $fahrer->{"s$n"};
 	delete $fahrer->{"s$n"};
     }
@@ -324,7 +324,7 @@ sub fahrer_aus_datenbank($$;$$$) {
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
 	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
-	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, rang
+	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, s5, rang
 	FROM fahrer
 	WHERE id = ?};
     my $args = [ $id ];
@@ -377,7 +377,7 @@ sub wertung_aus_datenbank($$) {
 
     my $sth = $dbh->prepare(q{
 	SELECT startnummer, klasse, stechen, papierabnahme, ausfall,
-	       zusatzpunkte, s0, s1, s2, s3, s4, punkte, runden, rang
+	       zusatzpunkte, s0, s1, s2, s3, s4, s5, punkte, runden, rang
 	FROM fahrer
 	WHERE id = ? /* and papierabnahme */
     });

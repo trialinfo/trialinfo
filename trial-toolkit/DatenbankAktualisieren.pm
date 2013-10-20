@@ -296,7 +296,7 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	    }
 	}
 	if (exists $neu->{s}) {
-	    for (my $n = 0; $n <= 4; $n++) {
+	    for (my $n = 0; $n <= 5; $n++) {
 		push @$felder, "s$n";
 		push @$felder_alt, $alt->{s}[$n]
 		    if $alt;

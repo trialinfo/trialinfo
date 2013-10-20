@@ -550,6 +550,7 @@ sub dat_datei_schreiben($$) {
 		}
 	    }
 	    $fahrer->{r} = $r;
+	    $fahrer->{s}[5] = 0;  # Anzahl der 5er ist immer auf 0 gesetzt ...
 
 	    # Pad arrays; otherwise pack() writes variable-length records
 	    foreach my $fmt (@$dat_format) {
