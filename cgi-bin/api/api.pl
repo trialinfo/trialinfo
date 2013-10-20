@@ -530,14 +530,14 @@ if ($op eq 'GET/vareihen') {
 	$status = '200 Deleted';
     }
 } elsif ($op eq "DELETE/vareihe") {
-    my ($id, $version) = parameter($q, qw(vareihe version));
+    my ($vareihe, $version) = parameter($q, qw(vareihe version));
     eval {
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
 	    DELETE FROM vareihe
 	    WHERE vareihe = ? AND version = ?
 	});
-	if ($sth->execute($id, $version) != 1) {
+	if ($sth->execute($vareihe, $version) != 1) {
 	    die "Invalid Row Version\n";
 	}
 	foreach my $tabelle (qw(vareihe_veranstaltung vareihe_klasse)) {
@@ -545,7 +545,7 @@ if ($op eq 'GET/vareihen') {
 		DELETE FROM $tabelle
 		WHERE vareihe = ?
 	    });
-	    $sth->execute($id);
+	    $sth->execute($vareihe);
 	}
 	$dbh->commit;
     };
