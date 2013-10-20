@@ -26,8 +26,6 @@ COMMON_FILES = \
 LOCAL_FILES = \
 	db-sync.pl \
 	db-export.pl \
-	doc/eer-diagramm.mwb \
-	doc/eer-diagramm.pdf \
 	README \
 	IO/Tee.pm \
 	jahreswertung.pl \
