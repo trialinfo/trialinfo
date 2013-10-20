@@ -32,11 +32,13 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   function fahrer_zuweisen(fahrer) {
     if (!fahrer)
       fahrer = $scope.fahrer_alt;
-    $scope.fahrer = punkte_pro_sektion_auffuellen(fahrer);
-    $scope.klasse = fahrer.klasse;
-    $scope.fahrer_alt = angular.copy($scope.fahrer);
-    $scope.suchbegriff = '';
-    delete $scope.fahrerliste;
+    if (fahrer) {
+      $scope.fahrer = punkte_pro_sektion_auffuellen(fahrer);
+      $scope.klasse = fahrer.klasse;
+      $scope.fahrer_alt = angular.copy($scope.fahrer);
+      $scope.suchbegriff = '';
+      delete $scope.fahrerliste;
+    }
   }
 
   function punkte_fokusieren() {
