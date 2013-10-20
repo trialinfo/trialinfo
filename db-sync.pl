@@ -152,6 +152,7 @@ CREATE TABLE veranstaltung (
   version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
   datum DATE,
+  mtime TIMESTAMP NULL,
   dat_mtime TIMESTAMP NULL,
   cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
@@ -708,6 +709,7 @@ do {
 
 			$cfg->{cfg_mtime} = $cfg_mtime;
 			$cfg->{dat_mtime} = $dat_mtime;
+			$cfg->{mtime} = max_timestamp($cfg_mtime, $dat_mtime);
 			$cfg->{aktiv} = $aktiv;
 			$cfg->{vareihen} = $vareihe;
 			features_aktualisieren $cfg, $features;

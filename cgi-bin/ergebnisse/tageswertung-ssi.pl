@@ -81,7 +81,7 @@ if (defined $vareihe) {
     # FIXME: Stattdessen eine Liste der Veranstaltungen; Parameter
     # durchschleifen. Veranstalter-Link zu animiertem Ergebnis?
     $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime,
+	SELECT id, NULL, wertung, titel, mtime,
 	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)
@@ -96,7 +96,7 @@ if (my @row = $sth->fetchrow_array) {
     $bezeichnung = $row[1];
     $wertung = $row[2];
     $cfg->{wertungen}[$wertung - 1] = { titel => $row[3] };
-    $zeit = max_timestamp($row[4], $row[5]);
+    $zeit = $row[4];
     $cfg->{wertungsmodus} = $row[6];
     $cfg->{vierpunktewertung} = $row[7];
     $cfg->{punkteteilung} = $row[8];

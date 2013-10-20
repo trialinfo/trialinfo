@@ -556,7 +556,7 @@ sub veranstaltung_aktualisieren($$$$) {
 	    dateiname datum aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
 	    wertung1_markiert versicherung ergebnislistenbreite
-	    ergebnisliste_feld dat_mtime cfg_mtime punkteteilung)) {
+	    ergebnisliste_feld dat_mtime cfg_mtime mtime punkteteilung)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;
 		push @$felder_alt, $alt->{$feld}
