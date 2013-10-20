@@ -165,21 +165,21 @@ sub punkte_berechnen($$) {
 	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    runde: for ($runde = 0; $runde < $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde] // [];
-		sektion: foreach my $sektion (@$sektionen) {
+		foreach my $sektion (@$sektionen) {
 		    my $p = $punkte_in_runde->[$sektion - 1];
-		    unless (defined $p) {
+		    if (defined $p) {
+			$gefahrene_sektionen++;
+			$punkte_pro_runde->[$runde] += $p;
+			$punkteverteilung->[$p]++
+			    if $p <= 5;
+		    } else {
 			$letzte_vollstaendige_runde = $runde
 			    unless defined $letzte_vollstaendige_runde;
 			$befahren = befahrene_sektionen($fahrer_nach_startnummer)
 			    unless defined $befahren;
 			last runde
 			    if defined $befahren->[$klasse - 1][$runde][$sektion - 1];
-			next sektion;
 		    }
-		    $gefahrene_sektionen++;
-		    $punkte_pro_runde->[$runde] += $p;
-		    $punkteverteilung->[$p]++
-			if $p <= 5;
 		}
 		$letzte_begonnene_runde = $runde + 1
 		    if defined $punkte_pro_runde->[$runde];
