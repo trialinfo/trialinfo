@@ -148,29 +148,36 @@ function punkteController($scope, $routeParams, $http, $timeout) {
       if (fahrer.papierabnahme) {
 	var punkte_summe = fahrer.zusatzpunkte;
 	var punkte_pro_runde = [];
-	var punkte_verteilung = [0, 0, 0, 0, $scope.veranstaltung.vierpunktewertung ? 0 : null, 0];
+	var punkteverteilung = [0, 0, 0, 0, 0, 0];
+	var ende_erreicht = false;
+	var runden = 0;
 	angular.forEach(fahrer.punkte_pro_sektion, function(punkte_in_runde, runde) {
-	  var summe_sinnvoll = true;
-	  punkte_pro_runde[runde] = null;
 	  angular.forEach(punkte_in_runde, function(punkte) {
-	    if (punkte === null)
-	      summe_sinnvoll = false;  /* FIXME: Nur wenn Sektion nich aus der Wertung genommen wurde! */
-	    else {
+	    if (punkte === null || punkte === undefined) {
+	      /* FIXME: Wenn Sektion nich aus der Wertung genommen wurde:
+	         ende_erreicht = true; */
+	    } else if (!ende_erreicht) {
 	      punkte_summe += punkte;
 	      punkte_pro_runde[runde] = (punkte_pro_runde[runde] || 0) + punkte;
 	      if (punkte <= 5)
-		punkte_verteilung[punkte] = (punkte_verteilung[punkte] || 0) + 1;
+		punkteverteilung[punkte]++;
 	    }
 	  });
-	  if (!summe_sinnvoll)
-	    punkte_pro_runde[runde] = null;
+	  if (!ende_erreicht && punkte_pro_runde[runde] !== undefined)
+	    runden++;
 	});
+	/* FIXME: Sobald Sektionen aus der Wertung markiert werden,
+	 * fahrer.punkte_pro_runde, fahrer.punkteverteilung, und fahrer.punkte
+	 * direkt aktualisieren!
+	 */
 	$scope.punkte_pro_runde = punkte_pro_runde;
-	$scope.punkte_verteilung = punkte_verteilung;
-	fahrer.punkte = punkte_summe;
+	$scope.punkteverteilung = punkteverteilung;
+	$scope.punkte = punkte_summe;
+	if (runden != 0 || fahrer.runden != null)
+	  fahrer.runden = runden;
       } else {
-	delete $scope.punkte_pro_runde;
-	delete $scope.punkte_verteilung;
+	$scope.punkte_pro_runde = [];
+	$scope.punkteverteilung = [];
 	if (fahrer.punkte != undefined)
 	  fahrer.punkte = null;
       }

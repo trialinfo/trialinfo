@@ -30,7 +30,7 @@
 		    <input type="number" size="1" maxlength="1" min="0" max="5" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" ui-validate="'punkte_gueltig($value)'" id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" punkte-tab-to="tab_weiter(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
-		    <span title="Runde {{runde}}">{{punkte_pro_runde[runde - 1]}}</span>
+		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{punkte_pro_runde[runde - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
@@ -50,9 +50,9 @@
 	      <tr>
 		<th align="right">Gesamtpunkte</th>
 		<td>
-		  <input type="number" size="3" min="0" max="999" ng-model="fahrer.punkte" disabled="disabled">
-		    <span ng-if="punkte_pro_runde && punkte_verteilung" style="font-weight:bold">
-		      &nbsp; (<span ng-repeat="h in punkte_verteilung track by $index" title="Anzahl der {{$index}}er"><span ng-if="h != null">{{h}}<span ng-if="!$last"> &nbsp;</span></span></span>)
+		  <input type="number" size="3" min="0" max="999" ng-model="punkte" disabled="disabled">
+		    <span ng-if="fahrer.papierabnahme" style="font-weight:bold">
+		      &nbsp; (<span ng-repeat="h in punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
 		</td>
 	      </tr>
