@@ -148,7 +148,7 @@ $sth = $dbh->prepare(q{
 $sth->execute($wertung, $id, defined $vareihe ? $vareihe : ());
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n <= 5; $n++) {
-	$fahrer->{s}[$n] = $fahrer->{"s$n"};
+	$fahrer->{punkteverteilung}[$n] = $fahrer->{"s$n"};
 	delete $fahrer->{"s$n"};
     }
     my $startnummer = $fahrer->{startnummer};

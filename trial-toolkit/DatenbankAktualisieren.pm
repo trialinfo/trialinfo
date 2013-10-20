@@ -295,12 +295,12 @@ sub einen_fahrer_aktualisieren($$$$$) {
 		push @$felder_neu, $neu->{$feld};
 	    }
 	}
-	if (exists $neu->{s}) {
+	if (exists $neu->{punkteverteilung}) {
 	    for (my $n = 0; $n <= 5; $n++) {
 		push @$felder, "s$n";
-		push @$felder_alt, $alt->{s}[$n]
+		push @$felder_alt, $alt->{punkteverteilung}[$n]
 		    if $alt;
-		push @$felder_neu, $neu->{s}[$n];
+		push @$felder_neu, $neu->{punkteverteilung}[$n];
 	    }
 	}
     }

@@ -159,7 +159,7 @@ my $dat_format = [
     "zusatzpunkte:f",			# 601:
     "punkte_pro_runde:S<:5",		# 605:
     "r:S<:30",				# 615: [ 0er, ..., 5er ] pro Runde (5er nicht gezählt, immer 0)
-    "s:S<:6",				# 675: [ 0er, ..., 5er ] gesamt (5er nicht gezählt, immer 0)
+    "punkteverteilung:S<:6",		# 675: [ 0er, ..., 5er ] gesamt (5er nicht gezählt, immer 0)
     "punkte:f",				# 687:
     "ausfall:S<",			# 691: 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
 					#      5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
@@ -550,7 +550,7 @@ sub dat_datei_schreiben($$) {
 		}
 	    }
 	    $fahrer->{r} = $r;
-	    $fahrer->{s}[5] = 0;  # Anzahl der 5er ist immer auf 0 gesetzt ...
+	    $fahrer->{punkteverteilung}[5] = 0;  # Anzahl der 5er ist immer auf 0 gesetzt ...
 
 	    # Pad arrays; otherwise pack() writes variable-length records
 	    foreach my $fmt (@$dat_format) {

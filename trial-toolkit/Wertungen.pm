@@ -56,8 +56,8 @@ sub rang_vergleich($$$) {
 
     # Abfallend nach 0ern, 1ern, 2ern, 3ern, 4ern
     for (my $n = 0; $n < 5; $n++) {
-	return $b->{s}[$n] <=> $a->{s}[$n]
-	    if $a->{s}[$n] != $b->{s}[$n];
+	return $b->{punkteverteilung}[$n] <=> $a->{punkteverteilung}[$n]
+	    if $a->{punkteverteilung}[$n] != $b->{punkteverteilung}[$n];
     }
 
     # Aufsteigend nach der besten Runde?
@@ -147,7 +147,7 @@ sub punkte_berechnen($$) {
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $punkte_pro_runde;
 	my $gesamtpunkte;
-	my $s;  # 0er, 1er, 2er, 3er, 4er, 5er
+	my $punkteverteilung;  # 0er, 1er, 2er, 3er, 4er, 5er
 	my $gefahrene_sektionen;
 	my $runde;
 
@@ -157,7 +157,7 @@ sub punkte_berechnen($$) {
 	    my $letzte_begonnene_runde = 0;
 	    my $letzte_vollstaendige_runde;
 	    $gesamtpunkte = 0;
-	    $s = [(0) x 6];
+	    $punkteverteilung = [(0) x 6];
 	    $gefahrene_sektionen = 0;
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // [];
@@ -178,7 +178,7 @@ sub punkte_berechnen($$) {
 		    }
 		    $gefahrene_sektionen++;
 		    $punkte_pro_runde->[$runde] += $p;
-		    $s->[$p]++
+		    $punkteverteilung->[$p]++
 			if $p <= 5;
 		}
 		$letzte_begonnene_runde = $runde + 1
@@ -211,7 +211,7 @@ sub punkte_berechnen($$) {
 
 	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;
-	$fahrer->{s} = $s;
+	$fahrer->{punkteverteilung} = $punkteverteilung;
 	$fahrer->{gefahrene_sektionen} = $gefahrene_sektionen;
     }
 }
@@ -612,7 +612,8 @@ sub tageswertung(@) {
 		    !$a->{stechen} && !$b->{stechen}) {
 		    for (my $m = 0; $m < 5; $m++) {
 			$sn++;
-			last unless $a->{s}[$m] == $b->{s}[$m];
+			last unless $a->{punkteverteilung}[$m] ==
+				    $b->{punkteverteilung}[$m];
 		    }
 		}
 
@@ -702,9 +703,9 @@ sub tageswertung(@) {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
 		    if ($n < ($fahrer->{sn} // -1)) {
-			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info2\"" ];
+			push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info2\"" ];
 		    } else {
-			push @$row, [ $fahrer->{s}[$n], "r", "class=\"info\"" ];
+			push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info\"" ];
 		    }
 		}
 		if ($stechen) {

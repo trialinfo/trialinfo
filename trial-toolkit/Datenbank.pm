@@ -306,12 +306,12 @@ sub neue_startnummern_aus_datenbank($$$) {
 
 sub punkteverteilung_umwandeln($) {
     my ($fahrer) = @_;
-    my $s;
+    my $punkteverteilung;
     for (my $n = 0; $n <= 5; $n++) {
-	push @$s, $fahrer->{"s$n"};
+	push @$punkteverteilung, $fahrer->{"s$n"};
 	delete $fahrer->{"s$n"};
     }
-    $fahrer->{s} = $s;
+    $fahrer->{punkteverteilung} = $punkteverteilung;
 }
 
 sub fahrer_aus_datenbank($$;$$$) {
