@@ -7,7 +7,7 @@
 <table ng-if="fold.zuruecksetzen">
   <tr>
     <td>
-      <button disabled="disabled">Start</button>
+      <button ng-click="reset('start')">Start</button>
     </td>
     <td>
       Löscht alle Punkte, Start- und Zielzeit, Ausfall, Stechen
@@ -15,7 +15,7 @@
   </tr>
   <tr>
     <td>
-      <button disabled="disabled">Nennbeginn</button>
+      <button ng-click="reset('nennbeginn')">Nennbeginn</button>
     </td>
     <td>
       Löscht Nennungseingang, Papierabnahme, Startgeld + Start
@@ -23,7 +23,7 @@
   </tr>
   <tr>
     <td>
-      <button disabled="disabled">Nur Stammdaten</button>
+      <button ng-click="reset('stammdaten')">Nur Stammdaten</button>
     </td>
     <td>
       Löscht alle Startnummern + Nennbeginn

@@ -179,6 +179,57 @@ sub get_veranstaltung($$) {
     return $result;
 }
 
+sub veranstaltung_reset($$$) {
+    my ($dbh, $id, $reset) = @_;
+    my $sth;
+
+    die "Unbekannte Reset-Operation\n"
+	unless ($reset =~ /^(start|nennbeginn|stammdaten)$/);
+
+    my $startnummer_max;
+    if ($reset eq 'stammdaten') {
+	$sth = $dbh->prepare(q{
+	    SELECT MIN(startnummer), MAX(startnummer)
+	    FROM fahrer
+	    WHERE id = ?
+	});
+	$sth->execute($id);
+	($startnummer_max) = $sth->fetchrow_array
+	    or die "Konnte die minimale und maximale Startnummer nicht ermitteln\n";
+	$reset = 'nennbeginn'
+	    if $startnummer_max <= 0;
+    }
+    $dbh->do(q{
+	DELETE FROM punkte
+	WHERE id = ?
+    }, undef, $id);
+    $dbh->do(q{
+	DELETE FROM runde
+	WHERE id = ?
+    }, undef, $id);
+    $dbh->do(q{
+	UPDATE fahrer_wertung
+	SET wertungsrang = NULL, wertungspunkte = NULL
+	WHERE id = ?
+    }, undef, $id);
+    $dbh->do(q{
+	UPDATE fahrer
+	SET version = version + 1, runden = NULL, s0 = NULL, s1 = NULL,
+	    s2 = NULL, s3 = NULL, s4 = NULL, s5 = NULL,
+	    zusatzpunkte = 0, punkte = NULL, ausfall = 0, stechen = 0,
+	    rang = NULL, startzeit = NULL, zielzeit = NULL
+	    } . ($reset eq 'start' ? '' : (
+		q{
+		    , nennungseingang = 0, papierabnahme = 0, nenngeld = NULL
+		} . ($reset eq 'nennbeginn' ? '' : q{
+		    , startnummer = CASE WHEN startnummer < 0 THEN
+					 startnummer - ? ELSE
+					 -startnummer END
+		}))) . q{
+	WHERE id = ?
+    }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
+}
+
 my $result;
 my $status = '200 OK';
 if ($op eq 'GET/vareihen') {
@@ -388,6 +439,8 @@ if ($op eq 'GET/vareihen') {
 	}
 	if (defined $basis) {
 	    veranstaltung_duplizieren($do_sql, $basis, $id_neu);
+	    veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
+		if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	    $version = 1;
 	}
 	if (defined $id || defined $basis) {
@@ -560,6 +613,35 @@ if ($op eq 'GET/vareihen') {
 	$dbh->disconnect;
     } else {
 	$status = '200 Deleted';
+    }
+} elsif ($op eq "POST/veranstaltung/reset") {
+    my ($id, $version, $reset) = parameter($q, qw(id version reset));
+
+    eval {
+	$dbh->begin_work;
+	my $sth = $dbh->prepare(q{
+	    SELECT version FROM veranstaltung
+	    WHERE id = ?
+	});
+	$sth->execute($id);
+	my ($version0) = $sth->fetchrow_array
+	    or die "Veranstaltung nicht gefunden\n";
+	die "Invalid Row Version\n"
+	    if $version0 != $version;
+	veranstaltung_reset($dbh, $id, $reset);
+	$dbh->commit;
+    };
+    if ($@) {
+	print STDERR $@;
+	if ($@ =~ /Invalid Row Version/) {
+	    $status = '409 Conflict';
+	} else {
+	    $status = '500 Internal Server Error';
+	}
+	$result->{error} = $@;
+	$dbh->disconnect;
+    } else {
+	$status = '200 Modified';
     }
 } elsif ($op eq "GET/fahrer/suchen") {
     my ($id, $suchbegriff) = parameter($q, qw(id suchbegriff));

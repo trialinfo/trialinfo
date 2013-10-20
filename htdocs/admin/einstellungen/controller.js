@@ -114,7 +114,7 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
 	wertungspunkte: [],
 	wertungsmodus: 0,
 	versicherung: 0,
-	zuruecksetzen: 'nennbeginn'
+	reset: 'nennbeginn'
       };
       for (var n = 0; n < 15; n++) {
 	veranstaltung.klassen.push({});
@@ -219,7 +219,7 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
 	    eindeutiger_titel(veranstaltung.wertungen[0].titel,
 			      $scope.veranstaltungen);
 	  veranstaltung.datum = $scope.$eval('heute | date:"d.M.yyyy"', {heute: Date.now()});
-	  veranstaltung.zuruecksetzen = 'nennbeginn';
+	  veranstaltung.reset = 'nennbeginn';
 	  veranstaltung_zuweisen(veranstaltung, true);
 	}).
 	error(netzwerkfehler);
