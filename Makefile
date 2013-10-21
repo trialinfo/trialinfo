@@ -34,6 +34,7 @@ LOCAL_FILES = \
 
 GENERATED_WEB_FILES = \
 	cgi-bin/veranstalter/.htaccess \
+	htdocs/ergebnisse/.htaccess \
 
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \

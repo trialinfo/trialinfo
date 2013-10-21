@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Auswertung</title>
+    <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+  </head>
+<body>
+<!--#set var="which" value="$QUERY_STRING" -->
+<!--#include virtual="/cgi-bin/ergebnisse/jahreswertung-ssi.pl?$which" -->
+</body>
+</html>

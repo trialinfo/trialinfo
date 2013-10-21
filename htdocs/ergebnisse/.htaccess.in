@@ -1,0 +1,10 @@
+DirectoryIndex index.shtml
+Options Indexes Includes
+
+# Laut Dokumentation unterstützt Apache ab Version 2.3.13 eine neue Syntax für
+# die Ausdrücke in SSI #if-Befehlen. Die neue Syntax ist ab Version 2.4 per
+# Default aktiviert, wir verwenden aber die alte Syntax.
+#
+# (Der aktuelle Server unterstützt Option SSILegacyExprParser noch nicht.)
+#
+#SSILegacyExprParser on
