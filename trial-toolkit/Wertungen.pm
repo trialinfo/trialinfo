@@ -155,6 +155,7 @@ sub punkte_berechnen($$) {
 	my $klasse = $fahrer->{klasse};
 	if (defined $klasse && $fahrer->{papierabnahme}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
+	    my $letzte_begonnene_runde = 0;
 	    my $letzte_vollstaendige_runde;
 	    $gesamtpunkte = 0;
 	    $s = [(0) x 6];
@@ -183,6 +184,8 @@ sub punkte_berechnen($$) {
 			    if $p <= 5;
 		    }
 		}
+		$letzte_begonnene_runde = $runde + 1
+		    if defined $punkte_pro_runde->[$runde];
 	    }
 	    foreach my $punkte (@$punkte_pro_runde) {
 		$gesamtpunkte += $punkte;
@@ -202,6 +205,8 @@ sub punkte_berechnen($$) {
 	    $fahrer->{runden} = $letzte_vollstaendige_runde
 		if !defined $fahrer->{runden} ||
 		   $fahrer->{runden} < $letzte_vollstaendige_runde;
+	    $fahrer->{runden} = $letzte_begonnene_runde
+		if $fahrer->{runden} > $letzte_begonnene_runde;
 	    $gesamtpunkte += $fahrer->{zusatzpunkte};
 	} else {
 	    $fahrer->{runden} = undef;
