@@ -112,15 +112,6 @@ function serieController($scope, $http, $routeParams, $timeout, $location, $wind
     return !angular.equals($scope.vareihe_alt, $scope.vareihe);
   };
 
-  function netzwerkfehler(data, status) {
-    if (status === 409)
-      $scope.fehler = 'Veränderung der Daten am Server festgestellt.';
-    if (status == 500)
-      $scope.fehler = 'Interner Serverfehler.';
-    else
-      $scope.fehler = data.error;
-  }
-
   $scope.speichern = function() {
     var vareihe = angular.copy($scope.vareihe);
     var veranstaltungen = vareihe.veranstaltungen;

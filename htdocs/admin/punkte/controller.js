@@ -62,13 +62,6 @@ function punkteController($scope, $routeParams, $http, $timeout) {
     }
   }
 
-  function netzwerkfehler(data, status) {
-    if (status == 500)
-      $scope.fehler = 'Interner Serverfehler.';
-    else
-      $scope.fehler = data.error;
-  }
-
   $scope.fahrer_laden = function(startnummer, richtung) {
     fahrer_laden($http, $routeParams.id, startnummer, richtung,
 		 richtung ? 'starter' : undefined).
@@ -202,12 +195,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
 	fahrer_zuweisen(fahrer);
 	set_focus('#suchbegriff', $timeout);
       }).
-      error(function (data, status) {
-	if (status === 409)
-	  $scope.fehler = 'Veränderung der Daten am Server festgestellt.';
-	else
-	  netzwerkfehler(data, status);
-      });
+      error(netzwerkfehler);
   };
 
   $scope.verwerfen = function() {

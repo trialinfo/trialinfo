@@ -133,14 +133,6 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
       $scope.sektionen_alt = angular.copy($scope.sektionen);
       $scope.features_alt = angular.copy($scope.features);
     }
-    $scope.fehler = undefined;
-  }
-
-  function netzwerkfehler(data, status) {
-    if (status == 500)
-      $scope.fehler = 'Interner Serverfehler.';
-    else
-      $scope.fehler = data.error;
   }
 
   $scope.speichern = function() {
@@ -158,12 +150,7 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
 	  /* FIXME: Wie Reload verhindern? */
 	}
       }).
-      error(function (data, status) {
-	if (status === 409)
-	  $scope.fehler = 'Veränderung der Daten am Server festgestellt.';
-	else
-	  netzwerkfehler(data, status);
-      });
+      error(netzwerkfehler);
   };
 
   $scope.verwerfen = function() {
@@ -185,13 +172,6 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);
-
-  function netzwerkfehler(data, status) {
-    if (status == 500)
-      $scope.fehler = 'Interner Serverfehler.';
-    else
-      $scope.fehler = data.error;
-  }
 
   function eindeutiger_titel(titel, veranstaltungen) {
     var vergeben = {};

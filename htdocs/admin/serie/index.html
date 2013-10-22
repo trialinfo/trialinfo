@@ -77,9 +77,6 @@
     </table>
   </fieldset><br>
   <p>
-    <span style="color: red">{{fehler}}</span>
-  </p>
-  <p>
     <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()">Speichern</button>
     <button type="button" ng-disabled="!geaendert()" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
     <button type="button" ng-disabled="geaendert() || ist_neu" ng-click="loeschen()" tabindex="-1">Löschen</button>

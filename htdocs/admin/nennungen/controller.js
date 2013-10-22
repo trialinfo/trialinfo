@@ -47,13 +47,6 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
     });
   }
 
-  function netzwerkfehler(data, status) {
-    if (status == 500)
-      $scope.fehler = 'Interner Serverfehler.';
-    else
-      $scope.fehler = data.error;
-  }
-
   $scope.fahrer_laden = function(startnummer, richtung) {
     fahrer_laden($http, $routeParams.id, startnummer, richtung).
       success(function(fahrer) {
@@ -112,9 +105,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
 	set_focus('#suchbegriff', $timeout);
       }).
       error(function (data, status) {
-	if (status === 409)
-	  $scope.fehler = 'Veränderung der Daten am Server festgestellt.';
-	else if (status == 403)
+	if (status == 403)
 	  $scope.fehler = 'Startnummer ' + $scope.fahrer.startnummer +
 			  ' existiert bereits.';
 	else
@@ -191,7 +182,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
 	  checker.resolve();
 	}
       }).
-      error(function(data, status, headers, config) {
+      error(function(data, status) {
 	$scope.startnummer_belegt = undefined;
 	netzwerkfehler(data, status);
 	checker.reject();
@@ -223,12 +214,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
 	  $scope.neuer_fahrer(false);
 	  set_focus('#suchbegriff', $timeout);
 	}).
-	error(function (data, status) {
-	  if (status === 409)
-	    $scope.fehler = 'Veränderung der Daten am Server festgestellt.';
-	  else
-	    netzwerkfehler(data, status);
-	});
+	error(netzwerkfehler);
     }
   };
 

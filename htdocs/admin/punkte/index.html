@@ -132,9 +132,6 @@
 	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine Fahrer gefunden.</span>
 	  </p>
 	  <p>
-	    <span style="color: red">{{fehler}}</span>
-	  </p>
-	  <p>
 	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
 	    <button type="button" ng-disabled="!geaendert()" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
 	  </p>

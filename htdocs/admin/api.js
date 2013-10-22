@@ -160,3 +160,13 @@ function vareihe_loeschen($http, vareihe, version) {
   };
   return $http.delete('/api/vareihe', {params: params});
 }
+
+function netzwerkfehler(data, status) {
+  alert((status == 500 ?
+	   'Interner Serverfehler.' :
+	 status === 409 ?
+	   'Veränderung der Daten am Server festgestellt.' :
+	   'HTTP-Request ist ' + (status ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
+	(typeof data === 'object' && data.error !== undefined ?
+	 '\n\n' + data.error : ''));
+}
