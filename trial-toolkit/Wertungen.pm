@@ -19,13 +19,12 @@ package Wertungen;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung max_timestamp);
+@EXPORT = qw(rang_und_wertungspunkte_berechnen tageswertung jahreswertung);
 
 use utf8;
 use List::Util qw(min max);
 use POSIX qw(modf);
 use RenderOutput;
-use Time::Local;
 use TrialToolkit;
 use strict;
 
@@ -1135,20 +1134,6 @@ sub jahreswertung(@) {
 	push @$body, [ $label, $cfg->{wertungen}[$wertung - 1]{titel} ];
     }
     doc_table header => ["", "Name"], body => $body, format => ["r", "l"];
-}
-
-sub max_timestamp($$) {
-    my ($a, $b) = @_;
-    my ($ta, $tb);
-
-    return $b unless defined $a;
-    return $a unless defined $b;
-
-    $ta = timelocal($6, $5, $4, $3, $2 - 1, $1 - 1900)
-	if $a =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/;
-    $tb = timelocal($6, $5, $4, $3, $2 - 1, $1 - 1900)
-	if $b =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/;
-    return $ta < $tb ? $b : $a;
 }
 
 1;

@@ -14,13 +14,14 @@ DOWNLOAD_FILES = \
 	htdocs/js/raphael-min.js \
 
 COMMON_FILES = \
-	trial-toolkit/JSON_bool.pm \
-	trial-toolkit/Trialtool.pm \
-	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	trial-toolkit/Datenbank.pm \
+	trial-toolkit/JSON_bool.pm \
+	trial-toolkit/Parse/Binary/FixedFormat.pm \
 	trial-toolkit/RenderOutput.pm \
-	trial-toolkit/Wertungen.pm \
+	trial-toolkit/Timestamp.pm \
 	trial-toolkit/TrialToolkit.pm.txt \
+	trial-toolkit/Trialtool.pm \
+	trial-toolkit/Wertungen.pm \
 
 LOCAL_FILES = \
 	db-sync.pl \

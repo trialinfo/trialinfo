@@ -19,9 +19,10 @@
 
 use utf8;
 use DBI;
-use Trialtool qw(timestamp_mtime cfg_datei_schreiben dat_datei_schreiben
+use Trialtool qw(cfg_datei_schreiben dat_datei_schreiben
 		 neue_startnummern_zu_fahrern);
 use Datenbank qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8);
+use Timestamp;
 use Getopt::Long;
 use File::Glob ':glob';
 use Encode qw(encode);

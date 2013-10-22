@@ -37,15 +37,11 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
 	     dat_datei_schreiben trialtool_dateien gestartete_klassen
-	     mtime_timestamp timestamp_mtime neue_startnummern_von_fahrern
-	     neue_startnummern_zu_fahrern);
+	     neue_startnummern_von_fahrern neue_startnummern_zu_fahrern);
 
-use File::stat;
-use POSIX qw(strftime mktime);
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
 use Encode qw(encode decode);
-use Time::localtime;
 use FileHandle;
 use JSON_bool;
 use strict;
@@ -621,24 +617,6 @@ sub gestartete_klassen($) {
 	    if $sektionen->[$n] && @{$sektionen->[$n]};
     }
     return $gestartet;
-}
-
-sub mtime_timestamp($) {
-    my ($dateiname) = @_;
-
-    my $stat = stat(encode(locale_fs => "$dateiname"))
-	or die "$dateiname: $!\n";
-    return strftime("%Y-%m-%d %H:%M:%S", @{localtime($stat->mtime)});
-}
-
-sub timestamp_mtime($) {
-    my ($timestamp) = @_;
-
-    if ($timestamp =~ /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/) {
-	return mktime($6, $5, $4, $3, $2 - 1, $1 - 1900);
-    } else {
-	return undef;
-    }
 }
 
 sub neue_startnummern_von_fahrern($$) {
