@@ -1,9 +1,9 @@
 <h1>{{veranstaltung.wertungen[0].titel}}</h1>
-<a href="../ergebnisse/tageswertung.shtml?id={{id}}" target="tageswertung:{{id}}">Auswertung</a><br>
+<a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}" target="tageswertung:{{veranstaltung.id}}">Auswertung</a><br>
 <br>
-<a href="#/veranstaltung/{{id}}/nennungen">Nennungen</a><br>
-<a href="#/veranstaltung/{{id}}/punkte">Punktevergabe</a><br><br>
-<a href="#/veranstaltung/{{id}}/einstellungen">Einstellungen</a><br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/nennungen">Nennungen</a><br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/punkte">Punktevergabe</a><br><br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/einstellungen">Einstellungen</a><br>
 <a ng-if="!fold.zuruecksetzen" href="" ng-click="$parent.fold.zuruecksetzen = true">↓ Zurücksetzen</a>
 <a ng-if="fold.zuruecksetzen" href="" ng-click="$parent.fold.zuruecksetzen = false">↑ Zurücksetzen</a><br>
 <table ng-if="fold.zuruecksetzen">

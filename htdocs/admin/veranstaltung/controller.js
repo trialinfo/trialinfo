@@ -1,12 +1,12 @@
 'use strict;'
 
-function veranstaltungController($scope, $location, $routeParams, $http) {
-  $scope.id = $routeParams.id;
+function veranstaltungController($scope, $location, $http, veranstaltung) {
+  $scope.veranstaltung = veranstaltung;
   $scope.fold = {};
 
   $scope.loeschen = function() {
     if (confirm('Veranstaltung wirklich löschen?\n\nDie Veranstaltung kann später nicht wiederhergestellt werden.')) {
-      veranstaltung_loeschen($http, $routeParams.id, $scope.veranstaltung.version).
+      veranstaltung_loeschen($http, veranstaltung.id, veranstaltung.version).
 	success(function() {
 	  $location.path('/veranstaltungen');
 	}).
@@ -20,8 +20,8 @@ function veranstaltungController($scope, $location, $routeParams, $http) {
     if (confirm('Veranstaltung wirklich auf ' + was + ' zurücksetzen?\n\n' +
 		'Diese Änderung kann nicht rückgängig gemacht werden.')) {
       var params = {
-	id: $routeParams.id,
-	version: $scope.veranstaltung.version,
+	id: veranstaltung.id,
+	version: veranstaltung.version,
 	reset: reset
       };
       $http.post('/api/veranstaltung/reset', undefined, {params: params}).
@@ -29,6 +29,11 @@ function veranstaltungController($scope, $location, $routeParams, $http) {
     }
     $scope.fold.zuruecksetzen = false;
   }
-
-  veranstaltung_laden($scope, $http, $routeParams.id);
 }
+
+veranstaltungController.resolve = {
+  veranstaltung: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/veranstaltung',
+				      {params: $route.current.params}));
+  }
+};

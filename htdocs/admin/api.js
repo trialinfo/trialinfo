@@ -161,6 +161,19 @@ function vareihe_loeschen($http, vareihe, version) {
   return $http.delete('/api/vareihe', {params: params});
 }
 
+function http_request($q, request) {
+  var deferred = $q.defer();
+  request.
+    success(function(data) {
+      deferred.resolve(data);
+    }).
+    error(function(data, status) {
+      deferred.reject();
+      netzwerkfehler(data, status);
+    });
+  return deferred.promise;
+}
+
 function netzwerkfehler(data, status) {
   alert((status == 500 ?
 	   'Interner Serverfehler.' :

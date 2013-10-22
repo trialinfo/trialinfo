@@ -1,6 +1,21 @@
 'use strict;'
 
-function punkteController($scope, $routeParams, $http, $timeout) {
+function punkteController($scope, $http, $timeout, veranstaltung) {
+  $scope.veranstaltung = veranstaltung;
+  $scope.features = features_aus_liste(veranstaltung);
+  $scope.startende_klassen = startende_klassen(veranstaltung);
+
+  /* Um die Maske sinnvoll darstellen zu können, Felder für die befahrenen
+   * Sektionen und Runden der ersten definierten Klasse anzeigen.  Das
+   * stimmt zumindest bei allen Veranstaltungen, bei denen alle Klassen
+   * die selben Sektionen und Runden befahren.  */
+  for (var klasse = 1; klasse < veranstaltung.sektionen.length + 1; klasse++) {
+    if (veranstaltung.sektionen[klasse - 1]) {
+      $scope.klasse = klasse;
+      break;
+    }
+  }
+
   $scope.fahrer_startet = function() {
     try {
       var fahrer = $scope.fahrer;
@@ -14,7 +29,6 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   function punkte_pro_sektion_auffuellen(fahrer) {
     try {
       var punkte_pro_sektion = fahrer.punkte_pro_sektion;
-      var veranstaltung = $scope.veranstaltung;
       var runden = veranstaltung.klassen[fahrer.klasse - 1].runden;
       for (var n = 0; n < runden; n++) {
 	if (punkte_pro_sektion[n] === undefined)
@@ -45,7 +59,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
     var fahrer = $scope.fahrer;
     if (fahrer && fahrer.papierabnahme &&
 	(fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
-      var sektionen = $scope.veranstaltung.sektionen[fahrer.klasse - 1];
+      var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
       var punkte_pro_sektion = fahrer.punkte_pro_sektion;
       try {
 	angular.forEach(fahrer.punkte_pro_sektion, function(punkte_in_runde, $index) {
@@ -63,7 +77,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   }
 
   $scope.fahrer_laden = function(startnummer, richtung) {
-    fahrer_laden($http, $routeParams.id, startnummer, richtung,
+    fahrer_laden($http, veranstaltung.id, startnummer, richtung,
 		 richtung ? 'starter' : undefined).
       success(function(fahrer) {
 	fahrer_zuweisen(Object.keys(fahrer).length ? fahrer : undefined);
@@ -78,7 +92,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
 
   $scope.fahrer_suchen = function() {
     if ($scope.suchbegriff != '') {
-      fahrer_suchen($http, $routeParams.id, $scope.suchbegriff).
+      fahrer_suchen($http, veranstaltung.id, $scope.suchbegriff).
 	success(function(fahrerliste) {
 	  fahrerliste = fahrerliste.filter(function(fahrer) {
 	    return fahrer.startnummer !== null && fahrer.klasse !== null;
@@ -97,7 +111,6 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   $scope.$watch('suchbegriff', 'fahrer_suchen()');
 
   function runden_zaehlen() {
-    var veranstaltung = $scope.veranstaltung;
     var fahrer = $scope.fahrer;
     var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
     var punkte_pro_sektion = fahrer.punkte_pro_sektion;
@@ -120,7 +133,6 @@ function punkteController($scope, $routeParams, $http, $timeout) {
 
   $scope.rundenfarbe = function() {
     try {
-      var veranstaltung = $scope.veranstaltung;
       var fahrer = $scope.fahrer;
       if ($scope.fahrer_startet() && (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
 	var runden = fahrer.runden /* FIXME: runden_zaehlen() */ + 1;
@@ -190,7 +202,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
       startnummer = $scope.fahrer_alt.startnummer;
       version = $scope.fahrer_alt.version;
     }
-    fahrer_speichern($http, $routeParams.id, startnummer, version, $scope.fahrer).
+    fahrer_speichern($http, veranstaltung.id, startnummer, version, $scope.fahrer).
       success(function(fahrer) {
 	fahrer_zuweisen(fahrer);
 	set_focus('#suchbegriff', $timeout);
@@ -207,7 +219,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
     try {
       var rundenliste = [];
       if ($scope.startende_klassen[klasse - 1]) {
-	var runden = $scope.veranstaltung.klassen[klasse - 1].runden;
+	var runden = veranstaltung.klassen[klasse - 1].runden;
 	for (var n = 1; n <= runden; n++)
 	  rundenliste.push(n);
 	return rundenliste;
@@ -216,7 +228,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   };
 
   $scope.klassensymbol = function() {
-    var farbe = $scope.veranstaltung.klassen[$scope.fahrer.klasse - 1].farbe;
+    var farbe = veranstaltung.klassen[$scope.fahrer.klasse - 1].farbe;
     if (farbe) {
       return '<span style="position: absolute; z-index: 1">◻</span>' +
 	     '<span style="color:' + farbe + '">◼</span>';
@@ -229,13 +241,13 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   $scope.punkte_gueltig = function(punkte) {
     if (punkte === undefined || punkte === null)
       return true;
-    var vierpunktewertung = $scope.veranstaltung.vierpunktewertung;
+    var vierpunktewertung = veranstaltung.vierpunktewertung;
     return punkte >= 0 && punkte <= 5 &&
 	   (vierpunktewertung || punkte != 4);
   };
 
   $scope.tab_weiter = function(runde, index) {
-    var sektionen = $scope.veranstaltung.sektionen[$scope.klasse - 1];
+    var sektionen = veranstaltung.sektionen[$scope.klasse - 1];
     if (index + 1 < sektionen.length)
       return 'punkte_' + runde + '_' + sektionen[index + 1];
   };
@@ -243,7 +255,7 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   $scope.ueberzeit = function() {
     try {
       var fahrer = $scope.fahrer;
-      var gesamt = $scope.veranstaltung.klassen[fahrer.klasse - 1].fahrzeit;
+      var gesamt = veranstaltung.klassen[fahrer.klasse - 1].fahrzeit;
       if (fahrer.startzeit && fahrer.zielzeit && gesamt) {
 	var startzeit = fahrer.startzeit.match(/^(\d\d):(\d\d):(\d\d)$/);
 	startzeit = (+startzeit[1] * 60 + +startzeit[2]) * 60 + +startzeit[3];
@@ -278,21 +290,11 @@ function punkteController($scope, $routeParams, $http, $timeout) {
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);
-
-  veranstaltung_laden($scope, $http, $routeParams.id).
-    success(function(veranstaltung) {
-      $scope.startende_klassen = startende_klassen(veranstaltung);
-
-      /* Um die Maske sinnvoll darstellen zu können, Felder für die befahrenen
-       * Sektionen und Runden der ersten definierten Klasse anzeigen.  Das
-       * stimmt zumindest bei allen Veranstaltungen, bei denen alle Klassen
-       * die selben Sektionen und Runden befahren.  */
-      for (var klasse = 1; klasse < veranstaltung.sektionen.length + 1; klasse++) {
-	if (veranstaltung.sektionen[klasse - 1]) {
-	  $scope.klasse = klasse;
-	  break;
-	}
-      }
-    }).
-    error(netzwerkfehler);
 }
+
+punkteController.resolve = {
+  veranstaltung: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/veranstaltung',
+				      {params: $route.current.params}));
+  },
+};

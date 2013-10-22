@@ -1,6 +1,6 @@
 'use strict;'
 
-function veranstaltungenController($scope, $http, $location) {
+function veranstaltungenController($scope, $http, $location, veranstaltungen) {
   $scope.sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
   };
@@ -17,5 +17,11 @@ function veranstaltungenController($scope, $http, $location) {
     $location.path('/veranstaltung/neu/einstellungen');
   };
 
-  veranstaltungen_laden($scope, $http);
+  $scope.veranstaltungen = veranstaltungen;
 }
+
+veranstaltungenController.resolve = {
+  veranstaltungen: function($q, $http) {
+    return http_request($q, $http.get('/api/veranstaltungen'));
+  }
+};

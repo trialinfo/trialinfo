@@ -1,6 +1,17 @@
 'use strict;'
 
-function serieController($scope, $http, $routeParams, $timeout, $location, $window) {
+function serieController($scope, $http, $timeout, $location, $window, vareihe, veranstaltungen) {
+  var veranstaltungsdatum = {};
+  vareihe_zuweisen(vareihe);
+
+  if (veranstaltungen) {
+    veranstaltungen.reverse();
+    $scope.veranstaltungen = veranstaltungen;
+    angular.forEach(veranstaltungen, function (veranstaltung) {
+      veranstaltungsdatum[veranstaltung.id] = veranstaltung.datum;
+    });
+  }
+
   function sort_uniq(array, cmp) {
     array = array.sort(cmp);
     for (var n = 0; n < array.length - 1; n++)
@@ -42,7 +53,6 @@ function serieController($scope, $http, $routeParams, $timeout, $location, $wind
     } catch (_) {}
   }, true);
 
-  var veranstaltungsdatum = {};
   function veranstaltungen_normalisieren(vareihe) {
     var veranstaltungen = vareihe.veranstaltungen;
     if (!veranstaltungen.length ||
@@ -96,6 +106,15 @@ function serieController($scope, $http, $routeParams, $timeout, $location, $wind
     if (vareihe === undefined)
       vareihe = $scope.vareihe_alt;
     else {
+      if (vareihe === null) {
+	vareihe = {
+	  version: 0,
+	  bezeichnung: 'Neue Serie',
+	  klassen: [],
+	  veranstaltungen: [],
+	  startnummern: []
+	};
+      }
       klassen_normalisieren(vareihe);
       veranstaltungen_normalisieren(vareihe);
       startnummern_normalisieren(vareihe);
@@ -126,7 +145,7 @@ function serieController($scope, $http, $routeParams, $timeout, $location, $wind
 	startnummern.push(aenderung);
     });
     vareihe.startnummern = startnummern;
-    vareihe_speichern($http, $routeParams.vareihe, vareihe).
+    vareihe_speichern($http, vareihe.vareihe, vareihe).
       success(function(vareihe) {
 	vareihe_zuweisen(vareihe);
 	var path = '/serie/' + vareihe.vareihe;
@@ -144,7 +163,7 @@ function serieController($scope, $http, $routeParams, $timeout, $location, $wind
 
   $scope.loeschen = function() {
     if (confirm('Serie wirklich löschen?\n\nDie Serie kann später nicht wiederhergestellt werden.'))
-      vareihe_loeschen($http, $routeParams.vareihe, $scope.vareihe.version).
+      vareihe_loeschen($http, $scope.vareihe.vareihe, $scope.vareihe.version).
 	success(function() {
 	  $window.history.back();
         }).
@@ -166,25 +185,16 @@ function serieController($scope, $http, $routeParams, $timeout, $location, $wind
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);
-
-  veranstaltungen_laden($scope, $http).
-    success(function (veranstaltungen) {
-      veranstaltungen.reverse();
-      angular.forEach(veranstaltungen, function (veranstaltung) {
-	veranstaltungsdatum[veranstaltung.id] = veranstaltung.datum;
-      });
-    });
-  if ($routeParams.vareihe) {
-    $http.get('/api/vareihe?vareihe=' + $routeParams.vareihe).
-      success(vareihe_zuweisen).
-      error(netzwerkfehler);
-  } else {
-    vareihe_zuweisen({
-      version: 0,
-      bezeichnung: 'Neue Serie',
-      klassen: [],
-      veranstaltungen: [],
-      startnummern: []
-    });
-  }
 }
+
+serieController.resolve = {
+  veranstaltungen: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/veranstaltungen'));
+   },
+  vareihe: function($q, $http, $route) {
+    if ($route.current.params.vareihe !== undefined)
+      return http_request($q, $http.get('/api/vareihe', {params: $route.current.params}));
+    else
+      return null;
+  }
+};

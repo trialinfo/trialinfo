@@ -1,6 +1,19 @@
 'use strict;'
 
-function nennungenController($scope, $routeParams, $http, $timeout, $q) {
+function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschlaege) {
+  $scope.veranstaltung = veranstaltung;
+  $scope.features = features_aus_liste(veranstaltung);
+  $scope.definierte_klassen = [];
+  angular.forEach(veranstaltung.klassen, function(klasse, index) {
+    if (klasse && klasse.bezeichnung != null && klasse.bezeichnung != '') {
+      $scope.definierte_klassen.push(
+	angular.extend({'klasse': index + 1}, klasse));
+    }
+  });
+  $scope.startende_klassen = startende_klassen(veranstaltung);
+  wertungslabels_erzeugen();
+
+  $scope.vorschlaege = vorschlaege;
   $scope.enabled = {suche: true, neu: true};
 
   function fahrer_fokusieren() {
@@ -48,7 +61,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
   }
 
   $scope.fahrer_laden = function(startnummer, richtung) {
-    fahrer_laden($http, $routeParams.id, startnummer, richtung).
+    fahrer_laden($http, veranstaltung.id, startnummer, richtung).
       success(function(fahrer) {
 	if (Object.keys(fahrer).length) {
 	  fahrer_zuweisen(fahrer);
@@ -61,7 +74,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
 
   $scope.fahrer_suchen = function() {
     if ($scope.suchbegriff !== '') {
-      fahrer_suchen($http, $routeParams.id,  $scope.suchbegriff).
+      fahrer_suchen($http, veranstaltung.id,  $scope.suchbegriff).
 	success(function(fahrerliste) {
 	  if (fahrerliste.length == 1)
 	    $scope.fahrer_laden(fahrerliste[0].startnummer);
@@ -99,7 +112,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
 	fahrer.startnummer = fahrer.startnummer_intern;
       delete fahrer.startnummer_intern;
     }
-    fahrer_speichern($http, $routeParams.id, startnummer, version, fahrer).
+    fahrer_speichern($http, veranstaltung.id, startnummer, version, fahrer).
       success(function(fahrer) {
 	fahrer_zuweisen(fahrer);
 	set_focus('#suchbegriff', $timeout);
@@ -126,7 +139,6 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
   }
 
   $scope.neuer_fahrer = function(aktiv) {
-    var veranstaltung = $scope.veranstaltung;
     /* FIXME: Wenn Felder gesetzt werden, werden hier die entsprechenden
      * Properties gesetzt; wenn die Felder dann gelöscht werden, bleiben die
      * Properties gesetzt.  Dadurch hat sich das Modell dann für angular.equals()
@@ -166,7 +178,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
       return true;
     }
     var params = {
-      'id': $routeParams.id,
+      'id': veranstaltung.id,
       'startnummer': startnummer
     };
     canceler = $q.defer();
@@ -198,7 +210,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
   $scope.klasse_gueltig = function(klasse) {
     if (klasse === undefined || klasse === null)
       return true;
-    klasse = $scope.veranstaltung.klassen[klasse - 1];
+    klasse = veranstaltung.klassen[klasse - 1];
     return klasse && klasse.bezeichnung != null && klasse.bezeichnung != '';
   };
 
@@ -209,7 +221,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
       if (startnummer === undefined)
 	startnummer = $scope.fahrer_alt.startnummer;
       var version = $scope.fahrer_alt.version;
-      fahrer_loeschen($http, $routeParams.id, startnummer, version).
+      fahrer_loeschen($http, veranstaltung.id, startnummer, version).
 	success(function(fahrer) {
 	  $scope.neuer_fahrer(false);
 	  set_focus('#suchbegriff', $timeout);
@@ -223,7 +235,7 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
     var accesskeys = 'knvgpsuäl';
     $scope.wertungen = [];
     angular.forEach($scope.features.wertungen, function(wertung) {
-      var bezeichnung = $scope.veranstaltung.wertungen[wertung - 1].bezeichnung;
+      var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;
       var label = bezeichnung, accesskey;
       for (var n = 0; n < bezeichnung.length; n++) {
 	var key = bezeichnung[n].toLowerCase();
@@ -255,24 +267,15 @@ function nennungenController($scope, $routeParams, $http, $timeout, $q) {
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);
-
-  veranstaltung_laden($scope, $http, $routeParams.id).
-    success(function(veranstaltung) {
-      $scope.definierte_klassen = [];
-      angular.forEach(veranstaltung.klassen, function(klasse, index) {
-	if (klasse.bezeichnung != null && klasse.bezeichnung != '') {
-	  $scope.definierte_klassen.push(
-	    angular.extend({'klasse': index + 1}, klasse));
-	}
-      });
-      $scope.startende_klassen = startende_klassen(veranstaltung);
-      wertungslabels_erzeugen();
-    }).
-    error(netzwerkfehler);
-
-  $http.get('/api/veranstaltung/vorschlaege', {'params': {'id': $routeParams.id}}).
-    success(function(vorschlaege) {
-      $scope.vorschlaege = vorschlaege;
-    }).
-    error(netzwerkfehler);
 }
+
+nennungenController.resolve = {
+  veranstaltung: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/veranstaltung',
+				      {params: $route.current.params}));
+  },
+  vorschlaege: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/veranstaltung/vorschlaege',
+				      {params: $route.current.params}));
+  }
+};

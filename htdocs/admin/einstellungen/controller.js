@@ -1,6 +1,8 @@
 'use strict;'
 
-function einstellungenController($scope, $routeParams, $http, $timeout, $location) {
+function einstellungenController($scope, $http, $timeout, $location, veranstaltung, veranstaltungen) {
+  veranstaltung_zuweisen(veranstaltung);
+
   function wertungspunkte_expandieren(wertungspunkte) {
     var l = wertungspunkte.length;
     if (l == 0) {
@@ -141,7 +143,7 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
     veranstaltung.sektionen = sektionen_von_bool($scope.sektionen);
     veranstaltung.features = features_zu_liste($scope.features);
     wertungspunkte_kolabieren(veranstaltung.wertungspunkte);
-    veranstaltung_speichern($http, $routeParams.id, veranstaltung).
+    veranstaltung_speichern($http, veranstaltung.id, veranstaltung).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
 	var path = '/veranstaltung/' + veranstaltung.id + '/einstellungen';
@@ -173,55 +175,60 @@ function einstellungenController($scope, $routeParams, $http, $timeout, $locatio
 
   beim_verlassen_warnen($scope, $scope.geaendert);
 
-  function eindeutiger_titel(titel, veranstaltungen) {
-    var vergeben = {};
-    var n = 1;
-    angular.forEach(veranstaltungen, function(veranstaltung) {
-      vergeben[veranstaltung.titel] = true;
-    });
-    while (titel in vergeben) {
-      titel = titel.replace(/ \(Kopie( \d+)?\)$/, '');
-      titel += ' (Kopie' + (n == 1 ? '' : ' ' + n) + ')';
-      n++;
-    }
-    return titel;
-  }
+  if (veranstaltungen) {
+    veranstaltungen.reverse();
+    $scope.veranstaltungen = veranstaltungen;
 
-  $scope.veranstaltung = { basis: null };
-  $scope.$watch('veranstaltung.basis', function() {
-    var basis = $scope.veranstaltung.basis;
-    if (basis !== null && basis !== undefined) {
-      $http.get('/api/veranstaltung', {'params': {'id': basis}}).
-	success(function(veranstaltung) {
-	  veranstaltung.basis = veranstaltung.id;
-	  delete veranstaltung.id;
-	  veranstaltung.wertungen[0].titel =
-	    eindeutiger_titel(veranstaltung.wertungen[0].titel,
-			      $scope.veranstaltungen);
-	  veranstaltung.datum = $scope.$eval('heute | date:"d.M.yyyy"', {heute: Date.now()});
-	  veranstaltung.reset = 'nennbeginn';
-	  veranstaltung_zuweisen(veranstaltung, true);
-	}).
-	error(netzwerkfehler);
-    } else
-      veranstaltung_zuweisen(null);
-  });
+    function eindeutiger_titel(titel, veranstaltungen) {
+      var vergeben = {};
+      var n = 1;
+      angular.forEach(veranstaltungen, function(veranstaltung) {
+	vergeben[veranstaltung.titel] = true;
+      });
+      while (titel in vergeben) {
+	titel = titel.replace(/ \(Kopie( \d+)?\)$/, '');
+	titel += ' (Kopie' + (n == 1 ? '' : ' ' + n) + ')';
+	n++;
+      }
+      return titel;
+    }
+
+    $scope.veranstaltung.basis = null;
+    $scope.$watch('veranstaltung.basis', function() {
+      var basis = $scope.veranstaltung.basis;
+      if (basis !== null && basis !== undefined) {
+	$http.get('/api/veranstaltung', {'params': {'id': basis}}).
+	  success(function(veranstaltung) {
+	    veranstaltung.basis = veranstaltung.id;
+	    delete veranstaltung.id;
+	    veranstaltung.wertungen[0].titel =
+	      eindeutiger_titel(veranstaltung.wertungen[0].titel,
+				$scope.veranstaltungen);
+	    veranstaltung.datum = $scope.$eval('heute | date:"d.M.yyyy"', {heute: Date.now()});
+	    veranstaltung.reset = 'nennbeginn';
+	    veranstaltung_zuweisen(veranstaltung, true);
+	  }).
+	  error(netzwerkfehler);
+      } else
+	veranstaltung_zuweisen(null);
+    });
+  }
 
   $scope.sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
   };
-
-  if ($routeParams.id) {
-    veranstaltung_laden($scope, $http, $routeParams.id).
-      success(function(veranstaltung) {
-	veranstaltung_zuweisen(veranstaltung);
-      }).
-      error(netzwerkfehler);
-  } else {
-    veranstaltung_zuweisen(null);
-    veranstaltungen_laden($scope, $http).
-      success(function (veranstaltungen) {
-	veranstaltungen.reverse();
-      });
-  }
 }
+
+einstellungenController.resolve = {
+  veranstaltung: function($q, $http, $route) {
+    if ($route.current.params.id !== undefined)
+      return http_request($q, $http.get('/api/veranstaltung',
+					{params: $route.current.params}));
+    else
+      return null;
+  },
+  veranstaltungen: function($q, $http, $route) {
+    if ($route.current.params.id === undefined)
+      return http_request($q, $http.get('/api/veranstaltungen'));
+  }
+};

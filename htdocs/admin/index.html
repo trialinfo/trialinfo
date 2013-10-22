@@ -62,31 +62,40 @@
 	    templateUrl: 'main.html',
 	  }).when('/veranstaltungen', {
 	    controller: 'veranstaltungenController',
-	    templateUrl: 'veranstaltungen/index.html'
+	    templateUrl: 'veranstaltungen/index.html',
+	    resolve: veranstaltungenController.resolve
 	  }).when('/veranstaltung/:id', {
 	    controller: 'veranstaltungController',
-	    templateUrl: 'veranstaltung/index.html'
+	    templateUrl: 'veranstaltung/index.html',
+	    resolve: veranstaltungController.resolve
 	  }).when('/veranstaltung/:id/nennungen', {
 	    controller: 'nennungenController',
-	    templateUrl: 'nennungen/index.html'
+	    templateUrl: 'nennungen/index.html',
+	    resolve: nennungenController.resolve
 	  }).when('/veranstaltung/:id/punkte', {
 	    controller: 'punkteController',
-	    templateUrl: 'punkte/index.html'
+	    templateUrl: 'punkte/index.html',
+	    resolve: punkteController.resolve
 	  }).when('/veranstaltung/neu/einstellungen', {
 	    controller: 'einstellungenController',
-	    templateUrl: 'einstellungen/index.html'
+	    templateUrl: 'einstellungen/index.html',
+	    resolve: einstellungenController.resolve
 	  }).when('/veranstaltung/:id/einstellungen', {
 	    controller: 'einstellungenController',
-	    templateUrl: 'einstellungen/index.html'
+	    templateUrl: 'einstellungen/index.html',
+	    resolve: einstellungenController.resolve
 	  }).when('/serien', {
 	    controller: 'serienController',
-	    templateUrl: 'serien/index.html'
+	    templateUrl: 'serien/index.html',
+	    resolve: serienController.resolve,
 	  }).when('/serie/neu', {
 	    controller: 'serieController',
-	    templateUrl: 'serie/index.html'
+	    templateUrl: 'serie/index.html',
+	    resolve: serieController.resolve
 	  }).when('/serie/:vareihe', {
 	    controller: 'serieController',
-	    templateUrl: 'serie/index.html'
+	    templateUrl: 'serie/index.html',
+	    resolve: serieController.resolve
 	  }).otherwise({
 	    redirectTo: '/'
 	  });
