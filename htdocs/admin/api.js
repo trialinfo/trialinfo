@@ -175,11 +175,10 @@ function http_request($q, request) {
 }
 
 function netzwerkfehler(data, status) {
-  alert((status == 500 ?
+  alert(status === 409 ?
+	  'Veränderung der Daten am Server festgestellt.' :
+	(status == 500 ?
 	   'Interner Serverfehler.' :
-	 status === 409 ?
-	   'Veränderung der Daten am Server festgestellt.' :
 	   'HTTP-Request ist ' + (status ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
-	(typeof data === 'object' && data.error !== undefined ?
-	 '\n\n' + data.error : ''));
+	(typeof data === 'object' && data.error !== undefined ? '\n\n' + data.error : ''));
 }
