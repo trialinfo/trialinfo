@@ -85,7 +85,7 @@ sub get_veranstaltung($$) {
 	SELECT version, id, datum, dateiname, punkte_sektion_auslassen,
 	       vierpunktewertung, wertung1_markiert, versicherung,
 	       punkte_sektion_auslassen, wertungsmodus, wertungspunkte_234,
-	       punkteteilung, wertung1_markiert, versicherung, aktiv
+	       punkteteilung, wertung1_markiert, versicherung, aktiv, mtime
 	FROM veranstaltung
 	WHERE id = ?
     });
