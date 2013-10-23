@@ -126,6 +126,8 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	veranstaltung.wertungen.push({});
       veranstaltung.wertungen[0].titel = 'Neue Veranstaltung';
     }
+    if (veranstaltung.datum === undefined)
+      veranstaltung.datum = $scope.$eval('heute | date:"d.M.yyyy"', {heute: Date.now()});
     wertungspunkte_expandieren(veranstaltung.wertungspunkte);
     $scope.veranstaltung = veranstaltung;
     $scope.sektionen = sektionen_nach_bool(veranstaltung.sektionen);
@@ -204,7 +206,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	    veranstaltung.wertungen[0].titel =
 	      eindeutiger_titel(veranstaltung.wertungen[0].titel,
 				$scope.veranstaltungen);
-	    veranstaltung.datum = $scope.$eval('heute | date:"d.M.yyyy"', {heute: Date.now()});
+	    delete veranstaltung.datum;
 	    veranstaltung.reset = 'nennbeginn';
 	    veranstaltung_zuweisen(veranstaltung, true);
 	  }).
