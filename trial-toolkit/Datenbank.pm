@@ -373,7 +373,7 @@ sub fahrer_aus_datenbank($$;$$$) {
 
 sub wertung_aus_datenbank($$) {
     my ($dbh, $id) = @_;
-    my $fahrer_nach_startnummer;
+    my $fahrer_nach_startnummer = {};
 
     my $sth = $dbh->prepare(q{
 	SELECT startnummer, klasse, stechen, papierabnahme, ausfall,
