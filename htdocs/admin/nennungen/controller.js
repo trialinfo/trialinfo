@@ -18,16 +18,19 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
 
   function fahrer_fokusieren() {
     var fahrer = $scope.fahrer;
-    var enabled = $scope.enabled;
-    if (enabled.startnummer && fahrer.startnummer === null)
-      set_focus('#startnummer', $timeout);
-    else if (enabled.fahrer) {
-      var felder = ['klasse', 'nachname', 'vorname', 'geburtsdatum'];
-      for (var n = 0; n < felder.length; n++) {
-	var feld = felder[n];
-	if (fahrer[feld] === null || fahrer[feld] === '') {
-	  set_focus('#' + feld, $timeout);
-	  break;
+    if (fahrer) {
+      var enabled = $scope.enabled;
+      if (enabled.startnummer && fahrer.startnummer === null)
+	set_focus('#startnummer', $timeout);
+      else if (enabled.fahrer) {
+	var felder = ['klasse', 'nachname', 'vorname', 'geburtsdatum'];
+	for (var n = 0; n < felder.length; n++) {
+	  var feld = felder[n];
+	  if ($scope.features[feld] &&
+	      (fahrer[feld] === null || fahrer[feld] === '')) {
+	    set_focus('#' + feld, $timeout);
+	    break;
+	  }
 	}
       }
     }
