@@ -13,7 +13,7 @@ function features_aus_liste(veranstaltung) {
     obj[feature] = true;
   });
   obj.wertungen = [];
-  for (var n = 1; n in veranstaltung.wertungen; n++)
+  for (var n = 1; n <= veranstaltung.wertungen.length; n++)
     if ('wertung' + n in obj)
       obj.wertungen.push(n);
   return obj;
