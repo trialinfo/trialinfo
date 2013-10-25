@@ -109,6 +109,10 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
     if (version === undefined)
       version = 0;
     var fahrer = $scope.fahrer;
+    if (fahrer.startnummer == null) {
+      fahrer.nennungseingang = false;
+      fahrer.papierabnahme = false;
+    }
     if (fahrer.startnummer_intern !== undefined) {
       fahrer = angular.copy(fahrer);
       if (fahrer.startnummer === null)
