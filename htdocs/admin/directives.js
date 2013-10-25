@@ -168,7 +168,7 @@ function numericDirective() {
   };
 }
 
-function punkteTabTo() {
+function tabTo() {
   return {
     restrict: 'A',
     link: function (scope, element, attr) {
@@ -178,22 +178,25 @@ function punkteTabTo() {
 	   erschweren. */
 	return;
       }
-      var selector = scope.$eval(attr.punkteTabTo);
-      if (selector) {
-	element.bind('keyup', function(event) {
-	  if (event.which >= 48 && event.which <= 57 &&
-              !(event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) &&
-	      this.value.length === this.maxLength) {
-	    if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
-	      var next = document.getElementById(selector);
-	      if (next) {
-		next.focus();
-		next.select();
+      element.bind('keyup', function(event) {
+	if (event.which > 46 && event.which <= 222 &&
+	    (event.which < 112 /* F1 */ || event.which > 123 /* F12 */)) {
+	  if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
+	    var selector = scope.$eval(attr.tabTo);
+	    if (selector !== undefined) {
+	      if (selector === null)
+		element[0].blur();
+	      else {
+		var next = document.getElementById(selector);
+		if (next) {
+		  next.focus();
+		  next.select();
+		}
 	      }
 	    }
 	  }
-	});
-      }
+	}
+      });
     }
   }
 }

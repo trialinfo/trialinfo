@@ -241,10 +241,15 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
 	   (vierpunktewertung || punkte != 4);
   };
 
-  $scope.tab_weiter = function(runde, index) {
-    var sektionen = veranstaltung.sektionen[$scope.klasse - 1];
-    if (index + 1 < sektionen.length)
-      return 'punkte_' + runde + '_' + sektionen[index + 1];
+  $scope.punkte_tab_to = function(runde, index) {
+    var fahrer = $scope.fahrer;
+    if (fahrer) {
+      var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
+      while (++index < sektionen.length) {
+	if (sektion_in_wertung(fahrer.klasse, runde, sektionen[index]))
+	  return 'punkte_' + runde + '_' + sektionen[index];
+      }
+    }
   };
 
   $scope.ueberzeit = function() {
