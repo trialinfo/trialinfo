@@ -364,7 +364,7 @@ sub status($) {
 
     foreach my $id (keys %$veranstaltungen) {
 	my $cfg = $veranstaltungen->{$id}{cfg};
-	if ($cfg->{dateiname} eq basename $dateiname) {
+	if (defined $cfg->{dateiname} && $cfg->{dateiname} eq basename $dateiname) {
 	    my $changed = $cfg->{cfg_mtime} ne $cfg_mtime ||
 			  $cfg->{dat_mtime} ne $dat_mtime;
 	    return ($id, $changed, $cfg_mtime, $dat_mtime);
