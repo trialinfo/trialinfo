@@ -19,8 +19,7 @@
 
 use utf8;
 use DBI;
-use Trialtool qw(cfg_datei_schreiben dat_datei_schreiben
-		 neue_startnummern_zu_fahrern);
+use Trialtool qw(cfg_datei_schreiben dat_datei_schreiben);
 use Datenbank qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8);
 use Timestamp;
 use Getopt::Long;
@@ -138,8 +137,7 @@ if ($list) {
 		my ($dat_fh, $dat_name) = tempfile("$dateiname-XXXXXX",
 						   SUFFIX => ".dat",
 						   UNLINK => 1);
-		neue_startnummern_zu_fahrern $cfg, $fahrer_nach_startnummer;
-		dat_datei_schreiben $dat_fh, $fahrer_nach_startnummer;
+		dat_datei_schreiben $dat_fh, $cfg, $fahrer_nach_startnummer;
 		$dat_fh->flush;
 		my $dat_mtime = timestamp_mtime($cfg->{dat_mtime});
 		utime $dat_mtime, $dat_mtime, $dat_fh;

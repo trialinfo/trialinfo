@@ -37,7 +37,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
 	     dat_datei_schreiben trialtool_dateien gestartete_klassen
-	     neue_startnummern_von_fahrern neue_startnummern_zu_fahrern);
+	     neue_startnummern_von_fahrern);
 
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
@@ -479,8 +479,8 @@ sub dat_datei_parsen($$) {
     return $fahrer_nach_startnummern;
 }
 
-sub dat_datei_schreiben($$) {
-    my ($fh, $fahrer_nach_startnummern) = @_;
+sub dat_datei_schreiben($$$) {
+    my ($fh, $cfg, $fahrer_nach_startnummern) = @_;
     my $leerer_fahrer = "\0" x 4 . " " x 573 . "00.0000.00NNNN" .
 			"\0" x 4 . "0NNNNN" . "\0" x 96 . "\6\0" x 75;
 
@@ -488,6 +488,7 @@ sub dat_datei_schreiben($$) {
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
 
+    my $neue_startnummern = $cfg->{neue_startnummern};
     for (my $n = 0; $n < 1600; $n++) {
 	my $startnummer = $n + 1;
 	if ($startnummer >= 1000 && $startnummer < 1400) {
@@ -526,9 +527,9 @@ sub dat_datei_schreiben($$) {
 	    } else {
 		$fahrer->{zielzeit} = undef;
 	    }
-	    if (exists $fahrer->{neue_startnummer}) {
+	    if (exists $neue_startnummern->{$startnummer}) {
 		$fahrer->{bemerkung} .= " *JW:" .
-		    ($fahrer->{neue_startnummer} // '') . "*";
+		    ($neue_startnummern->{$startnummer} // '') . "*";
 	    }
 
 	    my $p;
@@ -632,16 +633,6 @@ sub neue_startnummern_von_fahrern($$) {
 	}
     }
     $cfg->{neue_startnummern} = $neue_startnummern;
-}
-
-sub neue_startnummern_zu_fahrern($$) {
-    my ($cfg, $fahrer_nach_startnummer) = @_;
-
-    my $neue_startnummern = $cfg->{neue_startnummern};
-    foreach my $startnummer (keys %$neue_startnummern) {
-	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	$fahrer->{neue_startnummer} = $neue_startnummern->{$startnummer};
-    }
 }
 
 1;
