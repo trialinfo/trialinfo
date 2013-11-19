@@ -162,7 +162,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $zeit = max_timestamp(mtime_timestamp("$name.cfg"), mtime_timestamp("$name.dat"));
 
     my $cfg = cfg_datei_parsen("$name.cfg");
-    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", $cfg, 1);
 
     if ($wertung != 1) {
 	# FIXME: Rang und Wertungspunkte sollten pro Wertung berechnet werden,

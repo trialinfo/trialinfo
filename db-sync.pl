@@ -694,8 +694,7 @@ do {
 
 		    if ($neu_uebertragen || $veraendert) {
 			my $cfg = cfg_datei_parsen("$dateiname.cfg");
-			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", $nur_fahrer);
-			neue_startnummern_von_fahrern $cfg, $fahrer_nach_startnummer;
+			my $fahrer_nach_startnummer = dat_datei_parsen("$dateiname.dat", $cfg, $nur_fahrer);
 			if (%{$cfg->{neue_startnummern}} && !@$vareihe) {
 				print STDERR "Warnung: Veranstaltung '$dateiname' ist keinen " .
 				    "Serien zugeordnet, daher können die Startnummernänderungen " .

@@ -159,8 +159,7 @@ foreach my $name (trialtool_dateien @ARGV) {
 	$cfg->{label} = $n;
     }
     $n++;
-    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
-    neue_startnummern_von_fahrern $cfg, $fahrer_nach_startnummer;
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", $cfg, 1);
     $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];

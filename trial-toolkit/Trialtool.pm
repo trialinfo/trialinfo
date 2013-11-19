@@ -36,8 +36,7 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen
-	     neue_startnummern_von_fahrern);
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen);
 
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
@@ -381,8 +380,8 @@ sub punkte_aufteilen($) {
 	     [@$punkte[60..74]] ];
 }
 
-sub dat_datei_parsen($$) {
-    my ($dateiname, $nur_fahrer) = @_;
+sub dat_datei_parsen($$$) {
+    my ($dateiname, $cfg, $nur_fahrer) = @_;
 
     my $startnummern = $nur_fahrer ? 999 : 1600;
     my $fh = new FileHandle(encode(locale_fs => $dateiname));
@@ -390,6 +389,7 @@ sub dat_datei_parsen($$) {
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
 
+    $cfg->{neue_startnummern} = {};
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
     for (my $n = 1; $n <= $startnummern; $n++) {
 	my $startnummer = $n;
@@ -465,7 +465,7 @@ sub dat_datei_parsen($$) {
 	    # z.B.:  *JW:987*.  Wenn keine Startnummer angegeben ist
 	    # (*JW:*), werden die Wertungspunkte in der Jahreswertung
 	    # ignoriert.
-	    $fahrer->{neue_startnummer} = $1 || undef;
+	    $cfg->{neue_startnummern}{$startnummer} = $1 || undef;
 	}
 
 	if ($fahrer->{bemerkung} =~ s/\s*\*BL:\s*([^*]*?)\s*\*\s*//) {
@@ -619,20 +619,6 @@ sub gestartete_klassen($) {
 	    if $sektionen->[$n] && @{$sektionen->[$n]};
     }
     return $gestartet;
-}
-
-sub neue_startnummern_von_fahrern($$) {
-    my ($cfg, $fahrer_nach_startnummer) = @_;
-
-    my $neue_startnummern = {};
-    foreach my $startnummer (keys %$fahrer_nach_startnummer) {
-	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if (exists $fahrer->{neue_startnummer}) {
-	    $neue_startnummern->{$startnummer} = $fahrer->{neue_startnummer};
-	    delete $fahrer->{neue_startnummer};
-	}
-    }
-    $cfg->{neue_startnummern} = $neue_startnummern;
 }
 
 1;
