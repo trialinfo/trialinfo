@@ -162,6 +162,7 @@ sub punkte_berechnen($$) {
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // [];
 
+	    my $auslassen = $cfg->{punkte_sektion_auslassen};
 	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    runde: for ($runde = 0; $runde < $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde] // [];
@@ -169,9 +170,9 @@ sub punkte_berechnen($$) {
 		    my $p = $punkte_in_runde->[$sektion - 1];
 		    if (defined $p) {
 			$gefahrene_sektionen++;
-			$punkte_pro_runde->[$runde] += $p;
+			$punkte_pro_runde->[$runde] += $p == -1 ? $auslassen : $p;
 			$punkteverteilung->[$p]++
-			    if $p <= 5;
+			    if $p >= 0 && $p <= 5;
 		    } else {
 			$letzte_vollstaendige_runde = $runde
 			    unless defined $letzte_vollstaendige_runde;
@@ -401,9 +402,10 @@ sub punkte_pro_sektion($$$) {
 
     my $klasse = $fahrer->{klasse};
     my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$runde];
+    my $auslassen = $cfg->{punkte_sektion_auslassen};
     foreach my $sektion (@{$cfg->{sektionen}[$klasse - 1]}) {
 	my $p = $punkte_pro_runde->[$sektion - 1];
-	push @$punkte_pro_sektion, defined $p ? $p : '-';
+	push @$punkte_pro_sektion, defined $p ? ($p == -1 ? $auslassen : $p) : '-';
     }
     return join(" ", @$punkte_pro_sektion);
 }

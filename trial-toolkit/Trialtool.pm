@@ -426,7 +426,8 @@ sub dat_datei_parsen($$$) {
 	# zur Eingabe für Strafpunkte für eine Sektion, die der Fahrer
 	# ausgelassen hat.
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
-	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
+	$fahrer->{punkte_pro_sektion} = punkte_aufteilen([
+	    map { $_ > 5 ? -1 : $_ } @{$fahrer->{punkte_pro_sektion}} ]);
 	delete $fahrer->{r};
 	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
 	    my $jahr;
@@ -540,7 +541,8 @@ sub dat_datei_schreiben($$$) {
 			$fahrer->{punkte_pro_sektion}[$runde][$sektion] // 6;
 		}
 	    }
-	    $fahrer->{punkte_pro_sektion} = $p;
+	    my $auslassen = $cfg->{punkte_sektion_auslassen};
+	    $fahrer->{punkte_pro_sektion} = [ map { $_ == -1 ? $auslassen : $_ } @$p ];
 
 	    my $r;
 	    for (my $runde = 0; $runde < 5; $runde++) {
