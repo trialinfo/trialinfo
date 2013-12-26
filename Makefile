@@ -14,6 +14,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/raphael-min.js \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
+	htdocs/js/angular-route.js \
 	htdocs/js/validate.js \
 
 COMMON_FILES = \
@@ -88,7 +89,7 @@ htdocs/js/raphael.js htdocs/js/raphael-min.js:
 
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
-ANGULAR_VERSION=1.1.5
+ANGULAR_VERSION=1.2.7
 htdocs/js/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \

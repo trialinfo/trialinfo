@@ -1,6 +1,6 @@
 'use strict;'
 
-function punkteController($scope, $http, $timeout, veranstaltung) {
+function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.startende_klassen = startende_klassen(veranstaltung);
@@ -86,10 +86,6 @@ function punkteController($scope, $http, $timeout, veranstaltung) {
       error(netzwerkfehler);
   };
 
-  $scope.suchbegriff_geaendert = function() {
-    delete $scope.fahrerliste;
-  }
-
   $scope.fahrer_suchen = function() {
     if ($scope.suchbegriff != '') {
       fahrer_suchen($http, veranstaltung.id, $scope.suchbegriff).
@@ -107,8 +103,6 @@ function punkteController($scope, $http, $timeout, veranstaltung) {
       delete $scope.fahrerliste;
     }
   };
-  $scope.suchbegriff = '';
-  $scope.$watch('suchbegriff', 'fahrer_suchen()');
 
   function runden_zaehlen() {
     var fahrer = $scope.fahrer;
@@ -230,8 +224,9 @@ function punkteController($scope, $http, $timeout, veranstaltung) {
   $scope.klassensymbol = function() {
     var farbe = veranstaltung.klassen[$scope.fahrer.klasse - 1].farbe;
     if (farbe) {
-      return '<span style="position: absolute; z-index: 1">◻</span>' +
-	     '<span style="color:' + farbe + '">◼</span>';
+      return $sce.trustAsHtml(
+	'<span style="position: absolute; z-index: 1">◻</span>' +
+	'<span style="color:' + farbe + '">◼</span>');
     }
   };
 

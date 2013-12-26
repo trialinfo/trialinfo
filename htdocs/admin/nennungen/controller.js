@@ -1,6 +1,6 @@
 'use strict;'
 
-function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschlaege) {
+function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, vorschlaege) {
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.definierte_klassen = [];
@@ -14,7 +14,7 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
   wertungslabels_erzeugen();
 
   $scope.vorschlaege = vorschlaege;
-  $scope.enabled = {suche: true, neu: true};
+  $scope.enabled = {neu: true};
 
   function fahrer_fokusieren() {
     var fahrer = $scope.fahrer;
@@ -57,7 +57,6 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
       'loeschen': fahrer_aktiv &&
 		  (fahrer.startnummer !== null ||
 		   fahrer.startnummer_intern !== undefined),
-      suche: true,
       neu: !fahrer_ist_neu,
       verwerfen: fahrer_ist_neu
     });
@@ -89,8 +88,6 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
       delete $scope.fahrerliste;
     }
   };
-  $scope.suchbegriff = '';
-  $scope.$watch('suchbegriff', 'fahrer_suchen()');
 
   $scope.geaendert = function() {
     return !angular.equals($scope.fahrer_alt, $scope.fahrer);
@@ -179,6 +176,15 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
   $scope.startnummer_gueltig = function(startnummer) {
     if (canceler)
       canceler.resolve();
+    if (typeof startnummer == 'string') {
+      /* ui-validate calls the validator function too early for numeric form
+       * fields which convert input fields to numbers or undefined; maybe this can be
+       * fixed there instead of here. */
+      if (startnummer == '')
+	startnummer = undefined;
+      else
+	startnummer = +startnummer;
+    }
     if (startnummer === undefined || startnummer === null ||
 	startnummer === $scope.fahrer_alt.startnummer) {
       $scope.startnummer_belegt = undefined;
@@ -206,11 +212,6 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
 	netzwerkfehler(data, status);
 	checker.reject();
       });
-    /* FIXME: This doesn't work in angular 1.2 because Angular's
-       scope.$eval explicitly checks for promises and tries to
-       resolve them:
-       https://github.com/angular/angular.js/issues/4158
-    */
     return checker.promise;
   };
 
@@ -248,9 +249,10 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
 	var key = bezeichnung[n].toLowerCase();
 	if (accesskeys.indexOf(key) == -1) {
 	  accesskey = key;
-	  label = bezeichnung.substr(0, n) +
-		  '<span class="accesskey">' + bezeichnung[n] + '</span>' +
-		  bezeichnung.substr(n + 1);
+	  label = $sce.trustAsHtml(
+	    bezeichnung.substr(0, n) +
+	    '<span class="accesskey">' + bezeichnung[n] + '</span>' +
+	    bezeichnung.substr(n + 1));
 	  break;
 	}
       }
@@ -271,6 +273,10 @@ function nennungenController($scope, $http, $timeout, $q, veranstaltung, vorschl
 	  $scope.verwerfen();
       });
     }
+  };
+
+  $scope.suchen = function() {
+    console.log('suchen!');
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);

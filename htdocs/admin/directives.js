@@ -168,30 +168,6 @@ function numericDirective() {
   };
 }
 
-// Here is an on-change directive. It seems to work, but it is ugly to use:
-// http://stackoverflow.com/questions/14477904/how-to-create-on-change-directive-for-angularjs
-// http://jsfiddle.net/sunnycpp/TZnj2/52/
-//
-// FIXME: This directive breaks variable types in the model: for example, a number input
-// field turns into a string.
-function onChangeDirective() {
-  return {
-      restrict: 'A',
-      scope: {'onChange': '='},
-      link: function(scope, element, attr) {
-	  scope.$watch('onChange', function(nVal) { element.val(nVal); });
-	  element.bind('change', function() {
-	      var currentValue = element.val();
-	      if( scope.onChange !== currentValue ) {
-		  scope.$apply(function() {
-		      scope.onChange = currentValue;
-		  });
-	      }
-	  });
-      }
-  };
-}
-
 function punkteTabTo() {
   return {
     restrict: 'A',

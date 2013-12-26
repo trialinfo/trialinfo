@@ -6,7 +6,7 @@
 	<fieldset>
 	  <legend>Punktevergabe</legend>
 	  <p ng-if="fahrer">
-	    {{fahrer.startnummer}} <span ng-bind-html-unsafe="klassensymbol()"></span>
+	    {{fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
 	    {{fahrer.nachname}} {{fahrer.vorname}} (Klasse {{fahrer.klasse}})
 	  </p>
 	  <p ng-if="!fahrer.startnummer">
@@ -122,8 +122,7 @@
 	  </p>
 	  <p>
 	    <label for="suchbegriff" accesskey="s">Fahrer <span class="accesskey">s</span>uchen:</label><br>
-	    <!-- The onChange directive creates a new scope, which required $parent in onChange. How ugly is that? -->
-	    <input type="text" ng-disabled="$parent.geaendert()" size="20" maxlength="40" on-change="suchbegriff" id="suchbegriff" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off"><br>
+	    <input type="text" ng-disabled="geaendert()" size="20" maxlength="40" ng-model="suchbegriff" onchange="angular.element(this).scope().fahrer_suchen()" id="suchbegriff" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>
 	    <span ng-repeat="fahrer in fahrerliste">
