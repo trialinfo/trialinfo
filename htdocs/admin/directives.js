@@ -168,6 +168,45 @@ function numericDirective() {
   };
 }
 
+// Model: -1 <=> '-', 0, 1, 2, 3, 4 (when allowed), 5, null <=> ''
+function punkteDirective() {
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: function(scope, element, attr, ctrl) {
+      ctrl.$parsers.push(function(text) {
+	var vierpunktewertung;
+	try {
+	  vierpunktewertung = scope.veranstaltung.vierpunktewertung;
+	} catch(_) {}
+
+	if (typeof text == 'string') {
+	  if (text == '') {
+	    ctrl.$setValidity('punkte', true);
+	    return null;
+	  } else if (text == '-') {
+	    ctrl.$setValidity('punkte', true);
+	    return -1;
+	  } else if (text.match(/^[012345]$/) &&
+		     (vierpunktewertung || text != '4')) {
+	    ctrl.$setValidity('punkte', true);
+	    return +text;
+	  } else
+	    ctrl.$setValidity('punkte', false);
+	}
+      });
+      ctrl.$formatters.push(function(value) {
+	if (value == null)
+	  return '';
+	else if (value == -1)
+	  return '-';
+	else
+	  return value + '';
+      });
+    }
+  };
+}
+
 function tabTo() {
   return {
     restrict: 'A',

@@ -27,7 +27,7 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" align="center">
-		    <input type="number" size="1" maxlength="1" min="0" max="5" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" ui-validate="'punkte_gueltig($value)'" id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
+		    <input type="number" size="1" maxlength="1" min="0" max="5" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
 		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{punkte_pro_runde[runde - 1]}}</span>

@@ -233,14 +233,6 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
   $scope.fahrer_name = fahrer_name;
   $scope.fahrer_infos = fahrer_infos;
 
-  $scope.punkte_gueltig = function(punkte) {
-    if (punkte === undefined || punkte === null)
-      return true;
-    var vierpunktewertung = veranstaltung.vierpunktewertung;
-    return punkte >= 0 && punkte <= 5 &&
-	   (vierpunktewertung || punkte != 4);
-  };
-
   $scope.punkte_tab_to = function(runde, index) {
     var fahrer = $scope.fahrer;
     if (fahrer) {
