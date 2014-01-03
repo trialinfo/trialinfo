@@ -5,6 +5,26 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
   $scope.features = features_aus_liste(veranstaltung);
   $scope.startende_klassen = startende_klassen(veranstaltung);
 
+  $scope.sektion_aus_wertung = function (veranstaltung) {
+    var s = [];
+    angular.forEach(veranstaltung.sektionen_aus_wertung, function(sektionen, index) {
+      var klasse = index + 1;
+      if (sektionen) {
+	s[klasse - 1] = [];
+	angular.forEach(sektionen, function(sektionen, index) {
+	  var runde = index + 1;
+	  if (sektionen) {
+	    s[klasse - 1][runde - 1] = [];
+	    angular.forEach(sektionen, function(sektion) {
+	      s[klasse - 1][runde - 1][sektion - 1] = true;
+	    });
+	  }
+	});
+      }
+    });
+    return s;
+  }(veranstaltung);
+
   /* Um die Maske sinnvoll darstellen zu können, Felder für die befahrenen
    * Sektionen und Runden der ersten definierten Klasse anzeigen.  Das
    * stimmt zumindest bei allen Veranstaltungen, bei denen alle Klassen
@@ -39,41 +59,42 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
 	      punkte_pro_sektion[n][sektion - 1] = null;
 	  });
       }
-      return fahrer;
     } catch(_) {}
   };
 
   function fahrer_zuweisen(fahrer) {
-    if (!fahrer)
-      fahrer = $scope.fahrer_alt;
     if (fahrer) {
-      $scope.fahrer = punkte_pro_sektion_auffuellen(fahrer);
-      $scope.klasse = fahrer.klasse;
-      $scope.fahrer_alt = angular.copy($scope.fahrer);
-      $scope.suchbegriff = '';
-      delete $scope.fahrerliste;
-    }
+      punkte_pro_sektion_auffuellen(fahrer);
+      $scope.fahrer = fahrer;
+      $scope.fahrer_alt = angular.copy(fahrer);
+    } else
+      $scope.fahrer = angular.copy($scope.fahrer_alt);
+    punkte_berechnen();
+    $scope.klasse = $scope.fahrer.klasse;
+    $scope.suchbegriff = '';
+    delete $scope.fahrerliste;
   }
 
   function punkte_fokusieren() {
-    var fahrer = $scope.fahrer;
-    if (fahrer && fahrer.papierabnahme &&
-	(fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
-      var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
-      var punkte_pro_sektion = fahrer.punkte_pro_sektion;
-      try {
-	angular.forEach(fahrer.punkte_pro_sektion, function(punkte_in_runde, $index) {
-	  angular.forEach(sektionen, function(sektion) {
-	    var punkte = punkte_in_runde[sektion - 1];
-	    if (punkte === undefined || punkte === null) {
-	      /* FIXME: Nur, wenn die Sektion nicht aus der Wertung genommen wurde! */
-	      set_focus('#punkte_' + ($index + 1) + '_' + sektion, $timeout);
-	      throw false;
+    try {
+      var fahrer = $scope.fahrer;
+      if (fahrer.papierabnahme &&
+	  (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
+	var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
+	var punkte_pro_sektion = fahrer.punkte_pro_sektion;
+	for (var runde = fahrer.runden || 1; runde <= (fahrer.runden || 0) + 1; runde++) {
+	  for (var index = 0; index < sektionen.length; index++) {
+	    var sektion = sektionen[index];
+	    var punkte = punkte_pro_sektion[runde - 1][sektion - 1];
+	    if ((punkte === undefined || punkte === null) &&
+		sektion_in_wertung(fahrer.klasse, runde, sektion)) {
+	      set_focus('#punkte_' + runde + '_' + sektion, $timeout);
+	      return;
 	    }
-	  });
-	});
-      } catch (_) {}
-    }
+	  }
+	}
+      }
+    } catch (_) {};
   }
 
   $scope.fahrer_laden = function(startnummer, richtung) {
@@ -104,92 +125,102 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
     }
   };
 
-  function runden_zaehlen() {
-    var fahrer = $scope.fahrer;
-    var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
-    var punkte_pro_sektion = fahrer.punkte_pro_sektion;
-    for (var runden = 0; runden < punkte_pro_sektion.length; runden++) {
-      var runde_voll = true;
-      angular.forEach(sektionen, function(sektion) {
-	var punkte = punkte_pro_sektion[runden][sektion - 1];
-	if (punkte === null || punkte === undefined) {
-	  // FIXME: Hier müsste berücksichtigt werden wenn Sektionen aus der
-	  // Wertung genommen wurden; das Trialtool führt das aber nicht mit
-	  // sondern löscht stattdessen die Punkte aller Fahrer in der Sektion!
-	  runde_voll = false;
-	}
-      });
-      if (!runde_voll)
-	break;
+  $scope.aktuelle_runde = function(fahrer) {
+    if (fahrer && fahrer.papierabnahme) {
+      var runde = fahrer.runden || 1;
+      var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
+      for (var index = 0; index < sektionen.length; index++) {
+	var sektion = sektionen[index];
+	var punkte = fahrer.punkte_pro_sektion[runde - 1][sektion - 1];
+	if ((punkte === null || punkte === undefined) &&
+	    sektion_in_wertung(fahrer.klasse, runde, sektion))
+	  return runde;
+      }
+      if (runde < veranstaltung.klassen[fahrer.klasse - 1].runden)
+	return runde + 1;
     }
-    return runden;
   }
 
   $scope.rundenfarbe = function() {
-    try {
-      var fahrer = $scope.fahrer;
-      if ($scope.fahrer_startet() && (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
-	var runden = fahrer.runden /* FIXME: runden_zaehlen() */ + 1;
-	if (runden <= veranstaltung.klassen[fahrer.klasse - 1].runden) {
-	  var farbe = veranstaltung.kartenfarben[runden - 1];
-	  if (farbe !== 'white' && farbe !== '#000000')
-	    return farbe;
-	  }
-      }
-    } catch (_) { }
+    var fahrer = $scope.fahrer;
+    if ($scope.fahrer_startet() && (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
+      var runde = $scope.aktuelle_runde(fahrer);
+      if (runde)
+	return veranstaltung.kartenfarben[runde - 1];
+    }
   };
 
   $scope.geaendert = function() {
     return !angular.equals($scope.fahrer_alt, $scope.fahrer);
   };
 
-  $scope.punkte_berechnen = function() {
-    try {
-      var fahrer = $scope.fahrer;
+  function sektion_in_wertung(klasse, runde, sektion) {
+    var aus_wertung = $scope.sektion_aus_wertung;
+    aus_wertung = aus_wertung[klasse - 1];
+    if (!aus_wertung)
+      return true;
+    aus_wertung = aus_wertung[runde - 1];
+    if (!aus_wertung)
+      return true;
+    return !aus_wertung[sektion - 1];
+  }
+
+  function punkte_berechnen() {
+    var fahrer = $scope.fahrer;
+    if (fahrer) {
+      fahrer.punkte_pro_runde = [];
       if (fahrer.papierabnahme) {
-	var punkte_summe = fahrer.zusatzpunkte;
-	var punkte_pro_runde = [];
-	var punkteverteilung = [0, 0, 0, 0, 0, 0];
-	var ende_erreicht = false;
-	var runden = 0;
-	angular.forEach(fahrer.punkte_pro_sektion, function(punkte_in_runde, runde) {
-	  angular.forEach(punkte_in_runde, function(punkte) {
-	    if (punkte === null || punkte === undefined) {
-	      /* FIXME: Wenn Sektion nich aus der Wertung genommen wurde:
-	         ende_erreicht = true; */
-	    } else if (!ende_erreicht) {
-	      punkte_summe += punkte;
-	      punkte_pro_runde[runde] = (punkte_pro_runde[runde] || 0) + punkte;
-	      if (punkte <= 5)
-		punkteverteilung[punkte]++;
+	var sektionen = veranstaltung.sektionen[fahrer.klasse - 1];
+	fahrer.punkte = fahrer.zusatzpunkte;
+	fahrer.runden = 0;
+	fahrer.punkteverteilung = [0, 0, 0, 0, 0, 0];
+	delete $scope.sektionen_ausgelassen;
+	var sektion_ausgelassen = false;
+	var runde;
+	for (runde = 1; runde <= fahrer.punkte_pro_sektion.length; runde++) {
+	  var punkte_in_runde = 0;
+	  var runde_befahren = false;
+	  for (var index = 0; index < sektionen.length; index++) {
+	    var sektion = sektionen[index];
+	    if (sektion_in_wertung(fahrer.klasse, runde, sektion)) {
+	      var punkte = fahrer.punkte_pro_sektion[runde - 1][sektion - 1];
+	      if (punkte === null || punkte === undefined)
+		sektion_ausgelassen = true;
+	      else if (!sektion_ausgelassen) {
+		if (punkte == -1)
+		  punkte_in_runde += veranstaltung.punkte_sektion_auslassen;
+		else {
+		  punkte_in_runde += punkte;
+		  fahrer.punkteverteilung[punkte]++;
+		}
+		runde_befahren = true;
+	      } else
+		$scope.sektionen_ausgelassen = true;
 	    }
-	  });
-	  if (!ende_erreicht && punkte_pro_runde[runde] !== undefined)
-	    runden++;
-	});
-	/* FIXME: Sobald Sektionen aus der Wertung markiert werden,
-	 * fahrer.punkte_pro_runde, fahrer.punkteverteilung, und fahrer.punkte
-	 * direkt aktualisieren!
-	 */
-	$scope.punkte_pro_runde = punkte_pro_runde;
-	$scope.punkteverteilung = punkteverteilung;
-	$scope.punkte = punkte_summe;
-	if (runden != 0 || fahrer.runden != null)
-	  fahrer.runden = runden;
+	  }
+	  if (runde_befahren) {
+	    fahrer.punkte_pro_runde[runde - 1] = punkte_in_runde;
+	    fahrer.punkte += punkte_in_runde;
+	    fahrer.runden = runde;
+	  }
+	}
       } else {
-	$scope.punkte_pro_runde = [];
-	$scope.punkteverteilung = [];
-	if (fahrer.punkte != undefined)
-	  fahrer.punkte = null;
+	fahrer.punkte = null;
+	fahrer.runden = null;
+	fahrer.punkteverteilung = [];
       }
-    } catch (_) { }
-  };
-  $scope.$watch('fahrer.punkte_pro_sektion', 'punkte_berechnen()', true);
-  $scope.$watch('fahrer.zusatzpunkte', 'punkte_berechnen()');
+    }
+  }
+
+  $scope.$watch('fahrer.punkte_pro_sektion', function() {
+    punkte_berechnen();
+  }, true);
+  $scope.$watch('fahrer.zusatzpunkte', function() {
+    punkte_berechnen();
+  });
 
   $scope.speichern = function() {
     /* FIXME: Wenn Papierabnahme, dann muss die Klasse starten. */
-    /* FIXME: Punkte gleich mitspeichern ... */
     var version = 0;
     var startnummer;
     if ($scope.fahrer_alt && 'startnummer' in $scope.fahrer_alt) {

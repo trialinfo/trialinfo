@@ -27,10 +27,10 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" align="center">
-		    <input type="number" size="1" maxlength="1" min="0" max="5" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
+		    <input ng-if="!sektion_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
-		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{punkte_pro_runde[runde - 1]}}</span>
+		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
@@ -50,9 +50,9 @@
 	      <tr>
 		<th align="right">Gesamtpunkte</th>
 		<td>
-		  <input type="number" size="3" min="0" max="999" ng-model="punkte" disabled="disabled">
+		  <input type="number" size="3" min="0" max="999" ng-model="fahrer.punkte" disabled="disabled">
 		    <span ng-if="fahrer.papierabnahme" style="font-weight:bold">
-		      &nbsp; (<span ng-repeat="h in punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h}}<span ng-if="!$last"> &nbsp;</span></span></span>)
+		      &nbsp; (<span ng-repeat="h in fahrer.punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
 		</td>
 	      </tr>
@@ -129,6 +129,11 @@
 	      <a href="" ng-click="fahrer_laden(fahrer.startnummer)" title="{{fahrer_infos(fahrer, this)}}">{{fahrer_name(fahrer, this)}}</a><br>
 	    </span>
 	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine Fahrer gefunden.</span>
+	  </p>
+	  <p>
+	    <span ng-if="sektionen_ausgelassen" style="color: red">
+	    Tragen Sie für vom Fahrer ausgelassene Sektionen bitte ‚-‘ für die Punkte ein,<br>
+	    die folgenden Sektionen werden sonst nicht gewertet.</span>
 	  </p>
 	  <p>
 	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
