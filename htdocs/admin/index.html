@@ -37,6 +37,7 @@
     <script src="nennungen/controller.js"></script>
     <script src="punkte/controller.js"></script>
     <script src="einstellungen/controller.js"></script>
+    <script src="sektionen/controller.js"></script>
     <script src="serien/controller.js"></script>
     <script src="serie/controller.js"></script>
     <script>
@@ -54,6 +55,7 @@
       application.controller('veranstaltungController', veranstaltungController);
       application.controller('nennungenController', nennungenController);
       application.controller('einstellungenController', einstellungenController);
+      application.controller('sektionenController', sektionenController);
       application.controller('serienController', serienController);
       application.controller('serieController', serieController);
 
@@ -85,6 +87,10 @@
 	    controller: 'einstellungenController',
 	    templateUrl: 'einstellungen/index.html',
 	    resolve: einstellungenController.resolve
+	  }).when('/veranstaltung/:id/sektionen', {
+	    controller: 'sektionenController',
+	    templateUrl: 'sektionen/index.html',
+	    resolve: sektionenController.resolve
 	  }).when('/serien', {
 	    controller: 'serienController',
 	    templateUrl: 'serien/index.html',

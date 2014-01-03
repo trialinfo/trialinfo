@@ -1,0 +1,23 @@
+<h1>{{veranstaltung.wertungen[0].titel}} - Sektionen aus der Wertung</h1>
+<form name="form" ng-keydown="keydown($event)">
+  <div ng-repeat="klasse in startende_klassen">
+    <fieldset style="display:inline">
+      <legend><span title="Klasse {{klasse}}">{{veranstaltung.klassen[klasse - 1].bezeichnung}}</span></legend>
+      <table>
+	<tr>
+	  <th class="punktespalte"></th>
+	  <th class="punktespalte" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
+	</tr>
+	<tr ng-repeat="runde in runden(klasse)">
+	  <th><span title="Runde {{runde}}">R{{runde}}</span></th>
+	  <td align="center" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]">
+	    <input type="checkbox" ng-model="sektion_aus_wertung[klasse - 1][runde - 1][sektion - 1]"></td>
+	</tr>
+      </table>
+    </fieldset>
+  </div>
+  <p>
+    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
+    <button type="button" ng-disabled="!geaendert()" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
+  </p>
+</form>
