@@ -474,6 +474,27 @@ sub neue_startnummern_hash($) {
     return $hash;
 }
 
+sub sektionen_aus_wertung_hash($) {
+    my ($cfg) = @_;
+
+    my $hash = {};
+    if ($cfg) {
+	my $sektionen_aus_wertung = $cfg->{sektionen_aus_wertung} // [];
+	for (my $klasse = 1; $klasse <= @$sektionen_aus_wertung; $klasse++) {
+	    my $runden_sektionen = $sektionen_aus_wertung->[$klasse - 1];
+	    next unless $runden_sektionen;
+	    for (my $runde = 1; $runde <= @$runden_sektionen; $runde++) {
+		my $sektionen = $runden_sektionen->[$runde - 1];
+		next unless $sektionen;
+		foreach my $sektion (@$sektionen) {
+		    $hash->{"$klasse:$runde:$sektion"} = [];
+		}
+	    }
+	}
+    }
+    return $hash;
+}
+
 sub veranstaltung_aktualisieren($$$$) {
     my ($callback, $id, $alt, $neu) = @_;
     my $changed;
@@ -545,6 +566,15 @@ sub veranstaltung_aktualisieren($$$$) {
 		[$id],
 		neue_startnummern_hash($alt),
 		neue_startnummern_hash($neu)
+	    and $changed = 1;
+    }
+
+    if (!$neu || exists $neu->{sektionen_aus_wertung}) {
+	hash_aktualisieren $callback, 'sektion_aus_wertung',
+		[qw(id klasse runde sektion)], [],
+		[$id],
+		sektionen_aus_wertung_hash($alt),
+		sektionen_aus_wertung_hash($neu)
 	    and $changed = 1;
     }
 

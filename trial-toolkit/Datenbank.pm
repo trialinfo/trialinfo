@@ -120,6 +120,24 @@ sub sektionen_aus_datenbank($$) {
     return $sektionen;
 }
 
+sub sektionen_aus_wertung_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+    my $sektionen_aus_wertung = [];
+
+    my $sth = $dbh->prepare(q{
+	SELECT klasse, runde, sektion
+	FROM sektion_aus_wertung
+	WHERE id = ?
+	ORDER BY sektion
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	push @{$sektionen_aus_wertung->[$row[0] - 1][$row[1] - 1]}, $row[2];
+    }
+    return $sektionen_aus_wertung;
+}
+
 sub cfg_aus_datenbank($$;$) {
     my ($dbh, $id, $ohne_trialtool) = @_;
     my $cfg;
@@ -189,10 +207,16 @@ sub cfg_aus_datenbank($$;$) {
     });
     $sth->execute($id);
     $cfg->{features} = [];
+    my $feature_sektionen_aus_wertung;
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	push @{$cfg->{features}}, $row[0];
+
+	$feature_sektionen_aus_wertung = 1
+	    if $row[0] eq 'sektionen_aus_wertung';
     }
+    $cfg->{sektionen_aus_wertung} = $feature_sektionen_aus_wertung ?
+	sektionen_aus_wertung_aus_datenbank($dbh, $id) : undef;
 
     unless ($ohne_trialtool) {
 	$sth = $dbh->prepare(q{

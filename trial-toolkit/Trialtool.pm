@@ -503,8 +503,6 @@ sub dat_datei_schreiben($$$) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";
 	    }
-	    $fahrer->{klasse} = 99
-		unless defined $fahrer->{klasse};
 	    my $nachname_vorname = "$fahrer->{nachname}, $fahrer->{vorname}";
 	    $nachname_vorname = substr($nachname_vorname, 0, 19) . '.'
 		if length $nachname_vorname > 20;
@@ -533,27 +531,48 @@ sub dat_datei_schreiben($$$) {
 		    ($neue_startnummern->{$startnummer} // '') . "*";
 	    }
 
-	    my $p;
+	    # Das Trialtool merkt sich nicht, welche Sektionen aus der Wertung
+	    # genommen wurden, wir müssen hier also stattdessen die Punkte dieser
+	    # Sektionen auf undef setzen.
+
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion};
-	    for (my $runde = 0; $runde < 5; $runde++) {
-		for (my $sektion = 0; $sektion < 15; $sektion++) {
-		    $p->[$runde * 15 + $sektion] =
-			$fahrer->{punkte_pro_sektion}[$runde][$sektion] // 6;
+
+	    if ($cfg->{sektionen_aus_wertung} && defined $fahrer->{klasse}) {
+		if (my $runden = $cfg->{sektionen_aus_wertung}[$fahrer->{klasse} - 1]) {
+		    for (my $runde = 0; $runde < @$runden; $runde++) {
+			if (my $sektionen = $runden->[$runde]) {
+			    foreach my $sektion ($sektionen) {
+				$punkte_pro_sektion->[$runde][$sektion - 1] = undef;
+			    }
+			}
+		    }
 		}
 	    }
-	    my $auslassen = $cfg->{punkte_sektion_auslassen};
-	    $fahrer->{punkte_pro_sektion} = [ map { $_ == -1 ? $auslassen : $_ } @$p ];
 
 	    my $r;
 	    for (my $runde = 0; $runde < 5; $runde++) {
 		for (my $sektion = 0; $sektion < 15; $sektion++) {
 		    my $punkte = $punkte_pro_sektion->[$runde][$sektion];
 		    $r->[$runde * 6 + $punkte]++
-			if defined $punkte && $punkte < 5;
+			if defined $punkte && $punkte >= 0 && $punkte < 5;
 		}
 	    }
 	    $fahrer->{r} = $r;
+
+	    my $p;
+	    for (my $runde = 0; $runde < 5; $runde++) {
+		for (my $sektion = 0; $sektion < 15; $sektion++) {
+		    $p->[$runde * 15 + $sektion] =
+			$punkte_pro_sektion->[$runde][$sektion] // 6;
+		}
+	    }
+	    my $auslassen = $cfg->{punkte_sektion_auslassen};
+	    $fahrer->{punkte_pro_sektion} = [ map { $_ == -1 ? $auslassen : $_ } @$p ];
+
 	    $fahrer->{punkteverteilung}[5] = 0;  # Anzahl der 5er ist immer auf 0 gesetzt ...
+
+	    $fahrer->{klasse} = 99
+		unless defined $fahrer->{klasse};
 
 	    # Pad arrays; otherwise pack() writes variable-length records
 	    foreach my $fmt (@$dat_format) {

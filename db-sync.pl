@@ -148,6 +148,16 @@ CREATE TABLE sektion (
   PRIMARY KEY (id, klasse, sektion)
 );
 
+-- In veranstaltung.version berücksichtigt
+DROP TABLE IF EXISTS sektion_aus_wertung;
+CREATE TABLE sektion_aus_wertung (
+  id INT, -- veranstaltung
+  klasse INT,
+  runde INT,
+  sektion INT,
+  PRIMARY KEY (id, klasse, runde, sektion)
+);
+
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
   version INT NOT NULL DEFAULT 1,

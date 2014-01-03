@@ -120,43 +120,64 @@ sub punkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
     my $befahren;
 
-    # Das Trialtool erlaubt es, Sektionen in der Punkte-Eingabemaske auszulassen.
-    # Die ausgelassenen Sektionen sind danach "leer" (in den Trialtool-Dateien
-    # wird der Wert 6 verwendet, in Perl übersetzen wir das auf undef, und in der
-    # Datenbank verwenden wir NULL).  Für die Punkteanzahl des Fahrers zählen
-    # diese Sektionen wie eine 0, was zu einer falschen Bewertung führt.  Für
-    # den Anwender ist es schwer, dieses Problem zu erkennen und zu finden.
+    # Das Trialtool erlaubt es, Sektionen in der Punkte-Eingabemaske
+    # auszulassen.  Die ausgelassenen Sektionen sind danach "leer" (in den
+    # Trialtool-Dateien wird der Wert 6 verwendet, in Perl übersetzen wir das
+    # auf undef, und in der Datenbank verwenden wir NULL).  Für die
+    # Punkteanzahl des Fahrers zählen diese Sektionen wie ein 0er, was zu einer
+    # falschen Bewertung führt.  Für den Anwender ist es schwer, dieses Problem
+    # zu erkennen und zu finden.
     #
     # Leider wird derselbe Wert auch für Sektionen verwendet, die (für eine
     # bestimmte Klasse und Runde) aus der Wertung genommen werden.  In diesem
     # Fall soll die Sektion ignoriert werden.
     #
     # Um diese Situation besser zu behandeln, überprüfen wir wenn wir eine
-    # "leere" Sektion finden, ob die Sektion für alle Fahrer "leer" ist.  Das
-    # ist dann der Fall, wenn die Sektion noch nicht befahren oder aus der
-    # Wertung genommen wurde.  (In beiden Fällen können wir die Sektion
-    # ignorieren.)  Wenn die Sektion für manche Fahrer nicht "leer" ist, muss
-    # sie offensichtlich befahren werden.  Wir zählen dann die Punkte des
-    # Fahrers nicht mehr weiter, und zählen die unvollständig gefahrene Runde
-    # nicht als gefahren mit.
+    # "leere" Sektion finden, ob die Sektion für alle anderen Fahrer auch
+    # "leer" ist.  Das ist dann der Fall, wenn die Sektion noch nicht befahren
+    # oder aus der Wertung genommen wurde; in beiden Fällen können wir die
+    # Sektion ignorieren.  Wenn die Sektion für andere Fahrer nicht "leer" ist,
+    # muss sie offensichtlich befahren werden, und wir dürfen sie nicht
+    # ignorieren.
+    #
+    # Wenn die Daten nicht vom Trialtool stammen, merken wir uns explizit,
+    # welche Sektionen aus der Wertung genommen wurden (sektionen_us_wertung).
+    # Wir wissen dann genau, welche Sektionen ein Fahrer noch fahren muss.
+    #
+    # In jedem Fall werden die Fahrer zuerst nach der Anzahl der gefahrenen
+    # Sektionen gereiht (bis zur ersten nicht erfassten Sektion, die befahren
+    # werden muss), und erst danach nach den erzielten Punkten.  Das ergibt
+    # auch eine brauchbare Zwischenwertung, wenn die Ergebnisse Sektion für
+    # Sektion statt Runde für Runde eingegeben werden.
 
-    # FIXME: Wenn wir in Zukunft speichern welche Sektionen aus der Wertung
-    # genommen wurden, kann die aktuelle Runde immer errmittelt werden -- bzw.
-    # kann ermittelt werden, ob ein Fahrer fertig ist.
+    my $sektionen_aus_wertung;
+    if ($cfg->{sektionen_aus_wertung}) {
+	$sektionen_aus_wertung = [];
+	for (my $klasse_idx = 0; $klasse_idx < @{$cfg->{sektionen_aus_wertung}}; $klasse_idx++) {
+	    my $runden = $cfg->{sektionen_aus_wertung}[$klasse_idx]
+		or next;
+	    for (my $runde_idx = 0; $runde_idx < @$runden; $runde_idx++) {
+		my $sektionen = $runden->[$runde_idx];
+		foreach my $sektion (@$sektionen) {
+		    $sektionen_aus_wertung->[$klasse_idx][$runde_idx][$sektion - 1] = 1;
+		}
+	    }
+	}
+    }
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $punkte_pro_runde;
 	my $gesamtpunkte;
 	my $punkteverteilung;  # 0er, 1er, 2er, 3er, 4er, 5er
 	my $gefahrene_sektionen;
-	my $runde;
+	my $sektion_ausgelassen;
+	my $letzte_begonnene_runde;
+	my $letzte_vollstaendige_runde;
 
 	my $klasse = $fahrer->{klasse};
 	if (defined $klasse && $fahrer->{papierabnahme}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
-	    my $letzte_begonnene_runde = 0;
-	    my $letzte_vollstaendige_runde;
-	    $gesamtpunkte = 0;
+	    $gesamtpunkte = $fahrer->{zusatzpunkte};
 	    $punkteverteilung = [(0) x 6];
 	    $gefahrene_sektionen = 0;
 
@@ -164,52 +185,47 @@ sub punkte_berechnen($$) {
 
 	    my $auslassen = $cfg->{punkte_sektion_auslassen};
 	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
-	    runde: for ($runde = 0; $runde < $runden; $runde++) {
-		my $punkte_in_runde = $punkte_pro_sektion->[$runde] // [];
+	    runde: for (my $runde = 1; $runde <= $runden; $runde++) {
+		my $punkte_in_runde = $punkte_pro_sektion->[$runde - 1] // [];
 		foreach my $sektion (@$sektionen) {
 		    my $p = $punkte_in_runde->[$sektion - 1];
 		    if (defined $p) {
-			$gefahrene_sektionen++;
-			$punkte_pro_runde->[$runde] += $p == -1 ? $auslassen : $p;
-			$punkteverteilung->[$p]++
-			    if $p >= 0 && $p <= 5;
+			unless ($sektion_ausgelassen) {
+			    $gefahrene_sektionen++;
+			    $punkte_pro_runde->[$runde - 1] += $p == -1 ? $auslassen : $p;
+			    $punkteverteilung->[$p]++
+				if $p >= 0 && $p <= 5;
+			    $letzte_begonnene_runde = $runde;
+			}
+		    } elsif ($sektionen_aus_wertung) {
+			unless ($sektionen_aus_wertung->[$klasse - 1][$runde - 1][$sektion - 1]) {
+			    $sektion_ausgelassen = 1;
+			    $letzte_vollstaendige_runde = $runde - 1
+				unless defined $letzte_vollstaendige_runde;
+			}
 		    } else {
-			$letzte_vollstaendige_runde = $runde
+			$letzte_vollstaendige_runde = $runde - 1
 			    unless defined $letzte_vollstaendige_runde;
 			$befahren = befahrene_sektionen($fahrer_nach_startnummer)
 			    unless defined $befahren;
-			last runde
-			    if defined $befahren->[$klasse - 1][$runde][$sektion - 1];
+			$sektion_ausgelassen = 1
+			    if defined $befahren->[$klasse - 1][$runde - 1][$sektion - 1];
 		    }
 		}
-		$letzte_begonnene_runde = $runde + 1
-		    if defined $punkte_pro_runde->[$runde];
 	    }
 	    foreach my $punkte (@$punkte_pro_runde) {
 		$gesamtpunkte += $punkte;
 	    }
-	    if ($runde < @$punkte_pro_sektion) {
-		for (my $r = $runde; $r < @$punkte_pro_sektion; $r++) {
-		    last unless grep { defined $_ } @{$punkte_pro_sektion->[$r]};
-		    print STDERR "Warnung: Ergebnisse von Fahrer $fahrer->{startnummer} " .
-				 "in Runde " . ($r + 1) . " sind unvollständig!\n";
-		}
-	    }
-	    # Wenn ein Fahrer alle Sektionen einer Runden gefahren ist,
-	    # kann die Rundenzahl auf jeden Fall zumindest auf diesen Wert
-	    # gesetzt werden.
+	    $letzte_begonnene_runde //= 0;
 	    $letzte_vollstaendige_runde = $runden
 		unless defined $letzte_vollstaendige_runde;
-	    $fahrer->{runden} = $letzte_vollstaendige_runde
-		if !defined $fahrer->{runden} ||
-		   $fahrer->{runden} < $letzte_vollstaendige_runde;
-	    $fahrer->{runden} = $letzte_begonnene_runde
-		if $fahrer->{runden} > $letzte_begonnene_runde;
-	    $gesamtpunkte += $fahrer->{zusatzpunkte};
-	} else {
-	    $fahrer->{runden} = undef;
+	    if ($letzte_begonnene_runde != $letzte_vollstaendige_runde) {
+		print STDERR "Warnung: Ergebnisse von Fahrer $fahrer->{startnummer} " .
+			     "in Runde $letzte_begonnene_runde sind unvollständig!\n";
+	    }
 	}
 
+	$fahrer->{runden} = $letzte_begonnene_runde;
 	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;
 	$fahrer->{punkteverteilung} = $punkteverteilung;
