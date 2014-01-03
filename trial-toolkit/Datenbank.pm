@@ -120,24 +120,23 @@ sub sektionen_aus_datenbank($$) {
     return $sektionen;
 }
 
-sub cfg_aus_datenbank($$) {
-    my ($dbh, $id) = @_;
+sub cfg_aus_datenbank($$;$) {
+    my ($dbh, $id, $ohne_trialtool) = @_;
     my $cfg;
 
-    my $sth = $dbh->prepare(q{
-	SELECT version, dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
-	       punkte_sektion_auslassen, wertungspunkte_234, rand_links,
-	       rand_oben, wertung1_markiert, versicherung,
-	       ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime,
-	       mtime, punkteteilung
+    my $nur_trialtool = $ohne_trialtool ? '' :
+	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime';
+    my $sth = $dbh->prepare(qq{
+	SELECT version, id, dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
+	       punkte_sektion_auslassen, wertungspunkte_234, wertung1_markiert,
+	       versicherung, mtime, punkteteilung$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
     });
     $sth->execute($id);
-    unless ($cfg = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $cfg);
-	return undef;
-    }
+    return undef
+	unless $cfg = $sth->fetchrow_hashref;
+    fixup_hashref($sth, $cfg);
 
     $sth = $dbh->prepare(q{
 	SELECT wertung, titel, subtitel, bezeichnung
@@ -145,13 +144,11 @@ sub cfg_aus_datenbank($$) {
 	WHERE id = ?
     });
     $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	fixup_arrayref($sth, \@row);
-	$cfg->{wertungen}[$row[0] - 1] = {
-	    titel => $row[1],
-	    subtitel => $row[2],
-	    bezeichnung => $row[3],
-	};
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $wertung = $row->{wertung};
+	delete $row->{wertung};
+	$cfg->{wertungen}[$wertung - 1] = $row;
     }
 
     $sth = $dbh->prepare(q{
@@ -160,14 +157,11 @@ sub cfg_aus_datenbank($$) {
 	WHERE id = ?
     });
     $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	fixup_arrayref($sth, \@row);
-	$cfg->{klassen}[$row[0] - 1] = {
-	    bezeichnung => $row[1],
-	    fahrzeit => $row[2],
-	    runden => $row[3],
-	    farbe => $row[4],
-	};
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $klasse = $row->{klasse};
+	delete $row->{klasse};
+	$cfg->{klassen}[$klasse - 1] = $row;
     }
 
     $cfg->{sektionen} = sektionen_aus_datenbank($dbh, $id);
@@ -185,7 +179,8 @@ sub cfg_aus_datenbank($$) {
     }
 
     $cfg->{wertungspunkte} = wertungspunkte_aus_datenbank($dbh, $id);
-    $cfg->{neue_startnummern} = neue_startnummern_aus_datenbank($dbh, $id);
+    $cfg->{neue_startnummern} = neue_startnummern_aus_datenbank($dbh, $id)
+	unless $ohne_trialtool;
 
     $sth = $dbh->prepare(q{
 	SELECT feature
@@ -199,16 +194,18 @@ sub cfg_aus_datenbank($$) {
 	push @{$cfg->{features}}, $row[0];
     }
 
-    $sth = $dbh->prepare(q{
-	SELECT vareihe
-	FROM vareihe_veranstaltung
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    $cfg->{vareihen} = [];
-    while (my @row = $sth->fetchrow_array) {
-	fixup_arrayref($sth, \@row);
-	push @{$cfg->{vareihen}}, $row[0];
+    unless ($ohne_trialtool) {
+	$sth = $dbh->prepare(q{
+	    SELECT vareihe
+	    FROM vareihe_veranstaltung
+	    WHERE id = ?
+	});
+	$sth->execute($id);
+	$cfg->{vareihen} = [];
+	while (my @row = $sth->fetchrow_array) {
+	    fixup_arrayref($sth, \@row);
+	    push @{$cfg->{vareihen}}, $row[0];
+	}
     }
 
     return $cfg;
