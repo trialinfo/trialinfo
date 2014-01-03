@@ -176,7 +176,7 @@ CREATE TABLE veranstaltung (
 DROP TABLE IF EXISTS veranstaltung_feature;
 CREATE TABLE veranstaltung_feature (
   id INT, -- veranstaltung
-  feature VARCHAR(20),
+  feature VARCHAR(30),
   PRIMARY KEY (id, feature)
 );
 
