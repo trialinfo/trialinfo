@@ -75,110 +75,6 @@ sub get_fahrer($$$;$$) {
     return $result;
 }
 
-sub get_veranstaltung($$) {
-    my ($dbh, $id) = @_;
-    my $result;
-
-    # FIXME: Stattdessen cfg_aus_datenbank() verwenden!
-
-    my $sth = $dbh->prepare(q{
-	SELECT version, id, datum, dateiname, punkte_sektion_auslassen,
-	       vierpunktewertung, wertung1_markiert, versicherung,
-	       punkte_sektion_auslassen, wertungsmodus, wertungspunkte_234,
-	       punkteteilung, wertung1_markiert, versicherung, aktiv, mtime
-	FROM veranstaltung
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    $result = $sth->fetchrow_hashref;
-    fixup_hashref($sth, $result);
-    if (%$result) {
-	$sth = $dbh->prepare(q{
-	    SELECT wertung, titel, subtitel, bezeichnung
-	    FROM wertung
-	    WHERE id = ?
-	});
-	$sth->execute($id);
-	my $wertungen = [];
-	while (my $row = $sth->fetchrow_hashref) {
-	    fixup_hashref($sth, $row);
-	    my $wertung = $row->{wertung};
-	    delete $row->{wertung};
-	    $wertungen->[$wertung - 1] = $row;
-	}
-	$result->{wertungen} = $wertungen;
-
-	$sth = $dbh->prepare(q{
-	    SELECT klasse, sektion
-	    FROM sektion
-	    WHERE id = ?
-	    ORDER BY sektion
-	});
-	$sth->execute($id);
-	my $sektionen = [];
-	while (my @row = $sth->fetchrow_array) {
-	    fixup_arrayref($sth, \@row);
-	    push @{$sektionen->[$row[0] - 1]}, $row[1];
-	}
-	$result->{sektionen} = $sektionen;
-
-	$sth = $dbh->prepare(q{
-	    SELECT klasse, runden, fahrzeit, bezeichnung, farbe
-	    FROM klasse
-	    WHERE id = ?
-	});
-	$sth->execute($id);
-	my $klassen = [];
-	while (my $row = $sth->fetchrow_hashref) {
-	    fixup_hashref($sth, $row);
-	    my $klasse = $row->{klasse};
-	    delete $row->{klasse};
-	    $klassen->[$klasse - 1] = $row;
-	}
-	$result->{klassen} = $klassen;
-
-	$sth = $dbh->prepare(q{
-	    SELECT rang, punkte
-	    FROM wertungspunkte
-	    WHERE id = ?
-	});
-	$sth->execute($id);
-	my $wertungspunkte = [];
-	while (my @row = $sth->fetchrow_array) {
-	    fixup_arrayref($sth, \@row);
-	    $wertungspunkte->[$row[0] - 1] = $row[1];
-	}
-	$result->{wertungspunkte} = $wertungspunkte;
-
-	$sth = $dbh->prepare(q{
-	    SELECT runde, farbe
-	    FROM kartenfarbe
-	    WHERE id = ?
-	});
-	$sth->execute($id);
-	my $kartenfarben = [];
-	while (my @row = $sth->fetchrow_array) {
-	    fixup_arrayref($sth, \@row);
-	    $kartenfarben->[$row[0] - 1] = $row[1];
-	}
-	$result->{kartenfarben} = $kartenfarben;
-
-	$sth = $dbh->prepare(q{
-	    SELECT feature
-	    FROM veranstaltung_feature
-	    WHERE id = ?
-	});
-	$sth->execute($id);
-	my $features = [];
-	while (my @row = $sth->fetchrow_array) {
-	    fixup_arrayref($sth, \@row);
-	    push @$features, $row[0];
-	}
-	$result->{features} = $features;
-    }
-    return $result;
-}
-
 sub veranstaltung_reset($$$) {
     my ($dbh, $id, $reset) = @_;
     my $sth;
@@ -292,7 +188,7 @@ if ($op eq 'GET/vareihen') {
 	    $1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef, 1);
 } elsif ($op eq "GET/veranstaltung") {
     my ($id) = parameter($q, qw(id));
-    $result = get_veranstaltung($dbh, $id);
+    $result = cfg_aus_datenbank($dbh, $id, 1);
 } elsif ($op eq "GET/veranstaltung/vorschlaege") {
     my @params = parameter($q, qw(id));
     foreach my $feld (qw(bundesland land fahrzeug club)) {
@@ -444,7 +340,7 @@ if ($op eq 'GET/vareihen') {
 	    $version = 1;
 	}
 	if (defined $id || defined $basis) {
-	    $cfg0 = cfg_aus_datenbank($dbh, $id_neu);
+	    $cfg0 = cfg_aus_datenbank($dbh, $id_neu, 1);
 	    die "Invalid Row Version\n"
 		if $cfg0->{version} != $version;
 	}
@@ -466,7 +362,7 @@ if ($op eq 'GET/vareihen') {
 	$dbh->disconnect;
     } else {
 	$status = $cfg0 ? '200 Modified' : '201 Created';
-	$result = get_veranstaltung($dbh, $id);
+	$result = cfg_aus_datenbank($dbh, $id, 1);
     }
 } elsif ($op eq "PUT/vareihe") {
     my ($version) = parameter($q, qw(version));
