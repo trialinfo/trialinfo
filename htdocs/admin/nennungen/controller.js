@@ -38,6 +38,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
   }
 
   function fahrer_zuweisen(fahrer, fahrer_ist_neu) {
+    $scope.form.$setPristine();
     if (!fahrer)
       fahrer = $scope.fahrer_alt;
     var fahrer_aktiv = (fahrer && fahrer.startnummer) || fahrer_ist_neu;
@@ -155,8 +156,6 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
     };
     fahrer_zuweisen(fahrer, aktiv);
     fahrer_fokusieren();
-    // $scope.form.$setPristine();
-    // $scope.navigation.$setPristine();
   };
 
   $scope.startnummer_aendern = function() {

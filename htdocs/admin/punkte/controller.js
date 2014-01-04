@@ -63,6 +63,7 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
   };
 
   function fahrer_zuweisen(fahrer) {
+    $scope.form.$setPristine();
     if (fahrer) {
       punkte_pro_sektion_auffuellen(fahrer);
       $scope.fahrer = fahrer;
