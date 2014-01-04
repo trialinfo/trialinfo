@@ -2,13 +2,28 @@ NAME = trial-toolkit
 VERSION = 0.17
 
 MOUNTPOINT ?= /mnt/easyserver
-SUBDIR ?= www2.otsv.at
+
+ifeq ($(WHAT),production)
+HOST ?= www2.otsv.at
+AUTH_PREFIX = /srv/www/4571/www/@HOST@
+else
+ifeq ($(WHAT),staging)
+HOST ?= www4.otsv.at
+AUTH_PREFIX = /srv/www/4571/www/@HOST@
+else
+ifeq ($(WHAT),testing)
+HOST = localhost
+AUTH_PREFIX = $(PWD)
+else
+HOST = $(error WHAT must be set to "staging" or "production")
+endif
+endif
+endif
+
+MAKEFLAGS = --no-print-directory
 
 CURL = curl
 SED = sed
-
-HOST = localhost
-AUTH_PREFIX = $(PWD)
 
 DOWNLOAD_FILES = \
 	htdocs/js/jquery.js \
@@ -63,11 +78,9 @@ WEB_FILES = \
 	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/export-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
-	cgi-bin/veranstalter/.htaccess \
 	cgi-bin/veranstalter/nenngeld-ssi.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/apple-touch-icon.png \
-	htdocs/ergebnisse/.htaccess \
 	htdocs/ergebnisse/index.shtml \
 	htdocs/ergebnisse/2012.shtml \
 	htdocs/ergebnisse/jahreswertung.shtml \
@@ -139,26 +152,35 @@ dist: $(COMMON_FILES) $(LOCAL_FILES)
 	rm -rf $(NAME)-$(VERSION)
 
 mount:
-	sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT)
+	@if [ "$$(stat -c%m $(MOUNTPOINT))" != $(MOUNTPOINT) ]; then \
+	    sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT); \
+	fi
 
-upload:
-	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
+upload: download
+	@test -e "$(MOUNTPOINT)/$(HOST)" || $(MAKE) mount
 	$(MAKE) do-upload CMD='mkdir -p $$$$dir && cp -v "$$$$file" "$$$$target" && chmod g-w "$$$$target"'
 
-upload-diff:
-	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
+upload-diff: download
+	@test -e "$(MOUNTPOINT)/$(HOST)" || $(MAKE) mount
 	$(MAKE) do-upload CMD='diff -Nup "$$$$target" "$$$$file" || true'
 
 do-upload:
 	@set -e; \
+	for file in $(GENERATED_WEB_FILES); do \
+	    $(generate_web_file) < $$file.in > $$file.tmp; \
+	done; \
 	for file in $(COMMON_FILES) $(WEB_FILES); do \
-	    target=$(MOUNTPOINT)/$(SUBDIR)/$$file; \
+	    target=$(MOUNTPOINT)/$(HOST)/$$file; \
 	    dir=$$(dirname $$target); \
+	    case " $(GENERATED_WEB_FILES) " in *" $$file "*) file=$$file.tmp ;; esac; \
 	    if ! test -f "$$target" || \
 	       ! cmp -s "$$file" "$$target"; then \
 		$(CMD); \
 	    fi; \
-	done
+	done; \
+	for file in $(GENERATED_WEB_FILES); do \
+	    rm -f $file.tmp; \
+	done;
 
 clean:
 	rm -f $(DOWNLOAD_FILES)
