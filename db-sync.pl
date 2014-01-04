@@ -623,9 +623,9 @@ do {
 
 	if ($list) {
 	    my $sth = $dbh->prepare(q{
-		SELECT id, dateiname
+		SELECT id, dateiname, datum
 		FROM veranstaltung
-		ORDER BY dateiname
+		ORDER BY datum, dateiname
 	    });
 	    $sth->execute;
 	    my $header_printed;
@@ -634,7 +634,7 @@ do {
 		    printf "%3s  %s\n", "id", "dateiname";
 		    $header_printed = 1;
 		}
-		printf "%3d  %s\n", @row;
+		printf "%3d  %s\n", $row[0], $row[1] // $row[2] // '?';
 	    }
 	    exit;
 	}
