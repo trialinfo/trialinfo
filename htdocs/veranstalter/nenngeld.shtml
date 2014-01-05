@@ -10,6 +10,5 @@
 <h1>ÖTSV Nenngeldlisten</h1>
 <!--#set var="which" value="$QUERY_STRING" -->
 <!--#include virtual="/cgi-bin/veranstalter/nenngeld-ssi.pl?$which" -->
-<p><a href="http://www.otsv.at/"><img src="../otsv-logo.jpg" border="0" /></a></p>
 </body>
 </html>
