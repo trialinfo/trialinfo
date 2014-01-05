@@ -32,14 +32,13 @@
     <script src="../js/validate.js"></script>
     <script src="directives.js"></script>
     <script src="api.js"></script>
-    <script src="veranstaltungen/controller.js"></script>
+    <script src="main/controller.js"></script>
     <script src="veranstaltung/controller.js"></script>
     <script src="nennungen/controller.js"></script>
     <script src="punkte/controller.js"></script>
     <script src="einstellungen/controller.js"></script>
     <script src="sektionen/controller.js"></script>
-    <script src="serien/controller.js"></script>
-    <script src="serie/controller.js"></script>
+    <script src="vareihe/controller.js"></script>
     <script>
       var application = angular.module('application', ['ngRoute', 'ui.validate']);
 
@@ -51,22 +50,19 @@
 
       application.directive('tabTo', tabTo);
 
-      application.controller('veranstaltungenController', veranstaltungenController);
+      application.controller('mainController', mainController);
       application.controller('veranstaltungController', veranstaltungController);
       application.controller('nennungenController', nennungenController);
       application.controller('einstellungenController', einstellungenController);
       application.controller('sektionenController', sektionenController);
-      application.controller('serienController', serienController);
-      application.controller('serieController', serieController);
+      application.controller('vareiheController', vareiheController);
 
       application.config(function($routeProvider) {
 	$routeProvider.
 	  when('/', {
-	    templateUrl: 'main.html',
-	  }).when('/veranstaltungen', {
-	    controller: 'veranstaltungenController',
-	    templateUrl: 'veranstaltungen/index.html',
-	    resolve: veranstaltungenController.resolve
+	    controller: 'mainController',
+	    templateUrl: 'main/index.html',
+	    resolve: mainController.resolve
 	  }).when('/veranstaltung/:id', {
 	    controller: 'veranstaltungController',
 	    templateUrl: 'veranstaltung/index.html',
@@ -91,18 +87,14 @@
 	    controller: 'sektionenController',
 	    templateUrl: 'sektionen/index.html',
 	    resolve: sektionenController.resolve
-	  }).when('/serien', {
-	    controller: 'serienController',
-	    templateUrl: 'serien/index.html',
-	    resolve: serienController.resolve,
-	  }).when('/serie/neu', {
-	    controller: 'serieController',
-	    templateUrl: 'serie/index.html',
-	    resolve: serieController.resolve
-	  }).when('/serie/:vareihe', {
-	    controller: 'serieController',
-	    templateUrl: 'serie/index.html',
-	    resolve: serieController.resolve
+	  }).when('/vareihe/neu', {
+	    controller: 'vareiheController',
+	    templateUrl: 'vareihe/index.html',
+	    resolve: vareiheController.resolve
+	  }).when('/vareihe/:vareihe', {
+	    controller: 'vareiheController',
+	    templateUrl: 'vareihe/index.html',
+	    resolve: vareiheController.resolve
 	  }).otherwise({
 	    redirectTo: '/'
 	  });

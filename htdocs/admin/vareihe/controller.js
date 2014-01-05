@@ -1,6 +1,6 @@
 'use strict;'
 
-function serieController($scope, $http, $timeout, $location, $window, vareihe, veranstaltungen) {
+function vareiheController($scope, $http, $timeout, $location, $window, vareihe, veranstaltungen) {
   var veranstaltungsdatum = {};
   vareihe_zuweisen(vareihe);
 
@@ -109,7 +109,7 @@ function serieController($scope, $http, $timeout, $location, $window, vareihe, v
       if (vareihe === null) {
 	vareihe = {
 	  version: 0,
-	  bezeichnung: 'Neue Serie',
+	  bezeichnung: 'Neue Veranstaltungsreihe',
 	  klassen: [],
 	  veranstaltungen: [],
 	  startnummern: []
@@ -127,7 +127,7 @@ function serieController($scope, $http, $timeout, $location, $window, vareihe, v
   $scope.geaendert = function() {
     /* FIXME: Ändern der Veranstaltung in der zusätzlichen Zeile
        für Startnummernänderungen wird als Änderung der
-       Serie interpretiert. */
+       Veranstaltungsreihe interpretiert. */
     return !angular.equals($scope.vareihe_alt, $scope.vareihe);
   };
 
@@ -148,7 +148,7 @@ function serieController($scope, $http, $timeout, $location, $window, vareihe, v
     vareihe_speichern($http, vareihe.vareihe, vareihe).
       success(function(vareihe) {
 	vareihe_zuweisen(vareihe);
-	var path = '/serie/' + vareihe.vareihe;
+	var path = '/vareihe/' + vareihe.vareihe;
 	if ($location.path() != path) {
 	  $location.path(path).replace();
 	  /* FIXME: Wie Reload verhindern? */
@@ -162,7 +162,7 @@ function serieController($scope, $http, $timeout, $location, $window, vareihe, v
   };
 
   $scope.loeschen = function() {
-    if (confirm('Serie wirklich löschen?\n\nDie Serie kann später nicht wiederhergestellt werden.'))
+    if (confirm('Veranstaltungsreihe wirklich löschen?\n\nDie Veranstaltungsreihe kann später nicht wiederhergestellt werden.'))
       vareihe_loeschen($http, $scope.vareihe.vareihe, $scope.vareihe.version).
 	success(function() {
 	  $window.history.back();
@@ -187,7 +187,7 @@ function serieController($scope, $http, $timeout, $location, $window, vareihe, v
   beim_verlassen_warnen($scope, $scope.geaendert);
 }
 
-serieController.resolve = {
+vareiheController.resolve = {
   veranstaltungen: function($q, $http, $route) {
     return http_request($q, $http.get('/api/veranstaltungen'));
    },

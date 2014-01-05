@@ -45,30 +45,27 @@ GENERATED_WEB_FILES = \
 	htdocs/ergebnisse/.htaccess \
 
 ADMIN_FILES = \
-	cgi-bin/api/.htaccess \
 	cgi-bin/api/api.pl \
-	htdocs/api/.htaccess \
-	htdocs/admin/.htaccess \
+	cgi-bin/api/.htaccess \
 	htdocs/admin/api.js \
 	htdocs/admin/directives.js \
 	htdocs/admin/einstellungen/controller.js \
 	htdocs/admin/einstellungen/index.html \
+	htdocs/admin/.htaccess \
 	htdocs/admin/index.html \
-	htdocs/admin/main.html \
+	htdocs/admin/main/controller.js \
+	htdocs/admin/main/index.html \
 	htdocs/admin/nennungen/controller.js \
 	htdocs/admin/nennungen/index.html \
 	htdocs/admin/punkte/controller.js \
 	htdocs/admin/punkte/index.html \
 	htdocs/admin/sektionen/controller.js \
 	htdocs/admin/sektionen/index.html \
-	htdocs/admin/serie/controller.js \
-	htdocs/admin/serie/index.html \
-	htdocs/admin/serien/controller.js \
-	htdocs/admin/serien/index.html \
+	htdocs/admin/vareihe/controller.js \
+	htdocs/admin/vareihe/index.html \
 	htdocs/admin/veranstaltung/controller.js \
 	htdocs/admin/veranstaltung/index.html \
-	htdocs/admin/veranstaltungen/controller.js \
-	htdocs/admin/veranstaltungen/index.html \
+	htdocs/api/.htaccess \
 
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \
