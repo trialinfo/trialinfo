@@ -115,17 +115,19 @@ mount:
 
 upload:
 	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
-	$(MAKE) do-upload CMD='cp --parents -v "$$$$file" "$$(MOUNTPOINT)/$$(SUBDIR)/"'
+	$(MAKE) do-upload CMD='mkdir -p $$$$dir && cp -v "$$$$file" "$$$$target" && chmod g-w "$$$$target"'
 
 upload-diff:
 	@test -e "$(MOUNTPOINT)/$(SUBDIR)" || $(MAKE) mount
-	$(MAKE) do-upload CMD='diff -Nup "$$(MOUNTPOINT)/$$(SUBDIR)/$$$$file" "$$$$file" || true'
+	$(MAKE) do-upload CMD='diff -Nup "$$$$target" "$$$$file" || true'
 
-do-upload: $(COMMON_FILES) $(WEB_FILES)
+do-upload:
 	@set -e; \
-	for file in $^; do \
-	    if ! test -f "$(MOUNTPOINT)/$(SUBDIR)/$$file" || \
-	       ! cmp -s "$$file" "$(MOUNTPOINT)/$(SUBDIR)/$$file"; then \
+	for file in $(COMMON_FILES) $(WEB_FILES); do \
+	    target=$(MOUNTPOINT)/$(SUBDIR)/$$file; \
+	    dir=$$(dirname $$target); \
+	    if ! test -f "$$target" || \
+	       ! cmp -s "$$file" "$$target"; then \
 		$(CMD); \
 	    fi; \
 	done
