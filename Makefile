@@ -18,6 +18,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/validate.js \
 
 COMMON_FILES = \
+	trial-toolkit/DatenbankAktualisieren.pm \
 	trial-toolkit/Datenbank.pm \
 	trial-toolkit/JSON_bool.pm \
 	trial-toolkit/Parse/Binary/FixedFormat.pm \
@@ -43,9 +44,36 @@ GENERATED_WEB_FILES = \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 
+ADMIN_FILES = \
+	cgi-bin/api/.htaccess \
+	cgi-bin/api/api.pl \
+	htdocs/api/.htaccess \
+	htdocs/admin/.htaccess \
+	htdocs/admin/api.js \
+	htdocs/admin/directives.js \
+	htdocs/admin/einstellungen/controller.js \
+	htdocs/admin/einstellungen/index.html \
+	htdocs/admin/index.html \
+	htdocs/admin/main.html \
+	htdocs/admin/nennungen/controller.js \
+	htdocs/admin/nennungen/index.html \
+	htdocs/admin/punkte/controller.js \
+	htdocs/admin/punkte/index.html \
+	htdocs/admin/sektionen/controller.js \
+	htdocs/admin/sektionen/index.html \
+	htdocs/admin/serie/controller.js \
+	htdocs/admin/serie/index.html \
+	htdocs/admin/serien/controller.js \
+	htdocs/admin/serien/index.html \
+	htdocs/admin/veranstaltung/controller.js \
+	htdocs/admin/veranstaltung/index.html \
+	htdocs/admin/veranstaltungen/controller.js \
+	htdocs/admin/veranstaltungen/index.html \
+
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \
 	$(GENERATED_WEB_FILES) \
+	$(ADMIN_FILES) \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
