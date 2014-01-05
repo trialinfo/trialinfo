@@ -103,7 +103,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $fehler;
 
     my $cfg = cfg_datei_parsen("$name.cfg");
-    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", $cfg, 1);
 
     my $gestartete_klassen = gestartete_klassen($cfg);
     map { $otsv = 1 if $_ } @$gestartete_klassen[0 .. 9];

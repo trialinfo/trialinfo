@@ -114,7 +114,7 @@ eval {
 	}
 
 	my $cfg = cfg_datei_parsen("$name.cfg");
-	my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 0);
+	my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", $cfg, 0);
 
 	my $befahrene_sektionen = 'N' x 15;
 	for (my $klasse = 1; $klasse <= 15; $klasse++) {
@@ -194,7 +194,7 @@ eval {
 	    or die "$!\n";
 	$datname = decode(locale_fs => $datname);
 	binmode $datfh;
-	dat_datei_schreiben $datfh, $fahrer_nach_startnummer;
+	dat_datei_schreiben $datfh, $cfg, $fahrer_nach_startnummer;
 	$datfh->flush;
 	eval { $datfh->sync; };
 	if ($datfh->error) {
