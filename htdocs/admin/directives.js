@@ -207,6 +207,17 @@ function punkteDirective() {
   };
 }
 
+/* Unter Firefox funktioniert das Attribut autofocus in nachgeladenen Seiten nicht;
+   diese Directive korrigiert das.  */
+function autofocusDirective() {
+  return {
+    restrict: 'A',
+    link: function (scope, element, attrs) {
+      element[0].focus();
+    }
+  };
+}
+
 function tabTo() {
   return {
     restrict: 'A',
