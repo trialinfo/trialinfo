@@ -67,10 +67,10 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
     if (fahrer) {
       punkte_pro_sektion_auffuellen(fahrer);
       $scope.fahrer = fahrer;
-      $scope.fahrer_alt = angular.copy(fahrer);
     } else
       $scope.fahrer = angular.copy($scope.fahrer_alt);
     punkte_berechnen();
+    $scope.fahrer_alt = angular.copy($scope.fahrer);
     $scope.klasse = $scope.fahrer.klasse;
     $scope.suchbegriff = '';
     delete $scope.fahrerliste;
@@ -208,7 +208,7 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
       } else {
 	fahrer.punkte = null;
 	fahrer.runden = null;
-	fahrer.punkteverteilung = [];
+	fahrer.punkteverteilung = [null, null, null, null, null, null];
       }
     }
   }
