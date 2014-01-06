@@ -30,9 +30,14 @@ DOWNLOAD_FILES = \
 	htdocs/js/jquery.min.js \
 	htdocs/js/raphael.js \
 	htdocs/js/raphael-min.js \
+	htdocs/js/angular.js \
+	htdocs/js/angular.min.js \
+	htdocs/js/angular-route.js \
+	htdocs/js/validate.js \
 
 COMMON_FILES = \
 	htdocs/ergebnisse.css \
+	trial-toolkit/DatenbankAktualisieren.pm \
 	trial-toolkit/Datenbank.pm \
 	trial-toolkit/JSON_bool.pm \
 	trial-toolkit/Parse/Binary/FixedFormat.pm \
@@ -62,14 +67,41 @@ LOCAL_FILES = \
 	Windows/tageswertung.bat \
 
 GENERATED_WEB_FILES = \
+	cgi-bin/api/.htaccess \
 	cgi-bin/veranstalter/.htaccess \
+	htdocs/admin/.htaccess \
+	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/.htaccess \
 	htdocs/veranstalter/.htaccess \
 
+ADMIN_FILES = \
+	cgi-bin/api/api.pl \
+	cgi-bin/api/.htaccess \
+	htdocs/admin/api.js \
+	htdocs/admin/directives.js \
+	htdocs/admin/einstellungen/controller.js \
+	htdocs/admin/einstellungen/index.html \
+	htdocs/admin/.htaccess \
+	htdocs/admin/index.html \
+	htdocs/admin/main/controller.js \
+	htdocs/admin/main/index.html \
+	htdocs/admin/nennungen/controller.js \
+	htdocs/admin/nennungen/index.html \
+	htdocs/admin/punkte/controller.js \
+	htdocs/admin/punkte/index.html \
+	htdocs/admin/sektionen/controller.js \
+	htdocs/admin/sektionen/index.html \
+	htdocs/admin/vareihe/controller.js \
+	htdocs/admin/vareihe/index.html \
+	htdocs/admin/veranstaltung/controller.js \
+	htdocs/admin/veranstaltung/index.html \
+	htdocs/api/.htaccess \
+
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \
 	$(GENERATED_WEB_FILES) \
+	$(ADMIN_FILES) \
 	cgi-bin/ergebnisse/jahreswertung-ssi.pl \
 	cgi-bin/ergebnisse/statistik-ssi.pl \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
@@ -126,6 +158,20 @@ htdocs/js/raphael.js htdocs/js/raphael-min.js:
 	@mkdir -p $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		http://github.com/DmitryBaranovskiy/raphael/raw/master/$(notdir $@)
+
+# AngularJS
+ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
+ANGULAR_VERSION=1.2.7
+htdocs/js/angular%:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
+
+# AngularUI Validate
+htdocs/js/validate.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		https://github.com/angular-ui/ui-utils/raw/master/modules/validate/validate.js
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \

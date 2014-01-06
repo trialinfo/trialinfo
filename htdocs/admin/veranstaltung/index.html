@@ -1,0 +1,46 @@
+<h1>{{veranstaltung.wertungen[0].titel}}</h1>
+<a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}" target="tageswertung:{{veranstaltung.id}}">Auswertung</a><br>
+<br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/nennungen">Nennungen</a><br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/punkte">Punktevergabe</a><br>
+<br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/einstellungen">Einstellungen</a><br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/sektionen">Sektionen aus der Wertung</a><br>
+<br>
+<a ng-if="!fold.zuruecksetzen" href="" ng-click="$parent.fold.zuruecksetzen = true">↓ Zurücksetzen</a>
+<a ng-if="fold.zuruecksetzen" href="" ng-click="$parent.fold.zuruecksetzen = false">↑ Zurücksetzen</a><br>
+<table ng-if="fold.zuruecksetzen">
+  <tr>
+    <td>
+      <button ng-click="reset('start')">Start</button>
+    </td>
+    <td>
+      Löscht alle Punkte, Start- und Zielzeit, Ausfall, Stechen
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <button ng-click="reset('nennbeginn')">Nennbeginn</button>
+    </td>
+    <td>
+      Löscht Nennungseingang, Papierabnahme, Startgeld + Start
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <button ng-click="reset('stammdaten')">Nur Stammdaten</button>
+    </td>
+    <td>
+      Löscht alle Startnummern + Nennbeginn
+    </td>
+  </tr>
+</table>
+<a ng-if="!fold.loeschen" href="" ng-click="$parent.fold.loeschen = true">↓ Löschen</a>
+<a ng-if="fold.loeschen" href="" ng-click="$parent.fold.loeschen = false">↑ Löschen</a><br>
+<table ng-if="fold.loeschen">
+  <tr>
+    <td>
+      <button ng-click="loeschen()">Veranstaltung löschen</button>
+    </td>
+  </tr>
+</table>

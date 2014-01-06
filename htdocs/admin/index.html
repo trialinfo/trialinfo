@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html ng-app='application'>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Veranstaltungsverwaltung</title>
+    <style type="text/css">
+      *
+      {
+      font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+      }
+
+      span.accesskey { text-decoration:underline; }
+      .einzelpunkte { text-align:center; }
+      .punktespalte { width:2em; }
+      /*.adw { font-style:italic; }*/
+
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+      }
+      input, textarea, select, button { font-family:inherit; font-size:inherit; }
+
+      textarea.ng-invalid.ng-dirty, input.ng-invalid.ng-dirty {
+	color: #e00000;
+	background-color: #fff0f0;
+      }
+    </style>
+
+    <script src="../js/angular.js"></script>
+    <script src="../js/angular-route.js"></script>
+    <script src="../js/validate.js"></script>
+    <script src="directives.js"></script>
+    <script src="api.js"></script>
+    <script src="main/controller.js"></script>
+    <script src="veranstaltung/controller.js"></script>
+    <script src="nennungen/controller.js"></script>
+    <script src="punkte/controller.js"></script>
+    <script src="einstellungen/controller.js"></script>
+    <script src="sektionen/controller.js"></script>
+    <script src="vareihe/controller.js"></script>
+    <script>
+      var application = angular.module('application', ['ngRoute', 'ui.validate']);
+
+      application.directive('isoDate', isoDateDirective);
+      application.directive('isoTime', isoTimeDirective);
+      application.directive('isoTimestamp', isoTimestampDirective);
+      application.directive('numeric', numericDirective);
+      application.directive('punkte', punkteDirective);
+
+      application.directive('tabTo', tabTo);
+
+      application.controller('mainController', mainController);
+      application.controller('veranstaltungController', veranstaltungController);
+      application.controller('nennungenController', nennungenController);
+      application.controller('einstellungenController', einstellungenController);
+      application.controller('sektionenController', sektionenController);
+      application.controller('vareiheController', vareiheController);
+
+      application.config(function($routeProvider) {
+	$routeProvider.
+	  when('/', {
+	    controller: 'mainController',
+	    templateUrl: 'main/index.html',
+	    resolve: mainController.resolve
+	  }).when('/veranstaltung/:id', {
+	    controller: 'veranstaltungController',
+	    templateUrl: 'veranstaltung/index.html',
+	    resolve: veranstaltungController.resolve
+	  }).when('/veranstaltung/:id/nennungen', {
+	    controller: 'nennungenController',
+	    templateUrl: 'nennungen/index.html',
+	    resolve: nennungenController.resolve
+	  }).when('/veranstaltung/:id/punkte', {
+	    controller: 'punkteController',
+	    templateUrl: 'punkte/index.html',
+	    resolve: punkteController.resolve
+	  }).when('/veranstaltung/neu/einstellungen', {
+	    controller: 'einstellungenController',
+	    templateUrl: 'einstellungen/index.html',
+	    resolve: einstellungenController.resolve
+	  }).when('/veranstaltung/:id/einstellungen', {
+	    controller: 'einstellungenController',
+	    templateUrl: 'einstellungen/index.html',
+	    resolve: einstellungenController.resolve
+	  }).when('/veranstaltung/:id/sektionen', {
+	    controller: 'sektionenController',
+	    templateUrl: 'sektionen/index.html',
+	    resolve: sektionenController.resolve
+	  }).when('/vareihe/neu', {
+	    controller: 'vareiheController',
+	    templateUrl: 'vareihe/index.html',
+	    resolve: vareiheController.resolve
+	  }).when('/vareihe/:vareihe', {
+	    controller: 'vareiheController',
+	    templateUrl: 'vareihe/index.html',
+	    resolve: vareiheController.resolve
+	  }).otherwise({
+	    redirectTo: '/'
+	  });
+      });
+    </script>
+  </head>
+  <body ng-view>
+  </body>
+</html>

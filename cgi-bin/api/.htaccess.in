@@ -1,0 +1,7 @@
+AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
+AuthName "Protected"
+AuthType Basic
+
+#<Limit GET PUT DELETE>
+    Require user admin
+#</Limit>

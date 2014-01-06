@@ -1,0 +1,146 @@
+<h1>{{veranstaltung.wertungen[0].titel}} - Punktevergabe</h1>
+<table>
+  <tr>
+    <td valign="top">
+      <form name="form" ng-keydown="keydown($event)">
+	<fieldset>
+	  <legend>Punktevergabe</legend>
+	  <p ng-if="fahrer">
+	    {{fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
+	    {{fahrer.nachname}} {{fahrer.vorname}} (Klasse {{fahrer.klasse}})
+	  </p>
+	  <p ng-if="!fahrer.startnummer">
+	    &nbsp;
+	  </p>
+	  <p>
+	    <fieldset ng-style="rundenfarbe() ? {'border': '2px solid ' + rundenfarbe()} : undefined">
+	      <legend>Punkte</legend>
+	      <table>
+		<tr>
+		  <th class="punktespalte"></th>
+		  <th class="punktespalte" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
+		</tr>
+		<tr ng-repeat="runde in rundenliste(klasse)">
+		  <th>
+		    <label for="punkte_{{runde}}_{{veranstaltung.sektionen[klasse - 1][0]}}" title="Runde {{runde}}" accesskey="{{runde}}">
+		      R<span class="accesskey">{{runde}}</span>
+		    </label>
+		  </th>
+		  <td ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" align="center">
+		    <input ng-if="!sektion_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
+		  </td>
+		  <td align="right" style="font-weight:bold">
+		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
+		  </td>
+		</tr>
+	      </table>
+	      <p ng-if="fahrer && !startende_klassen[fahrer.klasse - 1]">
+		Für Klasse {{fahrer.klasse}} sind keine zu befahrenen Sektionen ausgewählt.
+	      </p>
+	    </fieldset>
+	  </p>
+	  <p>
+	    <table>
+	      <tr>
+		<th align="right"><label for="zusatzpunkte" accesskey="z"><span class="accesskey">Z</span>usatzpunkte</label></th>
+		<td>
+		  <input ng-disabled="!fahrer_startet()" type="number" size="3" min="0" max="999" required ng-model="fahrer.zusatzpunkte" id="zusatzpunkte">
+		</td>
+	      </tr>
+	      <tr>
+		<th align="right">Gesamtpunkte</th>
+		<td>
+		  <input type="number" size="3" min="0" max="999" ng-model="fahrer.punkte" disabled="disabled">
+		    <span ng-if="fahrer.papierabnahme" style="font-weight:bold">
+		      &nbsp; (<span ng-repeat="h in fahrer.punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
+		    </span>
+		</td>
+	      </tr>
+	      <tr ng-if="features.startzeit || features.zielzeit">
+		<th align="right"><label for="startzeit"><span class="accesskey">F</span>ahrzeit</label></th>
+		<td>
+		  <span ng-if="features.startzeit">
+		    <input ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.startzeit" name="startzeit" iso-time id="startzeit" accesskey="f">
+		      <label for="startzeit">Start</label>
+		  </span>
+		  <span ng-if="features.zielzeit">
+		    <input ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.zielzeit" name="zielzeit" iso-time id="zielzeit">
+		      <label for="zielzeit">Ziel</label> &nbsp; <span style="font-weight: bold; color: red">{{ueberzeit()}}</span>
+		  </span>
+		</td>
+	      </tr>
+	      <tr>
+		<th align="right"><label for="ausfall" accesskey="a"><span class="accesskey">A</span>usfall</label></th>
+		<td>
+		  <select ng-disabled="!fahrer_startet()" ng-model="fahrer.ausfall" numeric id="ausfall">
+		    <option value="0"></option>
+		    <option value="3">Ausgefallen</option>
+		    <option value="4">Aus der Wertung</option>
+		    <option value="5">Nicht gestartet</option>
+		    <option value="6">Nicht gestartet, entschuldigt</option>
+		  </select>
+		</td>
+	      </tr>
+	      <tr>
+		<th align="right"><label for="stechen" accesskey="t">S<span class="accesskey">t</span>echen</label></th>
+		<td>
+		  <select ng-disabled="!fahrer_startet()" ng-model="fahrer.stechen" numeric id="stechen">
+		    <option value="0"></option>
+		    <option value="1">1. Platz</option>
+		    <option value="2">2. Platz</option>
+		    <option value="3">3. Platz</option>
+		    <option value="4">4. Platz</option>
+		    <option value="5">5. Platz</option>
+		    <option value="6">6. Platz</option>
+		    <option value="7">7. Platz</option>
+		    <option value="8">8. Platz</option>
+		    <option value="9">9. Platz</option>
+		    <option value="10">10. Platz</option>
+		  </select>
+		</td>
+	      </tr>
+	      <tr ng-if="fahrer && !fahrer_alt.papierabnahme && startende_klassen[fahrer.klasse - 1]">
+		<th align="right">Teilnahme</th>
+		<td>
+		  <input type="checkbox" ng-model="fahrer.papierabnahme" id="papierabnahme"><label for="papierabnahme" accesskey="p"><span class="accesskey">P</span>apierabnahme</label>
+		</td>
+	      </tr>
+	    </table>
+	  </p>
+	</fieldset>
+      </form>
+    </td>
+    <td valign="top">
+      <form name="navigation">
+	<fieldset>
+	  <legend>Navigation</legend>
+	  <p>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'naechster')" tabindex="-1">|&lt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'vorheriger')" tabindex="-1">&lt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'naechster')" tabindex="-1">&gt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'vorheriger')" tabindex="-1">&gt;|</button>
+	  </p>
+	  <p>
+	    <label for="suchbegriff" accesskey="s">Fahrer <span class="accesskey">s</span>uchen:</label><br>
+	    <input type="text" ng-disabled="geaendert()" size="20" maxlength="40" ng-model="suchbegriff" onchange="angular.element(this).scope().fahrer_suchen()" id="suchbegriff" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off"><br>
+	  </p>
+	  <p>
+	    <span ng-repeat="fahrer in fahrerliste">
+	      <a href="" ng-click="fahrer_laden(fahrer.startnummer)" title="{{fahrer_infos(fahrer, this)}}">{{fahrer_name(fahrer, this)}}</a><br>
+	    </span>
+	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine Fahrer gefunden.</span>
+	  </p>
+	  <p>
+	    <span ng-if="sektionen_ausgelassen" style="color: red">
+	    Tragen Sie für vom Fahrer ausgelassene Sektionen bitte ‚-‘ für die Punkte ein,<br>
+	    die folgenden Sektionen werden sonst nicht gewertet.</span>
+	  </p>
+	  <p>
+	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
+	    <button type="button" ng-disabled="!geaendert()" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
+	  </p>
+	</fieldset>
+      </form>
+    </td>
+  </tr>
+</table>

@@ -18,12 +18,21 @@ Möglichkeiten:
    als Tageswertung, Jahreswertung, oder als Punktestatistik.  Die dabei
    generierten Seiten sind recht leicht und flexibel anpassbar.
 
+ * Administration der Datenbank über Web-Formulare (ahnlich den Formularen im
+   Trialtool).
+
  * Export von Trialtool-Dateien aus der Datenbank.
 
  * Konsistenzprüfung der Daten für den ÖTSV.
 
 Diese Erweiterungen sind unabhängig vom Trialtool selbst; das Trialtool selbst
 ist für die Benützung nicht erforderlich.
+
+Die wesentlichen Einschränkungen, die das Trialtool mit sich bringt (Begrenzung
+auf höchstens 4 Wertungen, 5 Runden, 15 Sektionen, 15 Klassen) wurden bisher
+nicht aufgehoben.  Außerdem fehlen viele Listen und Ergebnisformate, die oft
+hilfreich wären.  Eine Verwaltung von Helfern existiert bisher ebenfalls
+nicht.
 
 Die Scripts wurden unter Linux entwickelt und unter Linux und Windows Vista
 getestet.  Serverseitig war bisher der HTTP-Server Apache und die Datenbank
@@ -76,6 +85,27 @@ VERWENDET WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in der Datei
 trial-toolkit/TrialToolkit.pm.txt.
 
 
+Administration
+--------------
+
+Über die Administrations-Formulare im Pfad admin/ relativ zur URL, über die
+Veranstaltungsübersicht erreichbar ist, lassen sich folgende Dinge
+konfigurieren:
+
+ * Anlegen, Ändern und Löschen von Veranstaltungen.  Konfigurieren von
+   Veranstaltungen (Wertungen, Klassen, befahrene Sektionen, Felder im
+   Nennformular usw.).
+
+ * Anlegen und Ändern von Fahrern, Zuweisen von Startnummern, Auswahl der
+   Starter einer Veranstaltung.
+
+ * Erfassung oder Änderung der Ergebnisse einer Veranstaltung (Punkte, Ausfall,
+   Stechen, Start- und Zielzeit).
+
+ * Definition von Veranstaltungsserien (enthaltene Veranstaltungen und Klassen,
+   Startnummernänderungen zwischen Veranstaltungen).
+
+
 Datenbank - Konfiguration
 -------------------------
 
@@ -113,13 +143,15 @@ Datenmodell
 
 Die anfängliche Datenbankstruktur lässt sich mit "db-sync --create-tables"
 erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen definiert
-werden; siehe dazu die Tabellen vareihe und vareihe_klasse:
+werden:
 
   Eine Veranstaltungsreihe fasst einzelne Veranstaltungen zusammen, entweder um
   sie auflisten zu können (z.B. alle Fahrrad- und Motorrad-Veranstaltungen im
   Jahr 2012), oder um eine Gesamtwertung zu definieren.  Für eine Gesamtwertung
   definiert die Tabelle vareihe_klasse die in der Gesamtwertung enthaltenen
   Klassen und die Anzahl der Läufe und Streichresultate.
+
+Das geht am einfachsten über die Administrations-Formulare.
 
 Das verwendete Datenmodell kann man dem Script db-sync.pl entnehmen.
 
@@ -172,6 +204,10 @@ Standardmäßig ist der Zugriff auf authorisierte Benutzer eingeschränkt.  Um
 Benutzer zu definieren, muss noch zusätzlich eine .htpasswd - Datei erzeugt
 werden und der Pfad zu dieser Datei in die .htaccess - Dateien eingetragen
 werden.
+
+Die Verzeichnisse htdocs/admin/ und cgi-bin/api/ geben Zugriff auf die
+Datenbank-Administration.  Standardmäßig hat hier nur der Benutzer "admin"
+Zugriff; dieser Benutzer muss zuerst in der Datei .htpasswd angelegt werden.
 
 Außerdem muss in der Datei trial-toolkit/TrialToolkit.pm definiert werden, auf
 welche Datenbank die CGI-Scripts mit welchem Benutzernamen und Kennwort

@@ -1,0 +1,15 @@
+<h1>Veranstaltungen</h1>
+<p>
+  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar"><a href="#/veranstaltung/{{veranstaltung.id}}" ng-style="veranstaltung.aktiv ? undefined : {'text-decoration': 'line-through'}">{{veranstaltung.titel}}{{veranstaltung_kuerzel(veranstaltung.vareihen)}}</a><br></span>
+</p>
+<p>
+  <button ng-click="neue_veranstaltung()">Neue Veranstaltung</button>
+</p>
+
+<h1>Veranstaltungsreihen</h1>
+<p>
+  <span ng-repeat="vareihe in vareihen" ng-style="vareihe.verborgen ? {'text-decoration': 'line-through'} : undefined"><a href="#/vareihe/{{vareihe.vareihe}}">{{vareihe.bezeichnung}}</a><br></span>
+</p>
+<p>
+  <button ng-click="neue_vareihe()">Neue Veranstaltungsreihe</button>
+</p>
