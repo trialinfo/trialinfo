@@ -21,6 +21,7 @@ use utf8;
 use DBI;
 use Trialtool qw(cfg_datei_schreiben dat_datei_schreiben);
 use Datenbank qw(cfg_aus_datenbank fahrer_aus_datenbank db_utf8);
+use Timestamp;
 use Getopt::Long;
 use File::Glob ':glob';
 use Encode qw(encode);
@@ -122,13 +123,13 @@ if ($list) {
 		    die "Dateiname '$dateiname.dat' existiert bereits; überschreiben mit --force\n";
 		}
 		print "$dateiname.cfg\n";
-		my ($cfg_mtime, $dat_mtime);
-		my $cfg = cfg_aus_datenbank($dbh, $id, \$cfg_mtime, \$dat_mtime);
+		my $cfg = cfg_aus_datenbank($dbh, $id);
 		my ($cfg_fh, $cfg_name) = tempfile("$dateiname-XXXXXX",
 						   SUFFIX => ".cfg",
 						   UNLINK => 1);
 		cfg_datei_schreiben $cfg_fh, $cfg;
 		$cfg_fh->flush;
+		my $cfg_mtime = timestamp_mtime($cfg->{cfg_mtime});
 		utime $cfg_mtime, $cfg_mtime, $cfg_fh;
 
 		print "$dateiname.dat\n";
@@ -136,8 +137,9 @@ if ($list) {
 		my ($dat_fh, $dat_name) = tempfile("$dateiname-XXXXXX",
 						   SUFFIX => ".dat",
 						   UNLINK => 1);
-		dat_datei_schreiben $dat_fh, $fahrer_nach_startnummer;
+		dat_datei_schreiben $dat_fh, $cfg, $fahrer_nach_startnummer;
 		$dat_fh->flush;
+		my $dat_mtime = timestamp_mtime($cfg->{dat_mtime});
 		utime $dat_mtime, $dat_mtime, $dat_fh;
 
 		unless (rename $cfg_name, encode(locale_fs => "$dateiname.cfg")) {

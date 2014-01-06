@@ -81,7 +81,7 @@ if (defined $vareihe) {
     # FIXME: Stattdessen eine Liste der Veranstaltungen; Parameter
     # durchschleifen. Veranstalter-Link zu animiertem Ergebnis?
     $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime,
+	SELECT id, NULL, wertung, titel, mtime,
 	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)
@@ -95,8 +95,8 @@ if (my @row = $sth->fetchrow_array) {
     $id = $row[0];
     $bezeichnung = $row[1];
     $wertung = $row[2];
-    $cfg->{titel}[$wertung - 1] = $row[3];
-    $zeit = max_time($row[4], $row[5]);
+    $cfg->{wertungen}[$wertung - 1] = { titel => $row[3] };
+    $zeit = $row[4];
     $cfg->{wertungsmodus} = $row[6];
     $cfg->{vierpunktewertung} = $row[7];
     $cfg->{punkteteilung} = $row[8];
@@ -127,16 +127,18 @@ if (defined $vareihe) {
 }
 while (my @row = $sth->fetchrow_array) {
     $cfg->{runden}[$row[0] - 1] = $row[1];
-    $cfg->{klassen}[$row[0] - 1] = $row[2];
-    $klassenfarben->{$row[0]} = $row[3]
-	if defined $row[3];
+    $cfg->{klassen}[$row[0] - 1] = {
+	runden => $row[1],
+	bezeichnung => $row[2],
+	farbe => $row[3]
+    };
 }
 
 $sth = $dbh->prepare(q{
     SELECT klasse, } . ($wertung == 1 ? "rang" : "wertungsrang AS rang") . ", " . q{
 	   startnummer, nachname, vorname, zusatzpunkte,
 	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
-	   s0, s1, s2, s3, s4, punkte, wertungspunkte, runden, ausfall,
+	   s0, s1, s2, s3, s4, s5, punkte, wertungspunkte, runden, ausfall,
 	   papierabnahme
     FROM fahrer} . (defined $vareihe ? q{
     JOIN vareihe_klasse USING (klasse)} : "") . "\n" .
@@ -145,15 +147,14 @@ $sth = $dbh->prepare(q{
     WHERE papierabnahme AND id = ?} . (defined $vareihe ? " AND vareihe = ?" : ""));
 $sth->execute($wertung, $id, defined $vareihe ? $vareihe : ());
 while (my $fahrer = $sth->fetchrow_hashref) {
-    for (my $n = 0; $n < 5; $n++) {
-	$fahrer->{s}[$n] = $fahrer->{"s$n"};
+    for (my $n = 0; $n <= 5; $n++) {
+	$fahrer->{punkteverteilung}[$n] = $fahrer->{"s$n"};
 	delete $fahrer->{"s$n"};
     }
     my $startnummer = $fahrer->{startnummer};
-    my $w = [];
-    $w->[$wertung - 1] = $fahrer->{wertungspunkte}
+    $fahrer->{wertungen} = [];
+    $fahrer->{wertungen}[$wertung - 1] = { punkte => $fahrer->{wertungspunkte} }
 	if defined $fahrer->{wertungspunkte};
-    $fahrer->{wertungspunkte} = $w;
     $fahrer_nach_startnummer->{$startnummer} = $fahrer;
 }
 
@@ -186,14 +187,12 @@ if ($alle_punkte) {
 	SELECT klasse, sektion
 	FROM sektion
 	WHERE id = ?
+	ORDER BY sektion
     });
     $sth->execute($id);
     my $sektionen;
-    for (my $n = 0; $n < 15; $n++) {
-	push @$sektionen, "N" x 15;
-    }
     while (my @row = $sth->fetchrow_array) {
-	substr($sektionen->[$row[0] - 1], $row[1] - 1, 1) = "J";
+	push @{$sektionen->[$row[0] - 1]}, $row[1];
     }
     $cfg->{sektionen} = $sektionen;
 
@@ -231,12 +230,12 @@ if ($alle_punkte) {
 unless ($animiert) {
     doc_h1 "$bezeichnung"
 	if defined $bezeichnung;
-    doc_h2 "$cfg->{titel}[$wertung - 1]";
+    doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
 } else {
     if (defined $bezeichnung) {
-	doc_h2 "$bezeichnung – $cfg->{titel}[$wertung - 1]";
+	doc_h2 "$bezeichnung – $cfg->{wertungen}[$wertung - 1]{titel}";
     } else {
-	doc_h2 "$cfg->{titel}[$wertung - 1]";
+	doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
     }
 }
 

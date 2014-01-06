@@ -26,6 +26,7 @@ use File::Glob ':glob';
 use File::Temp qw(tempfile);
 use Getopt::Long;
 use Trialtool;
+use Timestamp;
 use RenderOutput;
 use Wertungen;
 use TrialToolkit;
@@ -158,10 +159,10 @@ EOF
 }
 
 foreach my $name (trialtool_dateien @ARGV) {
-    my $zeit = max_time(mtime("$name.cfg"), mtime("$name.dat"));
+    my $zeit = max_timestamp(mtime_timestamp("$name.cfg"), mtime_timestamp("$name.dat"));
 
     my $cfg = cfg_datei_parsen("$name.cfg");
-    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", $cfg, 1);
 
     if ($wertung != 1) {
 	# FIXME: Rang und Wertungspunkte sollten pro Wertung berechnet werden,
@@ -170,15 +171,15 @@ foreach my $name (trialtool_dateien @ARGV) {
 	foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	    delete $fahrer_nach_startnummer->{$startnummer}
-		unless $fahrer->{wertungen}[$wertung - 1];
+		unless $fahrer->{wertungen}[$wertung - 1]{aktiv};
 	}
     }
 
     $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
-    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]";
-    doc_h2 doc_text "$cfg->{titel}[$wertung - 1]\n$cfg->{subtitel}[$wertung - 1]";
+    doc_h1 "Tageswertung mit Punkten für die $cfg->{wertungen}[$wertung - 1]{bezeichnung}";
+    doc_h2 doc_text "$cfg->{wertungen}[$wertung - 1]{titel}\n$cfg->{wertungen}[$wertung - 1]{subtitel}";
 
     tageswertung cfg => $cfg,
 		 fahrer_nach_startnummer => $fahrer_nach_startnummer,

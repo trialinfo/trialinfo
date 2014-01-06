@@ -23,8 +23,8 @@ $txt = {
 # Kommandozeilen-Utilities können die Farben auch explizit angegeben werden.)
 # (Achtung, nicht vergessen, die #-Zeichen am Zeilenanfang zu entfernen!)
 $klassenfarben = {
-     #1 => "red",
-     #2 => "blue",
+     #1 => "#ff0000",
+     #2 => "#0000ff",
 };
 
 # Werden die Wertungspunkte bei Gleichstand aufgeteilt?  (Siehe Option
@@ -34,7 +34,6 @@ $punkteteilung = undef;
 # Features, die bei der Datenübertragung zusätzlich gesetzt oder entfernt
 # werden sollen.
 $veranstaltungsfeatures = {
-    neue_startnummer => 1,
     #bundesland => 1,
     #helfer => 0,
     #nennungseingang => 0,

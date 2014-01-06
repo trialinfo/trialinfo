@@ -36,15 +36,13 @@ package Trialtool;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen mtime);
+	     dat_datei_schreiben trialtool_dateien gestartete_klassen);
 
-use File::stat;
-use POSIX qw(strftime);
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
 use Encode qw(encode decode);
-use Time::localtime;
 use FileHandle;
+use JSON_bool;
 use strict;
 
 my $cfg_format = [
@@ -67,7 +65,7 @@ my $cfg_format = [
     "fahrzeiten:A5:15",			# 1609:
     "wertungspunkte:S<:20",		# 1684: Wertungspunkte für Rang 1 - 20
     "sektionen:A15:15",			# 1724: Gefahrene Sektionen pro Klasse
-    "wertungspunkte_markiert:S<",	# 1949: Feld "Wertungspunkte" markiert?
+    "wertung1_markiert:S<",		# 1949: Feld "Wertungspunkte" markiert?
     "versicherung:S<",			# 1951: Versicherungsart-Vorwahl (0 = Keine,
 					#	1 = ADAC-Versicherung, 2 = DMV-Versicherung,
 					#	3 = KFZ-Versicherung, 4 = Tagesversicherung)
@@ -160,7 +158,7 @@ my $dat_format = [
     "zusatzpunkte:f",			# 601:
     "punkte_pro_runde:S<:5",		# 605:
     "r:S<:30",				# 615: [ 0er, ..., 5er ] pro Runde (5er nicht gezählt, immer 0)
-    "s:S<:6",				# 675: [ 0er, ..., 5er ] gesamt (5er nicht gezählt, immer 0)
+    "punkteverteilung:S<:6",		# 675: [ 0er, ..., 5er ] gesamt (5er nicht gezählt, immer 0)
     "punkte:f",				# 687:
     "ausfall:S<",			# 691: 0 = Im Rennen, 3 = Ausfall, 4 = Aus der Wertung,
 					#      5 = Nicht gestartet, 6 = Nicht gestartet, entschuldigt
@@ -203,6 +201,16 @@ my %ergebnisliste_felder = (
     map { $ergebnisliste_felder[$_] => $_ }
         (0 .. $#ergebnisliste_felder) );
 
+my %kartenfarben_in = (
+    'Blau' => '#0000ff',
+    'Braun' => '#a52a2a',
+    'Gelb' => '#ffff00',
+    'Grün' => '#008000',
+    'Rot' => '#ff0000',
+    'Weiss' => '#ffffff',
+);
+my %kartenfarben_out = map { $kartenfarben_in{$_} => $_ } keys %kartenfarben_in;
+
 sub cfg_datei_parsen($) {
     my ($dateiname) = @_;
 
@@ -211,26 +219,63 @@ sub cfg_datei_parsen($) {
     my $cfg = do { local $/; <$fh> };
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
     $cfg = $cfg_parser->unformat($cfg);
-    delete $cfg->{''};
     decode_strings($cfg, $cfg_format);
+    delete $cfg->{''};
     $cfg->{runden} = [ map { ord($_) - ord("0") } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { $_ eq "00:00" ? undef : "$_:00" } @{$cfg->{fahrzeiten}} ];
-    $cfg->{vierpunktewertung} = ($cfg->{vierpunktewertung} eq "J") ? 1 : 0;
+    $cfg->{vierpunktewertung} = json_bool($cfg->{vierpunktewertung} eq "J");
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder{$cfg->{ergebnisliste_feld}};
-    $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $_ } @{$cfg->{kartenfarben}} ];
+    $cfg->{kartenfarben} = [ map { $_ eq "Keine" ? undef : $kartenfarben_in{$_} } @{$cfg->{kartenfarben}} ];
+    $cfg->{wertung1_markiert} = json_bool($cfg->{wertung1_markiert});
+
+    my $klassen = [];
+    for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
+	$klassen->[$n] = {
+	    bezeichnung => $cfg->{klassen}[$n],
+	    runden => $cfg->{runden}[$n],
+	    fahrzeit => $cfg->{fahrzeiten}[$n],
+	    # farbe => ...
+	};
+    }
+    $cfg->{klassen} = $klassen;
+    delete $cfg->{runden};
+    delete $cfg->{fahrzeiten};
+
+    my $wertungen = [];
+    for (my $n = 0; $n < @{$cfg->{titel}}; $n++) {
+	$wertungen->[$n] = {
+	    titel => $cfg->{titel}[$n],
+	    subtitel => $cfg->{subtitel}[$n],
+	    bezeichnung => $cfg->{wertungen}[$n],
+	};
+    }
+    $cfg->{wertungen} = $wertungen;
+    delete $cfg->{titel};
+    delete $cfg->{subtitel};
+
+    my $sektionen = [];
+    for (my $n = 0; $n < @{$cfg->{sektionen}}; $n++) {
+	my $s = $cfg->{sektionen}[$n];
+	$sektionen->[$n] = [];
+	for (my $i = 0; $i < length $s; $i++) {
+	    push @{$sektionen->[$n]}, $i + 1
+		if substr($s, $i, 1) eq 'J';
+	}
+    }
+    $cfg->{sektionen} = $sektionen;
 
     for (my $n = @{$cfg->{wertungspunkte}} - 1; $n > 0; $n--) {
 	pop @{$cfg->{wertungspunkte}}
 	    if $cfg->{wertungspunkte}[$n] == $cfg->{wertungspunkte}[$n - 1];
     }
 
-    $cfg->{nennungsmaske_felder} = [ @$nennungsmaske_felder ];
+    $cfg->{features} = [ @$nennungsmaske_felder ];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
-	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder1->[$n]
+	push @{$cfg->{features}}, $nennungsmaske_felder1->[$n]
 	    if $cfg->{nennungsmaske_felder1}[$n];
     }
     for (my $n = 0; $n < @$nennungsmaske_felder2; $n++) {
-	push @{$cfg->{nennungsmaske_felder}}, $nennungsmaske_felder2->[$n]
+	push @{$cfg->{features}}, $nennungsmaske_felder2->[$n]
 	    if $cfg->{nennungsmaske_felder2}[$n];
     }
     delete $cfg->{nennungsmaske_felder1};
@@ -247,25 +292,56 @@ sub cfg_datei_schreiben($$) {
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
 
     $cfg = { %{$cfg} };
-    encode_strings($cfg, $cfg_format);
 
-    my $felder = { map { $_ => 1 } @{$cfg->{nennungsmaske_felder}} };
+    my $features = { map { $_ => 1 } @{$cfg->{features}} };
 
     for (my $n = @{$cfg->{wertungspunkte}}; $n < 20; $n++) {
 	$cfg->{wertungspunkte}[$n] = $cfg->{wertungspunkte}[$n - 1];
     }
 
+    my $sektionen = $cfg->{sektionen};
+    $cfg->{sektionen} = [];
+    for (my $n = 0; $n < 15; $n++) {
+	my $s = 'N' x 15;
+	foreach my $sektion (@{$sektionen->[$n]}) {
+	    substr($s, $sektion - 1, 1) = 'J';
+	}
+	push @{$cfg->{sektionen}}, $s;
+    }
+
+    my $klassen = $cfg->{klassen};
+    $cfg->{klassen} = [];
+    $cfg->{runden} = [];
+    $cfg->{fahrzeit} = [];
+    for (my $n = 0; $n < 15; $n++) {
+	my $klasse = $klassen->[$n];
+	push @{$cfg->{klassen}}, $klasse->{bezeichnung};
+	push @{$cfg->{runden}}, $klasse->{runden};
+	push @{$cfg->{fahrzeit}}, $klasse->{fahrzeit};
+    }
+
+    my $wertungen = $cfg->{wertungen};
+    $cfg->{titel} = [];
+    $cfg->{subtitel} = [];
+    $cfg->{wertungen} = [];
+    for (my $n = 0; $n < 4; $n++) {
+	my $wertung = $wertungen->[$n];
+	push @{$cfg->{titel}}, $wertung->{titel};
+	push @{$cfg->{subtitel}}, $wertung->{subtitel};
+	push @{$cfg->{wertungen}}, $wertung->{bezeichnung};
+    }
+
     $cfg->{nennungsmaske_felder1} = [];
     for (my $n = 0; $n < @$nennungsmaske_felder1; $n++) {
 	$cfg->{nennungsmaske_felder1}[$n] =
-	    exists $felder->{$nennungsmaske_felder1->[$n]};
+	    exists $features->{$nennungsmaske_felder1->[$n]};
     }
     $cfg->{nennungsmaske_felder2} = [];
     for (my $n = 0; $n < @$nennungsmaske_felder2; $n++) {
 	$cfg->{nennungsmaske_felder2}[$n] =
-	    exists $felder->{$nennungsmaske_felder2->[$n]};
+	    exists $features->{$nennungsmaske_felder2->[$n]};
     }
-    delete $cfg->{nennungsmaske_felder};
+    delete $cfg->{features};
     $cfg->{_1} = 1;
 
     # Pad arrays; otherwise pack() writes variable-length records
@@ -275,12 +351,14 @@ sub cfg_datei_schreiben($$) {
 	}
     }
 
-    $cfg->{kartenfarben} = [ map { defined $_ ? $_ : "Keine" } @{$cfg->{kartenfarben}} ];
+    $cfg->{kartenfarben} = [ map { defined $_ ? $kartenfarben_out{$_} : "Keine" } @{$cfg->{kartenfarben}} ];
     $cfg->{runden} = [ map { "0" + ($_ // 0) } @{$cfg->{runden}} ];
     $cfg->{fahrzeiten} = [ map { defined $_ ? substr($_, 0, 5) : "00:00" } @{$cfg->{fahrzeiten}} ];
     $cfg->{vierpunktewertung} = $cfg->{vierpunktewertung} ? "J" : "N";
+    $cfg->{wertung1_markiert} = json_unbool($cfg->{wertung1_markiert});
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
 
+    encode_strings($cfg, $cfg_format);
     print $fh $cfg_parser->format($cfg);
 }
 
@@ -302,8 +380,8 @@ sub punkte_aufteilen($) {
 	     [@$punkte[60..74]] ];
 }
 
-sub dat_datei_parsen($$) {
-    my ($dateiname, $nur_fahrer) = @_;
+sub dat_datei_parsen($$$) {
+    my ($dateiname, $cfg, $nur_fahrer) = @_;
 
     my $startnummern = $nur_fahrer ? 999 : 1600;
     my $fh = new FileHandle(encode(locale_fs => $dateiname));
@@ -311,6 +389,7 @@ sub dat_datei_parsen($$) {
     my $dat = do { local $/; <$fh> };
     my $fahrer_nach_startnummern;
 
+    $cfg->{neue_startnummern} = {};
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
     for (my $n = 1; $n <= $startnummern; $n++) {
 	my $startnummer = $n;
@@ -318,8 +397,8 @@ sub dat_datei_parsen($$) {
 	my $klasse = unpack "S<", $fahrer_binaer;
 	next if $klasse == 0;
 	my $fahrer = $fahrer_parser->unformat($fahrer_binaer);
-	delete $fahrer->{''};
 	decode_strings($fahrer, $dat_format);
+	delete $fahrer->{''};
 
 	if ($startnummer >= 1000 && $startnummer < 1400) {
 	    # Dast Trialtool verwendet dir Startnummern 1000 - 1399 für Fahrer,
@@ -338,14 +417,17 @@ sub dat_datei_parsen($$) {
 	    if $fahrer->{klasse} == 99;
 	$fahrer->{helfer} = undef
 	    if $fahrer->{helfer} == 0;
-	$fahrer->{wertungen} = [ map { $_ eq "J" ? 1 : 0 } @{$fahrer->{wertungen}} ];
+	$fahrer->{wertungen} = [ map { $_ eq 'J' ? { aktiv => json_bool(1) } : {} } @{$fahrer->{wertungen}} ];
+	$fahrer->{nennungseingang} = json_bool($fahrer->{nennungseingang});
+	$fahrer->{papierabnahme} = json_bool($fahrer->{papierabnahme});
 	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
 	# wurden, und nicht, wieviele Runden komplett gefahren wurden.
 	# Sektionen können bei der Eingabe übersprungen werden, im Unterschied
 	# zur Eingabe für Strafpunkte für eine Sektion, die der Fahrer
 	# ausgelassen hat.
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
-	$fahrer->{punkte_pro_sektion} = punkte_aufteilen($fahrer->{punkte_pro_sektion});
+	$fahrer->{punkte_pro_sektion} = punkte_aufteilen([
+	    map { $_ > 5 ? -1 : $_ } @{$fahrer->{punkte_pro_sektion}} ]);
 	delete $fahrer->{r};
 	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
 	    my $jahr;
@@ -357,25 +439,25 @@ sub dat_datei_parsen($$) {
 		$jahr = $3 + int(localtime->year() / 100) * 100 + 1900;
 	    }
 	    $fahrer->{geburtsdatum} = sprintf("%04d-%02d-%02d", $jahr, $2, $1);
-	    delete $fahrer->{geburtsdatum}
+	    $fahrer->{geburtsdatum} = undef
 		if $fahrer->{geburtsdatum} eq "1901-01-01";
 	} else {
-	    delete $fahrer->{geburtsdatum};
+	    $fahrer->{geburtsdatum} = undef;
 	}
 	if ($fahrer->{startzeit} =~ /^(\d{1,2})\.(\d{1,2})$/ &&
 	    "$1:$2" ne "00:00") {
 	    $fahrer->{startzeit} = "$1:$2:00";
 	} else {
-	    delete $fahrer->{startzeit};
+	    $fahrer->{startzeit} = undef;
 	}
 	if ($fahrer->{zielzeit} =~ /^(\d{1,2})\.(\d{1,2})$/ &&
 	    "$1:$2" ne "00:00") {
 	    $fahrer->{zielzeit} = "$1:$2:00";
 	} else {
-	    delete $fahrer->{zielzeit};
+	    $fahrer->{zielzeit} = undef;
 	}
 	$fahrer->{versicherung} = $fahrer->{versicherung} - '0';
-	delete $fahrer->{versicherung}
+	$fahrer->{versicherung} = undef
 	    if $fahrer->{versicherung} == 0;
 
 	if ($fahrer->{bemerkung} =~ s/\s*\*JW:\s*(\d*)\s*\*\s*//) {
@@ -384,10 +466,13 @@ sub dat_datei_parsen($$) {
 	    # z.B.:  *JW:987*.  Wenn keine Startnummer angegeben ist
 	    # (*JW:*), werden die Wertungspunkte in der Jahreswertung
 	    # ignoriert.
-	    $fahrer->{neue_startnummer} = $1 || undef;
+	    $cfg->{neue_startnummern}{$startnummer} = $1 || undef;
 	}
+
 	if ($fahrer->{bemerkung} =~ s/\s*\*BL:\s*([^*]*?)\s*\*\s*//) {
 	    $fahrer->{bundesland} = $1;
+	} else {
+	    $fahrer->{bundesland} = undef;
 	}
 	$fahrer_nach_startnummern->{$startnummer} = $fahrer;
     }
@@ -395,8 +480,8 @@ sub dat_datei_parsen($$) {
     return $fahrer_nach_startnummern;
 }
 
-sub dat_datei_schreiben($$) {
-    my ($fh, $fahrer_nach_startnummern) = @_;
+sub dat_datei_schreiben($$$) {
+    my ($fh, $cfg, $fahrer_nach_startnummern) = @_;
     my $leerer_fahrer = "\0" x 4 . " " x 573 . "00.0000.00NNNN" .
 			"\0" x 4 . "0NNNNN" . "\0" x 96 . "\6\0" x 75;
 
@@ -404,6 +489,7 @@ sub dat_datei_schreiben($$) {
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
 
+    my $neue_startnummern = $cfg->{neue_startnummern};
     for (my $n = 0; $n < 1600; $n++) {
 	my $startnummer = $n + 1;
 	if ($startnummer >= 1000 && $startnummer < 1400) {
@@ -417,8 +503,6 @@ sub dat_datei_schreiben($$) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";
 	    }
-	    $fahrer->{klasse} = 99
-		unless defined $fahrer->{klasse};
 	    my $nachname_vorname = "$fahrer->{nachname}, $fahrer->{vorname}";
 	    $nachname_vorname = substr($nachname_vorname, 0, 19) . '.'
 		if length $nachname_vorname > 20;
@@ -426,7 +510,7 @@ sub dat_datei_schreiben($$) {
 	    if (defined $fahrer->{geburtsdatum} && $fahrer->{geburtsdatum} =~ /^(....)-(..)-(..)$/) {
 		$fahrer->{geburtsdatum} = "$3.$2.$1";
 	    } else {
-		delete $fahrer->{geburtsdatum};
+		$fahrer->{geburtsdatum} = undef;
 	    }
 	    my $runden = $fahrer->{runden} // 0;
 	    $fahrer->{runden} = 'J' x $runden . 'N' x (5 - $runden);
@@ -435,37 +519,60 @@ sub dat_datei_schreiben($$) {
 	    if (defined $fahrer->{startzeit} && $fahrer->{startzeit} =~ /(..):(..):(..)/) {
 		$fahrer->{startzeit} = "$1.$2";
 	    } else {
-		delete $fahrer->{startzeit};
+		$fahrer->{startzeit} = undef;
 	    }
 	    if (defined $fahrer->{zielzeit} && $fahrer->{zielzeit} =~ /(..):(..):(..)/) {
 		$fahrer->{zielzeit} = "$1.$2";
 	    } else {
-		delete $fahrer->{zielzeit};
+		$fahrer->{zielzeit} = undef;
 	    }
-	    if (exists $fahrer->{neue_startnummer}) {
+	    if (exists $neue_startnummern->{$startnummer}) {
 		$fahrer->{bemerkung} .= " *JW:" .
-		    ($fahrer->{neue_startnummer} // '') . "*";
+		    ($neue_startnummern->{$startnummer} // '') . "*";
 	    }
 
-	    my $p;
+	    # Das Trialtool merkt sich nicht, welche Sektionen aus der Wertung
+	    # genommen wurden, wir müssen hier also stattdessen die Punkte dieser
+	    # Sektionen auf undef setzen.
+
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion};
-	    for (my $runde = 0; $runde < 5; $runde++) {
-		for (my $sektion = 0; $sektion < 15; $sektion++) {
-		    $p->[$runde * 15 + $sektion] =
-			$fahrer->{punkte_pro_sektion}[$runde][$sektion] // 6;
+
+	    if ($cfg->{sektionen_aus_wertung} && defined $fahrer->{klasse}) {
+		if (my $runden = $cfg->{sektionen_aus_wertung}[$fahrer->{klasse} - 1]) {
+		    for (my $runde = 0; $runde < @$runden; $runde++) {
+			if (my $sektionen = $runden->[$runde]) {
+			    foreach my $sektion ($sektionen) {
+				$punkte_pro_sektion->[$runde][$sektion - 1] = undef;
+			    }
+			}
+		    }
 		}
 	    }
-	    $fahrer->{punkte_pro_sektion} = $p;
 
 	    my $r;
 	    for (my $runde = 0; $runde < 5; $runde++) {
 		for (my $sektion = 0; $sektion < 15; $sektion++) {
 		    my $punkte = $punkte_pro_sektion->[$runde][$sektion];
 		    $r->[$runde * 6 + $punkte]++
-			if defined $punkte && $punkte < 5;
+			if defined $punkte && $punkte >= 0 && $punkte < 5;
 		}
 	    }
 	    $fahrer->{r} = $r;
+
+	    my $p;
+	    for (my $runde = 0; $runde < 5; $runde++) {
+		for (my $sektion = 0; $sektion < 15; $sektion++) {
+		    $p->[$runde * 15 + $sektion] =
+			$punkte_pro_sektion->[$runde][$sektion] // 6;
+		}
+	    }
+	    my $auslassen = $cfg->{punkte_sektion_auslassen};
+	    $fahrer->{punkte_pro_sektion} = [ map { $_ == -1 ? $auslassen : $_ } @$p ];
+
+	    $fahrer->{punkteverteilung}[5] = 0;  # Anzahl der 5er ist immer auf 0 gesetzt ...
+
+	    $fahrer->{klasse} = 99
+		unless defined $fahrer->{klasse};
 
 	    # Pad arrays; otherwise pack() writes variable-length records
 	    foreach my $fmt (@$dat_format) {
@@ -474,7 +581,9 @@ sub dat_datei_schreiben($$) {
 		}
 	    }
 
-	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    $fahrer->{wertungen} = [ map { $_ && $_->{aktiv} ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    $fahrer->{nennungseingang} = json_unbool($fahrer->{nennungseingang});
+	    $fahrer->{papierabnahme} = json_unbool($fahrer->{papierabnahme});
 	    encode_strings($fahrer, $dat_format);
 	    print $fh $fahrer_parser->format($fahrer);
 	} else {
@@ -525,19 +634,12 @@ sub gestartete_klassen($) {
     my ($cfg) = @_;
 
     my $sektionen = $cfg->{sektionen};
-    my $gestartet;
+    my $gestartet = [];
     for (my $n = 0; $n < @$sektionen; $n++) {
-	push @$gestartet, index($sektionen->[$n], "J") != -1 ? 1 : 0;
+	$gestartet->[$n] = 1
+	    if $sektionen->[$n] && @{$sektionen->[$n]};
     }
     return $gestartet;
-}
-
-sub mtime($) {
-    my ($dateiname) = @_;
-
-    my $stat = stat(encode(locale_fs => "$dateiname"))
-	or die "$dateiname: $!\n";
-    return strftime("%Y-%m-%d %H:%M:%S", @{localtime($stat->mtime)});
 }
 
 1;

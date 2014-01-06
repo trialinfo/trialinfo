@@ -62,9 +62,10 @@ if ($type eq 'cfg') {
     #print Dumper($cfg), "\n";
     #exit;
 
+    my $cfg = cfg_aus_datenbank($dbh, $id);
     my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
 			 "filename=\"$dateiname.dat\"");
-    dat_datei_schreiben(\*STDOUT, $fahrer_nach_startnummer);
+    dat_datei_schreiben(\*STDOUT, $cfg, $fahrer_nach_startnummer);
 }

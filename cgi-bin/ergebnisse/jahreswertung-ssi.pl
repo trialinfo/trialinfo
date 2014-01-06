@@ -23,6 +23,7 @@ use RenderOutput;
 use Wertungen;
 use Datenbank;
 use TrialToolkit;
+use Timestamp;
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';
@@ -71,7 +72,7 @@ if (my @row =  $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT id, datum, wertung, titel, subtitel, dat_mtime, cfg_mtime, punkteteilung
+    SELECT id, datum, wertung, titel, subtitel, mtime, punkteteilung
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN vareihe USING (vareihe, wertung)
@@ -94,18 +95,15 @@ while (my @row = $sth->fetchrow_array) {
 	$cfg->{label} = $n;
     }
     $n++;
-    $cfg->{titel}[$wertung - 1] = $row[3];
-    $cfg->{subtitel}[$wertung - 1] = $row[4];
+    $cfg->{wertungen}[$wertung - 1] = { titel => $row[3], subtitel => $row[4] };
     $veranstaltungen->{$id}{cfg} = $cfg;
-    $zeit = max_time($zeit, $row[5]);
-    $zeit = max_time($zeit, $row[6]);
-    $cfg->{punkteteilung} = $row[7];
+    $zeit = max_timestamp($zeit, $row[5]);
+    $cfg->{punkteteilung} = $row[6];
     push @$veranstaltungen_reihenfolge, $row[0];
 }
 
 $sth = $dbh->prepare(q{
     SELECT id, klasse, startnummer,
-	   CASE WHEN definiert THEN neue_startnummer ELSE startnummer END as neue_startnummer,
 	   vorname, nachname,
 	   wertungspunkte, wertungsrang
     } . ( @db_spalten ? ", " . join(", ", @db_spalten) : "") . q{
@@ -114,7 +112,6 @@ $sth = $dbh->prepare(q{
     JOIN vareihe_veranstaltung USING (id)
     /* JOIN vareihe USING (vareihe) */
     JOIN vareihe_klasse USING (vareihe, klasse)
-    LEFT JOIN (SELECT *, 1 AS definiert FROM neue_startnummer) AS neue_startnummer USING (id, startnummer)
     JOIN veranstaltung USING (id)
     WHERE aktiv AND vareihe = ?
 });
@@ -123,20 +120,29 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
 
-    my $wertungspunkte = $fahrer->{wertungspunkte};
-    $fahrer->{wertungspunkte} = [];
-    $fahrer->{wertungspunkte}[$wertung - 1] = $wertungspunkte;
-
-    my $wertungsrang = $fahrer->{wertungsrang};
-    $fahrer->{wertungsrang} = [];
-    $fahrer->{wertungsrang}[$wertung - 1] = $wertungsrang;
-
-    delete $fahrer->{neue_startnummer}
-	if defined $fahrer->{neue_startnummer} &&
-	   $fahrer->{startnummer} == $fahrer->{neue_startnummer};
+    $fahrer->{wertungen}[$wertung - 1] = {
+	    punkte => $fahrer->{wertungspunkte},
+	    rang => $fahrer->{wertungsrang},
+	};
+    delete $fahrer->{wertungspunkte};
+    delete $fahrer->{wertungsrang};
 
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
+}
+
+$sth = $dbh->prepare(q{
+    SELECT id, startnummer, neue_startnummer
+    FROM vareihe_veranstaltung
+    /* JOIN vareihe USING (vareihe) */
+    JOIN neue_startnummer USING (vareihe, id)
+    JOIN veranstaltung USING (id)
+    WHERE aktiv AND vareihe = ?
+});
+$sth->execute($vareihe);
+while (my @row = $sth->fetchrow_array) {
+    $veranstaltungen->{$row[0]}{cfg}{neue_startnummern}{$row[1]} = $row[2]
+	unless defined $row[2] && $row[1] == $row[2];
 }
 
 foreach my $id (keys %$veranstaltungen) {
@@ -163,7 +169,10 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($vareihe, $letzte_cfg->{id});
 while (my @row = $sth->fetchrow_array) {
-    $letzte_cfg->{klassen}[$row[0] - 1] = $row[1];
+    $letzte_cfg->{klassen}[$row[0] - 1] = {
+	bezeichnung => $row[1],
+	farbe => $row[2]
+    };
     $klassenfarben->{$row[0]} = $row[2]
 	if defined $row[2];
     $laeufe->{$row[0]} = $row[3];
@@ -177,7 +186,7 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($letzte_cfg->{id}, $wertung);
 if (my @row = $sth->fetchrow_array) {
-    $letzte_cfg->{wertungen}[$wertung - 1] = $row[0];
+    $letzte_cfg->{wertungen}[$wertung - 1]{bezeichnung} = $row[0];
 }
 
 doc_h1 "$bezeichnung";

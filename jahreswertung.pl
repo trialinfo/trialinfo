@@ -29,6 +29,7 @@ use Trialtool;
 use Wertungen;
 use RenderOutput;
 use TrialToolkit;
+use Timestamp;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
@@ -146,8 +147,8 @@ decode_argv;
 
 my $n = 1;
 foreach my $name (trialtool_dateien @ARGV) {
-    $zeit = max_time($zeit, mtime("$name.cfg"));
-    $zeit = max_time($zeit, mtime("$name.dat"));
+    $zeit = max_timestamp($zeit, mtime_timestamp("$name.cfg"));
+    $zeit = max_timestamp($zeit, mtime_timestamp("$name.dat"));
 
     my $cfg = cfg_datei_parsen("$name.cfg");
     if ($RenderOutput::html &&
@@ -158,21 +159,19 @@ foreach my $name (trialtool_dateien @ARGV) {
 	$cfg->{label} = $n;
     }
     $n++;
-    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", 1);
+    my $fahrer_nach_startnummer = dat_datei_parsen("$name.dat", $cfg, 1);
     $cfg->{punkteteilung} = $punkteteilung;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
     push @$veranstaltungen, [$cfg, $fahrer_nach_startnummer];
 }
 
 foreach my $veranstaltung (@$veranstaltungen) {
-    my $fahrer_nach_startnummer = $veranstaltung->[1];
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	if (exists $fahrer->{neue_startnummer}) {
-		my $cfg = $veranstaltung->[0];
-		print STDERR "Veranstaltung $cfg->{label}: Startnummer " .
-			     "$fahrer->{startnummer} -> " .
-			     ($fahrer->{neue_startnummer} // '') . "\n";
-	}
+    my $cfg = $veranstaltung->[0];
+    my $neue_startnummern = $cfg->{neue_startnummern};
+    foreach my $startnummer (sort keys %$neue_startnummern) {
+	print STDERR "Veranstaltung $cfg->{label}: Startnummer " .
+		     "$startnummer -> " .
+		     ($neue_startnummern->{$startnummer} // '') . "\n";
     }
 }
 
@@ -193,7 +192,7 @@ if ($RenderOutput::html) {
 EOF
 }
 
-doc_h1 $letzte_cfg->{wertungen}[$wertung - 1];
+doc_h1 $letzte_cfg->{wertungen}[$wertung - 1]{bezeichnung};
 jahreswertung veranstaltungen => $veranstaltungen,
 	      wertung => $wertung,
 	      laeufe_gesamt => $laeufe,

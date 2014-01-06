@@ -32,19 +32,19 @@ DOWNLOAD_FILES = \
 	htdocs/js/raphael-min.js \
 
 COMMON_FILES = \
-	trial-toolkit/Trialtool.pm \
-	trial-toolkit/Parse/Binary/FixedFormat.pm \
-	trial-toolkit/Datenbank.pm \
-	trial-toolkit/RenderOutput.pm \
-	trial-toolkit/Wertungen.pm \
 	htdocs/ergebnisse.css \
+	trial-toolkit/Datenbank.pm \
+	trial-toolkit/JSON_bool.pm \
+	trial-toolkit/Parse/Binary/FixedFormat.pm \
+	trial-toolkit/RenderOutput.pm \
+	trial-toolkit/Timestamp.pm \
 	trial-toolkit/TrialToolkit.pm.txt \
+	trial-toolkit/Trialtool.pm \
+	trial-toolkit/Wertungen.pm \
 
 LOCAL_FILES = \
 	db-sync.pl \
 	db-export.pl \
-	doc/eer-diagramm.mwb \
-	doc/eer-diagramm.pdf \
 	README \
 	IO/Tee.pm \
 	jahreswertung.pl \
