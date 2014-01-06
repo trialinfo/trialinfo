@@ -178,6 +178,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    UPDATE kartenfarbe SET farbe = '#008000' WHERE farbe in ('green', 'Grün', 'Gruen');
 	    UPDATE kartenfarbe SET farbe = '#ff0000' WHERE farbe in ('red', 'Rot');
 	    UPDATE kartenfarbe SET farbe = '#ffffff' WHERE farbe in ('white', 'Weiss', 'Weiß');
+
+	    UPDATE veranstaltung
+	    SET mtime = CASE WHEN dat_mtime > cfg_mtime THEN dat_mtime ELSE cfg_mtime END;
         }) {
     $dbh->do($sql)
 	or die "$sql: $!\n";
