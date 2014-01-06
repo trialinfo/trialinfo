@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Wiederherstellung</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+</head>
+<body>
+<h1>Wiederherstellung aus der Datenbank</h1>
+
+<p>Hier können Sie die Daten aus der Datenbank im Trialtool-Format
+herunterladen.  Pro Veranstaltung gibt es eine .cfg und eine .dat - Datei.
+Beide Dateien müssen in das Trialtool-Verzeichnis kopiert werden (standardmäßig
+<font style="font-family: monospace;">C:\Trialtool 3.12</font>), danach kann
+die Veranstaltung im Trialtool ausgewählt und weiterbearbeitet werden.</p>
+
+<!--#set var="which" value="$QUERY_STRING" -->
+<!--#include virtual="/cgi-bin/veranstalter/export-ssi.pl?$which" -->
+</body>
+</html>

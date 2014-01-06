@@ -43,6 +43,8 @@ GENERATED_WEB_FILES = \
 	htdocs/admin/.htaccess \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
+	htdocs/.htaccess \
+	htdocs/veranstalter/.htaccess \
 
 ADMIN_FILES = \
 	cgi-bin/api/api.pl \

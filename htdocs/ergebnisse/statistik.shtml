@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Punktestatistiken</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+
+</head>
+<body>
+<h1>Punktestatistiken</h1>
+<h2><!--#include virtual="/cgi-bin/ergebnisse/vareihe-bezeichnung.pl?vareihe=1" --></h2>
+<!--#set var="which" value="$QUERY_STRING" -->
+<!--#include virtual="/cgi-bin/ergebnisse/statistik-ssi.pl?$which" -->
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Veranstaltungsergebnisse</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+</head>
+<body>
+<h1>Veranstaltungsergebnisse</h1>
+
+<h2>Veranstaltungen</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=1&kuerzel" -->
+
+<h2>Gesamtwertungen</h2>
+<p>
+<a href="jahreswertung.shtml?vareihe=1"><!--#include virtual="/cgi-bin/ergebnisse/vareihe-bezeichnung.pl?vareihe=1" --></a><br>
+</p>
+<p>
+
+<h2>Sonstiges</h2>
+<p>
+<a href="statistik.shtml?vareihe=1&kuerzel">Punktestatistiken</a><br>
+</p>
+</body>
+</html>

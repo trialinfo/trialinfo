@@ -1,5 +1,8 @@
+DirectoryIndex index.shtml
+Options Indexes Includes
+
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
 AuthName "Protected"
 AuthType Basic
 AuthBasicProvider file
-Require user admin
+Require valid-user

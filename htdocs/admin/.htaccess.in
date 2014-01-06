@@ -1,4 +1,5 @@
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
 AuthName "Protected"
 AuthType Basic
+AuthBasicProvider file
 Require user admin

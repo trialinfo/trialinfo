@@ -1,3 +1,4 @@
 AuthName "Protected"
 AuthType Basic
+AuthBasicProvider file
 Require valid-user
