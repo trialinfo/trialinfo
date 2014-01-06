@@ -327,6 +327,10 @@ sub dat_datei_parsen($$) {
 	    # Darstellung auch mehr als 400 Fahrer ohne Startnummer darstellen
 	    # zu können, ändern wir diesen Bereich auf -1 .. -400.
 	    $startnummer = 999 - $startnummer;
+	    # Sicherstellen, dass Fahrer ohne Startnummer nicht in den
+	    # Starterlisten oder Ergebnissen auftauchen!
+	    $fahrer->{nennungseingang} = 0;
+	    $fahrer->{papierabnahme} = 0;
 	}
 
 	$fahrer->{startnummer} = $startnummer;
@@ -413,7 +417,6 @@ sub dat_datei_schreiben($$) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";
 	    }
-	    encode_strings($fahrer, $dat_format);
 	    $fahrer->{klasse} = 99
 		unless defined $fahrer->{klasse};
 	    my $nachname_vorname = "$fahrer->{nachname}, $fahrer->{vorname}";
@@ -472,6 +475,7 @@ sub dat_datei_schreiben($$) {
 	    }
 
 	    $fahrer->{wertungen} = [ map { $_ ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+	    encode_strings($fahrer, $dat_format);
 	    print $fh $fahrer_parser->format($fahrer);
 	} else {
 	    print $fh $leerer_fahrer;

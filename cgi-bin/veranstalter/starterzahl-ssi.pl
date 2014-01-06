@@ -112,7 +112,7 @@ $sth = $dbh->prepare(q{
     FROM fahrer
     JOIN vareihe_veranstaltung USING (id)
     JOIN veranstaltung USING (id)
-    WHERE aktiv AND vareihe = ? AND startnummer < 1000
+    WHERE aktiv AND vareihe = ? AND startnummer > 0
     GROUP BY id, klasse
 });
 $sth->execute($vareihe);

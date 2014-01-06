@@ -141,6 +141,10 @@ sub punkte_berechnen($$) {
     # Fahrers nicht mehr weiter, und zählen die unvollständig gefahrene Runde
     # nicht als gefahren mit.
 
+    # FIXME: Wenn wir in Zukunft speichern welche Sektionen aus der Wertung
+    # genommen wurden, kann die aktuelle Runde immer errmittelt werden -- bzw.
+    # kann ermittelt werden, ob ein Fahrer fertig ist.
+
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $punkte_pro_runde;
 	my $gesamtpunkte;
@@ -151,10 +155,11 @@ sub punkte_berechnen($$) {
 	my $klasse = $fahrer->{klasse};
 	if (defined $klasse && $fahrer->{papierabnahme}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
+	    my $letzte_begonnene_runde = 0;
+	    my $letzte_vollstaendige_runde;
 	    $gesamtpunkte = 0;
 	    $s = [(0) x 6];
 	    $gefahrene_sektionen = 0;
-	    $runde = 0;
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // '';
 
@@ -165,6 +170,8 @@ sub punkte_berechnen($$) {
 		    if (substr($sektionen, $sektion, 1) eq "J") {
 			my $p = $punkte_in_runde->[$sektion];
 			unless (defined $p) {
+			    $letzte_vollstaendige_runde = $runde
+				unless defined $letzte_vollstaendige_runde;
 			    $befahren = befahrene_sektionen($fahrer_nach_startnummer)
 				unless defined $befahren;
 			    last runde
@@ -177,6 +184,8 @@ sub punkte_berechnen($$) {
 			    if $p <= 5;
 		    }
 		}
+		$letzte_begonnene_runde = $runde + 1
+		    if defined $punkte_pro_runde->[$runde];
 	    }
 	    foreach my $punkte (@$punkte_pro_runde) {
 		$gesamtpunkte += $punkte;
@@ -188,7 +197,19 @@ sub punkte_berechnen($$) {
 				 "in Runde " . ($r + 1) . " sind unvollständig!\n";
 		}
 	    }
+	    # Wenn ein Fahrer alle Sektionen einer Runden gefahren ist,
+	    # kann die Rundenzahl auf jeden Fall zumindest auf diesen Wert
+	    # gesetzt werden.
+	    $letzte_vollstaendige_runde = $runden
+		unless defined $letzte_vollstaendige_runde;
+	    $fahrer->{runden} = $letzte_vollstaendige_runde
+		if !defined $fahrer->{runden} ||
+		   $fahrer->{runden} < $letzte_vollstaendige_runde;
+	    $fahrer->{runden} = $letzte_begonnene_runde
+		if $fahrer->{runden} > $letzte_begonnene_runde;
 	    $gesamtpunkte += $fahrer->{zusatzpunkte};
+	} else {
+	    $fahrer->{runden} = undef;
 	}
 
 	$fahrer->{punkte} = $gesamtpunkte;
@@ -215,8 +236,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $rang = 1;
 	$fahrer_in_klasse = [
 	    sort { rang_vergleich($a, $b, $cfg) }
-		 map { $_->{startnummer} < 1000 && $_->{papierabnahme} ? $_ : () }
-		     @$fahrer_in_klasse ];
+		 map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
@@ -496,7 +516,7 @@ sub tageswertung(@) {
     my $namenlaenge = 0;
     foreach my $fahrer (values %{$args{fahrer_nach_startnummer}}) {
 	next
-	    unless $fahrer->{startnummer} < 1000 && $fahrer->{papierabnahme};
+	    unless $fahrer->{papierabnahme};
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
 	$namenlaenge = max($n, $namenlaenge);
     }
@@ -519,8 +539,7 @@ sub tageswertung(@) {
 	my $farbe = "";
 
 	$fahrer_in_klasse = [
-	    map { $_->{startnummer} < 1000 && $_->{papierabnahme} ? $_ : () }
-		  @$fahrer_in_klasse ];
+	    map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
 
 	my $stechen = 0;
@@ -980,8 +999,7 @@ sub jahreswertung(@) {
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
-	    if ($startnummer < 1000 &&
-		defined $fahrer->{wertungspunkte}[$idx]) {
+	    if (defined $fahrer->{wertungspunkte}[$idx]) {
 		my $klasse = $fahrer->{klasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		    $fahrer->{wertungspunkte}[$idx];
