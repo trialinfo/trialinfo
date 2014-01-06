@@ -188,7 +188,7 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 if ($nach_klassen) {
-    doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
+    doc_h2 "$cfg->{titel}[$wertung - 1]";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Sektion 0 1 2 3) ];
     if ($cfg->{vierpunktewertung}) {
@@ -220,7 +220,7 @@ if ($nach_klassen) {
     }
     verteilung_legende;
 } elsif ($nach_sektionen) {
-    doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
+    doc_h2 "$cfg->{titel}[$wertung - 1]";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Klasse 0 1 2 3) ];
     if ($cfg->{vierpunktewertung}) {
@@ -260,7 +260,7 @@ if ($nach_klassen) {
     }
     verteilung_legende;
 } else {
-    doc_h2 "Punktestatistik – $cfg->{titel}[$wertung - 1]";
+    doc_h2 "$cfg->{titel}[$wertung - 1]";
     my $format = [ qw(r3 r3 r3 r3 r3) ];
     my $header = [ qw(Klasse 0 1 2 3) ];
     if ($cfg->{vierpunktewertung}) {

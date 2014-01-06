@@ -130,7 +130,7 @@ my $result;
 my $status = '200 OK';
 if ($op eq 'GET/vareihen') {
     my $sth = $dbh->prepare(q{
-	SELECT vareihe, bezeichnung, verborgen
+	SELECT vareihe, bezeichnung, kuerzel, verborgen
 	FROM vareihe
 	ORDER BY vareihe
     });

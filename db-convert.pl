@@ -164,6 +164,23 @@ foreach my $sql (split /\s*;\s*/, q{
 	      sektion INT,
 	      PRIMARY KEY (id, klasse, runde, sektion)
 	    );
+
+	    UPDATE klasse SET farbe = '#0000ff' WHERE farbe in ('blue', 'Blau');
+	    UPDATE klasse SET farbe = '#a52a2a' WHERE farbe in ('brown', 'Braun');
+	    UPDATE klasse SET farbe = '#ffff00' WHERE farbe in ('yellow', 'Gelb');
+	    UPDATE klasse SET farbe = '#008000' WHERE farbe in ('green', 'Grün', 'Gruen');
+	    UPDATE klasse SET farbe = '#ff0000' WHERE farbe in ('red', 'Rot');
+	    UPDATE klasse SET farbe = '#ffffff' WHERE farbe in ('white', 'Weiss', 'Weiß');
+
+	    UPDATE kartenfarbe SET farbe = '#0000ff' WHERE farbe in ('blue', 'Blau');
+	    UPDATE kartenfarbe SET farbe = '#a52a2a' WHERE farbe in ('brown', 'Braun');
+	    UPDATE kartenfarbe SET farbe = '#ffff00' WHERE farbe in ('yellow', 'Gelb');
+	    UPDATE kartenfarbe SET farbe = '#008000' WHERE farbe in ('green', 'Grün', 'Gruen');
+	    UPDATE kartenfarbe SET farbe = '#ff0000' WHERE farbe in ('red', 'Rot');
+	    UPDATE kartenfarbe SET farbe = '#ffffff' WHERE farbe in ('white', 'Weiss', 'Weiß');
+
+	    UPDATE veranstaltung
+	    SET mtime = CASE WHEN dat_mtime > cfg_mtime THEN dat_mtime ELSE cfg_mtime END;
         }) {
     $dbh->do($sql)
 	or die "$sql: $!\n";
