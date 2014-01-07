@@ -168,6 +168,37 @@ function numericDirective() {
   };
 }
 
+// Model: true, false, or null, View: 'yes', 'no', ''
+function yesNoNullDirective() {
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: function(scope, element, attr, ctrl) {
+      ctrl.$parsers.push(function(text) {
+	var match;
+	if (typeof text == 'string') {
+	  if (text == '') {
+	    ctrl.$setValidity('numeric', true);
+	    return null;
+	  } else if (text === 'yes' || text === 'no') {
+	    ctrl.$setValidity('numeric', true);
+	    return text === 'yes';
+	  } else
+	    ctrl.$setValidity('numeric', false);
+	}
+      });
+      ctrl.$formatters.push(function(value) {
+	if (value == null)
+	  return '';
+	if (typeof value == 'boolean')
+	  return value ? 'yes' : 'no';
+	else
+	  return value;
+      });
+    }
+  };
+}
+
 // Model: -1 <=> '-', 0, 1, 2, 3, 4 (when allowed), 5, null <=> ''
 function punkteDirective() {
   return {

@@ -25,6 +25,11 @@
 	color: #e00000;
 	background-color: #fff0f0;
       }
+
+      @media print {
+	.no-print, .no-print * { display: none !important; }
+	.page-break, .page-break * { page-break-after: always }
+      }
     </style>
 
     <script src="../js/angular.js"></script>
@@ -39,6 +44,7 @@
     <script src="einstellungen/controller.js"></script>
     <script src="sektionen/controller.js"></script>
     <script src="vareihe/controller.js"></script>
+    <script src="liste/controller.js"></script>
     <script>
       var application = angular.module('application', ['ngRoute', 'ui.validate']);
 
@@ -47,6 +53,7 @@
       application.directive('isoTimestamp', isoTimestampDirective);
       application.directive('numeric', numericDirective);
       application.directive('punkte', punkteDirective);
+      application.directive('yesNoNull', yesNoNullDirective);
 
       application.directive('autofocus', autofocusDirective);
       application.directive('tabTo', tabTo);
@@ -57,6 +64,7 @@
       application.controller('einstellungenController', einstellungenController);
       application.controller('sektionenController', sektionenController);
       application.controller('vareiheController', vareiheController);
+      application.controller('listeController', listeController);
 
       application.config(function($routeProvider) {
 	$routeProvider.
@@ -96,6 +104,10 @@
 	    controller: 'vareiheController',
 	    templateUrl: 'vareihe/index.html',
 	    resolve: vareiheController.resolve
+	  }).when('/liste/:id', {
+	    controller: listeController,
+	    templateUrl: 'liste/index.html',
+	    resolve: listeController.resolve
 	  }).otherwise({
 	    redirectTo: '/'
 	  });
