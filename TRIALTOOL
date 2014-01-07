@@ -26,6 +26,7 @@ Einschränkungen im TrialTool
   Negativ-Strafpunkt.
 * Eigentlich bräuchte es getrennte Felder für Nationalität des Fahrers
   und Land der Adresse.
+* Sonderzeichen werden nur sehr eingeschränkt unterstützt, kein UTF-8.
 
 Offene Fragen zum TrialTool
 ===========================
