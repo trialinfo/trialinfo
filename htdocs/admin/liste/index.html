@@ -1,0 +1,133 @@
+<a href="" ng-if="!anzeige.einstellungen" ng-click="anzeige.einstellungen = true" class="no-print" title="Anzeige einstellen">↓</a>
+<a href="" ng-if="anzeige.einstellungen" ng-click="anzeige.einstellungen = false" class="no-print" title="Anzeige einstellen">↑</a>
+<div ng-if="anzeige.einstellungen" class="no-print">
+  <p>
+    <form name="form" ng-model="anzeige.filter">
+      <fieldset style="display:inline">
+	<legend>Anzeige einstellen</legend>
+	<table>
+	  <tr><th align="right">Startnummer</th>
+	    <td>
+	      <select ng-model="anzeige.startnummer" yes-no-null title="Fahrer ist eine Startnummer zugeordnet">
+		<option value=""></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-if="feature.nennungseingang"><th align="right">Nennungseingang</th>
+	    <td>
+	      <select ng-model="anzeige.nennungseingang" yes-no-null>
+		<option value=""></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Papierabnahme</th>
+	    <td>
+	      <select ng-model="anzeige.papierabnahme" yes-no-null>
+		<option value=""></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-repeat="wertung in [1,2,3,4]" ng-if="features['wertung' + wertung]">
+	    <th align="right">{{veranstaltung.wertungen[wertung - 1].bezeichnung}}</th>
+	    <td>
+	      <select ng-model="anzeige['wertung' + wertung]" yes-no-null>
+		<option value=""></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr>
+	    <th align="right">Startnummernbereich</th>
+	    <td>
+	      <input type="number" size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.startnummer_min title="Von"> −
+	      <input type="number" size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.startnummer_max title="Bis">
+	    </td>
+	  </tr>
+	  <tr>
+	    <th align="right">Klasse</th>
+	    <td>
+	      <span ng-repeat="sektionen in veranstaltung.sektionen track by $index" ng-if="sektionen && sektionen.length"><input type="checkbox" ng-model="anzeige.klassen[$index + 1]" id="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}"><label for="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}">{{$index + 1}}</label> </span>
+	      <input type="checkbox" ng-model="anzeige.klassen['']" id="keine_klasse" title="Keine Klasse zugeordnet"><label for="keine_klasse" title="Keine Klasse zugeordnet">Keine</label>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Gruppieren nach</th>
+	    <td>
+	      <select ng-model="anzeige.gruppierung">
+		<option value=""></option>
+		<option value="klasse">Klasse</option>
+		<option value="wohnort">Wohnort</option>
+		<option value="fahrzeug">Fahrzeug</option>
+		<option value="club">Club</option>
+		<option value="versicherung">Versicherung</option>
+		<option value="lbl">Land (Bundesland)</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-if="anzeige.gruppierung != ''"><th></th>
+	    <td>
+	      <input type="checkbox" ng-model="anzeige.seitenumbruch" id="seitenumbruch"><label for="seitenumbruch">Seitenumbruch zwischen den Gruppen im Ausdruck</label>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Sortieren nach</th>
+	    <td>
+	      <select ng-model="anzeige.reihenfolge">
+		<option value="startnummer">Startnummer</option>
+		<option value="name">Name</option>
+		<option value="geburtsdatum">Geburtsdatum</option>
+		<option value="startzeit">Startzeit</option>
+		<option value="zielzeit">Zielzeit</option>
+	      </select>
+	    </td></tr>
+	  <tr><th align="right">Felder</th>
+	    <td>
+	      <span ng-repeat="_ in anzeige.felder track by $index">
+		<select ng-model="anzeige.felder[$index]">
+		  <option value=""></option>
+		  <option value="club">Club</option>
+		  <option value="fahrzeug">Fahrzeug</option>
+		  <option value="geburtsdatum">Geburtsdatum</option>
+		  <option value="klasse">Klasse</option>
+		  <option value="lbl">Land (Bundesland)</option>
+		  <option value="name">Name</option>
+		  <option value="nennungseingang" ng-if="feature.nennungseingang">Nennungseingang</option>
+		  <option value="papierabnahme">Papierabnahme</option>
+		  <option value="startnummer">Startnummer</option>
+		  <option value="startzeit">Startzeit</option>
+		  <option value="versicherung">Versicherung</option>
+		  <option value="wohnort">Wohnort</option>
+		  <option value="zielzeit">Zielzeit</option>
+		</select>
+	      </span>
+	    </td></tr>
+	</table>
+      </fieldset>
+    </form>
+  </p>
+</div>
+
+<style type="text/css">
+table.liste td,th {
+  padding: 0 0.5em 0 0.5em
+}
+</style>
+
+<h1>{{veranstaltung.wertungen[0].titel}} - Fahrerliste</h1>
+<div ng-repeat="gruppe in ergebnisliste">
+  <h2 ng-if="anzeige.gruppierung">{{gruppe_ueberschrift(gruppe)}}</h2>
+  <table class="liste">
+    <tr>
+      <th ng-repeat="feld in felder track by $index" ng-style="feld.style">{{feld.bezeichnung}}</th>
+    </tr>
+    <tr ng-repeat="fahrer in gruppe">
+      <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
+    </tr>
+  </table>
+  <span ng-if="anzeige.seitenumbruch" class="page-break" />
+</div>

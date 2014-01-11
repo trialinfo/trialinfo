@@ -96,6 +96,8 @@ ADMIN_FILES = \
 	htdocs/admin/vareihe/index.html \
 	htdocs/admin/veranstaltung/controller.js \
 	htdocs/admin/veranstaltung/index.html \
+	htdocs/admin/liste/index.html \
+	htdocs/admin/liste/controller.js \
 	htdocs/api/.htaccess \
 
 WEB_FILES = \

@@ -582,6 +582,39 @@ if ($op eq 'GET/vareihen') {
 	$status = "404 Not Found";
 	$result = { error => "Veranstaltungsreihe $vareihe nicht gefunden" };
     }
+} elsif ($op eq "GET/fahrerliste") {
+    my ($id) = parameter($q, qw(id));
+    $dbh->begin_work;
+    my $sth = $dbh->prepare(qq{
+	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
+	       nennungseingang, papierabnahme, geburtsdatum,
+	       wohnort, club, fahrzeug, versicherung, land, bundesland
+	FROM fahrer
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    my $fahrer = {};
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	$row->{wertungen} = [];
+	my $startnummer = $row->{startnummer};
+	$fahrer->{$startnummer} = $row;
+    }
+
+    my $sth = $dbh->prepare(qq{
+	SELECT startnummer, wertung
+	FROM fahrer_wertung
+	WHERE id = ?
+	ORDER BY startnummer, wertung
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	push @{$fahrer->{$row[0]}{wertungen}}, $row[1]
+	    if exists $fahrer->{$row[0]};
+    }
+    $dbh->commit;
+    $result = [ values %$fahrer ];
 } else {
     $status = "404 Not Found";
     $result->{error} = "Operation '$op' not defined";
