@@ -268,8 +268,10 @@ sub rang_und_wertungspunkte_berechnen($$) {
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	foreach my $wertung (values @{$fahrer->{wertungen}}) {
-	    delete $wertung->{rang};
-	    delete $wertung->{punkte};
+	    if (defined $wertung) {
+		delete $wertung->{rang};
+		delete $wertung->{punkte};
+	    }
 	}
     }
 
