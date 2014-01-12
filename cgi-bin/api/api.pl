@@ -56,13 +56,6 @@ sub parameter($@) {
     return @params;
 }
 
-my @fahrer_nonkeys = qw(
-    version klasse helfer bewerber nenngeld nachname vorname strasse wohnort
-    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
-    kennzeichen hubraum bemerkung bundesland land startzeit zielzeit
-    nennungseingang papierabnahme versicherung zusatzpunkte punkte ausfall
-    stechen runden);
-
 sub get_fahrer($$$;$$) {
     my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
     my $result;
