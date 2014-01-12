@@ -345,8 +345,9 @@ sub fahrer_aus_datenbank($$;$$$) {
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
-	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
-	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, s5, rang
+	       stechen, papierabnahme, papierabnahme_morgen, versicherung,
+	       runden, zusatzpunkte, punkte, ausfall, nennungseingang, s0, s1,
+	       s2, s3, s4, s5, rang
 	FROM fahrer
 	WHERE id = ?};
     my $args = [ $id ];

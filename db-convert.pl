@@ -115,6 +115,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ADD COLUMN basis INT AFTER id;
 
 	    ALTER TABLE fahrer
+	    ADD COLUMN papierabnahme_morgen BOOLEAN AFTER papierabnahme;
+
+	    ALTER TABLE fahrer
 	    ADD COLUMN s5 INT AFTER s4;
 
 	    ALTER TABLE vareihe
@@ -128,6 +131,9 @@ foreach my $sql (split /\s*;\s*/, q{
 
 	    ALTER TABLE vareihe
 	    ADD COLUMN verborgen BOOL;
+
+	    UPDATE fahrer
+	    SET papierabnahme_morgen = 0;
 
 	    UPDATE fahrer
 	    SET startnummer = 999 - startnummer

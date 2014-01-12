@@ -109,7 +109,8 @@ sub veranstaltung_reset($$$) {
 	    rang = NULL, startzeit = NULL, zielzeit = NULL
 	    } . ($reset eq 'start' ? '' : (
 		q{
-		    , nennungseingang = 0, papierabnahme = 0, nenngeld = NULL
+		    , nennungseingang = 0, papierabnahme = 0, papierabnahme_morgen = 0
+		    , nenngeld = NULL
 		} . ($reset eq 'nennbeginn' ? '' : q{
 		    , startnummer = CASE WHEN startnummer < 0 THEN
 					 startnummer - ? ELSE
@@ -118,6 +119,26 @@ sub veranstaltung_reset($$$) {
 		}))) . q{
 	WHERE id = ?
     }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
+
+    $sth = $dbh->prepare(q{
+	SELECT basis
+	FROM veranstaltung
+	JOIN veranstaltung_feature ON veranstaltung.basis = veranstaltung_feature.id
+	WHERE veranstaltung.id = ? AND feature = 'papierabnahme_morgen'
+    });
+    $sth->execute($id);
+    if (my @row = $sth->fetchrow_array) {
+        my $basis = $row[0];
+	# Feld papierabnahme in aktueller Veranstaltung auf
+	# papierabnahme_morgen von vorheriger Veranstaltung setzen
+	$dbh->do(q{
+	    UPDATE fahrer
+	    JOIN fahrer AS basis USING (startnummer)
+	    SET fahrer.nennungseingang = 1, fahrer.papierabnahme = 1
+	    WHERE fahrer.id = ? AND basis.id = ? AND basis.papierabnahme_morgen
+	}, undef, $id, $basis);
+    }
+    # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
 }
 
 my $result;
@@ -575,7 +596,7 @@ if ($op eq 'GET/vareihen') {
     $dbh->begin_work;
     my $sth = $dbh->prepare(qq{
 	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
-	       nennungseingang, papierabnahme, geburtsdatum,
+	       nennungseingang, papierabnahme, papierabnahme_morgen, geburtsdatum,
 	       wohnort, club, fahrzeug, versicherung, land, bundesland
 	FROM fahrer
 	WHERE id = ?

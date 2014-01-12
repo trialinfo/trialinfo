@@ -79,6 +79,7 @@ CREATE TABLE fahrer (
   stechen INT DEFAULT 0,
   nennungseingang BOOLEAN,
   papierabnahme BOOLEAN,
+  papierabnahme_morgen BOOLEAN,
   versicherung INT,
   runden INT,
   s0 INT, -- nicht in version berücksichtigt (berechnet)
