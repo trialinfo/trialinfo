@@ -121,6 +121,7 @@ sub veranstaltung_reset($$$) {
 		    , startnummer = CASE WHEN startnummer < 0 THEN
 					 startnummer - ? ELSE
 					 -startnummer END
+		    , lizenznummer = NULL
 		}))) . q{
 	WHERE id = ?
     }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
