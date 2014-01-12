@@ -589,7 +589,7 @@ if ($op eq 'GET/vareihen') {
 	$fahrer->{$startnummer} = $row;
     }
 
-    my $sth = $dbh->prepare(qq{
+    $sth = $dbh->prepare(qq{
 	SELECT startnummer, wertung
 	FROM fahrer_wertung
 	WHERE id = ?
