@@ -145,9 +145,10 @@ sub cfg_aus_datenbank($$;$) {
     my $nur_trialtool = $ohne_trialtool ? '' :
 	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime';
     my $sth = $dbh->prepare(qq{
-	SELECT version, id, dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
-	       punkte_sektion_auslassen, wertungspunkte_234, wertung1_markiert,
-	       versicherung, mtime, punkteteilung$nur_trialtool
+	SELECT version, id, basis, dateiname, datum, aktiv, vierpunktewertung,
+	       wertungsmodus, punkte_sektion_auslassen, wertungspunkte_234,
+	       wertung1_markiert, versicherung, mtime,
+	       punkteteilung$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
     });

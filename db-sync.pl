@@ -162,6 +162,7 @@ DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
   version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
+  basis INT, -- veranstaltung
   datum DATE,
   mtime TIMESTAMP NULL,
   dat_mtime TIMESTAMP NULL,

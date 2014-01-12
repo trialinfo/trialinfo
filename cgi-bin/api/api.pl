@@ -305,13 +305,7 @@ if ($op eq 'GET/vareihen') {
     print STDERR "$putdata\n";
 
     my $cfg0;
-    my ($basis, $id_neu);
-    if (defined $cfg1->{basis}) {
-	$basis = $cfg1->{basis};
-	delete $cfg1->{basis};
-    }
-    die "Sowohl 'basis' als auch 'id' definiert\n"
-	if defined $basis && defined $id;
+    my $id_neu;
 
     eval {
 	$dbh->begin_work;
@@ -327,13 +321,13 @@ if ($op eq 'GET/vareihen') {
 		or die "Konnte keine freie ID finden\n";
 	    $id_neu = ($row[0] // 0) + 1;
 	}
-	if (defined $basis) {
-	    veranstaltung_duplizieren($do_sql, $basis, $id_neu);
+	if (!defined $id && defined $cfg1->{basis}) {
+	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}, $id_neu);
 	    veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
 		if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	    $version = 1;
 	}
-	if (defined $id || defined $basis) {
+	if (defined $id || defined $cfg1->{basis}) {
 	    $cfg0 = cfg_aus_datenbank($dbh, $id_neu, 1);
 	    die "Invalid Row Version\n"
 		if $cfg0->{version} != $version;

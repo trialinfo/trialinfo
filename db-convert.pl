@@ -111,6 +111,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE fahrer
 	    ADD COLUMN version INT NOT NULL DEFAULT 1 FIRST;
 
+	    ALTER TABLE veranstaltung
+	    ADD COLUMN basis INT AFTER id;
+
 	    ALTER TABLE fahrer
 	    ADD COLUMN s5 INT AFTER s4;
 
