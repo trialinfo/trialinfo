@@ -145,9 +145,10 @@ sub cfg_aus_datenbank($$;$) {
     my $nur_trialtool = $ohne_trialtool ? '' :
 	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime';
     my $sth = $dbh->prepare(qq{
-	SELECT version, id, dateiname, datum, aktiv, vierpunktewertung, wertungsmodus,
-	       punkte_sektion_auslassen, wertungspunkte_234, wertung1_markiert,
-	       versicherung, mtime, punkteteilung$nur_trialtool
+	SELECT version, id, basis, dateiname, datum, aktiv, vierpunktewertung,
+	       wertungsmodus, punkte_sektion_auslassen, wertungspunkte_234,
+	       wertung1_markiert, versicherung, mtime,
+	       punkteteilung$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
     });
@@ -344,8 +345,9 @@ sub fahrer_aus_datenbank($$;$$$) {
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
-	       stechen, papierabnahme, versicherung, runden, zusatzpunkte,
-	       punkte, ausfall, nennungseingang, s0, s1, s2, s3, s4, s5, rang
+	       stechen, papierabnahme, papierabnahme_morgen, versicherung,
+	       runden, zusatzpunkte, punkte, ausfall, nennungseingang, s0, s1,
+	       s2, s3, s4, s5, rang
 	FROM fahrer
 	WHERE id = ?};
     my $args = [ $id ];

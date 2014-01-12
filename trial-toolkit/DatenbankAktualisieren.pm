@@ -287,7 +287,8 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
 	    kennzeichen hubraum bemerkung land bundesland helfer_nummer
 	    startzeit zielzeit stechen nennungseingang papierabnahme
-	    versicherung runden ausfall zusatzpunkte punkte rang)) {
+	    papierabnahme_morgen versicherung runden ausfall zusatzpunkte
+	    punkte rang)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;
 		push @$felder_alt, $alt->{$feld}
@@ -583,7 +584,7 @@ sub veranstaltung_aktualisieren($$$$) {
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
 	foreach my $feld (qw(
-	    dateiname datum aktiv vierpunktewertung wertungsmodus
+	    basis dateiname datum aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
 	    wertung1_markiert versicherung ergebnislistenbreite
 	    ergebnisliste_feld dat_mtime cfg_mtime mtime punkteteilung)) {

@@ -91,6 +91,10 @@ function listeController($scope, veranstaltung, fahrerliste) {
       { bezeichnung: 'Papierabnahme',
 	ausdruck: "papierabnahme ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
+    papierabnahme_morgen:
+      { bezeichnung: 'Papierabnahme morgen',
+	ausdruck: "papierabnahme_morgen ? 'Ja' : ''",
+	style: { 'text-align': 'center' } },
     versicherung:
       { bezeichnung: 'Versicherung',
 	ausdruck: "versicherung",

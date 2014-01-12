@@ -170,6 +170,10 @@
 		</span>
 		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.papierabnahme" id="papierabnahme">
 		  <label for="papierabnahme" accesskey="p"><span class="accesskey">P</span>apierabnahme</label>
+		<span ng-if="features.papierabnahme_morgen">
+		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.papierabnahme_morgen" id="papierabnahme_morgen">
+		    <label for="papierabnahme_morgen" accesskey="m">Papierabnahme <span class="accesskey">m</span>orgen</label>
+		</span>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.helfer">

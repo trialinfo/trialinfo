@@ -56,13 +56,6 @@ sub parameter($@) {
     return @params;
 }
 
-my @fahrer_nonkeys = qw(
-    version klasse helfer bewerber nenngeld nachname vorname strasse wohnort
-    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
-    kennzeichen hubraum bemerkung bundesland land startzeit zielzeit
-    nennungseingang papierabnahme versicherung zusatzpunkte punkte ausfall
-    stechen runden);
-
 sub get_fahrer($$$;$$) {
     my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
     my $result;
@@ -116,14 +109,36 @@ sub veranstaltung_reset($$$) {
 	    rang = NULL, startzeit = NULL, zielzeit = NULL
 	    } . ($reset eq 'start' ? '' : (
 		q{
-		    , nennungseingang = 0, papierabnahme = 0, nenngeld = NULL
+		    , nennungseingang = 0, papierabnahme = 0, papierabnahme_morgen = 0
+		    , nenngeld = NULL
 		} . ($reset eq 'nennbeginn' ? '' : q{
 		    , startnummer = CASE WHEN startnummer < 0 THEN
 					 startnummer - ? ELSE
 					 -startnummer END
+		    , lizenznummer = NULL
 		}))) . q{
 	WHERE id = ?
     }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
+
+    $sth = $dbh->prepare(q{
+	SELECT basis
+	FROM veranstaltung
+	JOIN veranstaltung_feature ON veranstaltung.basis = veranstaltung_feature.id
+	WHERE veranstaltung.id = ? AND feature = 'papierabnahme_morgen'
+    });
+    $sth->execute($id);
+    if (my @row = $sth->fetchrow_array) {
+        my $basis = $row[0];
+	# Feld papierabnahme in aktueller Veranstaltung auf
+	# papierabnahme_morgen von vorheriger Veranstaltung setzen
+	$dbh->do(q{
+	    UPDATE fahrer
+	    JOIN fahrer AS basis USING (startnummer)
+	    SET fahrer.nennungseingang = 1, fahrer.papierabnahme = 1
+	    WHERE fahrer.id = ? AND basis.id = ? AND basis.papierabnahme_morgen
+	}, undef, $id, $basis);
+    }
+    # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
 }
 
 my $result;
@@ -311,13 +326,7 @@ if ($op eq 'GET/vareihen') {
     print STDERR "$putdata\n";
 
     my $cfg0;
-    my ($basis, $id_neu);
-    if (defined $cfg1->{basis}) {
-	$basis = $cfg1->{basis};
-	delete $cfg1->{basis};
-    }
-    die "Sowohl 'basis' als auch 'id' definiert\n"
-	if defined $basis && defined $id;
+    my $id_neu;
 
     eval {
 	$dbh->begin_work;
@@ -333,13 +342,13 @@ if ($op eq 'GET/vareihen') {
 		or die "Konnte keine freie ID finden\n";
 	    $id_neu = ($row[0] // 0) + 1;
 	}
-	if (defined $basis) {
-	    veranstaltung_duplizieren($do_sql, $basis, $id_neu);
+	if (!defined $id && defined $cfg1->{basis}) {
+	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}, $id_neu);
 	    veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
 		if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	    $version = 1;
 	}
-	if (defined $id || defined $basis) {
+	if (defined $id || defined $cfg1->{basis}) {
 	    $cfg0 = cfg_aus_datenbank($dbh, $id_neu, 1);
 	    die "Invalid Row Version\n"
 		if $cfg0->{version} != $version;
@@ -587,7 +596,7 @@ if ($op eq 'GET/vareihen') {
     $dbh->begin_work;
     my $sth = $dbh->prepare(qq{
 	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
-	       nennungseingang, papierabnahme, geburtsdatum,
+	       nennungseingang, papierabnahme, papierabnahme_morgen, geburtsdatum,
 	       wohnort, club, fahrzeug, versicherung, land, bundesland
 	FROM fahrer
 	WHERE id = ?
@@ -601,7 +610,7 @@ if ($op eq 'GET/vareihen') {
 	$fahrer->{$startnummer} = $row;
     }
 
-    my $sth = $dbh->prepare(qq{
+    $sth = $dbh->prepare(qq{
 	SELECT startnummer, wertung
 	FROM fahrer_wertung
 	WHERE id = ?

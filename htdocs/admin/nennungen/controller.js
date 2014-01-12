@@ -110,7 +110,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
     if (fahrer.startnummer == null) {
       fahrer.nennungseingang = false;
       fahrer.papierabnahme = false;
+      fahrer.papierabnahme_morgen = false;
     }
+    if (fahrer.papierabnahme)
+      fahrer.nennungseingang = true;
     if (fahrer.startnummer_intern !== undefined) {
       fahrer = angular.copy(fahrer);
       if (fahrer.startnummer === null)
@@ -239,7 +242,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
 
   function wertungslabels_erzeugen() {
     /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-    var accesskeys = 'knvgpsuäl';
+    var accesskeys = 'knvgpmsuäl';
     $scope.wertungen = [];
     angular.forEach($scope.features.wertungen, function(wertung) {
       var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;

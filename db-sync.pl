@@ -79,6 +79,7 @@ CREATE TABLE fahrer (
   stechen INT DEFAULT 0,
   nennungseingang BOOLEAN,
   papierabnahme BOOLEAN,
+  papierabnahme_morgen BOOLEAN,
   versicherung INT,
   runden INT,
   s0 INT, -- nicht in version berücksichtigt (berechnet)
@@ -162,6 +163,7 @@ DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
   version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
+  basis INT, -- veranstaltung
   datum DATE,
   mtime TIMESTAMP NULL,
   dat_mtime TIMESTAMP NULL,
