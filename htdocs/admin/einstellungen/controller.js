@@ -128,7 +128,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       veranstaltung.wertungen[0].titel = 'Neue Veranstaltung';
     }
     if (veranstaltung.datum === undefined)
-      veranstaltung.datum = $scope.$eval('heute | date:"d.M.yyyy"', {heute: Date.now()});
+      veranstaltung.datum = $scope.$eval('heute | date:"yyyy-MM-dd"', {heute: Date.now()});
     wertungspunkte_expandieren(veranstaltung.wertungspunkte);
     $scope.veranstaltung = veranstaltung;
     $scope.sektionen = sektionen_nach_bool(veranstaltung.sektionen);
