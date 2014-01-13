@@ -99,6 +99,10 @@ function listeController($scope, veranstaltung, fahrerliste) {
       { bezeichnung: 'Versicherung',
 	ausdruck: "versicherung",
 	style: { 'text-align': 'left' } },
+    lizenznummer:
+      { bezeichnung: 'Lizenznr.',
+	ausdruck: "lizenznummer",
+	style: { 'text-align': 'left' } },
   };
 
   function generic_compare(v1, v2) {

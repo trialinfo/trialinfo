@@ -597,7 +597,8 @@ if ($op eq 'GET/vareihen') {
     my $sth = $dbh->prepare(qq{
 	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
 	       nennungseingang, papierabnahme, papierabnahme_morgen, geburtsdatum,
-	       wohnort, club, fahrzeug, versicherung, land, bundesland
+	       wohnort, club, fahrzeug, versicherung, land, bundesland,
+	       lizenznummer
 	FROM fahrer
 	WHERE id = ?
     });
