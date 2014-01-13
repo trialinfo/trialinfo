@@ -119,14 +119,16 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	versicherung: 0,
 	reset: 'nennbeginn'
       };
-      for (var n = 0; n < 15; n++) {
-	veranstaltung.klassen.push({});
-	veranstaltung.sektionen.push([]);
-      }
-      for (var n = 0; n < 4; n++)
-	veranstaltung.wertungen.push({});
       veranstaltung.wertungen[0].titel = 'Neue Veranstaltung';
     }
+
+    for (var n = veranstaltung.klassen.length; n < 15; n++) {
+      veranstaltung.klassen.push({});
+      veranstaltung.sektionen.push([]);
+    }
+    for (var n = veranstaltung.wertungen.length; n < 4; n++)
+      veranstaltung.wertungen.push({});
+
     if (veranstaltung.datum === undefined)
       veranstaltung.datum = $scope.$eval('heute | date:"yyyy-MM-dd"', {heute: Date.now()});
     wertungspunkte_expandieren(veranstaltung.wertungspunkte);
