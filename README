@@ -294,7 +294,7 @@ Jahreswertung und Startnummern-Änderungen, Wertungspunkte ignorieren
 Es kommt manchmal vor, dass sich die Startnummer eines Fahrers zwischen
 Wettbewerben ändert.  Das ist für die Jahreswerung ein Problem, die die
 Startnummer als Schlüssel verwendet.  Es wäre möglich, die Startnummern in den
-einzelnen Veranstaltungen nachträglich abzupassen, das würde aber auch die
+einzelnen Veranstaltungen nachträglich anzupassen, das würde aber auch die
 Ergebislisten der einzelnen Veranstaltungen verändern.  Stattdessen gibt es die
 Möglichkeit, Startnummern nur für die Jahreswertung umzuschreiben:
 
@@ -302,7 +302,7 @@ Soll die Jahreswertung direkt aus den TrialTool-Dateien erstellt werden,
 schreibt man in das Bemerkung-Feld der Fahrerstammdaten den Code *JW:987*
 (wobei 987 durch die Startnummer in der Jahreswertung ersetzt wird).
 
-Soll die Jahreswertung nur aus der Datenbank zu erstellen, definiert man die
+Soll die Jahreswertung nur aus der Datenbank erstellt werden, definiert man die
 Startnummernänderungen in der Tabelle neue_startnummer.  Wenn die
 TrialTool-Dateien bereits die *JW:987* - Codes enthalten, werden diese beim
 Import und Export berücksichtigt, und die Tabelle wird automatisch befüllt.
