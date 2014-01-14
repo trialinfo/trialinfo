@@ -78,7 +78,7 @@ $sth = $dbh->prepare(q{
 		     lizenznummer IS NULL)
 		THEN CONCAT('(', klasse, ')')
 		ELSE klasse END AS klasse,
-	   CONCAT(nachname, ', ', vorname) AS name,
+	   CONCAT(nachname, ' ', vorname) AS name,
 	   YEAR(geburtsdatum) AS geburtsjahr,
 	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 15
 		ELSE 25 END AS 'Nenngeld',
