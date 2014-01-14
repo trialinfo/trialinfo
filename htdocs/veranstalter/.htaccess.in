@@ -2,7 +2,8 @@ DirectoryIndex index.shtml
 Options Indexes Includes
 
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
+AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup
 AuthName "Protected"
 AuthType Basic
 AuthBasicProvider file
-Require valid-user
+Require group veranstalter
