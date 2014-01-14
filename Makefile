@@ -91,6 +91,7 @@ WEB_FILES = \
 	htdocs/ergebnisse/3.png \
 	htdocs/ergebnisse/4.png \
 	htdocs/ergebnisse/5.png \
+	htdocs/robots.txt \
 
 all: testing
 

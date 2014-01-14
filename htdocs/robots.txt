@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /api
+Disallow: /cgi-bin/api
+Disallow: /cgi-bin/veranstalter
+Disallow: /js
+Disallow: /veranstalter
