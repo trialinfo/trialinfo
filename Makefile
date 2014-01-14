@@ -228,7 +228,7 @@ do-upload:
 	    fi; \
 	done; \
 	for file in $(GENERATED_WEB_FILES); do \
-	    rm -f $file.tmp; \
+	    rm -f $$file.tmp; \
 	done;
 
 clean:
