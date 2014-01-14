@@ -672,7 +672,7 @@ sub tageswertung(@) {
 		push @$row, "";
 	    }
 	    push @$row, $fahrer->{startnummer};
-	    push @$row, $fahrer->{nachname} . ", " . $fahrer->{vorname};
+	    push @$row, $fahrer->{nachname} . " " . $fahrer->{vorname};
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
 	    }
@@ -1107,7 +1107,7 @@ sub jahreswertung(@) {
 	    my $row;
 	    push @$row, $fahrerwertung->{gesamtpunkte} ? "$fahrerwertung->{gesamtrang}." : "";
 	    push @$row, $startnummer,
-			$alle_fahrer->{$startnummer}{nachname} . ", " .
+			$alle_fahrer->{$startnummer}{nachname} . " " .
 			$alle_fahrer->{$startnummer}{vorname};
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
