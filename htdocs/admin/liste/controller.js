@@ -111,7 +111,10 @@ function listeController($scope, veranstaltung, fahrerliste) {
     if (t1 == t2) {
       if (v1 === v2)
 	return 0;
-      return v1 < v2 ? -1 : 1;
+      if (t1 == 'string')
+	return v1.localeCompare(v2);
+      else
+        return v1 < v2 ? -1 : 1;
     } else
       return t1 < t2 ? -1 : 1;
   };
