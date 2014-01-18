@@ -231,9 +231,11 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 	}
       }).
       error(function(data, status) {
-	$scope.startnummer_belegt = undefined;
-	netzwerkfehler(data, status);
-	checker.reject();
+	if (data) {
+	  $scope.startnummer_belegt = undefined;
+	  netzwerkfehler(data, status);
+	  checker.reject();
+	}
       });
     return checker.promise;
   };
