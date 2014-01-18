@@ -3,6 +3,7 @@
 function listeController($scope, veranstaltung, fahrerliste) {
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
+  $scope.fold = {};
 
   var versicherungen = {
     1: 'ADAC-Versicherung',
@@ -136,13 +137,13 @@ function listeController($scope, veranstaltung, fahrerliste) {
 	  anzeige['wertung' + wertung])
 	return false;
     }
-    if (anzeige.startnummer_min !== null &&
-	fahrer.startnummer < anzeige.startnummer_min)
+    if (anzeige.min !== null &&
+	fahrer.startnummer < anzeige.min)
       return false;
-    if (anzeige.startnummer_max !== null &&
-	fahrer.startnummer > anzeige.startnummer_max)
+    if (anzeige.max !== null &&
+	fahrer.startnummer > anzeige.max)
       return false;
-    return anzeige.klassen[fahrer.klasse === null ? '' : fahrer.klasse];
+    return anzeige.klassen[fahrer.klasse === null ? '-' : fahrer.klasse];
   }
 
   function klasse_compare(f1, f2) {
@@ -291,7 +292,7 @@ function listeController($scope, veranstaltung, fahrerliste) {
     gruppierung: 'klasse',
     reihenfolge: 'startnummer',
     klassen: function() {
-      var klassen = { '': true };
+      var klassen = { '-': true };
       angular.forEach(veranstaltung.sektionen, function(sektionen, index) {
 	if (sektionen && sektionen.length)
 	  klassen[index + 1] = true;
