@@ -64,11 +64,8 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
 
   function fahrer_zuweisen(fahrer) {
     $scope.form.$setPristine();
-    if (fahrer) {
-      punkte_pro_sektion_auffuellen(fahrer);
-      $scope.fahrer = fahrer;
-    } else
-      $scope.fahrer = angular.copy($scope.fahrer_alt);
+    punkte_pro_sektion_auffuellen(fahrer);
+    $scope.fahrer = fahrer;
     punkte_berechnen();
     $scope.fahrer_alt = angular.copy($scope.fahrer);
     $scope.klasse = $scope.fahrer.klasse;
@@ -102,8 +99,10 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
     fahrer_laden($http, veranstaltung.id, startnummer, richtung,
 		 richtung ? 'starter' : undefined).
       success(function(fahrer) {
-	fahrer_zuweisen(Object.keys(fahrer).length ? fahrer : undefined);
-	punkte_fokusieren();
+	if (Object.keys(fahrer).length) {
+	  fahrer_zuweisen(fahrer);
+	  punkte_fokusieren();
+	}
       }).
       error(netzwerkfehler);
   };
@@ -238,7 +237,7 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
 
   $scope.verwerfen = function() {
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
-    fahrer_zuweisen(undefined);
+    fahrer_zuweisen($scope.fahrer_alt);
   };
 
   $scope.rundenliste = function(klasse) {

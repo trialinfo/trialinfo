@@ -39,8 +39,6 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
 
   function fahrer_zuweisen(fahrer, fahrer_ist_neu) {
     $scope.form.$setPristine();
-    if (!fahrer)
-      fahrer = $scope.fahrer_alt;
     var fahrer_aktiv = (fahrer && fahrer.startnummer) || fahrer_ist_neu;
     if (fahrer && fahrer.startnummer < 0) {
       fahrer.startnummer_intern = fahrer.startnummer;
@@ -136,7 +134,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
 
   $scope.verwerfen = function() {
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
-    fahrer_zuweisen(undefined);
+    fahrer_zuweisen($scope.fahrer_alt);
   }
 
   function wertungen_auffuellen(fahrer) {
