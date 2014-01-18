@@ -1,6 +1,6 @@
 'use strict;'
 
-function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
+function punkteController($scope, $sce, $http, $timeout, $route, $location, veranstaltung) {
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.startende_klassen = startende_klassen(veranstaltung);
@@ -62,18 +62,33 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
     } catch(_) {}
   };
 
+  function url_aktualisieren() {
+    var startnummer;
+    if ($scope.fahrer)
+      startnummer = $scope.fahrer.startnummer;
+    if ($location.search().startnummer !== startnummer) {
+      var search = {};
+      if (startnummer)
+	search.startnummer = startnummer;
+      $location.search(search).replace();
+    }
+  }
+
   function fahrer_zuweisen(fahrer) {
-    $scope.form.$setPristine();
+    if ($scope.form)
+      $scope.form.$setPristine();
     if (fahrer) {
       punkte_pro_sektion_auffuellen(fahrer);
       $scope.fahrer = fahrer;
+      punkte_berechnen();
+      $scope.klasse = $scope.fahrer.klasse;
     } else
-      $scope.fahrer = angular.copy($scope.fahrer_alt);
-    punkte_berechnen();
+      $scope.fahrer = undefined;
     $scope.fahrer_alt = angular.copy($scope.fahrer);
-    $scope.klasse = $scope.fahrer.klasse;
     $scope.suchbegriff = '';
     delete $scope.fahrerliste;
+
+    url_aktualisieren();
   }
 
   function punkte_fokusieren() {
@@ -102,8 +117,10 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
     fahrer_laden($http, veranstaltung.id, startnummer, richtung,
 		 richtung ? 'starter' : undefined).
       success(function(fahrer) {
-	fahrer_zuweisen(Object.keys(fahrer).length ? fahrer : undefined);
-	punkte_fokusieren();
+	if (Object.keys(fahrer).length) {
+	  fahrer_zuweisen(fahrer);
+	  punkte_fokusieren();
+	}
       }).
       error(netzwerkfehler);
   };
@@ -238,7 +255,7 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
 
   $scope.verwerfen = function() {
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
-    fahrer_zuweisen(undefined);
+    fahrer_zuweisen($scope.fahrer_alt);
   };
 
   $scope.rundenliste = function(klasse) {
@@ -314,6 +331,20 @@ function punkteController($scope, $sce, $http, $timeout, veranstaltung) {
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);
+
+  $scope.$on('$routeUpdate', function() {
+    var startnummer = $location.search().startnummer;
+    var aktuelle_startnummer;
+    if ($scope.fahrer)
+      aktuelle_startnummer = $scope.fahrer.startnummer;
+    if (aktuelle_startnummer !== startnummer) {
+      if (startnummer !== undefined)
+	$scope.fahrer_laden(startnummer);
+      else
+	fahrer_zuweisen(undefined);
+    }
+  });
+  $scope.$emit('$routeUpdate');
 }
 
 punkteController.resolve = {

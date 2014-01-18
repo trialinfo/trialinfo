@@ -1,6 +1,6 @@
 'use strict;'
 
-function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, vorschlaege) {
+function nennungenController($scope, $sce, $http, $timeout, $q, $route, $location, veranstaltung, vorschlaege) {
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.definierte_klassen = [];
@@ -37,10 +37,29 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
     $scope.fehler = undefined;
   }
 
+  function startnummer_intern() {
+    var fahrer = $scope.fahrer;
+    if (fahrer) {
+      var startnummer = fahrer.startnummer_intern;
+      if (startnummer === undefined)
+	  startnummer = fahrer.startnummer;
+      return startnummer;
+    }
+  }
+
+  function url_aktualisieren() {
+    var startnummer = startnummer_intern();
+    if ($location.search().startnummer !== startnummer) {
+      var search = {};
+      if (startnummer)
+	search.startnummer = startnummer;
+      $location.search(search).replace();
+    }
+  }
+
   function fahrer_zuweisen(fahrer, fahrer_ist_neu) {
-    $scope.form.$setPristine();
-    if (!fahrer)
-      fahrer = $scope.fahrer_alt;
+    if ($scope.form)
+      $scope.form.$setPristine();
     var fahrer_aktiv = (fahrer && fahrer.startnummer) || fahrer_ist_neu;
     if (fahrer && fahrer.startnummer < 0) {
       fahrer.startnummer_intern = fahrer.startnummer;
@@ -61,6 +80,8 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
       neu: !fahrer_ist_neu,
       verwerfen: fahrer_ist_neu
     });
+
+    url_aktualisieren();
   }
 
   $scope.fahrer_laden = function(startnummer, richtung) {
@@ -136,7 +157,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
 
   $scope.verwerfen = function() {
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
-    fahrer_zuweisen(undefined);
+    fahrer_zuweisen($scope.fahrer_alt);
   }
 
   function wertungen_auffuellen(fahrer) {
@@ -210,14 +231,23 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
 	}
       }).
       error(function(data, status) {
-	$scope.startnummer_belegt = undefined;
-	netzwerkfehler(data, status);
-	checker.reject();
+	if (data) {
+	  $scope.startnummer_belegt = undefined;
+	  netzwerkfehler(data, status);
+	  checker.reject();
+	}
       });
     return checker.promise;
   };
 
   $scope.klasse_gueltig = function(klasse) {
+    /* ui-validate calls the validator function too early for numeric form
+     * fields which convert input fields to numbers or undefined; maybe this can be
+     * fixed there instead of here. */
+    if (klasse == '')
+      klasse = undefined;
+    else
+      klasse = +klasse;
     if (klasse === undefined || klasse === null)
       return true;
     klasse = veranstaltung.klassen[klasse - 1];
@@ -277,11 +307,18 @@ function nennungenController($scope, $sce, $http, $timeout, $q, veranstaltung, v
     }
   };
 
-  $scope.suchen = function() {
-    console.log('suchen!');
-  };
-
   beim_verlassen_warnen($scope, $scope.geaendert);
+
+  $scope.$on('$routeUpdate', function() {
+    var startnummer = $location.search().startnummer;
+    if (startnummer_intern() !== startnummer) {
+      if (startnummer !== undefined)
+	$scope.fahrer_laden(startnummer);
+      else
+	$scope.neuer_fahrer(false);
+    }
+  });
+  $scope.$emit('$routeUpdate');
 }
 
 nennungenController.resolve = {

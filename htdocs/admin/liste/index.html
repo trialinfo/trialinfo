@@ -1,6 +1,6 @@
-<a href="" ng-if="!anzeige.einstellungen" ng-click="anzeige.einstellungen = true" class="no-print" title="Anzeige einstellen">↓</a>
-<a href="" ng-if="anzeige.einstellungen" ng-click="anzeige.einstellungen = false" class="no-print" title="Anzeige einstellen">↑</a>
-<div ng-if="anzeige.einstellungen" class="no-print">
+<a href="" ng-if="!fold.einstellungen" ng-click="fold.einstellungen = true" class="no-print" title="Anzeige einstellen">↓</a>
+<a href="" ng-if="fold.einstellungen" ng-click="fold.einstellungen = false" class="no-print" title="Anzeige einstellen">↑</a>
+<div ng-if="fold.einstellungen" class="no-print">
   <p>
     <form name="form" ng-model="anzeige.filter">
       <fieldset style="display:inline">
@@ -46,15 +46,15 @@
 	  <tr>
 	    <th align="right">Startnummernbereich</th>
 	    <td>
-	      <input type="number" size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.startnummer_min title="Von"> −
-	      <input type="number" size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.startnummer_max title="Bis">
+	      <input type="number" size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.min title="Von"> −
+	      <input type="number" size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.max title="Bis">
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right">Klasse</th>
 	    <td>
 	      <span ng-repeat="sektionen in veranstaltung.sektionen track by $index" ng-if="sektionen && sektionen.length"><input type="checkbox" ng-model="anzeige.klassen[$index + 1]" id="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}"><label for="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}">{{$index + 1}}</label> </span>
-	      <input type="checkbox" ng-model="anzeige.klassen['']" id="keine_klasse" title="Keine Klasse zugeordnet"><label for="keine_klasse" title="Keine Klasse zugeordnet">Keine</label>
+	      <input type="checkbox" ng-model="anzeige.klassen['-']" id="keine_klasse" title="Keine Klasse zugeordnet"><label for="keine_klasse" title="Keine Klasse zugeordnet">Keine</label>
 	    </td>
 	  </tr>
 	  <tr><th align="right">Gruppieren nach</th>
