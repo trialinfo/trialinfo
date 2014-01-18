@@ -307,10 +307,6 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     }
   };
 
-  $scope.suchen = function() {
-    console.log('suchen!');
-  };
-
   beim_verlassen_warnen($scope, $scope.geaendert);
 
   $scope.$on('$routeUpdate', function() {
