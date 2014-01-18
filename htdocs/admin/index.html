@@ -79,7 +79,8 @@
 	  }).when('/veranstaltung/:id/nennungen', {
 	    controller: 'nennungenController',
 	    templateUrl: 'nennungen/index.html',
-	    resolve: nennungenController.resolve
+	    resolve: nennungenController.resolve,
+	    reloadOnSearch: false
 	  }).when('/veranstaltung/:id/punkte', {
 	    controller: 'punkteController',
 	    templateUrl: 'punkte/index.html',
