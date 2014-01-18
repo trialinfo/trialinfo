@@ -34,7 +34,7 @@
 	    </td>
 	  </tr>
 	  <tr ng-repeat="wertung in [1,2,3,4]" ng-if="features['wertung' + wertung]">
-	    <th align="right">{{veranstaltung.wertungen[wertung - 1].bezeichnung}}</th>
+	    <th align="right">{{wertungsbezeichnung(wertung)}}</th>
 	    <td>
 	      <select ng-model="anzeige['wertung' + wertung]" yes-no-null>
 		<option value=""></option>

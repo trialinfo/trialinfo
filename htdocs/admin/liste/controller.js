@@ -107,6 +107,11 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
 	style: { 'text-align': 'left' } },
   };
 
+  $scope.wertungsbezeichnung = function(wertung) {
+    var w = veranstaltung.wertungen[wertung - 1];
+    return w && w.bezeichnung ? w.bezeichnung : 'Wertung ' + wertung;
+  };
+
   $scope.feldliste = (function() {
     var feldliste = [
       { value: 'name', name: 'Name' }
@@ -133,7 +138,7 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
       feldliste.push({ value: 'lbl', name: 'Land (Bundesland)' });
     angular.forEach([1, 2, 3, 4], function(wertung) {
       if ($scope.features['wertung' + wertung]) {
-	var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;
+	var bezeichnung = $scope.wertungsbezeichnung(wertung);
 	feldliste.push({ value: 'wertung' + wertung, name: bezeichnung });
 	definierte_felder['wertung' + wertung] = {
 	  bezeichnung: bezeichnung,
