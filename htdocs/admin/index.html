@@ -109,7 +109,8 @@
 	  }).when('/liste/:id', {
 	    controller: listeController,
 	    templateUrl: 'liste/index.html',
-	    resolve: listeController.resolve
+	    resolve: listeController.resolve,
+	    reloadOnSearch: false
 	  }).otherwise({
 	    redirectTo: '/'
 	  });
