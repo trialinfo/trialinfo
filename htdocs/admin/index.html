@@ -84,7 +84,8 @@
 	  }).when('/veranstaltung/:id/punkte', {
 	    controller: 'punkteController',
 	    templateUrl: 'punkte/index.html',
-	    resolve: punkteController.resolve
+	    resolve: punkteController.resolve,
+	    reloadOnSearch: false
 	  }).when('/veranstaltung/neu/einstellungen', {
 	    controller: 'einstellungenController',
 	    templateUrl: 'einstellungen/index.html',
