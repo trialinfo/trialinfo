@@ -241,6 +241,13 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.klasse_gueltig = function(klasse) {
+    /* ui-validate calls the validator function too early for numeric form
+     * fields which convert input fields to numbers or undefined; maybe this can be
+     * fixed there instead of here. */
+    if (klasse == '')
+      klasse = undefined;
+    else
+      klasse = +klasse;
     if (klasse === undefined || klasse === null)
       return true;
     klasse = veranstaltung.klassen[klasse - 1];
