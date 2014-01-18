@@ -88,23 +88,8 @@
 	  <tr><th align="right">Felder</th>
 	    <td>
 	      <span ng-repeat="_ in anzeige.felder track by $index">
-		<select ng-model="anzeige.felder[$index]">
+		<select ng-model="anzeige.felder[$index]" ng-options="feld.value as feld.name for feld in feldliste">
 		  <option value=""></option>
-		  <option value="club">Club</option>
-		  <option value="fahrzeug">Fahrzeug</option>
-		  <option value="geburtsdatum">Geburtsdatum</option>
-		  <option value="klasse">Klasse</option>
-		  <option value="lbl">Land (Bundesland)</option>
-		  <option value="lizenznummer">Lizenznummer</option>
-		  <option value="name">Name</option>
-		  <option value="nennungseingang" ng-if="feature.nennungseingang">Nennungseingang</option>
-		  <option value="papierabnahme">Papierabnahme</option>
-		  <option value="papierabnahme_morgen">Papierabnahme morgen</option>
-		  <option value="startnummer">Startnummer</option>
-		  <option value="startzeit">Startzeit</option>
-		  <option value="versicherung">Versicherung</option>
-		  <option value="wohnort">Wohnort</option>
-		  <option value="zielzeit">Zielzeit</option>
 		</select>
 	      </span>
 	    </td></tr>

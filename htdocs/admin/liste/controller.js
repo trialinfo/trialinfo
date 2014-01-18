@@ -107,6 +107,44 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
 	style: { 'text-align': 'left' } },
   };
 
+  $scope.feldliste = (function() {
+    var feldliste = [
+      { value: 'name', name: 'Name' }
+    ];
+    angular.forEach([
+      { value: 'club', name: 'Club' },
+      { value: 'fahrzeug', name: 'Fahrzeug' },
+      { value: 'geburtsdatum', name: 'Geburtsdatum' },
+      { value: 'klasse', name: 'Klasse' },
+      { value: 'lizenznummer', name: 'Lizenznummer' },
+      { value: 'papierabnahme', name: 'Papierabnahme' },
+      { value: 'papierabnahme_morgen', name: 'Papierabnahme morgen' },
+      { value: 'startnummer', name: 'Startnummer' },
+      { value: 'versicherung', name: 'Versicherung' },
+      { value: 'wohnort', name: 'Wohnort' },
+      { value: 'startzeit', name: 'Startzeit' },
+      { value: 'zielzeit', name: 'Zielzeit' },
+      { value: 'nennungseingang', name: 'Nennungseingang' }
+    ], function(feld) {
+      if ($scope.features[feld.value])
+	feldliste.push(feld);
+    });
+    if ($scope.features.land || $scope.features.bundesland)
+      feldliste.push({ value: 'lbl', name: 'Land (Bundesland)' });
+    angular.forEach([1, 2, 3, 4], function(wertung) {
+      if ($scope.features['wertung' + wertung]) {
+	var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;
+	feldliste.push({ value: 'wertung' + wertung, name: bezeichnung });
+	definierte_felder['wertung' + wertung] = {
+	  bezeichnung: bezeichnung,
+	  ausdruck: "wertungen[" + (wertung - 1) + "] ? 'Ja' : ''",
+	  style: { 'text-align': 'center' }
+	};
+      }
+    });
+    return feldliste.sort(function(a, b) { return a.name.localeCompare(b.name); });
+  })();
+
   function generic_compare(v1, v2) {
     var t1 = typeof v1;
     var t2 = typeof v2;
