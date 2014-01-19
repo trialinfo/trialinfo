@@ -1,6 +1,6 @@
 'use strict;'
 
-function listeController($scope, $route, $location, veranstaltung, fahrerliste) {
+function listeController($scope, $sce, $route, $location, veranstaltung, fahrerliste) {
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.fold = {};
@@ -44,13 +44,18 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
     return land_bundesland.join(' ');
   }
 
+  $scope.wertungsbezeichnung = function(wertung) {
+    var w = veranstaltung.wertungen[wertung - 1];
+    return w && w.bezeichnung ? w.bezeichnung : 'Wertung ' + wertung;
+  };
+
   var definierte_felder = {
     startnummer: 
-      { bezeichnung: 'Nr.',
+      { bezeichnung: '<span title="Startnummer">Nr.</span>',
 	ausdruck: "startnummer < 0 ? null : startnummer",
 	style: { 'text-align': 'center' } },
     klasse:
-      { bezeichnung: 'Kl.',
+      { bezeichnung: '<span title="Klasse">Kl.</span>',
 	ausdruck: "klasse",
 	style: { 'text-align': 'center' } },
     name:
@@ -106,14 +111,22 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
 	ausdruck: "lizenznummer",
 	style: { 'text-align': 'left' } },
   };
-
-  $scope.wertungsbezeichnung = function(wertung) {
-    var w = veranstaltung.wertungen[wertung - 1];
-    return w && w.bezeichnung ? w.bezeichnung : 'Wertung ' + wertung;
-  };
+  angular.forEach([1, 2, 3, 4], function(wertung) {
+    if ($scope.features['wertung' + wertung]) {
+      definierte_felder['wertung' + wertung] = {
+	bezeichnung: $scope.wertungsbezeichnung(wertung),
+	ausdruck: "wertungen[" + (wertung - 1) + "] ? 'Ja' : ''",
+	style: { 'text-align': 'center' }
+      };
+    }
+  });
+  angular.forEach(definierte_felder, function(feld) {
+    feld.bezeichnung = $sce.trustAsHtml(feld.bezeichnung);
+  });
 
   $scope.feldliste = (function() {
     var feldliste = [
+      { value: '', name: '' },
       { value: 'name', name: 'Name' }
     ];
     angular.forEach([
@@ -138,13 +151,8 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
       feldliste.push({ value: 'lbl', name: 'Land (Bundesland)' });
     angular.forEach([1, 2, 3, 4], function(wertung) {
       if ($scope.features['wertung' + wertung]) {
-	var bezeichnung = $scope.wertungsbezeichnung(wertung);
-	feldliste.push({ value: 'wertung' + wertung, name: bezeichnung });
-	definierte_felder['wertung' + wertung] = {
-	  bezeichnung: bezeichnung,
-	  ausdruck: "wertungen[" + (wertung - 1) + "] ? 'Ja' : ''",
-	  style: { 'text-align': 'center' }
-	};
+	feldliste.push({ value: 'wertung' + wertung,
+			 name: $scope.wertungsbezeichnung(wertung) });
       }
     });
     return feldliste.sort(function(a, b) { return a.name.localeCompare(b.name); });
@@ -188,10 +196,6 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
 	fahrer.startnummer > anzeige.max)
       return false;
     return anzeige.klassen[fahrer.klasse === null ? '-' : fahrer.klasse];
-  }
-
-  function klasse_compare(f1, f2) {
-    return generic_compare(f1.klasse, f2.klasse);
   }
 
   function make_compare(comparators) {
@@ -318,6 +322,8 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
   }
 
   function von_url(anzeige) {
+    var anzeige = angular.copy(anzeige);
+
     angular.forEach(tristate_optionen, function(option) {
       if (anzeige[option] === 'yes')
 	anzeige[option] = true;
@@ -352,8 +358,8 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
     return anzeige;
   }
 
-  function nach_url() {
-    var anzeige = angular.copy($scope.anzeige);
+  function nach_url(anzeige) {
+    var anzeige = angular.copy(anzeige);
 
     angular.forEach(tristate_optionen, function(option) {
       if (anzeige[option] !== null)
@@ -384,7 +390,7 @@ function listeController($scope, $route, $location, veranstaltung, fahrerliste) 
 
   function url_aktualisieren() {
     var url_alt = $location.search();
-    var url_neu = nach_url();
+    var url_neu = nach_url($scope.anzeige);
     if (!angular.equals(url_alt, url_neu))
       $location.search(url_neu).replace();
   }
