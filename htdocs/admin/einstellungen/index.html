@@ -49,7 +49,7 @@
   <fieldset style="display:inline">
     <legend>Wertungen</legend>
     <p>
-      <label for="punkte_sektion_auslassen">Für das Auslassen einer Sektion gibt es <input type="number" size="2" maxlength="3" min="0" max="999" ng-model="veranstaltung.punkte_sektion_auslassen" id="punkte_sektion_auslassen"> Punkte.</label>
+      <label for="punkte_sektion_auslassen">Für das Auslassen einer Sektion gibt es <input type="number" size="2" maxlength="3" min="0" max="999" ng-model="veranstaltung.punkte_sektion_auslassen" id="punkte_sektion_auslassen" style="text-align: center"> Punkte.</label>
     </p>
     <p>
       <input type="checkbox" ng-model="veranstaltung.vierpunktewertung" id="vierpunktewertung"><label for="vierpunktewertung">Es gilt die Vierpunktewertung (Fahrradtrial).</label>
@@ -98,7 +98,7 @@
 	    <span title="{{$last ? 'Ab dem ' : ''}}{{$index + 1}}. Platz">{{$index + 1}}{{$last ? '+' : ''}}</span>
 	  </th>
 	  <td>
-	    <input type="number" size="2" maxlength="3" min="0" max="999" ng-model="veranstaltung.wertungspunkte[$index]">
+	    <input type="number" size="2" maxlength="3" min="0" max="999" ng-model="veranstaltung.wertungspunkte[$index]" style="text-align: center">
 	  </td>
 	</tr>
       </table>
@@ -145,11 +145,11 @@
 	  </select>
 	</td>
 	<td align="center">
-	  <input type="number" size="1" maxlength="1" min="1" max="9" ng-model="klasse.runden">
+	  <input type="number" size="1" maxlength="1" min="1" max="9" ng-model="klasse.runden" style="text-align: center">
 	</td>
 	<td align="center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <input type="text" size="5" maxlength="5" ng-model="klasse.fahrzeit" iso-time id="klasse{{$index + 1}}_fahrzeit">
+	  <input type="text" size="5" maxlength="5" ng-model="klasse.fahrzeit" iso-time id="klasse{{$index + 1}}_fahrzeit" style="text-align: center">
 	</td>
 	<td align="center">
 	  <input ng-repeat="sektion in befahrene_sektionen() track by $index" type="checkbox" ng-model="sektionen[$parent.$index][$index]" title="Sektion {{sektion}}">
