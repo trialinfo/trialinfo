@@ -157,7 +157,7 @@
 	      <td>
 		<span ng-repeat="wertung in features.wertungen">
 		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.wertungen[wertung - 1].aktiv" id="wertung{{wertung}}" accesskey="{{wertungen[wertung - 1].accesskey}}">
-		    <label for="wertung{{wertung}}" ng-bind-html="wertungen[wertung - 1].label"></label>
+		    <label for="wertung{{wertung}}" ng-bind-html="wertungen[wertung - 1].label" ng-style="keine_wertungen ? {'text-decoration': 'line-through'} : {}" title="{{keine_wertungen ? 'Klasse ' + fahrer.klasse + ' nimmt an keinen Wertungen teil.': ''}}"></label>
 		</span>
 	      </td>
 	    </tr>

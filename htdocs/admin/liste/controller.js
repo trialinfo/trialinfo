@@ -35,6 +35,13 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
       wertungen[wertung - 1] = true;
     });
     fahrer.wertungen = wertungen;
+
+    if (fahrer.klasse !== null) {
+      var klasse = veranstaltung.klassen[fahrer.klasse - 1];
+      fahrer.wertungsklasse = klasse.wertungsklasse;
+      if (klasse.keine_wertungen)
+	fahrer.wertungen[0] = false;
+    }
   });
 
   $scope.land_bundesland = function(fahrer) {
@@ -57,7 +64,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
 	ausdruck: "startnummer < 0 ? null : startnummer",
 	style: { 'text-align': 'center' } },
     klasse:
-      { bezeichnung: '<span title="Klasse">Kl.</span>',
+      { bezeichnung: '<span title="Klasse (in Nennung)">Kl.</span>',
 	ausdruck: "klasse",
 	style: { 'text-align': 'center' } },
     name:
@@ -135,7 +142,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
       { value: 'club', name: 'Club' },
       { value: 'fahrzeug', name: 'Fahrzeug' },
       { value: 'geburtsdatum', name: 'Geburtsdatum' },
-      { value: 'klasse', name: 'Klasse' },
+      { value: 'klasse', name: 'Klasse (in Nennung)' },
       { value: 'lizenznummer', name: 'Lizenznummer' },
       { value: 'papierabnahme', name: 'Papierabnahme' },
       { value: 'papierabnahme_morgen', name: 'Papierabnahme morgen' },
@@ -197,7 +204,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
     if (anzeige.max !== null &&
 	fahrer.startnummer > anzeige.max)
       return false;
-    return anzeige.klassen[fahrer.klasse === null ? '-' : fahrer.klasse];
+    return anzeige.klassen[fahrer.wertungsklasse === null ? '-' : fahrer.wertungsklasse];
   }
 
   function make_compare(comparators) {
@@ -228,14 +235,14 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
   }
 
   var gruppieren_funktionen = {
-    klasse: {
+    wertungsklasse: {
       heading: function(f) {
-	return f.klasse > 0 ?
-	       veranstaltung.klassen[f.klasse - 1].bezeichnung :
+	return f.wertungsklasse > 0 ?
+	       veranstaltung.klassen[f.wertungsklasse - 1].bezeichnung :
 	       'Keiner Klasse zugeordnet'
       },
       compare: function(f1, f2) {
-	return generic_compare(f1.klasse, f2.klasse);
+	return generic_compare(f1.wertungsklasse, f2.wertungsklasse);
       }
     },
     wohnort: {
@@ -451,7 +458,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
       search = {
 	startnummer: 'yes',
 	papierabnahme: 'yes',
-	gruppierung: 'klasse',
+	gruppierung: 'wertungsklasse',
 	reihenfolge: 'startnummer',
 	klasse: ['-'],
 	feld: ['startnummer', 'name']

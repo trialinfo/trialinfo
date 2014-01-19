@@ -171,7 +171,7 @@ sub cfg_aus_datenbank($$;$) {
     }
 
     $sth = $dbh->prepare(q{
-	SELECT klasse, bezeichnung, fahrzeit, runden, farbe
+	SELECT klasse, bezeichnung, fahrzeit, runden, farbe, wertungsklasse, keine_wertungen
 	FROM klasse
 	WHERE id = ?
     });
@@ -447,7 +447,7 @@ sub vareihe_aus_datenbank($$) {
 	push @{$result->{veranstaltungen}}, $row[0];
     }
     $sth = $dbh->prepare(q{
-	SELECT klasse, laeufe, streichresultate
+	SELECT wertungsklasse AS klasse, laeufe, streichresultate
 	FROM vareihe_klasse
 	WHERE vareihe = ?
 	ORDER BY klasse

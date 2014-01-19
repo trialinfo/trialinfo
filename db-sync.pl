@@ -116,6 +116,8 @@ CREATE TABLE klasse (
   gestartet BOOLEAN,
   farbe VARCHAR(20),
   fahrzeit TIME,
+  wertungsklasse INT NOT NULL,
+  keine_wertungen BOOLEAN,
   PRIMARY KEY (id, klasse)
 );
 
@@ -261,7 +263,7 @@ CREATE TABLE vareihe (
 DROP TABLE IF EXISTS vareihe_klasse;
 CREATE TABLE vareihe_klasse (
   vareihe INT,
-  klasse INT,
+  wertungsklasse INT,
   laeufe INT,
   streichresultate INT,
   PRIMARY KEY (vareihe, klasse)

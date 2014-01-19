@@ -132,6 +132,12 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE vareihe
 	    ADD COLUMN verborgen BOOL;
 
+	    ALTER TABLE klasse ADD COLUMN wertungsklasse INT;
+	    ALTER TABLE klasse ADD COLUMN keine_wertungen BOOLEAN;
+	    ALTER TABLE vareihe_klasse CHANGE COLUMN klasse wertungsklasse INT;
+
+	    UPDATE klasse SET wertungsklasse = klasse;
+
 	    UPDATE fahrer
 	    SET papierabnahme_morgen = 0;
 

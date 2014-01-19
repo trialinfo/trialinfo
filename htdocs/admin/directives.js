@@ -175,16 +175,15 @@ function yesNoNullDirective() {
     require: 'ngModel',
     link: function(scope, element, attr, ctrl) {
       ctrl.$parsers.push(function(text) {
-	var match;
 	if (typeof text == 'string') {
 	  if (text == '') {
-	    ctrl.$setValidity('numeric', true);
+	    ctrl.$setValidity('yesNoNull', true);
 	    return null;
 	  } else if (text === 'yes' || text === 'no') {
-	    ctrl.$setValidity('numeric', true);
+	    ctrl.$setValidity('yesNoNull', true);
 	    return text === 'yes';
 	  } else
-	    ctrl.$setValidity('numeric', false);
+	    ctrl.$setValidity('yesNoNull', false);
 	}
       });
       ctrl.$formatters.push(function(value) {
@@ -194,6 +193,32 @@ function yesNoNullDirective() {
 	  return value ? 'yes' : 'no';
 	else
 	  return value;
+      });
+    }
+  };
+}
+
+// Model: true, false, or null, View: 'yes', 'no', ''
+function wertungsklasseDirective() {
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: function(scope, element, attr, ctrl) {
+      ctrl.$parsers.push(function(wertungsklasse) {
+	if (typeof wertungsklasse === 'string') {
+	  ctrl.$setValidity('wertungsklasse', true);
+	  if (wertungsklasse === '')
+	    return attr.wertungsklasse;
+	  else
+	    return wertungsklasse;
+	}
+	ctrl.$setValidity('wertungsklasse', false);
+      });
+      ctrl.$formatters.push(function(wertungsklasse) {
+	if (wertungsklasse === attr.wertungsklasse)
+	  return '';
+	else
+	  return wertungsklasse;
       });
     }
   };

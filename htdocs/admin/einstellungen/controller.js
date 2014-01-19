@@ -4,6 +4,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   $scope.$root.kontext(veranstaltung ? veranstaltung.wertungen[0].titel : 'Neue Veranstaltung');
 
   veranstaltung_zuweisen(veranstaltung);
+  veranstaltung = undefined;
 
   function wertungspunkte_expandieren(wertungspunkte) {
     var l = wertungspunkte.length;
@@ -87,8 +88,6 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     return befahrene_sektionen;
   }
 
-  // null vs. "" oder 0
-
   $scope.geaendert = function() {
     try {
       angular.forEach($scope.features, function(value, key) {
@@ -115,18 +114,17 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	sektionen: [],
 	features: ['startnummer', 'klasse', 'nachname', 'vorname',
 		   'papierabnahme', 'sektionen_aus_wertung'],
-	wertungen: [],
+	wertungen: [{titel: 'Neue Veranstaltung'}],
 	wertungspunkte: [],
 	wertungsmodus: 0,
 	versicherung: 0,
 	reset: 'nennbeginn'
       };
-      veranstaltung.wertungen[0].titel = 'Neue Veranstaltung';
     }
 
     for (var klasse = 1; klasse <= 15; klasse++) {
       if (!veranstaltung.klassen[klasse - 1])
-	veranstaltung.klassen[klasse - 1] = {};
+	veranstaltung.klassen[klasse - 1] = {wertungsklasse: klasse};
       if (!veranstaltung.sektionen[klasse - 1])
 	veranstaltung.sektionen[klasse - 1] = [];
     }
@@ -231,6 +229,19 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   $scope.sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
   };
+
+  $scope.wertungsklasse_blur = function(klasse, event) {
+    if (event.target.value === klasse + '')
+      event.target.value = '';
+  };
+
+  $scope.$watch('veranstaltung.klassen', function() {
+    var klasse_gewertet = {};
+    angular.forEach($scope.veranstaltung.klassen, function(klasse) {
+      klasse_gewertet[klasse.wertungsklasse] = true;
+    });
+    $scope.klasse_gewertet = klasse_gewertet;
+  }, true);
 }
 
 einstellungenController.resolve = {

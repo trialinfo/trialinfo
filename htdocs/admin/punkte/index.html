@@ -18,24 +18,24 @@
 	      <table>
 		<tr>
 		  <th class="punktespalte"></th>
-		  <th class="punktespalte" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
+		  <th class="punktespalte" ng-repeat="sektion in veranstaltung.sektionen[wertungsklasse - 1]"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
 		</tr>
-		<tr ng-repeat="runde in rundenliste(klasse)">
+		<tr ng-repeat="runde in rundenliste(wertungsklasse)">
 		  <th>
-		    <label for="punkte_{{runde}}_{{veranstaltung.sektionen[klasse - 1][0]}}" title="Runde {{runde}}" accesskey="{{runde}}">
+		    <label for="punkte_{{runde}}_{{veranstaltung.sektionen[wertungsklasse - 1][0]}}" title="Runde {{runde}}" accesskey="{{runde}}">
 		      R<span class="accesskey">{{runde}}</span>
 		    </label>
 		  </th>
-		  <td ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" align="center">
-		    <input ng-if="!sektion_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
+		  <td ng-repeat="sektion in veranstaltung.sektionen[wertungsklasse - 1]" align="center">
+		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
 		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
-	      <p ng-if="fahrer && !startende_klassen[fahrer.klasse - 1]">
-		Für Klasse {{fahrer.klasse}} sind keine zu befahrenen Sektionen ausgewählt.
+	      <p ng-if="fahrer && !startende_klassen[wertungsklasse - 1]">
+		Für Klasse {{wertungsklasse}} sind keine zu befahrenen Sektionen ausgewählt.
 	      </p>
 	    </fieldset>
 	  </p>
@@ -94,7 +94,7 @@
 		  </select>
 		</td>
 	      </tr>
-	      <tr ng-if="fahrer && !fahrer_alt.papierabnahme && startende_klassen[fahrer.klasse - 1]">
+	      <tr ng-if="fahrer && !fahrer_alt.papierabnahme && startende_klassen[wertungsklasse - 1]">
 		<th align="right">Teilnahme</th>
 		<td>
 		  <input type="checkbox" ng-model="fahrer.papierabnahme" id="papierabnahme"><label for="papierabnahme" accesskey="p"><span class="accesskey">P</span>apierabnahme</label>

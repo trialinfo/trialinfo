@@ -311,6 +311,12 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
   beim_verlassen_warnen($scope, $scope.geaendert);
 
+  $scope.$watch('fahrer.klasse', function(klasse) {
+    var fahrer = $scope.fahrer;
+    $scope.keine_wertungen = fahrer && fahrer.klasse &&
+      veranstaltung.klassen[fahrer.klasse - 1].keine_wertungen;
+  });
+
   $scope.$on('$routeUpdate', function() {
     var startnummer = $location.search().startnummer;
     if (startnummer_intern() !== startnummer) {
