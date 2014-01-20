@@ -1,6 +1,8 @@
 'use strict;'
 
 function sektionenController($scope, $http, $timeout, veranstaltung) {
+  $scope.$root.kontext(veranstaltung.wertungen[0].titel);
+
   $scope.startende_klassen = function() {
     var startende_klassen = [];
     for (var klasse = 1; klasse <= veranstaltung.klassen.length; klasse++) {

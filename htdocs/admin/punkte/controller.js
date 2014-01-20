@@ -1,6 +1,8 @@
 'use strict;'
 
 function punkteController($scope, $sce, $http, $timeout, $route, $location, veranstaltung) {
+  $scope.$root.kontext(veranstaltung.wertungen[0].titel);
+
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.startende_klassen = startende_klassen(veranstaltung);

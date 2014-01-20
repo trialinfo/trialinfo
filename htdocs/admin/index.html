@@ -2,7 +2,7 @@
 <html ng-app='application'>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Veranstaltungsverwaltung</title>
+    <title ng-bind="$root.titel">Veranstaltungsverwaltung</title>
     <style type="text/css">
       *
       {
@@ -69,6 +69,7 @@
       application.config(function($routeProvider) {
 	$routeProvider.
 	  when('/', {
+	    titel: 'Veranstaltungsverwaltung',
 	    controller: 'mainController',
 	    templateUrl: 'main/index.html',
 	    resolve: mainController.resolve
@@ -77,11 +78,13 @@
 	    templateUrl: 'veranstaltung/index.html',
 	    resolve: veranstaltungController.resolve
 	  }).when('/veranstaltung/:id/nennungen', {
+	    titel: 'Nennungen',
 	    controller: 'nennungenController',
 	    templateUrl: 'nennungen/index.html',
 	    resolve: nennungenController.resolve,
 	    reloadOnSearch: false
 	  }).when('/veranstaltung/:id/punkte', {
+	    titel: 'Punktevergabe',
 	    controller: 'punkteController',
 	    templateUrl: 'punkte/index.html',
 	    resolve: punkteController.resolve,
@@ -91,10 +94,12 @@
 	    templateUrl: 'einstellungen/index.html',
 	    resolve: einstellungenController.resolve
 	  }).when('/veranstaltung/:id/einstellungen', {
+	    titel: 'Einstellungen',
 	    controller: 'einstellungenController',
 	    templateUrl: 'einstellungen/index.html',
 	    resolve: einstellungenController.resolve
 	  }).when('/veranstaltung/:id/sektionen', {
+	    titel: 'Sektionen aus der Wertung',
 	    controller: 'sektionenController',
 	    templateUrl: 'sektionen/index.html',
 	    resolve: sektionenController.resolve
@@ -107,6 +112,7 @@
 	    templateUrl: 'vareihe/index.html',
 	    resolve: vareiheController.resolve
 	  }).when('/liste/:id', {
+	    titel: 'Fahrerliste',
 	    controller: listeController,
 	    templateUrl: 'liste/index.html',
 	    resolve: listeController.resolve,
@@ -114,6 +120,17 @@
 	  }).otherwise({
 	    redirectTo: '/'
 	  });
+      }).run(function($rootScope, $route) {
+	$rootScope.kontext = function(kontext) {
+	  var titel = [kontext];
+	  if ($route.current.titel)
+	    titel.push($route.current.titel);
+	  $rootScope.titel = titel.join(' - ');
+	};
+
+	$rootScope.$on("$routeChangeSuccess", function() {
+	  $rootScope.titel = $route.current.titel || '';
+	});
       });
     </script>
   </head>

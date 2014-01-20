@@ -1,6 +1,8 @@
 'use strict;'
 
 function einstellungenController($scope, $http, $timeout, $location, veranstaltung, veranstaltungen) {
+  $scope.$root.kontext(veranstaltung ? veranstaltung.wertungen[0].titel : 'Neue Veranstaltung');
+
   veranstaltung_zuweisen(veranstaltung);
 
   function wertungspunkte_expandieren(wertungspunkte) {

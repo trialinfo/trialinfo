@@ -1,6 +1,8 @@
 'use strict;'
 
 function vareiheController($scope, $http, $timeout, $location, $window, vareihe, veranstaltungen) {
+  $scope.$root.kontext(vareihe ? vareihe.bezeichnung : 'Neue Veranstaltungsreihe');
+
   var veranstaltungsdatum = {};
   vareihe_zuweisen(vareihe);
 

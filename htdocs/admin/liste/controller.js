@@ -1,6 +1,8 @@
 'use strict;'
 
 function listeController($scope, $sce, $route, $location, veranstaltung, fahrerliste) {
+  $scope.$root.kontext(veranstaltung.wertungen[0].titel);
+
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.fold = {};
