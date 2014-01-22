@@ -62,7 +62,7 @@ if (my @row = $sth->fetchrow_array) {
 	    FROM vareihe_veranstaltung
 	    JOIN vareihe USING (vareihe)
 	    JOIN vareihe_klasse USING (vareihe)
-	    JOIN klasse USING (id, klasse)
+	    JOIN klasse USING (id, wertungsklasse)
 	    WHERE klasse.gestartet) AS _ USING (id)
 	WHERE aktiv AND vareihe = ? AND wertung = ?
 	GROUP BY id
@@ -70,7 +70,7 @@ if (my @row = $sth->fetchrow_array) {
     });
     $sth2->execute($vareihe, $wertung);
     print "<p>\n";
-    while (my@row = $sth2->fetchrow_array) {
+    while (my @row = $sth2->fetchrow_array) {
 	my ($id, $titel, $kuerzel) = @row;
 	print "<a href=\"$url?id=$id$spalten\">$titel</a>";
 	print " ($kuerzel)"
