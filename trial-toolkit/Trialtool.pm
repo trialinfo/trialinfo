@@ -235,6 +235,7 @@ sub cfg_datei_parsen($) {
 	    runden => $cfg->{runden}[$n],
 	    fahrzeit => $cfg->{fahrzeiten}[$n],
 	    # farbe => ...
+	    wertungsklasse => $n + 1,
 	};
     }
     $cfg->{klassen} = $klassen;

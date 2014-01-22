@@ -1,6 +1,8 @@
 'use strict;'
 
 function nennungenController($scope, $sce, $http, $timeout, $q, $route, $location, veranstaltung, vorschlaege) {
+  $scope.$root.kontext(veranstaltung.wertungen[0].titel);
+
   $scope.veranstaltung = veranstaltung;
   $scope.features = features_aus_liste(veranstaltung);
   $scope.definierte_klassen = [];
@@ -308,6 +310,12 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);
+
+  $scope.$watch('fahrer.klasse', function(klasse) {
+    var fahrer = $scope.fahrer;
+    $scope.keine_wertungen = fahrer && fahrer.klasse &&
+      veranstaltung.klassen[fahrer.klasse - 1].keine_wertungen;
+  });
 
   $scope.$on('$routeUpdate', function() {
     var startnummer = $location.search().startnummer;

@@ -4,17 +4,17 @@ use utf8;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw($database $username $password $txt $klassenfarben $punkteteilung
-	     $veranstaltungsfeatures);
+	     $veranstaltungsfeatures $cgi_verbose);
 
 # Datenbankzugang für die Kommandozeilen-Utilities und die CGI-Scripts.  (Bei
 # den Kommandozeilen-Utilities kann das auch explizit angegeben werden.)
-$database = 'mysql:database;host=mysql.example.com';
-$username = 'username';
-$password = 'password';
+our $database = 'mysql:database;host=mysql.example.com';
+our $username = 'username';
+our $password = 'password';
 
 # Titel von lokal (ohne Datenbank) erzeugten Tageswertungs- und
 # Jahreswertungs-Seiten
-$txt = {
+our $txt = {
     'tageswertung-titel' => 'Tageswertung',
     'jahreswertung-titel' => 'Jahreswertung',
 };
@@ -22,21 +22,23 @@ $txt = {
 # Standard-Klassenfarben als HTML5-Farbnamen oder Farbcodes.  (Bei den
 # Kommandozeilen-Utilities können die Farben auch explizit angegeben werden.)
 # (Achtung, nicht vergessen, die #-Zeichen am Zeilenanfang zu entfernen!)
-$klassenfarben = {
+our $klassenfarben = {
      #1 => "#ff0000",
      #2 => "#0000ff",
 };
 
 # Werden die Wertungspunkte bei Gleichstand aufgeteilt?  (Siehe Option
 # --punkteteilung in tageswertung.pl.)
-$punkteteilung = undef;
+our $punkteteilung = undef;
 
 # Features, die bei der Datenübertragung zusätzlich gesetzt oder entfernt
 # werden sollen.
-$veranstaltungsfeatures = {
+our $veranstaltungsfeatures = {
     #bundesland => 1,
     #helfer => 0,
     #nennungseingang => 0,
 };
+
+our $cgi_verbose = undef;
 
 1;

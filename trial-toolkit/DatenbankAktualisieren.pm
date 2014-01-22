@@ -204,7 +204,7 @@ sub fahrer_wertungen_hash($) {
 	my $wertungen = $fahrer->{wertungen} // [];
 	for (my $n = 0; $n < @$wertungen; $n++) {
 	    my $wertung = $wertungen->[$n];
-	    next unless $wertung->{aktiv};
+	    next unless $wertung && $wertung->{aktiv};
 	    $hash->{$n + 1} = [ $wertung->{rang},
 				$wertung->{punkte} ];
 	}
@@ -356,6 +356,7 @@ sub veranstaltung_wertungen_hash($) {
     if ($cfg && $cfg->{wertungen}) {
 	for (my $n = 0; $n < @{$cfg->{wertungen}}; $n++) {
 	    my $wertung = $cfg->{wertungen}[$n];
+	    next unless $wertung;
 	    next if ($wertung->{titel} // "") eq "" &&
 		    ($wertung->{subtitel} // "") eq "" &&
 		    ($wertung->{bezeichnung} // "") eq "";
@@ -412,11 +413,14 @@ sub klassen_hash($) {
 	    exists $cfg->{sektionen} ? gestartete_klassen($cfg) : [];
 	for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
 	    my $klasse = $cfg->{klassen}[$n];
+	    next unless $klasse;
 	    $hash->{$n + 1} = [$klasse->{runden},
 			       $klasse->{bezeichnung},
 			       json_bool($gestartete_klassen->[$n] // 0),
 			       $klasse->{farbe},
-			       $klasse->{fahrzeit}];
+			       $klasse->{fahrzeit},
+			       $klasse->{wertungsklasse},
+			       $klasse->{keine_wertungen}];
 	}
     }
     return $hash;
@@ -527,7 +531,7 @@ sub veranstaltung_aktualisieren($$$$) {
 
     if (!$neu || exists $neu->{klassen}) {
 	hash_aktualisieren $callback, 'klasse',
-		[qw(id klasse)], [qw(runden bezeichnung gestartet farbe fahrzeit)],
+		[qw(id klasse)], [qw(runden bezeichnung gestartet farbe fahrzeit wertungsklasse keine_wertungen)],
 		[$id],
 		klassen_hash($alt),
 		klassen_hash($neu)
@@ -653,7 +657,7 @@ sub vareihe_aktualisieren($$$$) {
 
     if (!$neu || exists $neu->{klassen}) {
 	hash_aktualisieren $callback, 'vareihe_klasse',
-		[qw(vareihe klasse)], [qw(laeufe streichresultate)],
+		[qw(vareihe wertungsklasse)], [qw(laeufe streichresultate)],
 		[$vareihe],
 		vareihe_klassen_hash($alt),
 		vareihe_klassen_hash($neu)

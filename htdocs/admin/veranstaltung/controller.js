@@ -1,6 +1,8 @@
 'use strict;'
 
 function veranstaltungController($scope, $location, $http, veranstaltung) {
+  $scope.$root.kontext(veranstaltung.wertungen[0].titel);
+
   $scope.veranstaltung = veranstaltung;
   $scope.fold = {};
 

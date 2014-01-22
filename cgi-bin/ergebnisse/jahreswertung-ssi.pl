@@ -32,6 +32,9 @@ $RenderOutput::html = 1;
 my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($database) })
     or die "Could not connect to database: $DBI::errstr\n";
 
+trace_sql $dbh, 2, \*STDERR
+  if $cgi_verbose;
+
 my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
 my @klassen = $q->param('klasse');
@@ -109,11 +112,12 @@ $sth = $dbh->prepare(q{
     } . ( @db_spalten ? ", " . join(", ", @db_spalten) : "") . q{
     FROM fahrer_wertung
     JOIN fahrer USING (id, startnummer)
+    JOIN klasse USING (id, klasse)
     JOIN vareihe_veranstaltung USING (id)
     /* JOIN vareihe USING (vareihe) */
-    JOIN vareihe_klasse USING (vareihe, klasse)
+    JOIN vareihe_klasse USING (vareihe, wertungsklasse)
     JOIN veranstaltung USING (id)
-    WHERE aktiv AND vareihe = ?
+    WHERE aktiv AND vareihe_veranstaltung.vareihe = ?
 });
 $sth->execute($vareihe);
 while (my $fahrer = $sth->fetchrow_hashref) {
@@ -145,6 +149,18 @@ while (my @row = $sth->fetchrow_array) {
 	unless defined $row[2] && $row[1] == $row[2];
 }
 
+$sth = $dbh->prepare(q{
+    SELECT id, klasse, wertungsklasse
+    FROM klasse
+    JOIN vareihe_klasse USING (wertungsklasse)
+    WHERE vareihe = ?
+});
+$sth->execute($vareihe);
+while (my @row = $sth->fetchrow_array) {
+    my $cfg = $veranstaltungen->{$row[0]}{cfg};
+    $cfg->{klassen}[$row[1] - 1]{wertungsklasse} = $row[2];
+}
+
 foreach my $id (keys %$veranstaltungen) {
     delete $veranstaltungen->{$id}
 	unless exists $veranstaltungen->{$id}{fahrer};
@@ -164,15 +180,15 @@ my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 $sth = $dbh->prepare(q{
     SELECT klasse, bezeichnung, farbe, laeufe, streichresultate
     FROM klasse
-    JOIN vareihe_klasse USING (klasse)
+    JOIN vareihe_klasse USING (wertungsklasse)
     WHERE vareihe = ? AND id = ?
 });
 $sth->execute($vareihe, $letzte_cfg->{id});
 while (my @row = $sth->fetchrow_array) {
-    $letzte_cfg->{klassen}[$row[0] - 1] = {
-	bezeichnung => $row[1],
-	farbe => $row[2]
-    };
+    my $klasse = $letzte_cfg->{klassen}[$row[0] - 1];
+    $klasse->{bezeichnung} = $row[1];
+    $klasse->{farbe} = $row[2];
+
     $klassenfarben->{$row[0]} = $row[2]
 	if defined $row[2];
     $laeufe->{$row[0]} = $row[3];

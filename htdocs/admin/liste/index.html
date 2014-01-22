@@ -15,7 +15,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-if="feature.nennungseingang"><th align="right">Nennungseingang</th>
+	  <tr ng-if="features.nennungseingang"><th align="right">Nennungseingang</th>
 	    <td>
 	      <select ng-model="anzeige.nennungseingang" yes-no-null>
 		<option value=""></option>
@@ -34,7 +34,7 @@
 	    </td>
 	  </tr>
 	  <tr ng-repeat="wertung in [1,2,3,4]" ng-if="features['wertung' + wertung]">
-	    <th align="right">{{veranstaltung.wertungen[wertung - 1].bezeichnung}}</th>
+	    <th align="right">{{wertungsbezeichnung(wertung)}}</th>
 	    <td>
 	      <select ng-model="anzeige['wertung' + wertung]" yes-no-null>
 		<option value=""></option>
@@ -61,12 +61,12 @@
 	    <td>
 	      <select ng-model="anzeige.gruppierung">
 		<option value=""></option>
-		<option value="klasse">Klasse</option>
-		<option value="wohnort">Wohnort</option>
-		<option value="fahrzeug">Fahrzeug</option>
-		<option value="club">Club</option>
-		<option value="versicherung">Versicherung</option>
-		<option value="lbl">Land (Bundesland)</option>
+		<option value="club" ng-if="features.club">Club</option>
+		<option value="fahrzeug" ng-if="features.fahrzeug">Fahrzeug</option>
+		<option value="lbl" ng-if="features.land || features.bundesland">Land (Bundesland)</option>
+		<option value="wertungsklasse">Klasse (in Wertung)</option>
+		<option value="versicherung" ng-if="features.versicherung">Versicherung</option>
+		<option value="wohnort" ng-if="features.wohnort">Wohnort</option>
 	      </select>
 	    </td>
 	  </tr>
@@ -78,18 +78,17 @@
 	  <tr><th align="right">Sortieren nach</th>
 	    <td>
 	      <select ng-model="anzeige.reihenfolge">
-		<option value="startnummer">Startnummer</option>
+		<option value="geburtsdatum" ng-if="features.geburtsdatum">Geburtsdatum</option>
 		<option value="name">Name</option>
-		<option value="geburtsdatum">Geburtsdatum</option>
-		<option value="startzeit">Startzeit</option>
-		<option value="zielzeit">Zielzeit</option>
+		<option value="startnummer">Startnummer</option>
+		<option value="startzeit" ng-if="features.startzeit">Startzeit</option>
+		<option value="zielzeit" ng-if="features.zielzeit">Zielzeit</option>
 	      </select>
 	    </td></tr>
 	  <tr><th align="right">Felder</th>
 	    <td>
 	      <span ng-repeat="_ in anzeige.felder track by $index">
 		<select ng-model="anzeige.felder[$index]" ng-options="feld.value as feld.name for feld in feldliste">
-		  <option value=""></option>
 		</select>
 	      </span>
 	    </td></tr>
@@ -110,7 +109,7 @@ table.liste td,th {
   <h2 ng-if="anzeige.gruppierung">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
     <tr>
-      <th ng-repeat="feld in felder track by $index" ng-style="feld.style">{{feld.bezeichnung}}</th>
+      <th ng-repeat="feld in felder track by $index" ng-style="feld.style" ng-bind-html="feld.bezeichnung"></th>
     </tr>
     <tr ng-repeat="fahrer in gruppe">
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
