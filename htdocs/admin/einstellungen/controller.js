@@ -124,12 +124,15 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       veranstaltung.wertungen[0].titel = 'Neue Veranstaltung';
     }
 
-    for (var n = veranstaltung.klassen.length; n < 15; n++) {
-      veranstaltung.klassen.push({});
-      veranstaltung.sektionen.push([]);
+    for (var klasse = 1; klasse <= 15; klasse++) {
+      if (!veranstaltung.klassen[klasse - 1])
+	veranstaltung.klassen[klasse - 1] = {};
+      if (!veranstaltung.sektionen[klasse - 1])
+	veranstaltung.sektionen[klasse - 1] = [];
     }
-    for (var n = veranstaltung.wertungen.length; n < 4; n++)
-      veranstaltung.wertungen.push({});
+    for (var wertung = 1; wertung <= 4; wertung++)
+      if (!veranstaltung.wertungen[wertung - 1])
+	veranstaltung.wertungen[wertung - 1] = {};
 
     if (veranstaltung.datum === undefined)
       veranstaltung.datum = $scope.$eval('heute | date:"yyyy-MM-dd"', {heute: Date.now()});
