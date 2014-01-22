@@ -204,7 +204,7 @@ sub fahrer_wertungen_hash($) {
 	my $wertungen = $fahrer->{wertungen} // [];
 	for (my $n = 0; $n < @$wertungen; $n++) {
 	    my $wertung = $wertungen->[$n];
-	    next unless $wertung->{aktiv};
+	    next unless $wertung && $wertung->{aktiv};
 	    $hash->{$n + 1} = [ $wertung->{rang},
 				$wertung->{punkte} ];
 	}
@@ -356,6 +356,7 @@ sub veranstaltung_wertungen_hash($) {
     if ($cfg && $cfg->{wertungen}) {
 	for (my $n = 0; $n < @{$cfg->{wertungen}}; $n++) {
 	    my $wertung = $cfg->{wertungen}[$n];
+	    next unless $wertung;
 	    next if ($wertung->{titel} // "") eq "" &&
 		    ($wertung->{subtitel} // "") eq "" &&
 		    ($wertung->{bezeichnung} // "") eq "";
@@ -412,6 +413,7 @@ sub klassen_hash($) {
 	    exists $cfg->{sektionen} ? gestartete_klassen($cfg) : [];
 	for (my $n = 0; $n < @{$cfg->{klassen}}; $n++) {
 	    my $klasse = $cfg->{klassen}[$n];
+	    next unless $klasse;
 	    $hash->{$n + 1} = [$klasse->{runden},
 			       $klasse->{bezeichnung},
 			       json_bool($gestartete_klassen->[$n] // 0),
