@@ -280,7 +280,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
   function wertungslabels_erzeugen() {
     /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-    var accesskeys = 'knvgpmsuäl';
+    var accesskeys = 'aknvgpmsuäl';
     $scope.wertungen = [];
     angular.forEach($scope.features.wertungen, function(wertung) {
       var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;

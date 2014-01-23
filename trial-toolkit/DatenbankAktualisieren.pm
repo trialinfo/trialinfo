@@ -287,8 +287,8 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
 	    kennzeichen hubraum bemerkung land bundesland helfer_nummer
 	    startzeit zielzeit stechen nennungseingang papierabnahme
-	    papierabnahme_morgen versicherung runden ausfall zusatzpunkte
-	    punkte rang)) {
+	    papierabnahme_morgen versicherung runden ausser_konkurrenz ausfall
+	    zusatzpunkte punkte rang)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;
 		push @$felder_alt, $alt->{$feld}

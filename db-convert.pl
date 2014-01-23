@@ -120,6 +120,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE fahrer
 	    ADD COLUMN s5 INT AFTER s4;
 
+	    ALTER TABLE fahrer
+	    ADD COLUMN ausser_konkurrenz BOOLEAN AFTER s5;
+
 	    ALTER TABLE vareihe
 	    ADD COLUMN version INT NOT NULL DEFAULT 1 FIRST;
 

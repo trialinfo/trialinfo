@@ -44,6 +44,10 @@ sub wertungsklassen_setzen($$) {
 sub rang_vergleich($$$) {
     my ($a, $b, $cfg) = @_;
 
+    if ($a->{ausser_konkurrenz} != $b->{ausser_konkurrenz}) {
+	return $a->{ausser_konkurrenz} <=> $b->{ausser_konkurrenz};
+    }
+
     if ($a->{ausfall} != $b->{ausfall}) {
 	# Fahrer ohne Ausfall zuerst
 	return $a->{ausfall} <=> $b->{ausfall}
@@ -327,7 +331,8 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		    my ($m, $n);
 		    for ($m = 0; $m < @$fahrer_in_klasse; $m = $n) {
 			my $fahrer_m = $fahrer_in_klasse->[$m];
-			if ($fahrer_m->{ausfall} ||
+			if ($fahrer_m->{ausser_konkurrenz} ||
+			    $fahrer_m->{ausfall} ||
 			    $fahrer_m->{runden} < $runden ||
 			    !defined $fahrer_m->{wertungen}[$wertung - 1]{rang}) {
 			    $n = $m + 1;
@@ -337,7 +342,8 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			my $anzahl_fahrer = 1;
 			for ($n = $m + 1; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
-			    next if $fahrer_n->{ausfall} ||
+			    next if $fahrer_n->{ausser_konkurrenz} ||
+				    $fahrer_n->{ausfall} ||
 				    !defined $fahrer_n->{wertungen}[$wertung - 1]{rang};
 			    last if $fahrer_m->{wertungen}[$wertung - 1]{rang} !=
 				    $fahrer_n->{wertungen}[$wertung - 1]{rang};
@@ -351,7 +357,8 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			}
 			for ($n = $m; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
-			    next if $fahrer_n->{ausfall} ||
+			    next if $fahrer_n->{ausser_konkurrenz} ||
+				    $fahrer_n->{ausfall} ||
 				    !defined $fahrer_n->{wertungen}[$wertung - 1]{rang};
 			    last if $fahrer_m->{wertungen}[$wertung - 1]{rang} !=
 				    $fahrer_n->{wertungen}[$wertung - 1]{rang};
@@ -362,7 +369,8 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		} else {
 		    foreach my $fahrer (@$fahrer_in_klasse) {
 			my $wr = $fahrer->{wertungen}[$wertung - 1]{rang};
-			next if $fahrer->{ausfall} ||
+			next if $fahrer->{ausser_konkurrenz} ||
+				$fahrer->{ausfall} ||
 				$fahrer->{runden} < $runden ||
 				!defined $wr;
 			my $x = min($wr, scalar @$wertungspunkte);
@@ -484,6 +492,8 @@ sub klassenstatistik($$$) {
 	if ($fahrer->{papierabnahme}) {
 	    $$fahrer_gesamt++;
 	    $ausfall->{$fahrer->{ausfall}}++;
+	    $ausfall->{ausser_konkurrenz}++
+		if $fahrer->{ausser_konkurrenz};
 	}
     }
 }
@@ -510,8 +520,10 @@ sub fahrerstatistik($$) {
 	if $ausfall->{5} || $ausfall->{6};
     push @details, "$ausfall->{3} ausgefallen"
 	if $ausfall->{3};
-    push @details, "$ausfall->{4} aus der Wertung"
+    push @details, "$ausfall->{4} nicht gewertet"
 	if $ausfall->{4};
+    push @details, "$ausfall->{ausser_konkurrenz} außer Konkurrenz"
+	if $ausfall->{ausser_konkurrenz};
     return "$fahrer_gesamt Fahrer" .
 	(@details ? " (davon " . join(", ", @details) . ")" : "") . ".";
 }
@@ -537,7 +549,7 @@ sub tageswertung(@) {
 
     my $ausfall = {
 	3 => "ausgefallen",
-	4 => "aus der wertung",
+	4 => "nicht gewertet",
 	5 => "nicht gestartet",
 	6 => "nicht gestartet, entschuldigt"
     };
@@ -686,7 +698,7 @@ sub tageswertung(@) {
 
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $row;
-	    if (!$fahrer->{ausfall}) {
+	    if (!($fahrer->{ausser_konkurrenz} || $fahrer->{ausfall})) {
 		push @$row, "$fahrer->{rang}.";
 	    } else {
 		push @$row, "";
@@ -735,10 +747,13 @@ sub tageswertung(@) {
 	    push @$row, $fahrer->{zusatzpunkte} || ""
 		if $zusatzpunkte;
 
-	    if ($fahrer->{ausfall} != 0) {
-		push @$row, [ $ausfall->{$fahrer->{ausfall}}, $ausfall_fmt ];
-	    } elsif ($fahrer->{runden} == 0) {
-		push @$row, [ "", $ausfall_fmt ];
+	    if ($fahrer->{ausser_konkurrenz} || $fahrer->{ausfall} || $fahrer->{runden} == 0) {
+		my @details = ();
+		push @details, "außer konkurrenz"
+		    if $fahrer->{ausser_konkurrenz};
+		push @details, $ausfall->{$fahrer->{ausfall}}
+		    if $fahrer->{ausfall};
+		push @$row, [ join(", ", @details), $ausfall_fmt ];
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {

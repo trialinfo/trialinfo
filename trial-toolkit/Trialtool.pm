@@ -500,6 +500,9 @@ sub dat_datei_schreiben($$$) {
 
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
+	    if ($fahrer->{ausser_konkurrenz} && $fahrer->{ausfall} == 0) {
+		$fahrer->{ausfall} = 4;  # Aus der Wertung
+	    }
 	    if (defined $fahrer->{bundesland}) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";

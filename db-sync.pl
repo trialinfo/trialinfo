@@ -88,6 +88,7 @@ CREATE TABLE fahrer (
   s3 INT, -- nicht in version berücksichtigt (berechnet)
   s4 INT, -- nicht in version berücksichtigt (berechnet)
   s5 INT, -- nicht in version berücksichtigt (berechnet)
+  ausser_konkurrenz BOOLEAN,
   ausfall INT DEFAULT 0,
   zusatzpunkte INT DEFAULT 0,
   punkte INT, -- nicht in version berücksichtigt (berechnet)
