@@ -219,7 +219,7 @@
 	    <button type="button" ng-disabled="!(geaendert() || enabled.verwerfen)" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
 	  </p>
 	  <p>
-	    <button type="button" ng-disabled="geaendert() || !enabled.neu" ng-click="neuer_fahrer(true)" accesskey="u" tabindex="-1">Ne<span class="accesskey">u</span>er Fahrer</button><br>
+	    <button type="button" ng-disabled="geaendert() || !enabled.neu" ng-click="neuer_fahrer()" accesskey="u" tabindex="-1">Ne<span class="accesskey">u</span>er Fahrer</button><br>
 	    <button type="button" ng-disabled="!enabled.fahrer || enabled.startnummer" ng-click="startnummer_aendern()" accesskey="ä" tabindex="-1">Startnummer <span class="accesskey">ä</span>ndern</button><br>
 	    <button type="button" ng-disabled="geaendert() || !enabled.loeschen" ng-disabled="!enabled.fahrer" ng-click="loeschen()" accesskey="l" tabindex="-1">Fahrer <span class="accesskey">l</span>öschen</button>
 	  </p>
