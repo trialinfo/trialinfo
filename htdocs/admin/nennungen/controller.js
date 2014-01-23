@@ -59,28 +59,29 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     }
   }
 
-  function fahrer_zuweisen(fahrer, fahrer_ist_neu) {
+  function fahrer_zuweisen(fahrer) {
     if ($scope.form)
       $scope.form.$setPristine();
-    var fahrer_aktiv = (fahrer && fahrer.startnummer) || fahrer_ist_neu;
-    if (fahrer && fahrer.startnummer < 0) {
-      fahrer.startnummer_intern = fahrer.startnummer;
-      fahrer.startnummer = null;
+    if (fahrer) {
+      if (fahrer.startnummer < 0) {
+	fahrer.startnummer_intern = fahrer.startnummer;
+	fahrer.startnummer = null;
+      }
+      wertungen_auffuellen(fahrer);
     }
-    wertungen_auffuellen(fahrer);
     $scope.fahrer = fahrer;
     $scope.fahrer_alt = angular.copy(fahrer);
     $scope.suchbegriff = '';
 
-    var enabled = $scope.enabled;
-    angular.extend(enabled, {
-      'startnummer': fahrer_aktiv && fahrer.startnummer === null,
-      'fahrer': fahrer_aktiv,
-      'loeschen': fahrer_aktiv &&
+    $scope.fahrer_ist_neu = false;
+    angular.extend($scope.enabled, {
+      'startnummer': fahrer && fahrer.startnummer === null,
+      'fahrer': fahrer && true,
+      'loeschen': fahrer &&
 		  (fahrer.startnummer !== null ||
 		   fahrer.startnummer_intern !== undefined),
-      neu: !fahrer_ist_neu,
-      verwerfen: fahrer_ist_neu
+      neu: true,
+      verwerfen: false,
     });
 
     url_aktualisieren();
@@ -159,7 +160,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
   $scope.verwerfen = function() {
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
-    fahrer_zuweisen($scope.fahrer_alt);
+    fahrer_zuweisen($scope.fahrer_ist_neu ? undefined : $scope.fahrer_alt);
   }
 
   function wertungen_auffuellen(fahrer) {
@@ -169,7 +170,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     });
   }
 
-  $scope.neuer_fahrer = function(aktiv) {
+  $scope.neuer_fahrer = function() {
     /* FIXME: Wenn Felder gesetzt werden, werden hier die entsprechenden
      * Properties gesetzt; wenn die Felder dann gelöscht werden, bleiben die
      * Properties gesetzt.  Dadurch hat sich das Modell dann für angular.equals()
@@ -180,7 +181,12 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       'wertungen': [ { aktiv: veranstaltung.wertung1_markiert } ],
       'versicherung': veranstaltung.versicherung
     };
-    fahrer_zuweisen(fahrer, aktiv);
+    fahrer_zuweisen(fahrer);
+    $scope.fahrer_ist_neu = true;
+    angular.extend($scope.enabled, {
+      neu: false,
+      verwerfen: true,
+    });
     fahrer_fokusieren();
   };
 
@@ -265,7 +271,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       var version = $scope.fahrer_alt.version;
       fahrer_loeschen($http, veranstaltung.id, startnummer, version).
 	success(function(fahrer) {
-	  $scope.neuer_fahrer(false);
+	  fahrer_zuweisen(undefined);
 	  set_focus('#suchbegriff', $timeout);
 	}).
 	error(netzwerkfehler);
@@ -318,12 +324,15 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   });
 
   $scope.$on('$routeUpdate', function() {
+    var intern = startnummer_intern();
+    if (intern == null)
+      intern = undefined;
     var startnummer = $location.search().startnummer;
-    if (startnummer_intern() !== startnummer) {
+    if (startnummer !== intern) {
       if (startnummer !== undefined)
 	$scope.fahrer_laden(startnummer);
       else
-	$scope.neuer_fahrer(false);
+	fahrer_zuweisen(undefined);
     }
   });
   $scope.$emit('$routeUpdate');
