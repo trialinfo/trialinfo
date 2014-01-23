@@ -1,5 +1,8 @@
 <h1>{{veranstaltung.wertungen[0].titel}}</h1>
-<a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}" target="tageswertung:{{veranstaltung.id}}">Auswertung</a><br>
+<a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}" target="tageswertung:{{veranstaltung.id}}">Auswertung<span ng-if="wertungen[0] == 1"> mit {{veranstaltung.wertungen[0].bezeichnung}}</span></a><br>
+<span ng-repeat="wertung in wertungen track by $index" ng-if="wertung > 1">
+<a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}&wertung={{wertung}}" target="tageswertung:{{veranstaltung.id}}">Auswertung {{veranstaltung.wertungen[wertung - 1].bezeichnung}}</a><br>
+</span>
 <a href="#/liste/{{veranstaltung.id}}" target="liste:{{veranstaltung.id}}">Fahrerliste</a><br>
 <br>
 <a href="#/veranstaltung/{{veranstaltung.id}}/nennungen">Nennungen</a><br>
