@@ -4,6 +4,15 @@ function veranstaltungController($scope, $location, $http, veranstaltung) {
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
   $scope.veranstaltung = veranstaltung;
+  $scope.wertungen = (function() {
+    var wertungen = [];
+    angular.forEach(veranstaltung.features, function(feature) {
+      var match;
+      if ((match = feature.match(/^wertung(\d+)$/)))
+        wertungen.push(+match[1]);
+    });
+    return wertungen;
+  })();
   $scope.fold = {};
 
   $scope.loeschen = function() {
