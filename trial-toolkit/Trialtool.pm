@@ -89,7 +89,7 @@ my $nennungsmaske_felder = [ qw(
     vorname
     wertung1
     nennungseingang
-    papierabnahme
+    start
     helfer
 ) ];
 
@@ -150,7 +150,7 @@ my $dat_format = [
     "zielzeit:A5",			# 582:
     "wertungen:A:4",			# 587:
     "stechen:S<",			# 591: 0 = kein Stechen
-    "papierabnahme:S<",			# 593:
+    "start:S<",				# 593: Papierabnahme = Fahrer startet
     "versicherung:A",			# 595: "0" = Keine, "1" = ADAC-Versicherung,
 					#      "2" = DMV-Versicherung, "3" = KFZ-Versicherung,
 					#      "4" = Tagesversicherung
@@ -410,7 +410,7 @@ sub dat_datei_parsen($$$) {
 	    # Sicherstellen, dass Fahrer ohne Startnummer nicht in den
 	    # Starterlisten oder Ergebnissen auftauchen!
 	    $fahrer->{nennungseingang} = 0;
-	    $fahrer->{papierabnahme} = 0;
+	    $fahrer->{start} = 0;
 	}
 
 	$fahrer->{startnummer} = $startnummer;
@@ -420,7 +420,7 @@ sub dat_datei_parsen($$$) {
 	    if $fahrer->{helfer} == 0;
 	$fahrer->{wertungen} = [ map { $_ eq 'J' ? { aktiv => json_bool(1) } : {} } @{$fahrer->{wertungen}} ];
 	$fahrer->{nennungseingang} = json_bool($fahrer->{nennungseingang});
-	$fahrer->{papierabnahme} = json_bool($fahrer->{papierabnahme});
+	$fahrer->{start} = json_bool($fahrer->{start});
 	# Das Rundenfeld im Trialtool gibt an wieviele Runden schon eingegeben
 	# wurden, und nicht, wieviele Runden komplett gefahren wurden.
 	# Sektionen können bei der Eingabe übersprungen werden, im Unterschied
@@ -500,6 +500,9 @@ sub dat_datei_schreiben($$$) {
 
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
+	    if ($fahrer->{ausser_konkurrenz} && $fahrer->{ausfall} == 0) {
+		$fahrer->{ausfall} = 4;  # Aus der Wertung
+	    }
 	    if (defined $fahrer->{bundesland}) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";
@@ -584,7 +587,7 @@ sub dat_datei_schreiben($$$) {
 
 	    $fahrer->{wertungen} = [ map { $_ && $_->{aktiv} ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
 	    $fahrer->{nennungseingang} = json_unbool($fahrer->{nennungseingang});
-	    $fahrer->{papierabnahme} = json_unbool($fahrer->{papierabnahme});
+	    $fahrer->{start} = json_unbool($fahrer->{start});
 	    encode_strings($fahrer, $dat_format);
 	    print $fh $fahrer_parser->format($fahrer);
 	} else {

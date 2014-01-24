@@ -103,13 +103,13 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
       { bezeichnung: 'Nennungseingang',
 	ausdruck: "nennungseingang ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
-    papierabnahme:
-      { bezeichnung: 'Papierabnahme',
-	ausdruck: "papierabnahme ? 'Ja' : ''",
+    start:
+      { bezeichnung: 'Start',
+	ausdruck: "start ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
-    papierabnahme_morgen:
-      { bezeichnung: 'Papierabnahme morgen',
-	ausdruck: "papierabnahme_morgen ? 'Ja' : ''",
+    start_morgen:
+      { bezeichnung: 'Start morgen',
+	ausdruck: "start_morgen ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
     versicherung:
       { bezeichnung: 'Versicherung',
@@ -144,8 +144,8 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
       { value: 'geburtsdatum', name: 'Geburtsdatum' },
       { value: 'klasse', name: 'Klasse (in Nennung)' },
       { value: 'lizenznummer', name: 'Lizenznummer' },
-      { value: 'papierabnahme', name: 'Papierabnahme' },
-      { value: 'papierabnahme_morgen', name: 'Papierabnahme morgen' },
+      { value: 'start', name: 'Fahrer startet' },
+      { value: 'start_morgen', name: 'Fahrer startet morgen' },
       { value: 'startnummer', name: 'Startnummer' },
       { value: 'versicherung', name: 'Versicherung' },
       { value: 'wohnort', name: 'Wohnort' },
@@ -189,8 +189,11 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
     if (anzeige.nennungseingang !== null &&
 	fahrer.nennungseingang !== anzeige.nennungseingang)
       return false;
-    if (anzeige.papierabnahme !== null &&
-	fahrer.papierabnahme !== anzeige.papierabnahme)
+    if (anzeige.start !== null &&
+	fahrer.start !== anzeige.start)
+      return false;
+    if (anzeige.start_morgen !== null &&
+	fahrer.start_morgen !== anzeige.start_morgen)
       return false;
     for (var wertung = 1; wertung <= 4; wertung++) {
       if (anzeige['wertung' + wertung] !== null &&
@@ -315,7 +318,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
   };
 
   var tristate_optionen = (function() {
-    var felder = ['startnummer', 'nennungseingang', 'papierabnahme'];
+    var felder = ['startnummer', 'nennungseingang', 'start', 'start_morgen'];
     for (var n = 1; n <= 4; n++)
       felder.push('wertung' + n);
     return felder;
@@ -432,7 +435,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
   $scope.$watch('anzeige.startnummer', function() {
     if ($scope.anzeige.startnummer !== true) {
       $scope.anzeige.nennungseingang = null;
-      $scope.anzeige.papierabnahme = null;
+      $scope.anzeige.start = null;
     }
   });
   $scope.$watch('anzeige', aktualisieren, true);
@@ -457,7 +460,7 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
     if (angular.equals(search, {})) {
       search = {
 	startnummer: 'yes',
-	papierabnahme: 'yes',
+	start: 'yes',
 	gruppierung: 'wertungsklasse',
 	reihenfolge: 'startnummer',
 	klasse: ['-'],

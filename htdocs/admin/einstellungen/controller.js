@@ -113,7 +113,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	kartenfarben: [],
 	sektionen: [],
 	features: ['startnummer', 'klasse', 'nachname', 'vorname',
-		   'papierabnahme', 'sektionen_aus_wertung'],
+		   'start', 'sektionen_aus_wertung'],
 	wertungen: [{titel: 'Neue Veranstaltung'}],
 	wertungspunkte: [],
 	wertungsmodus: 0,
@@ -215,7 +215,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	    delete veranstaltung.datum;
 	    veranstaltung.reset = 'nennbeginn';
 	    angular.forEach(veranstaltung.features, function(feature, index) {
-	      if (feature == 'papierabnahme_morgen')
+	      if (feature == 'start_morgen')
 		veranstaltung.features.splice(index, 1);
 	    });
 	    veranstaltung_zuweisen(veranstaltung, true);

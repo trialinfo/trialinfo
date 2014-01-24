@@ -345,15 +345,15 @@ sub fahrer_aus_datenbank($$;$$$) {
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
-	       stechen, papierabnahme, papierabnahme_morgen, versicherung,
-	       runden, zusatzpunkte, punkte, ausfall, nennungseingang, s0, s1,
-	       s2, s3, s4, s5, rang
+	       stechen, start, start_morgen, versicherung,
+	       runden, zusatzpunkte, punkte, ausser_konkurrenz, ausfall,
+	       nennungseingang, s0, s1, s2, s3, s4, s5, rang
 	FROM fahrer
 	WHERE id = ?};
     my $args = [ $id ];
     if (defined $startnummer) {
 	if (defined $starter) {
-	    $sql .= q{ AND papierabnahme};
+	    $sql .= q{ AND start};
 	}
 	if (!defined $richtung) {
 	    $sql .= q{ AND startnummer = ?};
@@ -399,10 +399,11 @@ sub wertung_aus_datenbank($$) {
     my $fahrer_nach_startnummer = {};
 
     my $sth = $dbh->prepare(q{
-	SELECT startnummer, klasse, stechen, papierabnahme, ausfall,
-	       zusatzpunkte, s0, s1, s2, s3, s4, s5, punkte, runden, rang
+	SELECT startnummer, klasse, stechen, start, ausser_konkurrenz,
+	       ausfall, zusatzpunkte, s0, s1, s2, s3, s4, s5, punkte, runden,
+	       rang
 	FROM fahrer
-	WHERE id = ? /* and papierabnahme */
+	WHERE id = ? /* and start */
     });
     $sth->execute($id);
     while (my $fahrer = $sth->fetchrow_hashref) {

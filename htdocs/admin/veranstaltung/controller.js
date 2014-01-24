@@ -4,6 +4,7 @@ function veranstaltungController($scope, $location, $http, veranstaltung) {
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
   $scope.veranstaltung = veranstaltung;
+  $scope.features = features_aus_liste(veranstaltung);
   $scope.wertungen = (function() {
     var wertungen = [];
     angular.forEach(veranstaltung.features, function(feature) {

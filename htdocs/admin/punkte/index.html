@@ -30,7 +30,7 @@
 		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
-		    <span ng-if="fahrer.papierabnahme" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
+		    <span ng-if="fahrer.start" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
@@ -42,7 +42,7 @@
 	  <p>
 	    <table>
 	      <tr>
-		<th align="right"><label for="zusatzpunkte" accesskey="z"><span class="accesskey">Z</span>usatzpunkte</label></th>
+		<th align="right"><label for="zusatzpunkte" accesskey="p">Zusatz<span class="accesskey">p</span>unkte</label></th>
 		<td>
 		  <input ng-disabled="!fahrer_startet()" type="number" size="3" min="0" max="999" required ng-model="fahrer.zusatzpunkte" id="zusatzpunkte">
 		</td>
@@ -51,15 +51,15 @@
 		<th align="right">Gesamtpunkte</th>
 		<td>
 		  <input type="number" size="3" min="0" max="999" ng-model="fahrer.punkte" disabled="disabled">
-		    <span ng-if="fahrer.papierabnahme" style="font-weight:bold">
+		    <span ng-if="fahrer.start" style="font-weight:bold">
 		      &nbsp; (<span ng-repeat="h in fahrer.punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
 		</td>
 	      </tr>
 	      <tr ng-if="features.startzeit || features.zielzeit">
-		<th align="right"><label for="startzeit"><span class="accesskey">F</span>ahrzeit</label></th>
+		<th align="right"><label for="startzeit">Fahr<span class="accesskey">z</span>eit</label></th>
 		<td>
-		  <input ng-if="features.startzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.startzeit" name="startzeit" iso-time accesskey="f" title="Startzeit"> −
+		  <input ng-if="features.startzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.startzeit" name="startzeit" iso-time accesskey="z" title="Startzeit"> −
 		  <input ng-if="features.zielzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.zielzeit" name="zielzeit" iso-time title="Zielzeit">
 		  &nbsp; <span style="font-weight: bold; color: red">{{ueberzeit()}}</span>
 		</td>
@@ -70,14 +70,14 @@
 		  <select ng-disabled="!fahrer_startet()" ng-model="fahrer.ausfall" numeric id="ausfall">
 		    <option value="0"></option>
 		    <option value="3">Ausgefallen</option>
-		    <option value="4">Aus der Wertung</option>
+		    <option value="4">Nicht gewertet</option>
 		    <option value="5">Nicht gestartet</option>
 		    <option value="6">Nicht gestartet, entschuldigt</option>
 		  </select>
 		</td>
 	      </tr>
 	      <tr>
-		<th align="right"><label for="stechen" accesskey="t">S<span class="accesskey">t</span>echen</label></th>
+		<th align="right"><label for="stechen" accesskey="s"><span class="accesskey">S</span>techen</label></th>
 		<td>
 		  <select ng-disabled="!fahrer_startet()" ng-model="fahrer.stechen" numeric id="stechen">
 		    <option value="0"></option>
@@ -94,10 +94,10 @@
 		  </select>
 		</td>
 	      </tr>
-	      <tr ng-if="fahrer && !fahrer_alt.papierabnahme && startende_klassen[wertungsklasse - 1]">
+	      <tr ng-if="fahrer && !fahrer_alt.start && startende_klassen[wertungsklasse - 1]">
 		<th align="right">Teilnahme</th>
 		<td>
-		  <input type="checkbox" ng-model="fahrer.papierabnahme" id="papierabnahme"><label for="papierabnahme" accesskey="p"><span class="accesskey">P</span>apierabnahme</label>
+		  <input type="checkbox" ng-model="fahrer.start" id="start"><label for="start" accesskey="s"><span class="accesskey">S</span>tart</label>
 		</td>
 	      </tr>
 	    </table>
@@ -116,7 +116,7 @@
 	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'vorheriger')" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
-	    <label for="suchbegriff" accesskey="s">Fahrer <span class="accesskey">s</span>uchen:</label><br>
+	    <label for="suchbegriff" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>
 	    <input type="text" ng-disabled="geaendert()" size="20" maxlength="40" ng-model="suchbegriff" onchange="angular.element(this).scope().fahrer_suchen()" id="suchbegriff" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>

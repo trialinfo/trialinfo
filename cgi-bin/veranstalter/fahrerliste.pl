@@ -63,7 +63,7 @@ my $sth = $dbh->prepare(q{
 	   fahrzeug, hubraum, bemerkung AS 'E-Mail'
     FROM fahrer
     WHERE id = ? AND startnummer > 0
-	  } . ($gestartet ? "AND papierabnahme" : "") . q{
+	  } . ($gestartet ? "AND start" : "") . q{
     ORDER BY startnummer
 });
 my ($header, $body);

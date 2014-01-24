@@ -19,7 +19,7 @@
       <button ng-click="reset('start')">Start</button>
     </td>
     <td>
-      Löscht alle Punkte, Start- und Zielzeit, Ausfall, Stechen
+      Löscht alle Punkte, <span ng-if="features.startzeit || features.zielzeit">Start- und Zielzeit, </span>Ausfall, Stechen
     </td>
   </tr>
   <tr>
@@ -27,7 +27,7 @@
       <button ng-click="reset('nennbeginn')">Nennbeginn</button>
     </td>
     <td>
-      Setzt zusätzlich Nennungseingang und Papierabnahme zurück, löscht Nenngeld
+      Setzt zusätzlich <span ng-if="features.nennungseingang">Nennungseingang und </span>Start zurück, löscht Nenngeld
     </td>
   </tr>
   <tr>
