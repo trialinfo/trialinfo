@@ -94,7 +94,7 @@ $sth = $dbh->prepare(q{
     LEFT JOIN fahrer_wertung USING (id, startnummer)
     LEFT JOIN wertung USING (id, wertung)
     JOIN veranstaltung USING (id)
-    WHERE id = ? AND papierabnahme
+    WHERE id = ? AND start
     GROUP BY id, startnummer
     ORDER BY startnummer;
 });

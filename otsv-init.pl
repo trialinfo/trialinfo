@@ -166,7 +166,7 @@ eval {
 		$fahrer->{ausfall} = 0;
 	    }
 	    $fahrer->{nennungseingang} = 0;
-	    $fahrer->{papierabnahme} = 0;
+	    $fahrer->{start} = 0;
 	    $fahrer->{zusatzpunkte} = 0;
 	    $fahrer->{punkte} = 0;
 	    $fahrer->{runden} = 0;

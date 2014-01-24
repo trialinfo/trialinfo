@@ -114,7 +114,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     my $starter;
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	$starter++
-	    if $fahrer->{papierabnahme};
+	    if $fahrer->{start};
     }
     printf "Starter insgesamt: %s\n\n", $starter;
 
@@ -202,7 +202,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     # nicht erfolgt ist ist?
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	if ($fahrer->{runden} != 0 && !$fahrer->{papierabnahme}) {
+	if ($fahrer->{runden} != 0 && !$fahrer->{start}) {
 	    print "Warnung: Für Fahrer $startnummer $fahrer->{nachname} " .
 		  "$fahrer->{vorname} sind Ergebnisse eingetragen, obwohl " .
 		  "die Papierabnahme nicht eingetragen ist.\n";
@@ -232,7 +232,7 @@ foreach my $name (trialtool_dateien @ARGV) {
     # Fahrer ohne Papierabnahme von weiteren Checks ausnehmen
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
-	unless ($fahrer->{papierabnahme}) {
+	unless ($fahrer->{start}) {
 	    delete $fahrer_nach_startnummer->{$startnummer};
 	}
     }
