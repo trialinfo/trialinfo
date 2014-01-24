@@ -48,7 +48,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   $scope.fahrer_startet = function() {
     try {
       var fahrer = $scope.fahrer;
-      return fahrer.papierabnahme &&
+      return fahrer.start &&
 	     $scope.startende_klassen[wertungs_klasse(fahrer) - 1];
     } catch (_) {}
   };
@@ -104,7 +104,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   function punkte_fokusieren() {
     try {
       var fahrer = $scope.fahrer;
-      if (fahrer.papierabnahme &&
+      if (fahrer.start &&
 	  (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
 	var wertungsklasse = wertungs_klasse(fahrer);
 	var sektionen = veranstaltung.sektionen[wertungsklasse - 1];
@@ -155,7 +155,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   };
 
   $scope.aktuelle_runde = function(fahrer) {
-    if (fahrer && fahrer.papierabnahme) {
+    if (fahrer && fahrer.start) {
       var runde = fahrer.runden || 1;
       var wertungsklasse = wertungs_klasse(fahrer);
       var sektionen = veranstaltung.sektionen[wertungsklasse - 1] // [];
@@ -199,7 +199,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
     var fahrer = $scope.fahrer;
     if (fahrer) {
       fahrer.punkte_pro_runde = [];
-      if (fahrer.papierabnahme) {
+      if (fahrer.start) {
 	var wertungsklasse = wertungs_klasse(fahrer);
 	var sektionen = veranstaltung.sektionen[wertungsklasse - 1] || [];
 	fahrer.punkte = fahrer.zusatzpunkte;
@@ -251,7 +251,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   });
 
   $scope.speichern = function() {
-    /* FIXME: Wenn Papierabnahme, dann muss die Klasse starten. */
+    /* FIXME: Wenn Start, dann muss die Klasse starten. */
     var version = 0;
     var startnummer;
     if ($scope.fahrer_alt && 'startnummer' in $scope.fahrer_alt) {

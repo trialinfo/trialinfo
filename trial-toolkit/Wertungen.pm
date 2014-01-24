@@ -119,7 +119,7 @@ sub befahrene_sektionen($) {
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $klasse = $fahrer->{wertungsklasse};
-	if (defined $klasse && $fahrer->{papierabnahme}) {
+	if (defined $klasse && $fahrer->{start}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
 	    for (my $runde = 0; $runde < @$punkte_pro_sektion; $runde++) {
 		my $punkte = $punkte_pro_sektion->[$runde] // [];
@@ -192,7 +192,7 @@ sub punkte_berechnen($$) {
 	my $letzte_vollstaendige_runde;
 
 	my $klasse = $fahrer->{wertungsklasse};
-	if (defined $klasse && $fahrer->{papierabnahme}) {
+	if (defined $klasse && $fahrer->{start}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
 	    $gesamtpunkte = $fahrer->{zusatzpunkte};
 	    $punkteverteilung = [(0) x 6];
@@ -272,7 +272,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $rang = 1;
 	$fahrer_in_klasse = [
 	    sort { rang_vergleich($a, $b, $cfg) }
-		 map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
+		 map { $_->{start} ? $_ : () } @$fahrer_in_klasse ];
 	my $vorheriger_fahrer;
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    $fahrer->{rang} =
@@ -489,7 +489,7 @@ sub klassenstatistik($$$) {
     my ($fahrer_in_klasse, $fahrer_gesamt, $ausfall) = @_;
 
     foreach my $fahrer (@$fahrer_in_klasse) {
-	if ($fahrer->{papierabnahme}) {
+	if ($fahrer->{start}) {
 	    $$fahrer_gesamt++;
 	    $ausfall->{$fahrer->{ausfall}}++;
 	    $ausfall->{ausser_konkurrenz}++
@@ -570,7 +570,7 @@ sub tageswertung(@) {
     my $namenlaenge = 0;
     foreach my $fahrer (values %{$args{fahrer_nach_startnummer}}) {
 	next
-	    unless $fahrer->{papierabnahme};
+	    unless $fahrer->{start};
 	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
 	$namenlaenge = max($n, $namenlaenge);
     }
@@ -592,7 +592,7 @@ sub tageswertung(@) {
 	my $farbe = "";
 
 	$fahrer_in_klasse = [
-	    map { $_->{papierabnahme} ? $_ : () } @$fahrer_in_klasse ];
+	    map { $_->{start} ? $_ : () } @$fahrer_in_klasse ];
 	next unless @$fahrer_in_klasse > 0;
 
 	my $stechen = 0;

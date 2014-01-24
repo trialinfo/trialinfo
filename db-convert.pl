@@ -115,7 +115,10 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ADD COLUMN basis INT AFTER id;
 
 	    ALTER TABLE fahrer
-	    ADD COLUMN papierabnahme_morgen BOOLEAN AFTER papierabnahme;
+	    CHANGE COLUMN papierabnahme start BOOLEAN;
+
+	    ALTER TABLE fahrer
+	    ADD COLUMN start_morgen BOOLEAN AFTER start;
 
 	    ALTER TABLE fahrer
 	    ADD COLUMN s5 INT AFTER s4;
@@ -142,7 +145,7 @@ foreach my $sql (split /\s*;\s*/, q{
 	    UPDATE klasse SET wertungsklasse = klasse;
 
 	    UPDATE fahrer
-	    SET papierabnahme_morgen = 0;
+	    SET start_morgen = 0;
 
 	    UPDATE fahrer
 	    SET startnummer = 999 - startnummer
@@ -153,7 +156,15 @@ foreach my $sql (split /\s*;\s*/, q{
 		SELECT COUNT(*) - s4 - s3 - s2 - s1 - s0
 		FROM punkte AS p
 		WHERE fahrer.id = p.id AND fahrer.startnummer = p.startnummer)
-	    WHERE papierabnahme;
+	    WHERE start;
+
+	    UPDATE veranstaltung_feature
+	    SET feature = 'start'
+	    WHERE feature = 'papierabnahme';
+
+	    UPDATE veranstaltung_feature
+	    SET feature = 'start_morgen'
+	    WHERE feature = 'papierabnahme_morgen';
 
 	    DROP TABLE IF EXISTS ns;
 	    CREATE TABLE ns (

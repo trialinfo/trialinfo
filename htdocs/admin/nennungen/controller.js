@@ -119,7 +119,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.speichern = function() {
-    /* FIXME: Wenn Papierabnahme, dann muss die Klasse starten. */
+    /* FIXME: Wenn Start, dann muss die Klasse starten. */
     var startnummer;
     var version;
     if ($scope.fahrer_alt) {
@@ -133,10 +133,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var fahrer = $scope.fahrer;
     if (fahrer.startnummer == null) {
       fahrer.nennungseingang = false;
-      fahrer.papierabnahme = false;
-      fahrer.papierabnahme_morgen = false;
+      fahrer.start = false;
+      fahrer.start_morgen = false;
     }
-    if (fahrer.papierabnahme)
+    if (fahrer.start)
       fahrer.nennungseingang = true;
     if (fahrer.startnummer_intern !== undefined) {
       fahrer = angular.copy(fahrer);
@@ -280,7 +280,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
   function wertungslabels_erzeugen() {
     /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-    var accesskeys = 'aknvgpmsuäl';
+    var accesskeys = 'aknvpmsfuäl';
     $scope.wertungen = [];
     angular.forEach($scope.features.wertungen, function(wertung) {
       var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;

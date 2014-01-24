@@ -168,11 +168,11 @@
 		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.nennungseingang" id="nennungseingang">
 		    <label for="nennungseingang" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
 		</span>
-		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.papierabnahme" id="papierabnahme">
-		  <label for="papierabnahme" accesskey="p"><span class="accesskey">P</span>apierabnahme</label>
-		<span ng-if="features.papierabnahme_morgen">
-		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.papierabnahme_morgen" id="papierabnahme_morgen">
-		    <label for="papierabnahme_morgen" accesskey="m">Papierabnahme <span class="accesskey">m</span>orgen</label>
+		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.start" id="start">
+		  <label for="start" accesskey="s"><span class="accesskey">S</span>tart</label>
+		<span ng-if="features.start_morgen">
+		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.start_morgen" id="start_morgen">
+		    <label for="start_morgen" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
 		</span>
 		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.ausser_konkurrenz" id="ausser_konkurrenz">
 		  <label for="ausser_konkurrenz" accesskey="a"><span class="accesskey">A</span>ußer Konkurrenz</label>
@@ -199,7 +199,7 @@
 	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'vorheriger')" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
-	    <label for="suchbegriff" accesskey="s">Fahrer <span class="accesskey">s</span>uchen:</label><br>
+	    <label for="suchbegriff" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>
 	    <input type="text" ng-disabled="geaendert()" size="20" maxlength="40" ng-model="suchbegriff" onchange="angular.element(this).scope().fahrer_suchen()" id="suchbegriff" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>
@@ -210,7 +210,7 @@
 	  </p>
 	  <p>
 	    <span style="color: red">{{fehler}}</span>
-	    <!-- if (!(fahrer && fahrer.papierabnahme && startende_klassen[fahrer.klasse - 1])) ... -->
+	    <!-- if (!(fahrer && fahrer.start && startende_klassen[fahrer.klasse - 1])) ... -->
 	    <span ng-if="startnummer_belegt" style="color: red">
 	      Startnummer belegt:<br>
 	      {{startnummer_belegt.nachname}} {{startnummer_belegt.vorname}} ({{startnummer_belegt.startnummer}})<br>

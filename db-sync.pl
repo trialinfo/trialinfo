@@ -78,8 +78,8 @@ CREATE TABLE fahrer (
   zielzeit TIME,
   stechen INT DEFAULT 0,
   nennungseingang BOOLEAN,
-  papierabnahme BOOLEAN,
-  papierabnahme_morgen BOOLEAN,
+  start BOOLEAN,
+  start_morgen BOOLEAN,
   versicherung INT,
   runden INT,
   s0 INT, -- nicht in version berücksichtigt (berechnet)

@@ -139,13 +139,13 @@ $sth = $dbh->prepare(q{
 	   startnummer, nachname, vorname, zusatzpunkte,
 	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
 	   s0, s1, s2, s3, s4, s5, punkte, wertungspunkte, fahrer.runden AS
-	   runden, ausser_konkurrenz, ausfall, papierabnahme
+	   runden, ausser_konkurrenz, ausfall, start
     FROM fahrer} . (defined $vareihe ? q{
     JOIN klasse USING (id, klasse)
     JOIN vareihe_klasse USING (wertungsklasse)} : "") . "\n" .
     ($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
     q{(SELECT * FROM fahrer_wertung WHERE wertung = ?) AS fahrer_wertung USING (id, startnummer)
-    WHERE papierabnahme AND id = ?} . (defined $vareihe ? " AND vareihe = ?" : ""));
+    WHERE start AND id = ?} . (defined $vareihe ? " AND vareihe = ?" : ""));
 $sth->execute($wertung, $id, defined $vareihe ? $vareihe : ());
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n <= 5; $n++) {

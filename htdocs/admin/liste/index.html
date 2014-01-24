@@ -24,9 +24,18 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr><th align="right">Papierabnahme</th>
+	  <tr><th align="right">Fahrer startet</th>
 	    <td>
-	      <select ng-model="anzeige.papierabnahme" yes-no-null>
+	      <select ng-model="anzeige.start" yes-no-null>
+		<option value=""></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-if="features.start_morgen"><th align="right">Fahrer startet morgen</th>
+	    <td>
+	      <select ng-model="anzeige.start_morgen" yes-no-null>
 		<option value=""></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
