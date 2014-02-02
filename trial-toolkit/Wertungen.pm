@@ -44,7 +44,7 @@ sub wertungsklassen_setzen($$) {
 sub rang_vergleich($$$) {
     my ($a, $b, $cfg) = @_;
 
-    if ($a->{ausser_konkurrenz} != $b->{ausser_konkurrenz}) {
+    if (($a->{ausser_konkurrenz} // 0) != ($b->{ausser_konkurrenz} // 0)) {
 	return $a->{ausser_konkurrenz} <=> $b->{ausser_konkurrenz};
     }
 

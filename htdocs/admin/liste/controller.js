@@ -1,6 +1,7 @@
 'use strict;'
 
-function listeController($scope, $sce, $route, $location, veranstaltung, fahrerliste) {
+function listeController($scope, $sce, $route, $location, $timeout, veranstaltung, fahrerliste) {
+  $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
   $scope.veranstaltung = veranstaltung;
@@ -333,8 +334,8 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
     return klassen;
   }
 
-  function von_url(anzeige) {
-    var anzeige = angular.copy(anzeige);
+  function von_url(search) {
+    var anzeige = angular.copy(search);
 
     angular.forEach(tristate_optionen, function(option) {
       if (anzeige[option] === 'yes')
@@ -367,37 +368,45 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
     anzeige.felder = felder;
     delete anzeige.feld;
 
+    if (anzeige['font-size'] !== undefined)
+      anzeige['font-size'] = +anzeige['font-size'];
+    anzeige.seitenumbruch = !!anzeige.seitenumbruch;
+
     return anzeige;
   }
 
   function nach_url(anzeige) {
-    var anzeige = angular.copy(anzeige);
+    var search = angular.copy(anzeige);
 
     angular.forEach(tristate_optionen, function(option) {
-      if (anzeige[option] !== null)
-	anzeige[option] = anzeige[option] ? 'yes' : 'no';
+      if (search[option] !== null)
+	search[option] = search[option] ? 'yes' : 'no';
     });
 
     var versteckte_klassen = [];
-    angular.forEach(anzeige.klassen, function(value, key) {
+    angular.forEach(search.klassen, function(value, key) {
       if (value === false)
 	versteckte_klassen.push(key);
     });
     if (versteckte_klassen.length)
-      anzeige.klasse = versteckte_klassen;
-    delete anzeige.klassen;
+      search.klasse = versteckte_klassen;
+    delete search.klassen;
 
-    var felder = anzeige.felder;
+    var felder = search.felder;
     if (felder[felder.length - 1] === '')
       felder.pop();
-    anzeige.feld = felder;
-    delete anzeige.felder;
+    search.feld = felder;
+    delete search.felder;
 
-    angular.forEach(anzeige, function(value, key) {
+    angular.forEach(search, function(value, key) {
       if (value === null || value === '')
-	delete anzeige[key];
+	delete search[key];
     });
-    return anzeige;
+
+    if (!search.seitenumbruch)
+      delete search.seitenumbruch;
+
+    return search;
   }
 
   function url_aktualisieren() {
@@ -432,6 +441,40 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
       return x;
   };
 
+  function scalefont(size, scale) {
+    return Math.round(size * Math.pow(Math.sqrt(2), scale));
+  };
+
+  $scope.print_style = function() {
+    var anzeige = $scope.anzeige;
+    return $sce.trustAsHtml('\n\
+@media print {\n\
+  @page {\n\
+    size:' + (anzeige['page-size'] || 'A4') + ';\n\
+    margin-left:' + (anzeige['margin-left'] || '2cm') + ';\n\
+    margin-top:' + (anzeige['margin-top'] || '2cm') + ';\n\
+    margin-right:' + (anzeige['margin-right'] || '2cm') + ';\n\
+    margin-bottom:' + (anzeige['margin-bottom'] || '2cm') + ';\n\
+  }\n\
+  body { font-size:' + scalefont(anzeige['font-size'] || 10, 0) + 'pt; }\n\
+  h2 { font-size:' + scalefont(anzeige['font-size'] || 10, 1) + 'pt; }\n\
+  h1 { font-size:' + scalefont(anzeige['font-size'] || 10, 2) + 'pt; }\n\
+}\n');
+  }
+
+  $scope.pdf_erzeugen = function(event) {
+    event.preventDefault();
+    $timeout(function() {
+      $scope.html = document.all[0].outerHTML;
+      $scope.url = $location.absUrl();
+      $timeout(function() {
+	document.getElementById('pdf').submit();
+	delete $scope.html;
+	delete $scope.url;
+      });
+    });
+  };
+
   $scope.$watch('anzeige.startnummer', function() {
     if ($scope.anzeige.startnummer !== true) {
       $scope.anzeige.nennungseingang = null;
@@ -464,9 +507,26 @@ function listeController($scope, $sce, $route, $location, veranstaltung, fahrerl
 	gruppierung: 'wertungsklasse',
 	reihenfolge: 'startnummer',
 	klasse: ['-'],
-	feld: ['startnummer', 'name']
+	feld: ['startnummer', 'name'],
       };
     }
+    angular.forEach({
+      startnummer: 'yes',
+      start: 'yes',
+      gruppierung: 'wertungsklasse',
+      reihenfolge: 'startnummer',
+      klasse: ['-'],
+      feld: ['startnummer', 'name'],
+      'page-size': 'A4',
+      'font-size': 10,
+      'margin-left': '2cm',
+      'margin-top': '2cm',
+      'margin-right': '2cm',
+      'margin-bottom': '2cm',
+    }, function(value, key) {
+      if (search[key] === undefined)
+	search[key] = value;
+    });
     angular.extend($scope.anzeige, von_url(search));
   });
   $scope.$emit('$routeUpdate');

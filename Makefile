@@ -25,6 +25,10 @@ MAKEFLAGS = --no-print-directory
 CURL = curl
 SED = sed
 
+HAVE_WEASYPRINT_testing = 1
+HAVE_WEASYPRINT_staging = 0
+HAVE_WEASYPRINT_production = 0
+
 DOWNLOAD_FILES = \
 	htdocs/js/jquery.js \
 	htdocs/js/jquery.min.js \
@@ -83,7 +87,7 @@ ADMIN_FILES = \
 	htdocs/admin/einstellungen/controller.js \
 	htdocs/admin/einstellungen/index.html \
 	htdocs/admin/.htaccess \
-	htdocs/admin/index.html \
+	htdocs/admin/index.shtml \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
 	htdocs/admin/nennungen/controller.js \
@@ -109,14 +113,21 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
 	cgi-bin/ergebnisse/vareihe-bezeichnung.pl \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
+	cgi-bin/pdf.pl \
 	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/export-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/nenngeld-ssi.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/apple-touch-icon.png \
-	htdocs/ergebnisse/index.shtml \
+	htdocs/ergebnisse/0.png \
+	htdocs/ergebnisse/1.png \
 	htdocs/ergebnisse/2012.shtml \
+	htdocs/ergebnisse/2.png \
+	htdocs/ergebnisse/3.png \
+	htdocs/ergebnisse/4.png \
+	htdocs/ergebnisse/5.png \
+	htdocs/ergebnisse/index.shtml \
 	htdocs/ergebnisse/jahreswertung.shtml \
 	htdocs/ergebnisse/statistik.shtml \
 	htdocs/ergebnisse/tageswertung.js \
@@ -124,17 +135,11 @@ WEB_FILES = \
 	htdocs/ergebnisse/vareihe.shtml \
 	htdocs/favicon.ico \
 	htdocs/js/jquery.polartimer.js \
-	htdocs/veranstalter/index.shtml \
+	htdocs/robots.txt \
 	htdocs/veranstalter/export.shtml \
+	htdocs/veranstalter/index.shtml \
 	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
-	htdocs/ergebnisse/0.png \
-	htdocs/ergebnisse/1.png \
-	htdocs/ergebnisse/2.png \
-	htdocs/ergebnisse/3.png \
-	htdocs/ergebnisse/4.png \
-	htdocs/ergebnisse/5.png \
-	htdocs/robots.txt \
 
 MAKEFLAGS = --no-print-directory
 
@@ -145,7 +150,10 @@ download: $(DOWNLOAD_FILES)
 testing: download
 	@$(MAKE) -s $(GENERATED_WEB_FILES) WHAT=testing
 
-generate_web_file = $(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' -e 's:@HOST@:$(HOST):g'
+generate_web_file = \
+	$(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' \
+	       -e 's:@HOST@:$(HOST):g' \
+	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g'
 
 $(GENERATED_WEB_FILES): %: %.in
 	@# $(HOST)

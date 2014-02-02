@@ -179,7 +179,6 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
     Alias /ergebnisse /home/agruen/trial-toolkit/htdocs
 
     <Directory "/home/agruen/trial-toolkit/htdocs">
-	Options Indexes
 	AllowOverride All
 	Order allow,deny
 	Allow from all
@@ -193,7 +192,7 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
   Im Verzeichnis "htdocs" befindet sich eine passende ".htaccess" - Datei mit:
 
     DirectoryIndex index.shtml
-    Options Indexes Includes
+    Options +Includes
 
   Achtung: der Alias "/ergebnisse" muss in der Konfiguration vor dem Alias "/"
   stehen.
@@ -339,6 +338,17 @@ Danach gewinnt der Fahrer mit mehr Streichpunkten.
 
 Wenn danach immer noch Gleichstand herrscht, werden beide Fahrer momentan
 gleich gereiht.
+
+
+WeasyPrint
+==========
+
+WeasyPrint Wird verwendet, um am Server HTML nach PDF zu konvertieren.
+Weasyprint ist zwar speziell für die Ergebnislisten mit ihren großen Tabellen
+sehr langsam, dafür erzeugt es aber einen ordentlichen Seitenumbruch, was z.B.
+WebKit-basierte Lösungen wie wkhtmltopdf nur sehr mangelhaft beherrschen.
+
+  yum install python-lxml weasyprint
 
 
 Lizenz

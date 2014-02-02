@@ -27,8 +27,8 @@
       }
 
       @media print {
-	.no-print, .no-print * { display: none !important; }
-	.page-break, .page-break * { page-break-after: always }
+	.no-print, .no-print * { display:none !important; }
+	.page-break { page-break-before:always; }
       }
     </style>
 
@@ -46,6 +46,12 @@
     <script src="vareihe/controller.js"></script>
     <script src="liste/controller.js"></script>
     <script>
+
+      var HAVE_WEASYPRINT;
+<!--#if expr="$HAVE_WEASYPRINT = 1" -->
+      HAVE_WEASYPRINT = true;
+<!--#endif -->
+
       var application = angular.module('application', ['ngRoute', 'ui.validate']);
 
       application.directive('isoDate', isoDateDirective);

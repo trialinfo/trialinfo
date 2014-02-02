@@ -1,3 +1,6 @@
+DirectoryIndex index.shtml
+Options +Includes
+SetEnv HAVE_WEASYPRINT @HAVE_WEASYPRINT@
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
 AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup
 AuthName "Protected"
