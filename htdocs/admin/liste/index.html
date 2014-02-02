@@ -1,3 +1,6 @@
+<style type="text/css" ng-bind-html="print_style()">
+</style>
+
 <a href="" ng-if="!fold.einstellungen" ng-click="fold.einstellungen = true" class="no-print" title="Anzeige einstellen">↓</a>
 <a href="" ng-if="fold.einstellungen" ng-click="fold.einstellungen = false" class="no-print" title="Anzeige einstellen">↑</a>
 <div ng-if="fold.einstellungen" class="no-print">
@@ -79,11 +82,6 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-if="anzeige.gruppierung != ''"><th></th>
-	    <td>
-	      <input type="checkbox" ng-model="anzeige.seitenumbruch" id="seitenumbruch"><label for="seitenumbruch">Seitenumbruch zwischen den Gruppen im Ausdruck</label>
-	    </td>
-	  </tr>
 	  <tr><th align="right">Sortieren nach</th>
 	    <td>
 	      <select ng-model="anzeige.reihenfolge">
@@ -102,7 +100,46 @@
 	      </span>
 	    </td></tr>
 	</table>
+      </fieldset><br>
+    </form>
+    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST">
+      <fieldset style="display:inline">
+	<legend>Drucken</legend>
+	<table>
+	  <tr><th align="right">Seitenformat</th>
+	    <td>
+	      <select ng-model="anzeige['page-size']">
+		<option value="A4">A4 Hochformat</option>
+		<option value="A4 landscape">A4 Querformat</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Ränder</th>
+	    <td>
+	      <input type="text" size="4" maxlength="6" ng-model="anzeige['margin-left']" title="Links" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="anzeige['margin-top']" title="Oben" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="anzeige['margin-right']" title="Rechts" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="anzeige['margin-bottom']" title="Unten" style="text-align:center">
+	    </td>
+	  </tr>
+	  <tr><th align="right">Schriftgröße</th>
+	    <td>
+	      <input type="number" min="6" max="20" size="2" maxlength="2" ng-model="anzeige['font-size']" style="text-align:center"> Punkt
+	    </td>
+	  </tr>
+	  <tr ng-if="anzeige.gruppierung != ''"><th></th>
+	    <td>
+	      <input type="checkbox" ng-model="anzeige.seitenumbruch" id="seitenumbruch"><label for="seitenumbruch">Seitenumbruch zwischen den Gruppen</label>
+	    </td>
+	  </tr>
+	  <tr><th></th>
+	    <td><button ng-if="HAVE_WEASYPRINT" type="submit" ng-click="pdf_erzeugen($event)">PDF erzeugen</button></td>
+	  </tr>
+	</table>
       </fieldset>
+      <input type="hidden" name="filename" value="Fahrerliste {{veranstaltung.wertungen[0].titel}}.pdf">
+      <input type="hidden" name="url" value="{{url}}">
+      <input type="hidden" name="html" value="{{html}}">
     </form>
   </p>
 </div>
@@ -113,8 +150,8 @@ table.liste td,th {
 }
 </style>
 
-<h1>{{veranstaltung.wertungen[0].titel}} - Fahrerliste</h1>
-<div ng-repeat="gruppe in ergebnisliste">
+<h1>Fahrerliste {{veranstaltung.wertungen[0].titel}}</h1>
+<div ng-repeat="gruppe in ergebnisliste" ng-class="$first ? '' : anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
     <tr>
@@ -124,5 +161,4 @@ table.liste td,th {
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
     </tr>
   </table>
-  <span ng-if="anzeige.seitenumbruch" class="page-break" />
 </div>

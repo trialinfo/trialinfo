@@ -4,6 +4,8 @@ VERSION = 0.16
 CURL = curl
 SED = sed
 
+HAVE_WEASYPRINT_testing = 1
+
 HOST = localhost
 AUTH_PREFIX = $(PWD)
 
@@ -54,7 +56,7 @@ ADMIN_FILES = \
 	htdocs/admin/einstellungen/controller.js \
 	htdocs/admin/einstellungen/index.html \
 	htdocs/admin/.htaccess \
-	htdocs/admin/index.html \
+	htdocs/admin/index.shtml \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
 	htdocs/admin/nennungen/controller.js \
@@ -80,17 +82,18 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/tageswertung-ssi.pl \
 	cgi-bin/ergebnisse/vareihe-bezeichnung.pl \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
+	cgi-bin/pdf.pl \
 	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/export-ssi.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
-	htdocs/js/jquery.polartimer.js \
 	htdocs/ergebnisse/0.png \
 	htdocs/ergebnisse/1.png \
 	htdocs/ergebnisse/2.png \
 	htdocs/ergebnisse/3.png \
 	htdocs/ergebnisse/4.png \
 	htdocs/ergebnisse/5.png \
+	htdocs/js/jquery.polartimer.js \
 	htdocs/robots.txt \
 
 all: testing
@@ -100,7 +103,10 @@ download: $(DOWNLOAD_FILES)
 testing: download
 	@$(MAKE) -s $(GENERATED_WEB_FILES) WHAT=testing
 
-generate_web_file = $(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' -e 's:@HOST@:$(HOST):g'
+generate_web_file = \
+	$(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' \
+	       -e 's:@HOST@:$(HOST):g' \
+	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g'
 
 $(GENERATED_WEB_FILES): %: %.in
 	@# $(HOST)
