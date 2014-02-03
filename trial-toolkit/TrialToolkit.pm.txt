@@ -34,6 +34,7 @@ our $punkteteilung = undef;
 # Features, die bei der Datenübertragung zusätzlich gesetzt oder entfernt
 # werden sollen.
 our $veranstaltungsfeatures = {
+    #email => 1,
     #bundesland => 1,
     #helfer => 0,
     #nennungseingang => 0,

@@ -126,6 +126,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE fahrer
 	    ADD COLUMN ausser_konkurrenz BOOLEAN AFTER s5;
 
+	    ALTER TABLE fahrer
+	    ADD COLUMN email VARCHAR(60) AFTER hubraum;
+
 	    ALTER TABLE vareihe
 	    ADD COLUMN version INT NOT NULL DEFAULT 1 FIRST;
 
@@ -210,6 +213,10 @@ foreach my $sql (split /\s*;\s*/, q{
 
 	    UPDATE veranstaltung
 	    SET mtime = CASE WHEN dat_mtime > cfg_mtime THEN dat_mtime ELSE cfg_mtime END;
+
+	    INSERT INTO veranstaltung_feature
+		SELECT id, "email"
+		FROM veranstaltung;
         }) {
     $dbh->do($sql)
 	or die "$sql: $!\n";
@@ -217,3 +224,21 @@ foreach my $sql (split /\s*;\s*/, q{
 create_version_trigger $dbh, 'veranstaltung';
 create_version_trigger $dbh, 'fahrer';
 create_version_trigger $dbh, 'vareihe';
+
+$dbh->begin_work;
+my $sth = $dbh->prepare(qq{
+    SELECT id, startnummer, bemerkung
+    FROM fahrer
+});
+$sth->execute;
+while (my @row = $sth->fetchrow_array) {
+    my ($id, $startnummer, $bemerkung) = @row;
+    if ($bemerkung =~ s/^([-_a-zA-Z0-9.]+\@[-_a-zA-Z0-9.]+)[,;]? ?//) {
+	$dbh->do(qq{
+	    UPDATE fahrer
+	    SET email = ?, bemerkung = ?
+	    WHERE id = ? AND startnummer = ?
+	}, undef, $1, $bemerkung, $id, $startnummer)
+    }
+}
+$dbh->commit;
