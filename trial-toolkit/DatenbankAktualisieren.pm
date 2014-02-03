@@ -285,7 +285,7 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	foreach my $feld (qw(
 	    klasse helfer bewerber nenngeld nachname vorname strasse wohnort
 	    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
-	    kennzeichen hubraum bemerkung land bundesland helfer_nummer
+	    kennzeichen hubraum email bemerkung land bundesland helfer_nummer
 	    startzeit zielzeit stechen nennungseingang start
 	    start_morgen versicherung runden ausser_konkurrenz ausfall
 	    zusatzpunkte punkte rang)) {

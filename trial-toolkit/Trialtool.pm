@@ -503,6 +503,9 @@ sub dat_datei_schreiben($$$) {
 	    if ($fahrer->{ausser_konkurrenz} && $fahrer->{ausfall} == 0) {
 		$fahrer->{ausfall} = 4;  # Aus der Wertung
 	    }
+	    if (defined $fahrer->{email}) {
+		$fahrer->{bemerkung} = $fahrer->{email} . " " . $fahrer->{bemerkung};
+	    }
 	    if (defined $fahrer->{bundesland}) {
 		$fahrer->{bemerkung} .= " *BL:" .
 		    ($fahrer->{bundesland} // '') . "*";

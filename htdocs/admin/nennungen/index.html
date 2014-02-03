@@ -146,6 +146,12 @@
 		</select>
 	      </td>
 	    </tr>
+	    <tr ng-if="features.email">
+	      <th align="right"><label for="email">E-Mail</label></th>
+	      <td>
+		<input ng-disabled="!enabled.fahrer" type="text" size="40" maxlength="60" ng-model="fahrer.email" id="email">
+	      </td>
+	    </tr>
 	    <tr ng-if="features.bemerkung">
 	      <th align="right"><label for="bemerkung">Bemerkungen</label></th>
 	      <td>

@@ -70,6 +70,7 @@ CREATE TABLE fahrer (
   rahmennummer VARCHAR(20),
   kennzeichen VARCHAR(15),
   hubraum VARCHAR(10),
+  email VARCHAR(60),
   bemerkung VARCHAR(150),
   land VARCHAR(15),
   bundesland VARCHAR(20),

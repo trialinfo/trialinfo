@@ -344,7 +344,7 @@ sub fahrer_aus_datenbank($$;$$$) {
 	SELECT version, startnummer, klasse, helfer, nenngeld, bewerber, nachname,
 	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
-	       bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
+	       email, bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
 	       stechen, start, start_morgen, versicherung,
 	       runden, zusatzpunkte, punkte, ausser_konkurrenz, ausfall,
 	       nennungseingang, s0, s1, s2, s3, s4, s5, rang
