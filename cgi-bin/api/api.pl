@@ -120,23 +120,25 @@ sub veranstaltung_reset($$$) {
 	WHERE id = ?
     }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
 
-    $sth = $dbh->prepare(q{
-	SELECT basis
-	FROM veranstaltung
-	JOIN veranstaltung_feature ON veranstaltung.basis = veranstaltung_feature.id
-	WHERE veranstaltung.id = ? AND feature = 'start_morgen'
-    });
-    $sth->execute($id);
-    if (my @row = $sth->fetchrow_array) {
-        my $basis = $row[0];
-	# Feld start in aktueller Veranstaltung auf
-	# start_morgen von vorheriger Veranstaltung setzen
-	$dbh->do(q{
-	    UPDATE fahrer
-	    JOIN fahrer AS basis USING (startnummer)
-	    SET fahrer.nennungseingang = 1, fahrer.start = 1
-	    WHERE fahrer.id = ? AND basis.id = ? AND basis.start_morgen
-	}, undef, $id, $basis);
+    if ($reset eq 'nennbeginn') {
+	$sth = $dbh->prepare(q{
+	    SELECT basis
+	    FROM veranstaltung
+	    JOIN veranstaltung_feature ON veranstaltung.basis = veranstaltung_feature.id
+	    WHERE veranstaltung.id = ? AND feature = 'start_morgen'
+	});
+	$sth->execute($id);
+	if (my @row = $sth->fetchrow_array) {
+	    my $basis = $row[0];
+	    # Feld start in aktueller Veranstaltung auf
+	    # start_morgen von vorheriger Veranstaltung setzen
+	    $dbh->do(q{
+		UPDATE fahrer
+		JOIN fahrer AS basis USING (startnummer)
+		SET fahrer.nennungseingang = 1, fahrer.start = 1
+		WHERE fahrer.id = ? AND basis.id = ? AND basis.start_morgen
+	    }, undef, $id, $basis);
+	}
     }
     # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
 }
@@ -344,8 +346,6 @@ if ($op eq 'GET/vareihen') {
 	}
 	if (!defined $id && defined $cfg1->{basis}) {
 	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}, $id_neu);
-	    veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
-		if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	    $version = 1;
 	}
 	if (defined $id || defined $cfg1->{basis}) {
@@ -354,6 +354,8 @@ if ($op eq 'GET/vareihen') {
 		if $cfg0->{version} != $version;
 	}
 	veranstaltung_aktualisieren $do_sql, $id_neu, $cfg0, $cfg1;
+	veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
+	    if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	wertung_aktualisieren $dbh, $do_sql, $id_neu;
 	$dbh->commit;
 	$id = $id_neu;
