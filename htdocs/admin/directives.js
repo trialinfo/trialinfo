@@ -176,7 +176,7 @@ function yesNoNullDirective() {
     link: function(scope, element, attr, ctrl) {
       ctrl.$parsers.push(function(text) {
 	if (typeof text == 'string') {
-	  if (text == '') {
+	  if (text == '-') {
 	    ctrl.$setValidity('yesNoNull', true);
 	    return null;
 	  } else if (text === 'yes' || text === 'no') {
@@ -188,7 +188,7 @@ function yesNoNullDirective() {
       });
       ctrl.$formatters.push(function(value) {
 	if (value == null)
-	  return '';
+	  return '-';
 	if (typeof value == 'boolean')
 	  return value ? 'yes' : 'no';
 	else

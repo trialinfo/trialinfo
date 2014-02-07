@@ -18,7 +18,7 @@
 	  <tr><th align="right">Startnummer</th>
 	    <td>
 	      <select ng-model="anzeige.startnummer" yes-no-null title="Fahrer ist eine Startnummer zugeordnet">
-		<option value=""></option>
+		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
 	      </select>
@@ -27,7 +27,7 @@
 	  <tr ng-if="features.nennungseingang"><th align="right">Nennungseingang</th>
 	    <td>
 	      <select ng-model="anzeige.nennungseingang" yes-no-null>
-		<option value=""></option>
+		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
 	      </select>
@@ -36,7 +36,7 @@
 	  <tr><th align="right">Fahrer startet</th>
 	    <td>
 	      <select ng-model="anzeige.start" yes-no-null>
-		<option value=""></option>
+		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
 	      </select>

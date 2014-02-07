@@ -379,7 +379,9 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
     var search = angular.copy(anzeige);
 
     angular.forEach(tristate_optionen, function(option) {
-      if (search[option] !== null)
+      if (search[option] === null)
+	search[option] = '-'
+      else
 	search[option] = search[option] ? 'yes' : 'no';
     });
 
@@ -505,16 +507,6 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
 
   $scope.$on('$routeUpdate', function() {
     var search = $location.search();
-    if (angular.equals(search, {})) {
-      search = {
-	startnummer: 'yes',
-	start: 'yes',
-	gruppierung: 'wertungsklasse',
-	reihenfolge: 'startnummer',
-	klasse: ['-'],
-	feld: ['startnummer', 'name'],
-      };
-    }
     angular.forEach({
       startnummer: 'yes',
       start: 'yes',
