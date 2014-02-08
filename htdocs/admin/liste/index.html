@@ -1,8 +1,14 @@
+<style type="text/css">
+  @media screen {
+    a:link,a:visited { text-decoration:none; color:black; }
+    a:hover,a:active { text-decoration:underline; color:#551a8b; }
+  }
+</style>
+
 <style type="text/css" ng-bind-html="print_style()">
 </style>
 
-<a href="" ng-if="!fold.einstellungen" ng-click="fold.einstellungen = true" class="no-print" title="Anzeige einstellen">↓</a>
-<a href="" ng-if="fold.einstellungen" ng-click="fold.einstellungen = false" class="no-print" title="Anzeige einstellen">↑</a>
+<h1><a href="" ng-click="einstellungen($event)">Fahrerliste {{veranstaltung.wertungen[0].titel}}</a></h1>
 <div ng-if="fold.einstellungen" class="no-print">
   <p>
     <form name="form" ng-model="anzeige.filter">
@@ -150,7 +156,6 @@ table.liste td,th {
 }
 </style>
 
-<h1>Fahrerliste {{veranstaltung.wertungen[0].titel}}</h1>
 <div ng-repeat="gruppe in ergebnisliste" ng-class="$first ? '' : anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">

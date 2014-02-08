@@ -474,6 +474,11 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
       });
     });
   };
+  $scope.einstellungen = function(event) {
+    event.preventDefault();
+    event.target.blur();
+    $scope.fold.einstellungen = !$scope.fold.einstellungen;
+  }
 
   $scope.$watch('anzeige.startnummer', function() {
     if ($scope.anzeige.startnummer !== true) {
