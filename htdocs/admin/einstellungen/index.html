@@ -240,7 +240,7 @@
 	</p>
 	<p>
 	  <input type="checkbox" ng-model="features.bundesland" id="feature_bundesland"><label for="feature_bundesland">Bundesland</label><br>
-	  <input type="checkbox" ng-model="features.start_morgen" id="feature_start_morgen"><label for="feature_start_morgen">Start morgen</label>
+	  <input type="checkbox" ng-model="features.start_morgen" ng-disabled="veranstaltung.reset == 'nennbeginn'" id="feature_start_morgen"><label for="feature_start_morgen">Start morgen</label>
 	</p>
     </fieldset><br>
     <fieldset style="display:inline">

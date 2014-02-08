@@ -220,10 +220,6 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 				$scope.veranstaltungen);
 	    delete veranstaltung.datum;
 	    veranstaltung.reset = 'nennbeginn';
-	    angular.forEach(veranstaltung.features, function(feature, index) {
-	      if (feature == 'start_morgen')
-		veranstaltung.features.splice(index, 1);
-	    });
 	    veranstaltung_zuweisen(veranstaltung, true);
 	  }).
 	  error(netzwerkfehler);

@@ -27,10 +27,12 @@
       <button ng-click="reset('nennbeginn')">Nennbeginn</button>
     </td>
     <td>
-      Löscht zusätzlich <span ng-if="features.nennungseingang">Nennungseingang, </span>Start und Nenngeld
-      <span ng-if="veranstaltung.basis.anzahl_start_morgen">und setzt
+      Löscht zusätzlich <span ng-if="features.nennungseingang">Nennungseingang,</span>
+      Start<span ng-if="features.start_morgen">, Start morgen</span>
+      und das Nenngeld<span ng-if="veranstaltung.basis.anzahl_start_morgen"> und setzt
       <span ng-if="features.nennungseingang">Nennungseingang und</span> Start bei
-      {{veranstaltung.basis.anzahl_start_morgen}} Fahrern mit Start morgen in {{veranstaltung.basis.titel}}.
+      {{veranstaltung.basis.anzahl_start_morgen}} Fahrern mit Start morgen in
+      {{veranstaltung.basis.titel}}</span>.
     </td>
   </tr>
   <tr>
