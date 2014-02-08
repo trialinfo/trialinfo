@@ -379,7 +379,9 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
     var search = angular.copy(anzeige);
 
     angular.forEach(tristate_optionen, function(option) {
-      if (search[option] !== null)
+      if (search[option] === null)
+	search[option] = '-'
+      else
 	search[option] = search[option] ? 'yes' : 'no';
     });
 
@@ -474,6 +476,11 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
       });
     });
   };
+  $scope.einstellungen = function(event) {
+    event.preventDefault();
+    event.target.blur();
+    $scope.fold.einstellungen = !$scope.fold.einstellungen;
+  }
 
   $scope.$watch('anzeige.startnummer', function() {
     if ($scope.anzeige.startnummer !== true) {
@@ -500,16 +507,6 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
 
   $scope.$on('$routeUpdate', function() {
     var search = $location.search();
-    if (angular.equals(search, {})) {
-      search = {
-	startnummer: 'yes',
-	start: 'yes',
-	gruppierung: 'wertungsklasse',
-	reihenfolge: 'startnummer',
-	klasse: ['-'],
-	feld: ['startnummer', 'name'],
-      };
-    }
     angular.forEach({
       startnummer: 'yes',
       start: 'yes',

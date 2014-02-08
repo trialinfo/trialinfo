@@ -6,12 +6,12 @@
       <tr ng-if="!veranstaltung.id">
 	<th align="right"><label for="titel">Basierend auf</label></th>
 	<td>
-	  <select ng-model="veranstaltung.basis" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen | filter:sichtbar">
+	  <select ng-model="veranstaltung.basis.id" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen | filter:sichtbar">
 	    <option value=""></option>
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="!veranstaltung.id && veranstaltung.basis != null">
+      <tr ng-if="!veranstaltung.id && veranstaltung.basis.id != null">
 	<th align="right"><label for="titel">Zurücksetzen auf</label></th>
 	<td>
 	  <select ng-model="veranstaltung.reset">
@@ -20,6 +20,8 @@
 	    <option value="nennbeginn">Nennbeginn</option>
 	    <option value="stammdaten">Nur Stammdaten</option>
 	  </select>
+	  <span ng-if="veranstaltung.reset == 'nennbeginn' && veranstaltung.basis.anzahl_start_morgen" style="color:red">
+	    {{veranstaltung.basis.anzahl_start_morgen}} Fahrer schon als Starter markiert.</span>
 	</td>
       </tr>
       <tr>
@@ -219,7 +221,7 @@
 	  <input type="checkbox" ng-model="features.lizenznummer" id="feature_lizenznummer"><label for="feature_lizenznummer">Lizenznummer</label><br>
 	  <input type="checkbox" ng-model="features.hubraum" id="feature_hubraum"><label for="feature_hubraum">Hubraum</label><br>
 	  <input type="checkbox" ng-model="features.email" id="feature_email"><label for="feature_email">E-Mail</label><br>
-	  <input type="checkbox" ng-model="features.bemerkung" id="feature_bemerkung"><label for="feature_bemerkung">Bemerkung</label><br>
+	  <input type="checkbox" ng-model="features.bemerkung" id="feature_bemerkung"><label for="feature_bemerkung">Bemerkungen</label><br>
 	  <input type="checkbox" ng-model="features.strasse" id="feature_strasse"><label for="feature_strasse">Straße</label><br>
 	  <input type="checkbox" ng-model="features.plz" id="feature_plz"><label for="feature_plz">Postleitzahl</label><br>
 	  <input type="checkbox" ng-model="features.wohnort" id="feature_wohnort"><label for="feature_wohnort">Wohnort</label><br>

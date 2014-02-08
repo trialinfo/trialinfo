@@ -3,7 +3,7 @@
 <span ng-repeat="wertung in wertungen track by $index" ng-if="wertung > 1">
 <a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}&wertung={{wertung}}" target="tageswertung:{{veranstaltung.id}}">Auswertung {{veranstaltung.wertungen[wertung - 1].bezeichnung}}</a><br>
 </span>
-<a href="#/liste/{{veranstaltung.id}}" target="liste:{{veranstaltung.id}}">Fahrerliste</a><br>
+<a href="#/liste/{{veranstaltung.id}}">Fahrerliste</a><br>
 <br>
 <a href="#/veranstaltung/{{veranstaltung.id}}/nennungen">Nennungen</a><br>
 <a href="#/veranstaltung/{{veranstaltung.id}}/punkte">Punktevergabe</a><br>
@@ -19,7 +19,7 @@
       <button ng-click="reset('start')">Start</button>
     </td>
     <td>
-      Löscht alle Punkte, <span ng-if="features.startzeit || features.zielzeit">Start- und Zielzeit, </span>Ausfall, Stechen
+      Löscht alle Daten in der Punktevergabe und die Sektionen aus der Wertung.
     </td>
   </tr>
   <tr>
@@ -27,7 +27,10 @@
       <button ng-click="reset('nennbeginn')">Nennbeginn</button>
     </td>
     <td>
-      Setzt zusätzlich <span ng-if="features.nennungseingang">Nennungseingang und </span>Start zurück, löscht Nenngeld
+      Löscht zusätzlich <span ng-if="features.nennungseingang">Nennungseingang, </span>Start und Nenngeld
+      <span ng-if="veranstaltung.basis.anzahl_start_morgen">und setzt
+      <span ng-if="features.nennungseingang">Nennungseingang und</span> Start bei
+      {{veranstaltung.basis.anzahl_start_morgen}} Fahrern mit Start morgen in {{veranstaltung.basis.titel}}.
     </td>
   </tr>
   <tr>
@@ -35,7 +38,7 @@
       <button ng-click="reset('stammdaten')">Nur Stammdaten</button>
     </td>
     <td>
-      Löscht zusätzlich alle Startnummern und Lizenznummern
+      Löscht alles außer den Stammdaten der Fahrer, inklusive Startnummern und Lizenznummern.
     </td>
   </tr>
 </table>
