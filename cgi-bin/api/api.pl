@@ -120,6 +120,11 @@ sub veranstaltung_reset($$$) {
 	WHERE id = ?
     }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
 
+    $sth = $dbh->do(q{
+	DELETE FROM sektion_aus_wertung
+	WHERE id = ?
+    }, undef, $id);
+
     if ($reset eq 'nennbeginn') {
 	$sth = $dbh->prepare(q{
 	    SELECT basis
