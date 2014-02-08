@@ -349,11 +349,11 @@ if ($op eq 'GET/vareihen') {
 		or die "Konnte keine freie ID finden\n";
 	    $id_neu = ($row[0] // 0) + 1;
 	}
-	if (!defined $id && defined $cfg1->{basis}) {
-	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}, $id_neu);
+	if (!defined $id && defined $cfg1->{basis}{id}) {
+	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}{id}, $id_neu);
 	    $version = 1;
 	}
-	if (defined $id || defined $cfg1->{basis}) {
+	if (defined $id || defined $cfg1->{basis}{id}) {
 	    $cfg0 = cfg_aus_datenbank($dbh, $id_neu, 1);
 	    die "Invalid Row Version\n"
 		if $cfg0->{version} != $version;

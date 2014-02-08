@@ -157,6 +157,34 @@ sub cfg_aus_datenbank($$;$) {
 	unless $cfg = $sth->fetchrow_hashref;
     fixup_hashref($sth, $cfg);
 
+    if (defined $cfg->{basis}) {
+	my $basis = $cfg->{basis};
+	my $sth = $dbh->prepare(q{
+	    SELECT titel
+	    FROM wertung
+	    WHERE id = ? AND wertung = 1
+	});
+	$sth->execute($basis);
+	my ($titel) = $sth->fetchrow_array;
+	my $sth = $dbh->prepare(q{
+	    SELECT COUNT(*)
+	    FROM fahrer
+	    JOIN veranstaltung_feature USING (id)
+	    WHERE id = ? AND start_morgen AND feature = 'start_morgen'
+	});
+	$sth->execute($basis);
+	my @row = $sth->fetchrow_array;
+	fixup_arrayref($sth, \@row);
+	my $anzahl_start_morgen = $row[0];
+	$cfg->{basis} = {
+	    id => $basis,
+	    titel => $titel,
+	    anzahl_start_morgen => $anzahl_start_morgen
+	};
+    } else {
+	$cfg->{basis} = { id => undef };
+    }
+
     $sth = $dbh->prepare(q{
 	SELECT wertung, titel, subtitel, bezeichnung
 	FROM wertung
@@ -208,16 +236,28 @@ sub cfg_aus_datenbank($$;$) {
     });
     $sth->execute($id);
     $cfg->{features} = [];
-    my $feature_sektionen_aus_wertung;
+    my $features = {};
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	push @{$cfg->{features}}, $row[0];
-
-	$feature_sektionen_aus_wertung = 1
-	    if $row[0] eq 'sektionen_aus_wertung';
+	$features->{$row[0]} = 1;
     }
-    $cfg->{sektionen_aus_wertung} = $feature_sektionen_aus_wertung ?
+    $cfg->{sektionen_aus_wertung} = $features->{sektionen_aus_wertung} ?
 	sektionen_aus_wertung_aus_datenbank($dbh, $id) : undef;
+    if ($features->{start_morgen}) {
+	my $sth = $dbh->prepare(q{
+	    SELECT COUNT(*)
+	    FROM fahrer
+	    WHERE id = ? AND start_morgen
+	});
+	$sth->execute($id);
+	my @row = $sth->fetchrow_array;
+	fixup_arrayref($sth, \@row);
+	my ($anzahl_start_morgen) = $row[0];
+	$cfg->{anzahl_start_morgen} = $anzahl_start_morgen;
+    } else {
+	$cfg->{anzahl_start_morgen} = 0;
+    }
 
     unless ($ohne_trialtool) {
 	$sth = $dbh->prepare(q{

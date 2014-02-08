@@ -588,7 +588,7 @@ sub veranstaltung_aktualisieren($$$$) {
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
 	foreach my $feld (qw(
-	    basis dateiname datum aktiv vierpunktewertung wertungsmodus
+	    dateiname datum aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
 	    wertung1_markiert versicherung ergebnislistenbreite
 	    ergebnisliste_feld dat_mtime cfg_mtime mtime punkteteilung)) {
@@ -598,6 +598,12 @@ sub veranstaltung_aktualisieren($$$$) {
 		    if $alt;
 		push @$felder_neu, $neu->{$feld};
 	    }
+	}
+	if (exists $neu->{basis}) {
+	    push @$felder, 'basis';
+	    push @$felder_alt, $alt->{basis}{id}
+		if $alt;
+	    push @$felder_neu, $neu->{basis}{id};
 	}
     }
 

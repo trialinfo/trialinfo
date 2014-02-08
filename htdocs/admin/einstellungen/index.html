@@ -6,12 +6,12 @@
       <tr ng-if="!veranstaltung.id">
 	<th align="right"><label for="titel">Basierend auf</label></th>
 	<td>
-	  <select ng-model="veranstaltung.basis" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen | filter:sichtbar">
+	  <select ng-model="veranstaltung.basis.id" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen | filter:sichtbar">
 	    <option value=""></option>
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="!veranstaltung.id && veranstaltung.basis != null">
+      <tr ng-if="!veranstaltung.id && veranstaltung.basis.id != null">
 	<th align="right"><label for="titel">Zurücksetzen auf</label></th>
 	<td>
 	  <select ng-model="veranstaltung.reset">
@@ -20,6 +20,8 @@
 	    <option value="nennbeginn">Nennbeginn</option>
 	    <option value="stammdaten">Nur Stammdaten</option>
 	  </select>
+	  <span ng-if="veranstaltung.reset == 'nennbeginn' && veranstaltung.basis.anzahl_start_morgen" style="color:red">
+	    {{veranstaltung.basis.anzahl_start_morgen}} Fahrer schon als Starter markiert.</span>
 	</td>
       </tr>
       <tr>

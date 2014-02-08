@@ -118,7 +118,8 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	wertungspunkte: [],
 	wertungsmodus: 0,
 	versicherung: 0,
-	reset: 'nennbeginn'
+	reset: 'nennbeginn',
+	basis: { id: null }
       };
     }
 
@@ -201,13 +202,18 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       return titel;
     }
 
-    $scope.veranstaltung.basis = null;
-    $scope.$watch('veranstaltung.basis', function() {
-      var basis = $scope.veranstaltung.basis;
+    $scope.veranstaltung.basis = { id: null };
+    $scope.$watch('veranstaltung.basis.id', function() {
+      var basis = $scope.veranstaltung.basis.id;
       if (basis !== null && basis !== undefined) {
 	$http.get('/api/veranstaltung', {'params': {'id': basis}}).
 	  success(function(veranstaltung) {
-	    veranstaltung.basis = veranstaltung.id;
+	    veranstaltung.basis = {
+	      id: veranstaltung.id,
+	      titel: veranstaltung.wertungen[0].titel,
+	      anzahl_start_morgen: veranstaltung.anzahl_start_morgen
+	    };
+	    delete veranstaltung.anzahl_start_morgen;
 	    delete veranstaltung.id;
 	    veranstaltung.wertungen[0].titel =
 	      eindeutiger_titel(veranstaltung.wertungen[0].titel,
