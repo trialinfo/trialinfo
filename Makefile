@@ -42,6 +42,7 @@ LOCAL_FILES = \
 GENERATED_WEB_FILES = \
 	cgi-bin/api/.htaccess \
 	cgi-bin/veranstalter/.htaccess \
+	htdocs/admin/hilfe/.htaccess \
 	htdocs/admin/.htaccess \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
@@ -55,8 +56,11 @@ ADMIN_FILES = \
 	htdocs/admin/directives.js \
 	htdocs/admin/einstellungen/controller.js \
 	htdocs/admin/einstellungen/index.html \
+	htdocs/admin/hilfe/index.html \
 	htdocs/admin/.htaccess \
 	htdocs/admin/index.shtml \
+	htdocs/admin/liste/controller.js \
+	htdocs/admin/liste/index.html \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
 	htdocs/admin/nennungen/controller.js \
@@ -69,8 +73,6 @@ ADMIN_FILES = \
 	htdocs/admin/vareihe/index.html \
 	htdocs/admin/veranstaltung/controller.js \
 	htdocs/admin/veranstaltung/index.html \
-	htdocs/admin/liste/index.html \
-	htdocs/admin/liste/controller.js \
 	htdocs/api/.htaccess \
 
 WEB_FILES = \
