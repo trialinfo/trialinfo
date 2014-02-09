@@ -41,6 +41,14 @@
 	<td><input type="text" size="19" maxlength="19" ng-model="veranstaltung.mtime" iso-timestamp id="mtime" disabled="disabled"></span></td>
       </tr>
       <tr>
+	<th align="right"><label for="art">Art</label></th>
+	<td>
+	  <select ng-model="veranstaltung.art" id="art" nullable>
+	    <option value=""></option>
+	    <option value="otsv2014">ÖTSV + OSK 2014</option>
+	  </select>
+      </tr>
+      <tr>
 	<th align="right">Aktiv</th>
 	<td>
 	  <input type="checkbox" ng-model="veranstaltung.aktiv" id="aktiv"><label for="aktiv">Veranstaltung anzeigen und in Wertungen berücksichtigen</label>

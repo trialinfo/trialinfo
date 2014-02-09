@@ -108,6 +108,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     if (veranstaltung === null) {
       veranstaltung = {
 	version: 0,
+	art: null,
 	aktiv: true,
 	klassen: [],
 	kartenfarben: [],
