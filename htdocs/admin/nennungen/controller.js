@@ -118,6 +118,33 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     return !angular.equals($scope.fahrer_alt, $scope.fahrer);
   };
 
+  $scope.$watch('fahrer.geburtsdatum', function(geburtsdatum) {
+    var match;
+    if (geburtsdatum === undefined || geburtsdatum === null ||
+        !(match = geburtsdatum.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+      delete $scope.alter;
+      delete $scope.jahrgang_alter;
+      return;
+    }
+    geburtsdatum = new Date(match[1], match[2] - 1, match[3]);
+    var geburtsjahr = new Date(match[1], 0, 1);
+
+    var jetzt;
+    if (veranstaltung.datum &&
+        (match = veranstaltung.datum.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
+      jetzt = new Date(match[1], match[2] - 1, match[3]);
+    else
+      jetzt = new Date();
+
+    var alter = new Date();
+    alter.setTime(jetzt - geburtsdatum);
+    $scope.alter = alter.getUTCFullYear() - 1970;
+
+    var jahrgang_alter = new Date();
+    jahrgang_alter.setTime(jetzt - geburtsjahr);
+    $scope.jahrgang_alter = jahrgang_alter.getUTCFullYear() - 1970 - 1;
+  });
+
   $scope.speichern = function() {
     /* FIXME: Wenn Start, dann muss die Klasse starten. */
     var startnummer;

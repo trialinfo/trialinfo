@@ -222,6 +222,33 @@
 	      {{startnummer_belegt.nachname}} {{startnummer_belegt.vorname}} ({{startnummer_belegt.startnummer}})<br>
 	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}
 	    </span>
+	    <span ng-if="fahrer.geburtsdatum && veranstaltung.art == 'otsv2014'" style="color: red">
+	      <span ng-if="(fahrer.klasse == 3 || fahrer.klasse == 4) && jahrgang_alter > 45">
+		Fahrer war zu Jahresanfang über 45 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse + 3}} starten.
+	      </span>
+	      <span ng-if="(fahrer.klasse == 6 || fahrer.klasse == 7) && jahrgang_alter <= 45">
+		Fahrer war zu Jahresanfang noch nicht über 45 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse - 3}} starten.
+	      </span>
+	      <span ng-if="fahrer.klasse == 11 && alter < 14">
+		Fahrer ist noch nicht 14 Jahre alt<br>und darf in Klasse 11 noch nicht starten.
+	      </span>
+	      <span ng-if="fahrer.klasse == 12">
+		<span ng-if="alter < 12">
+		  Fahrer ist noch nicht 12 Jahre alt<br>und darf in Klasse 12 noch nicht starten.
+		</span>
+		<span ng-if="jahrgang_alter > 16">
+		  Fahrer war zu Jahresanfang über 16 Jahre alt<br>und darf in Klasse 12 nicht mehr starten.
+		</span>
+	      </span>
+	      <span ng-if="fahrer.klasse == 13">
+		<span ng-if="alter < 10">
+		  Fahrer ist noch nicht 10 Jahre alt<br>und darf in Klasse 13 noch nicht starten.
+		</span>
+		<span ng-if="jahrgang_alter > 14">
+		  Fahrer war zu Jahresanfang über 14 Jahre alt<br>und darf in Klasse 13 nicht mehr starten.
+		</span>
+	      </span>
+	    </span>
 	  </p>
 	  <p>
 	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
