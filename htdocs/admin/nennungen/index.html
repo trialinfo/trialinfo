@@ -220,7 +220,8 @@
 	    <span ng-if="startnummer_belegt" style="color: red">
 	      Startnummer belegt:<br>
 	      {{startnummer_belegt.nachname}} {{startnummer_belegt.vorname}} ({{startnummer_belegt.startnummer}})<br>
-	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}</span>
+	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}
+	    </span>
 	  </p>
 	  <p>
 	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
