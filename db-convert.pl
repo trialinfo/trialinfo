@@ -132,6 +132,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE fahrer
 	    ADD COLUMN email VARCHAR(60) AFTER hubraum;
 
+	    ALTER TABLE fahrer
+	    CHANGE COLUMN ausfall ausfall INT DEFAULT 0;
+
 	    ALTER TABLE vareihe
 	    ADD COLUMN version INT NOT NULL DEFAULT 1 FIRST;
 
