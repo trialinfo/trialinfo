@@ -173,6 +173,7 @@ CREATE TABLE veranstaltung (
   dat_mtime TIMESTAMP NULL,
   cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
+  art VARCHAR(20),  -- Art der Veranstaltung
   aktiv BOOLEAN,
   vierpunktewertung BOOLEAN,
   wertungsmodus INT,

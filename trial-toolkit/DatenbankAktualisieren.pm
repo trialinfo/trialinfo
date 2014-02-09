@@ -588,7 +588,7 @@ sub veranstaltung_aktualisieren($$$$) {
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
 	foreach my $feld (qw(
-	    dateiname datum aktiv vierpunktewertung wertungsmodus
+	    dateiname datum art aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
 	    wertung1_markiert versicherung ergebnislistenbreite
 	    ergebnisliste_feld dat_mtime cfg_mtime mtime punkteteilung)) {
