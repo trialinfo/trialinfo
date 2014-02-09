@@ -12,22 +12,21 @@
 <h1>Trial-Auswertung</h1>
 <p>Willkommen zum Auswertungssystem für Fahrrad- und
 Motorrad-Trial-Wettbewerbe.  Sie können hier alle wesentlichen Schritte zur
-Verwaltung einer Veranstaltung (Nennung, Punktevergabe, Erstellung diverser
+Verwaltung einer Veranstaltung (Nennung, Punktevergabe, Erstellung von
 Listen, Auswertung) und zur Erstellung einer Gesamtwertung über mehrere
 Veranstaltungen durchführen.</p>
 
-<p>Das Auswertunggsystem ist als datenbankbasierte Web-Applikation
-implementiert. Das heißt, dass die Bedienung über einen Web-Browser erfolgt,
-der mit dem entsprechenden Server kommuniziert. Auf dem Server werden dann die
-Veranstaltungs- und Gesamtwertungen berechnet und die Daten in einer Datenbank
-abgelegt. <!--Dieser Server kann über das Internet erreichbar sein, es besteht
-aber auch die Möglichkeit, die Software auf einem nicht ständig mit dem
-Internet verbundenen Gerät wie einem Notebook zu installieren.--></p>
+<p>Das Auswertunggsystem ist eine datenbankbasierte Web-Applikation, das heißt,
+die Bedienung erfolgt über einen Web-Browser, der mit dem entsprechenden Server
+kommuniziert. Auf dem Server werden die Veranstaltungs- und Gesamtwertungen
+berechnet und die Daten in einer Datenbank abgelegt. <!--Dieser Server kann
+über das Internet erreichbar sein, es besteht aber auch die Möglichkeit, die
+Software auf einem nicht ständig mit dem Internet verbundenen Gerät wie einem
+Notebook zu installieren.--></p>
 
 <p>Der Zugriff auf den Server kann auch von mehreren Geräten aus gleichzeitig
-erfolgen. Wenn dabei versucht wird, die selben Daten mehrfach und unabhängig
-voneinander zu verändern, werden diese Konflikte erkannt und es kommt zu
-Fehlermeldungen.</p>
+erfolgen. Wird dabei versucht, die selben Daten mehrfach zu verändern, dann
+werden diese Konflikte erkannt, und es kommt zu Fehlermeldungen.</p>
 
 <h2>Formulare und Navigation</h2>
 <p>Die Formulare und die ganze Web-Applikation sind so gestaltet, dass alle
@@ -38,10 +37,10 @@ angesprungen, und wichtige Aktionen über die Tastatur ausgelöst werden:
 <li> Die Taste ⏎ (Eingabetaste) speichert ein Formular.
 <li> Die Escape-Taste (⎋) verwirft die Änderungen in einem Formular.
 <li> Unterstrichene Buchstaben in Formularen kennzeichnen, dass eine
-Browser-abhängige Tastenkombination + unterstrichener Buchstabe das Feld
+browserabhängige Tastenkombination plus der unterstrichene Buchstabe das Feld
 anspringt oder die Aktion auslöst.  Auf PCs ist diese Tastenkombination oft ⎇ ⇧
-(Alt-Shift), auf MacOS ^⌥ (Ctrl + Opt). Es gibt dazu auch eine Übersicht auf <a
-href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.
+(Alt + Umschalttaste), auf MacOS ^⌥ (Ctrl + Option). Es gibt dazu auch eine
+Übersicht auf <a href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.
 </ul>
 </p>
 
@@ -50,13 +49,17 @@ href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.
 warnt, wenn versucht wird, ein Formular mit nicht gespeicherten Änderungen zu
 verlassen.</p>
 
-<p>Die Navigation in der Web-Applikation erfolgt über die Links und über die
-Zurück-Taste, um auf die vorige Seite zu springen. Auf Tastaturen auf denen es
-keine Zurück-Taste gibt, ist die entsprechende Tastaturkombination meist ⎇ ←
-(Alt-Links) oder ⌘← (Command-Links).</p>
+<p>Die Navigation in der Web-Applikation erfolgt über die Verknüpfungen und
+über die Zurück-Taste, um auf die vorige Seite zu springen. Auf Tastaturen, auf
+denen es keine Zurück-Taste gibt, ist die entsprechende Tastaturkombination
+meist ⎇ ← (Alt + Links) oder ⌘← (Command + Links).</p>
+
+<p>Die Schriftgröße lässt sich ebenfalls über den Web-Browser verändern; über
+die Tastatur üblicherweise mit ^+ und ^− (Ctrl + Plus und Ctrl + Minus)
+beziehungsweise ⌘+ und ⌘− (Command + Plus und Command + Minus).</p>
 
 <p>Außerdem können bei Bedarf Seiten der Applikation in mehreren Tabs oder
-Fenstern geöffnet werden, zwischen denen gewechselt wird.</p>
+Fenstern geöffnet werden, zwischen denen gewechselt werden kann.</p>
 
 <h2>Übersicht über die Web-Applikation</h2>
 <p>Nach der Eingabe von Benutzername und Kennwort kommt man auf die
@@ -65,43 +68,45 @@ Veranstaltungsreihen aufgelistet sind.  Hier kann man eine der Veranstaltungen
 oder Veranstaltungsreihen auswählen, oder eine neue Veranstaltung oder
 Veranstaltungsreihe anlegen.</p>
 
-<p>In der Übersicht erscheinen Veranstaltungen durchgestrichen, die in ihren
-Einstellungen als verborgen markiert sind; siehe dazu <a
+<p>Veranstaltungen, die in ihren Einstellungen als verborgen markiert sind, erscheinen
+in der Übersicht durchgestrichen (siehe <a
 href="#veranstaltung_verborgen">Veranstaltung anzeigen und in Wertungen
-berücksichtigen</a>. Veranstaltungsreihen erscheinen durchgestrichen, wenn die
-enthaltenen Veranstaltungen in der Übersicht verborgen werden; siehe dazu <a
+berücksichtigen</a>). Veranstaltungsreihen, deren enthaltene Veranstaltungen in
+der Übersicht verborgen werden, erscheinen ebenfalls durchgestrichen (siehe <a
 href="#veranstaltungen_verbergen">Veranstaltungen in Übersicht
-verbergen</a>.</p>
+verbergen</a>).</p>
 
-<p>Bei der Auswahl einer Veranstaltung erscheint eine Übersicht dieser
-Veranstaltung mit der Möglichkeit, zur Auswertung dieser Veranstaltung zu
-springen, diverse Fahrerlisten zu erstellen, die Nennungen zu verwalten, die
-Ergebnisse der einzelnen Runden einzugeben, diverse Einstellungen vorzunehmen,
-Sektionen aus der Wertung zu nehmen, die Daten der Veranstaltung
-zurückzusetzen, oder die Veranstaltung zu löschen.</p>
+<p>Bei der Auswahl einer Veranstaltung erscheint eine Veranstaltungsübersicht.
+Dort kann man zur Auswertung dieser Veranstaltung springen, Fahrerlisten
+erstellen, die Nennungen verwalten, die Ergebnisse der einzelnen Runden
+eingeben, Einstellungen vornehmen, Sektionen aus der Wertung nehmen, die Daten
+der Veranstaltung zurücksetzen, oder die Veranstaltung löschen.</p>
 
 <p>Bei der Auswahl einer Veranstaltungsreihe kann man zur Gesamtwertung der
-Veranstaltungsreihe springen, diverse Eigenschaften der Veranstaltungsreihe
+Veranstaltungsreihe springen, Eigenschaften der Veranstaltungsreihe
 verändern, die enthaltenen Veranstaltungen und Klassen zuordnen, und
 Startnummernänderungen definieren.</p>
 
-<h2>Auswertung</h2>
-<p>Auf der Veranstaltungsübersicht erscheint immer ein Link für die
+<h2>Auswertungen</h2>
+<p>In der Veranstaltungsübersicht erscheint ein Link für die
 Tageswertung, in der alle Starter dieses Tages aufscheinen.</p>
 
 <p>Falls Wertung&nbsp;1 in den Einstellungen aktiviert ist, wird diese als Teil
-der Tageswertung ausgegeben (Spalte "Wertungspunkte").</p>
+der Tageswertung angezeigt (Spalte Wertungspunkte).</p>
 
 <p>Für jede weitere aktivierte Wertung in den Einstellungen erscheint in der
 Veranstaltungsübersicht ein weiterer Link; hier werden jeweils nur die Fahrer
 in dieser Wertung angezeigt.</p>
+
+<p>Die Auswertungen über Veranstaltungsreihen sind in den jeweiligen
+Veranstaltungsreihen zu finden.</p>
 
 <h2>Fahrerliste</h2>
 <p>
 Beim Aufruf der Fahrerliste erscheint zunächst eine Liste der Fahrer, gruppiert
 nach Klassen und sortiert nach Startnummern. Diese Liste kann verändert werden,
 indem man auf die Überschrift klickt (die Überschrift ist ein versteckter
-Link). Es erscheinen darufhin diverse Einstellungsmöglichkeiten; bei einem
+Link). Es erscheinen darufhin verschiedene Einstellungsmöglichkeiten; bei einem
 weiteren Klick auf die Überschrift verschwinden diese wieder.</p>
 
 <p>Hier kann man auswählen, dass nur Starter oder nur Fahrer mit einer
@@ -117,58 +122,56 @@ an den Veranstaltungseinstellungen liegen.</p>
 kann man hauptsächlich das Seitenformat und die Basis-Schriftgröße einstellen.
 Falls es der Server unterstützt, kann dort direkt eine PDF-Datei erstellt
 werden; anderenfalls bleibt nur die Möglichkeit, die Fahrerliste direkt über
-den Web-Browser zu drucken. (Wie weit die Web-Browser die Druckeinstellungen
+den Web-Browser zu drucken. Wie weit die Web-Browser die Druckeinstellungen
 respektieren, unterscheidet sich leider stark zwischen Web-Browsern; zurzeit
 liefert leider kein einziger Browser wirklich zufriedenstellende
-Ergebnisse.)</p>
+Ergebnisse.</p>
 
 <h2>Nennungen</h2>
 <p>Die eine zentrale Stelle im Auswertungssystem sind die Nennungen. Hier kann
-zunächst im Bereich "Navigation" nach vorhandenen Fahrern gesucht und zwischen
+zunächst im Bereich Navigation nach vorhandenen Fahrern gesucht und zwischen
 Fahrern gewechselt werden. Weiters können hier neue Fahrer angelegt, und
 bestehende Fahrer gelöscht werden.</p>
 
 <p>Sobald einem Fahrer eine Startnummer zugeordnet wurde, ist das Feld
-"Startnummer" für Änderungen gesperrt, um dieses Feld besonders zu schützen.
-Die Sperre kann über die Schaltfläche "Startnummer ändern" aufgehoben werden.</p>
+Startnummer für Änderungen gesperrt, um es besonders zu schützen.
+Die Sperre kann über die Schaltfläche <em>Startnummer ändern</em> aufgehoben werden.</p>
 
 <p>Eine Änderung der Startnummer hat auf die Punkte des Fahrers keine
-Auswirkung. Beachten Sie aber, dass Veranstaltungsreihen die Startnummern
-verwenden, um die Ergebnisse über die verschiedenen Veranstaltungen den
-richtigen Fahrern zuzuordnen.  Es gibt außerdem die Möglichkeit, Startnummern
-nur für bestimmte Veranstaltungen innerhalb einer Veranstaltungsreihe
-umzudefinieren, statt sie in den Veranstaltungen selbst zu ändern; siehe dazu
-<a href="#vareihe_startnummern">Startnummernänderungen</a>.</p>
+Auswirkung. Beachten Sie aber, dass die Veranstaltungsreihen die Ergebnisse
+aufgrund der Startnummern zuordnen. Es gibt außer der Möglichkeit, Startnummern
+direkt in den Veranstaltungen zu ändern, auch die Möglichkeit, Startnummern nur
+innerhalb einer Veranstaltungsreihe zu ändern (siehe <a
+href="#vareihe_startnummern">Startnummernänderungen</a>).</p>
 
-<p>Bei Fahrern, denen (noch) keine Startnummer zugeordnet ist, ist das Feld
-"Startnummer" leer. Entsprechend kann die Startnummer eines Fahrers auch
-gelöscht werden, indem das Feld "Startnummer" geleert wird.</p>
+<p>Bei Fahrern, denen keine Startnummer zugeordnet ist, ist das Feld
+Startnummer leer. Dem entsprechend kann die Startnummer eines Fahrers auch
+gelöscht werden, indem das Feld Startnummer geleert wird.</p>
 
-<p>Das Nennformular kann eine relativ große Anzahl an Feldern enthalten, wenn
-diese benötigt werden, um die Übersichtlichkeit zu erhöhen, können nicht
-verwendete Felder aber auch in den Veranstaltungs-Einstellungen ausgeblendet
-werden.</p>
+<p>Das Nennformular kann eine relativ große Anzahl an Feldern enthalten.  Um
+die Übersichtlichkeit zu erhöhen, können nicht verwendete Felder aber auch in
+den Veranstaltungseinstellungen ausgeblendet werden.</p>
 
 <h2>Punktevergabe</h2>
 <p>Die andere zentrale Stelle im Auswertungssystem ist die Punktevergabe. Wier
-werden die Punkte der Fahrer in den einzelnen Sektionen erfasst; typischerweise
-rundenweise.</p>
+werden die Punkte der Fahrer in den einzelnen Sektionen typischerweise
+rundenweise erfasst.</p>
 
-<p>Um eine Sektion aus ausgelassen zu markieren, muss "-" in das Punktefeld
-eingetragen werden. Die Sektion wird dann mit den in den Einstellungen
-für ausgelassene Sektionen definierten Strafpunkten gewertet.</p>
+<p>Um eine Sektion aus ausgelassen zu markieren, muss „−“ in das Punktefeld
+eingetragen werden. Die Sektion wird dann mit den dafür definierten
+Strafpunkten gewertet.</p>
 
 <h2>Suche in den Nennungen und in der Punktevergabe</h2>
 <p>Die Suche ist über die Startnummer oder über Bestandteile des Namens
 möglich. Beispiele:
 <ul>
-<li> "470" findet den Fahrer mit der Startnummer 470.
+<li> „470“ findet den Fahrer mit der Startnummer 470.
 
-<li> "an gr" findet sowohl Andreas Grünbacher als auch Andreas Gradl.
+<li> „an gr“ findet sowohl Andreas Grünbacher als auch Andreas Gradl.
 
-<li> "*bacher" findet alle Fahrer mit dem Namensbestandteil "bacher".
+<li> „*bacher“ findet alle Fahrer mit dem Namensbestandteil „bacher“
 
-<li> "Bach?er" findet sowohl Bachner als auch Bachler.
+<li> „Bach?er“ findet sowohl Bachner als auch Bachler.
 </ul>
 </p>
 
@@ -177,55 +180,53 @@ einer Liste angezeigt, aus der der richtige Fahrer ausgewählt werden kann.</p>
 
 <p>Im Nennformular findet die Suche alle Fahrer, über die Daten vorliegen. In
 der Punktevergabe liefert die Suche nach Namen lediglich Fahrer, die als
-Starter markiert sind; eine Suche nach Startnummer liefert allerdings auch
-Fahrer, die nicht als Starter markiert sind. Das erlaubt es, Fahrer
-nachträglich als Starter zu markieren, bei denen das bei der Nennung vergessen
-wurde.</p>
+Starter markiert sind, die Suche nach Startnummern liefert aber auch
+Fahrer, die nicht als Starter markiert sind. Diese Fahrer können dann direkt in
+der Punktevergabe nachträglich als Starter markiert werden.</p>
 
 <h2>Einstellungen</h2>
 <p>Hier werden alle konfigurierbaren Aspekte einer Veranstaltung definiert. Die
 meisten Einstellungen sollten recht offensichtlich sein, die folgenden
-bedürfen aber möglicherweise einer Erklärung.</p>
+bedürfen aber einer Erklärung.</p>
 
 <h3 id="veranstaltung_verborgen">Allgemein / Veranstaltung anzeigen und in Wertungen berücksichtigen</h3>
-<p>Hier kann man eine Veranstaltung auf den normalerweise öffentlichen
-Ergebnisseiten zu verbergen, und sie in Veranstaltungsreihen zu ignorieren. Im
-Auswertungssystem bleibt die Veranstaltung dabei dennoch sichtbar.</p>
+<p>Hier kann man eine Veranstaltung auf den Ergebnisseiten verbergen und sie in
+Veranstaltungsreihen zu ignorieren. Im Auswertungssystem bleibt die
+Veranstaltung sichtbar.</p>
 
 <h3>Wertungspunkte / Punkteteilung bei gleicher Platzierung</h3>
-<p>Wenn es ex aequo-Platzierungen gibt, vergibt das Trialtool normalerweise
-allen Fahrern die maximalen Wertungspunkte: zwei Erste bekommen beide die
-Wertungspunkte für den ersten Platz, der nächste Fahrer hat Platz 3. Bei
-Punkteteilung werden stattdessen die Wertungspunkte für den ersten und zweiten
-Platz unter den beiden Ersten aufgeteilt.</p>
+<p>Wenn es ex aequo-Platzierungen gibt, bekommen normalerweise allen Fahrer die
+maximalen Wertungspunkte: zwei Erste bekommen beide die Wertungspunkte für den
+ersten Platz, der nächste Fahrer hat Platz 3. Bei Punkteteilung werden
+stattdessen die Wertungspunkte für den ersten und zweiten Platz unter den
+beiden Ersten aufgeteilt.</p>
 
 <h3>Klassen</h3>
-<p>Das Feld "Wertung in Klasse" definiert hier, dass eine Klasse nicht als
-eigene Klasse startet, sondern gemeinsam mit der angegebenen Klasse gewertet
-wird. Das Äquivalent wäre, die Klasse aller betroffenen Fahrer in der Nennung
-zu ändern. Dieses Feld ist üblicherweise leer.</p>
+<p>Das Feld <em>Wertung in Klasse</em> definiert hier, dass eine Klasse nicht
+als eigene Klasse startet, sondern gemeinsam mit der angegebenen Klasse
+gewertet wird. Das Äquivalent wäre, die Klasse aller betroffenen Fahrer in der
+Nennung zu ändern. Dieses Feld ist üblicherweise leer.</p>
 
-<p>Das Feld "Keine Wertungen" gibt an, dass Fahrer in dieser Klasse unabhängig
-von den Einstellungen in der Nennung an keinen Wertungen teilnehmen, und ihnen
-daher auch keine Wertungspunkte vergeben werden. Das Äquivalent wäre, die
-Wertungen aller betroffenen Fahrer in den Nennungen zu deaktivieren.</p>
+<p>Das Feld <em>Keine Wertung&nbsp;1</em> gibt an, dass Fahrer in dieser Klasse unabhängig
+von den Einstellungen in der Nennung an Wertung&nbsp;1 nicht teilnehmen, und ihnen
+daher auch keine Wertungspunkte vergeben werden. Das Äquivalent wäre,
+Wertung&nbsp;1 aller betroffenen Fahrer in der Nennung zu deaktivieren.</p>
 
-<h3>Nennformular / Sichtbare Felder / "Start morgen"</h3>
+<h3>Nennformular / Sichtbare Felder / Start morgen</h3>
 <p>Wenn diese Einstellung aktiviert ist, kann im Nennformular angewählt werden,
-dass ein Fahrer auch morgen (beziehungsweise eigentlich bei der nächsten
-Veranstaltung) startet. So kann an Wochenenden am Samstag erfasst werden,
-welche Fahrer auch schon für Sonntag genannt haben.  Wenn die
-Folgeveranstaltung für Sonntag dann angelegt wird, sind diese Fahrer
-automatisch als Starter markiert.</p>
+dass ein Fahrer auch morgen (beziehungsweise bei der folgenden Veranstaltung)
+startet. So kann an Wochenenden am Samstag erfasst werden, welche Fahrer auch
+schon für Sonntag genannt haben.  Wenn die Folgeveranstaltung für Sonntag dann
+angelegt wird, werden diese Fahrer automatisch als Starter markiert.</p>
 
 <h2>Sektionen aus der Wertung</h2>
 <p>Hier wird definiert, welche Sektionen für welche Klassen in welchen Runden
 nicht gewertet werden sollen, unabhängig davon, ob in der Punktevergabe Punkte
-für diese Sektionen eingetragen wurden. Wird eine Sektion aus der Wertung
+dafür eingetragen wurden. Wird eine Sektion aus der Wertung
 genommen, so erscheint sie auch nicht mehr in der Punktevergabe.</p>
 
 <p>Die vergebenen Punkte werden dabei nicht gelöscht sondern nur in der
-Wertungsberechnung ignoriert, sodass etwaige Fehler leicht wieder rückgängig
+Wertungsberechnung ignoriert, sodass Fehler leicht wieder rückgängig
 gemacht werden können.</p>
 
 <h2 id="reset">Zurücksetzen</h2>
@@ -240,16 +241,15 @@ Nenngeld aller Fahrer. Wenn in der vorigen Veranstaltung Fahrer für den Start
 morgen markiert sind, wird Nennungseingang und Start bei diesen Fahrern
 gesetzt.
 
-<li>Nur Stammdaten: Löscht zusätzlich alle Startnummern und Lizenznummern.
-Das ist für den Jahreswechsel gedacht.
+<li>Nur Stammdaten: Löscht alles außer den Stammdaten der Fahrer, inklusive
+Startnummern und Lizenznummern.
 </ul>
-Nach einer Rückfrage zur Vermeidung von Irrtümern wird die Veranstaltung
-zurückgesetzt. Achtung, die dabei gelöschten Daten sind danach wirklich weg!</p>
+Nach einer Rückfrage wird die Veranstaltung zurückgesetzt. Achtung, die dabei
+gelöschten Daten sind danach wirklich weg!</p>
 
 <h2>Löschen</h2>
-Betätigt man diesen Link, dann kann man dort "Veranstaltung löschen" auswählen.
-Nach einer Rückfrage zur Vermeidung von Irrtümern wird die Veranstaltung
-vollständig gelöscht.  Achtung, die Daten sind danach wirklich weg!
+Hier kann man nach einer Rückfrage die Veranstaltung löschen.  Achtung, die
+Daten sind danach wirklich weg!
 
 <h2>Neue Veranstaltung anlegen</h2>
 <p>Beim Anlegen einer neuen Veranstaltung kann man eine der existierenden
@@ -264,66 +264,59 @@ Nachhinein verändern.</p>
 
 <p>Wenn eine Basisveranstaltung angegeben wird, dann hat man auch die
 Möglichkeit, die Daten der neuen Veranstaltung sofort zurückzusetzen (siehe <a
-href="#reset">Zurücksetzen</a>). Fahrer, die in der Basisveranstaltung für den
-"Start morgen" markiert sind, werden in der neuen Veranstaltung automatisch als
-Starter markiert.</p>
+href="#reset">Zurücksetzen</a>).</p>
 
 <h2>Veranstaltungsreihen</h2>
 <p>Auch hier sollten die meisten Einstellungen recht offensichtlich sein, die
 folgenden Dinge sollten aber trotzdem erwähnt werden.</p>
 
 <h3 id="veranstaltungen_verbergen">Allgemein / Veranstaltungen in Übersicht verbergen</h3>
-<p>Über diese Einstellung können alle Einstellungen, die in dieser
+<p>Über diese Einstellung können alle Veranstaltungen, die in dieser
 Veranstaltungsreihe sind, auf der Übersichtsseite des Auswertungssystems
-verborgen werden. Das kann etwa dazu verwendet werden um Veranstaltungen aus
-vergangenen Jahren in der Übersicht zu verbergen, um die Übersichtlichkeit zu
-erhöhen.</p>
+verborgen werden. Das kann etwa dazu verwendet werden, um die Veranstaltungen aus
+den vergangenen Jahren in der Übersicht zu verbergen.</p>
 
 <h3 id="vareihe_startnummern">Startnummernänderungen</h3>
-<p>Hier kann für die Veranstaltungsreihe definiert werden, dass bestimmte
-Startnummern in bestimmten Veranstaltungen durch andere ersetzt werden sollen,
-oder dass die erzielten Punkte eines Fahrers nicht berücksichtigt werden
-sollen. (Startnummernänderungen sind nur relevant, wenn ein Fahrer
-Wertungspunkte erzielt hat, anderenfalls scheint er in der Veranstaltungsreihe
-ja nicht auf.</p>
+<p>Hier kann für die Veranstaltungsreihe pro Veranstaltung definiert werden,
+dass bestimmte Startnummern durch andere ersetzt werden sollen, oder dass die
+erzielten Wertungspunkte eines Fahrers nicht berücksichtigt werden sollen.
+(Wenn ein Fahrer keine Wertungspunkte erzielt hat, hat das keine
+Auswirkung.)</p>
 
-<p>Wenn ein Fahrer beispielsweise beim ersten Wettbewerb in einer Serie mit
+<p>Wenn ein Fahrer zum Beispiel beim ersten Wettbewerb einer Serie mit
 Startnummer 7 startet, und ihm dann fälschlicherweise für alle weiteren
-Wettbewerbe Startnummer 70 zugeordnet wird, dann würde dieser Fahrer in der
-Serie zwei Mal mit zwei Startnummern aufscheinen, und die erzielten Punkte
-würden nicht alle addiert. In diesem Fall ist eine Startnummernänderung für die
-erste Veranstaltung von 7 auf 70 die Lösung.</p>
+Wettbewerbe Startnummer 70 zugeordnet wird, würde dieser Fahrer in der Serie
+zwei Mal mit zwei Startnummern aufscheinen, und die erzielten Wertungspunkte
+würden nicht alle richtig addiert werden.  Eine Startnummernänderung im ersten
+Wettbewerb von 7 auf 70 Löst dieses Problem.</p>
 
-<p>Um die erzielten Punkte eines Fahrers in einer Veranstaltungsreihe zu
-ignorieren, lässt man das Feld "Nach" leer. Das kann im Fall des
-Klassenwechsels eines Fahrers nützlich sein, wenn er danach in der
-Gesamtwertung seiner alten Klasse nicht mehr aufscheinen soll.</p>
+<p>Um die Wertungspunkte eines Fahrers bei einer Veranstaltung zu ignorieren,
+muss das Feld <em>Nach</em> leer gelassen werden. Das kann dann sinnvoll sein, wenn
+ein Fahrer die Klasse wechselt, und die Wertungspunkte in seiner alten Klasse
+nicht mehr in der Gesamtwertung aufscheinen sollen.</p>
 
 <h2>Unterschiede zum TrialTool</h2>
 <ul>
-  <li>Formulare werden <em>nicht</em> automatisch gespeichert, wenn ein
-Formular gespeichert wird, werden allerdings immer auch alle Wertungen
-entsprechend angepasst (es gibt keinen Punkt wie "jetzt berechnen").
+  <li>Formulare werden <em>nicht</em> automatisch gespeichert.
 
-  <li>Das Feld "Papierabnahme", um einen Fahrer in der Nennung als Starter zu
-markieren, wurde auf "Start" umbenannt.
+  <li>Das Feld Papierabnahme, um einen Fahrer in der Nennung als Starter zu
+markieren, wurde auf Start umbenannt.
 
-  <li>Ein Fahrer kann jetzt in der Nennung als "außer Konkurrenz" markiert
-werden. Dadurch fällt die Mehrdeutigkeit weg, dass Fahrer sowohl "aus der
-Wertung" markiert werden wenn sie außer Konkurrenz fahren, als auch wenn sie
-disqualifiziert wurden. Das Feld "aus der Wertung" wurde außerdem auf "nicht
-gewertet" umbenannt.
+  <li>Ein Fahrer kann jetzt in der Nennung als außer Konkurrenz markiert
+werden. Dadurch fällt die Mehrdeutigkeit weg, dass Fahrer sowohl <em>aus der
+Wertung</em> markiert sind wenn sie außer Konkurrenz fahren, als auch wenn sie
+disqualifiziert wurden. Die Einstellung <em>aus der Wertung</em> wurde außerdem auf
+<em>nicht gewertet</em> umbenannt.
 
-  <li>Ein weiteres Feld "E-Mail" wurde eingeführt, um nicht die Bemerkungen
+  <li>Ein weiteres Feld <em>E-Mail</em> wurde eingeführt, um nicht die Bemerkungen
 dafür missbrauchen zu müssen.
 
-  <li>Ein weiteres Feld "Bundesland" wurde eingeführt.
+  <li>Ein weiteres Feld <em>Bundesland</em> wurde eingeführt.
 
-  <li>Sektionen aus der Wertung werden eindeutig als solche markiert statt die
-Punkte aller Fahrer dieser Sektionen zu löschen. Diese Sektionen werden in der
-Punktevergabe nicht mehr angeboten und im Ergebnis nicht berücksichtigt, wenn
-die Sektion aber irrtümlich aus der Wertung genommen wurde, kann das ohne
-weitere Schäden wieder rückgängig gemacht werden.
+  <li>Sektionen aus der Wertung werden eindeutig als solche markiert, statt die
+Punkte aller Fahrer dieser Sektionen zu löschen. Sektionen aus der Wertung
+werden in der Punktevergabe nicht mehr angeboten, und im Ergebnis nicht
+berücksichtigt.
 </ul>
 </body>
 </html>
