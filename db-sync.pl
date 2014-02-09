@@ -119,7 +119,7 @@ CREATE TABLE klasse (
   farbe VARCHAR(20),
   fahrzeit TIME,
   wertungsklasse INT NOT NULL,
-  keine_wertungen BOOLEAN,
+  keine_wertung1 BOOLEAN,
   PRIMARY KEY (id, klasse)
 );
 

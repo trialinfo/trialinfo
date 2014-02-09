@@ -420,7 +420,7 @@ sub klassen_hash($) {
 			       $klasse->{farbe},
 			       $klasse->{fahrzeit},
 			       $klasse->{wertungsklasse},
-			       $klasse->{keine_wertungen}];
+			       $klasse->{keine_wertung1}];
 	}
     }
     return $hash;
@@ -531,7 +531,7 @@ sub veranstaltung_aktualisieren($$$$) {
 
     if (!$neu || exists $neu->{klassen}) {
 	hash_aktualisieren $callback, 'klasse',
-		[qw(id klasse)], [qw(runden bezeichnung gestartet farbe fahrzeit wertungsklasse keine_wertungen)],
+		[qw(id klasse)], [qw(runden bezeichnung gestartet farbe fahrzeit wertungsklasse keine_wertung1)],
 		[$id],
 		klassen_hash($alt),
 		klassen_hash($neu)

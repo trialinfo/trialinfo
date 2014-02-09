@@ -40,7 +40,7 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
     if (fahrer.klasse !== null) {
       var klasse = veranstaltung.klassen[fahrer.klasse - 1];
       fahrer.wertungsklasse = klasse.wertungsklasse;
-      if (klasse.keine_wertungen)
+      if (klasse.keine_wertung1)
 	fahrer.wertungen[0] = false;
     }
   });

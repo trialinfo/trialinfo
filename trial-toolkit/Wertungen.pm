@@ -310,11 +310,11 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    my $rang = 1;
 	    my $vorheriger_fahrer;
 	    foreach my $fahrer (@$fahrer_in_klasse) {
-		my $keine_wertungen =
-		  $cfg->{klassen}[$fahrer->{klasse}]{keine_wertungen};
+		my $keine_wertung1 =
+		  $cfg->{klassen}[$fahrer->{klasse} - 1]{keine_wertung1};
 		next unless defined $fahrer->{rang} &&
 			    $fahrer->{wertungen}[$wertung - 1]{aktiv} &&
-			    !$keine_wertungen;
+			    ($wertung > 1 || !$keine_wertung1);
 		if ($vorheriger_fahrer &&
 		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
 		    $fahrer->{wertungen}[$wertung - 1]{rang} =

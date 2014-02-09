@@ -127,7 +127,7 @@
 	<th>Runden</th>
 	<th>Fahrzeit</th>
 	<th>Wertung<br>in Klasse</th>
-	<th>Keine<br>Wertungen</th>
+	<th>Keine<br>Wertung&nbsp;1</th>
       </tr>
       <tr ng-repeat="klasse in veranstaltung.klassen track by $index">
 	<th>{{$index + 1}}</th>
@@ -158,7 +158,7 @@
 	  <input type="number" size="2" maxlength="2" min="1" max="15" wertungsklasse="{{$index + 1}}" ng-model="klasse.wertungsklasse" ng-blur="wertungsklasse_blur($index + 1, $event)" style="text-align: center">
 	</td>
 	<td align="center">
-	  <input type="checkbox" ng-model="klasse.keine_wertungen">
+	  <input type="checkbox" ng-model="klasse.keine_wertung1">
 	</td>
       </tr>
     </table>
