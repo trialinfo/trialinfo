@@ -76,7 +76,7 @@
 	  <tr><th align="right">Gruppieren nach</th>
 	    <td>
 	      <select ng-model="anzeige.gruppierung">
-		<option value=""></option>
+		<option value="-"></option>
 		<option value="club" ng-if="features.club">Club</option>
 		<option value="fahrzeug" ng-if="features.fahrzeug">Fahrzeug</option>
 		<option value="lbl" ng-if="features.land || features.bundesland">Land (Bundesland)</option>
@@ -131,7 +131,7 @@
 	      <input type="number" min="6" max="20" size="2" maxlength="2" ng-model="anzeige['font-size']" style="text-align:center"> Punkt
 	    </td>
 	  </tr>
-	  <tr ng-if="anzeige.gruppierung != ''"><th></th>
+	  <tr ng-if="anzeige.gruppierung != '-'"><th></th>
 	    <td>
 	      <input type="checkbox" ng-model="anzeige.seitenumbruch" id="seitenumbruch"><label for="seitenumbruch">Seitenumbruch zwischen den Gruppen</label>
 	    </td>
@@ -155,7 +155,7 @@ table.liste td,th {
 </style>
 
 <div ng-repeat="gruppe in ergebnisliste" ng-class="$first ? '' : anzeige.seitenumbruch ? 'page-break' : ''">
-  <h2 ng-if="anzeige.gruppierung">{{gruppe_ueberschrift(gruppe)}}</h2>
+  <h2 ng-if="anzeige.gruppierung != '-'">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
     <tr>
       <th ng-repeat="feld in felder track by $index" ng-style="feld.style" ng-bind-html="feld.bezeichnung"></th>
