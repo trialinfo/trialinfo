@@ -224,8 +224,8 @@
 	    </span>
 	  </p>
 	  <p>
-	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
-	    <button type="button" ng-disabled="!(geaendert() || enabled.verwerfen)" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
+	    <button type="button" ng-disabled="!(geaendert() && form.$valid) || busy" ng-click="speichern()" tabindex="-1">Speichern</button>
+	    <button type="button" ng-disabled="!(geaendert() || enabled.verwerfen) || busy" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
 	  </p>
 	  <p>
 	    <button type="button" ng-disabled="geaendert() || !enabled.neu" ng-click="neuer_fahrer()" accesskey="u" tabindex="-1">Ne<span class="accesskey">u</span>er Fahrer</button><br>

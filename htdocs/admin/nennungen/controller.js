@@ -119,6 +119,8 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.speichern = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Start, dann muss die Klasse starten. */
     var startnummer;
     var version;
@@ -144,6 +146,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 	fahrer.startnummer = fahrer.startnummer_intern;
       delete fahrer.startnummer_intern;
     }
+    $scope.busy = true;
     fahrer_speichern($http, veranstaltung.id, startnummer, version, fahrer).
       success(function(fahrer) {
 	fahrer_zuweisen(fahrer);
@@ -155,10 +158,15 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 			  ' existiert bereits.';
 	else
 	  netzwerkfehler(data, status);
+      }).
+      finally(function() {
+	delete $scope.busy;
       });
   };
 
   $scope.verwerfen = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
     fahrer_zuweisen($scope.fahrer_ist_neu ? undefined : $scope.fahrer_alt);
   }

@@ -131,8 +131,8 @@
 	    die folgenden Sektionen werden sonst nicht gewertet.</span>
 	  </p>
 	  <p>
-	    <button type="button" ng-disabled="!(geaendert() && form.$valid)" ng-click="speichern()" tabindex="-1">Speichern</button>
-	    <button type="button" ng-disabled="!geaendert()" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
+	    <button type="button" ng-disabled="!(geaendert() && form.$valid) || busy" ng-click="speichern()" tabindex="-1">Speichern</button>
+	    <button type="button" ng-disabled="!geaendert() || busy" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
 	  </p>
 	</fieldset>
       </form>

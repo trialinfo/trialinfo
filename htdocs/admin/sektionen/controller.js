@@ -90,6 +90,8 @@ function sektionenController($scope, $http, $timeout, veranstaltung) {
   };
 
   $scope.speichern = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Klasse schon Starter hat, muss sie weiterhin starten. (Verweis auf Starterliste.) */
     veranstaltung.sektionen_aus_wertung = sektionen_aus_wertung($scope.sektion_aus_wertung);
 
@@ -99,15 +101,20 @@ function sektionenController($scope, $http, $timeout, veranstaltung) {
     var features = features_aus_liste(veranstaltung);
     features.sektionen_aus_wertung = true;
     veranstaltung.features = features_zu_liste(features);
-
+    $scope.busy = true;
     veranstaltung_speichern($http, veranstaltung.id, veranstaltung).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
       }).
-      error(netzwerkfehler);
+      error(netzwerkfehler).
+      finally(function() {
+	delete $scope.busy;
+      });
   };
 
   $scope.verwerfen = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
     veranstaltung_zuweisen(undefined);
   };
