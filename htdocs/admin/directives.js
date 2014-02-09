@@ -263,6 +263,21 @@ function punkteDirective() {
   };
 }
 
+function nullableDirective() {
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: function(scope, element, attr, ctrl) {
+      ctrl.$parsers.push(function(text) {
+	return text === '' ? null : text;
+      });
+      ctrl.$formatters.push(function(value) {
+	return value === null ? '' : value;
+      });
+    }
+  };
+}
+
 /* Unter Firefox funktioniert das Attribut autofocus in nachgeladenen Seiten nicht;
    diese Directive korrigiert das.  */
 function autofocusDirective() {

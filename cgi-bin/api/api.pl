@@ -144,6 +144,11 @@ sub veranstaltung_reset($$$) {
 		WHERE fahrer.id = ? AND basis.id = ? AND basis.start_morgen
 	    }, undef, $id, $basis);
 	}
+
+	$dbh->do(q{
+	    DELETE FROM veranstaltung_feature
+	    WHERE id = ? and feature = 'start_morgen'
+	}, undef, $id);
     }
     # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
 }

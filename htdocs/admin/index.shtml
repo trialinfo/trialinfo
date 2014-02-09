@@ -61,6 +61,7 @@
       application.directive('punkte', punkteDirective);
       application.directive('yesNoNull', yesNoNullDirective);
       application.directive('wertungsklasse', wertungsklasseDirective);
+      application.directive('nullable', nullableDirective);
 
       application.directive('autofocus', autofocusDirective);
       application.directive('tabTo', tabTo);

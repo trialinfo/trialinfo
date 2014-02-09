@@ -114,6 +114,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE veranstaltung
 	    ADD COLUMN basis INT AFTER id;
 
+	    ALTER TABLE veranstaltung
+	    ADD COLUMN art VARCHAR(20) AFTER dateiname;
+
 	    ALTER TABLE fahrer
 	    CHANGE COLUMN papierabnahme start BOOLEAN;
 
