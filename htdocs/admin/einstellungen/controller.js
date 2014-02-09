@@ -148,11 +148,14 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   }
 
   $scope.speichern = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Klasse schon Starter hat, muss sie weiterhin starten. (Verweis auf Starterliste.) */
     var veranstaltung = angular.copy($scope.veranstaltung);
     veranstaltung.sektionen = sektionen_von_bool($scope.sektionen);
     veranstaltung.features = features_zu_liste($scope.features);
     wertungspunkte_kolabieren(veranstaltung.wertungspunkte);
+    $scope.busy = true;
     veranstaltung_speichern($http, veranstaltung.id, veranstaltung).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
@@ -162,10 +165,15 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	  /* FIXME: Wie Reload verhindern? */
 	}
       }).
-      error(netzwerkfehler);
+      error(netzwerkfehler).
+      finally(function() {
+	delete $scope.busy;
+      });
   };
 
   $scope.verwerfen = function() {
+    if ($scope.busy)
+      return;
     veranstaltung_zuweisen(undefined);
   }
 

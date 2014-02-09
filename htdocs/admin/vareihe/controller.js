@@ -134,6 +134,8 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   };
 
   $scope.speichern = function() {
+    if ($scope.busy)
+      return;
     var vareihe = angular.copy($scope.vareihe);
     var veranstaltungen = vareihe.veranstaltungen;
     if (veranstaltungen.length && veranstaltungen[veranstaltungen.length - 1] === null)
@@ -147,6 +149,7 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 	startnummern.push(aenderung);
     });
     vareihe.startnummern = startnummern;
+    $scope.busy = true;
     vareihe_speichern($http, vareihe.vareihe, vareihe).
       success(function(vareihe) {
 	vareihe_zuweisen(vareihe);
@@ -156,20 +159,31 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 	  /* FIXME: Wie Reload verhindern? */
 	}
       }).
-      error(netzwerkfehler);
+      error(netzwerkfehler).
+      finally(function() {
+	delete $scope.busy;
+      });
   };
 
   $scope.verwerfen = function() {
+    if ($scope.busy)
+      return;
     vareihe_zuweisen(undefined);
   };
 
   $scope.loeschen = function() {
+    if ($scope.busy)
+      return;
     if (confirm('Veranstaltungsreihe wirklich löschen?\n\nDie Veranstaltungsreihe kann später nicht wiederhergestellt werden.'))
+      $scope.busy = true;
       vareihe_loeschen($http, $scope.vareihe.vareihe, $scope.vareihe.version).
 	success(function() {
 	  $window.history.back();
         }).
-        error(netzwerkfehler);
+        error(netzwerkfehler).
+	finally(function() {
+	  delete $scope.busy;
+	});
   };
 
   $scope.keydown = function(event) {

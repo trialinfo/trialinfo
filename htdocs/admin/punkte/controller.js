@@ -251,6 +251,8 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   });
 
   $scope.speichern = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Start, dann muss die Klasse starten. */
     var version = 0;
     var startnummer;
@@ -258,15 +260,21 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
       startnummer = $scope.fahrer_alt.startnummer;
       version = $scope.fahrer_alt.version;
     }
+    $scope.busy = true;
     fahrer_speichern($http, veranstaltung.id, startnummer, version, $scope.fahrer).
       success(function(fahrer) {
 	fahrer_zuweisen(fahrer);
 	set_focus('#suchbegriff', $timeout);
       }).
-      error(netzwerkfehler);
+      error(netzwerkfehler).
+      finally(function() {
+	delete $scope.busy;
+      });
   };
 
   $scope.verwerfen = function() {
+    if ($scope.busy)
+      return;
     /* FIXME: Wenn Fahrer geladen, neu laden um Versionskonflikte aufzulösen. */
     fahrer_zuweisen($scope.fahrer_alt);
   };

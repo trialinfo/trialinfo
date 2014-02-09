@@ -300,7 +300,8 @@ function tabTo() {
 	return;
       }
       element.bind('keyup', function(event) {
-	if (event.which > 46 && event.which <= 222 &&
+	if (!(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) &&
+	    event.which > 46 && event.which <= 222 &&
 	    (event.which < 112 /* F1 */ || event.which > 123 /* F12 */)) {
 	  if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
 	    var selector = scope.$eval(attr.tabTo);

@@ -91,7 +91,7 @@ CREATE TABLE fahrer (
   s5 INT, -- nicht in version berücksichtigt (berechnet)
   ausser_konkurrenz BOOLEAN,
   ausfall INT DEFAULT 0,
-  zusatzpunkte INT DEFAULT 0,
+  zusatzpunkte INT,
   punkte INT, -- nicht in version berücksichtigt (berechnet)
   rang INT, -- nicht in version berücksichtigt (berechnet)
   PRIMARY KEY (id, startnummer)
@@ -119,7 +119,7 @@ CREATE TABLE klasse (
   farbe VARCHAR(20),
   fahrzeit TIME,
   wertungsklasse INT NOT NULL,
-  keine_wertungen BOOLEAN,
+  keine_wertung1 BOOLEAN,
   PRIMARY KEY (id, klasse)
 );
 

@@ -132,6 +132,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE fahrer
 	    ADD COLUMN email VARCHAR(60) AFTER hubraum;
 
+	    ALTER TABLE fahrer
+	    CHANGE COLUMN ausfall ausfall INT DEFAULT 0;
+
 	    ALTER TABLE vareihe
 	    ADD COLUMN version INT NOT NULL DEFAULT 1 FIRST;
 
@@ -145,7 +148,7 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ADD COLUMN verborgen BOOL;
 
 	    ALTER TABLE klasse ADD COLUMN wertungsklasse INT;
-	    ALTER TABLE klasse ADD COLUMN keine_wertungen BOOLEAN;
+	    ALTER TABLE klasse ADD COLUMN keine_wertung1 BOOLEAN;
 	    ALTER TABLE vareihe_klasse CHANGE COLUMN klasse wertungsklasse INT;
 
 	    UPDATE klasse SET wertungsklasse = klasse;
