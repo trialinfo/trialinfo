@@ -166,7 +166,7 @@ sub cfg_aus_datenbank($$;$) {
 	});
 	$sth->execute($basis);
 	my ($titel) = $sth->fetchrow_array;
-	my $sth = $dbh->prepare(q{
+	$sth = $dbh->prepare(q{
 	    SELECT COUNT(*)
 	    FROM fahrer
 	    JOIN veranstaltung_feature USING (id)
