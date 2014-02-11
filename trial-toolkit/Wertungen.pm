@@ -205,6 +205,8 @@ sub punkte_berechnen($$) {
 	    runde: for (my $runde = 1; $runde <= $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde - 1] // [];
 		foreach my $sektion (@$sektionen) {
+		    next if $sektionen_aus_wertung &&
+			$sektionen_aus_wertung->[$klasse - 1][$runde - 1][$sektion - 1];
 		    my $p = $punkte_in_runde->[$sektion - 1];
 		    if (defined $p) {
 			unless ($sektion_ausgelassen) {
@@ -215,11 +217,9 @@ sub punkte_berechnen($$) {
 			    $letzte_begonnene_runde = $runde;
 			}
 		    } elsif ($sektionen_aus_wertung) {
-			unless ($sektionen_aus_wertung->[$klasse - 1][$runde - 1][$sektion - 1]) {
-			    $sektion_ausgelassen = 1;
-			    $letzte_vollstaendige_runde = $runde - 1
-				unless defined $letzte_vollstaendige_runde;
-			}
+			$sektion_ausgelassen = 1;
+			$letzte_vollstaendige_runde = $runde - 1
+			    unless defined $letzte_vollstaendige_runde;
 		    } else {
 			$letzte_vollstaendige_runde = $runde - 1
 			    unless defined $letzte_vollstaendige_runde;
