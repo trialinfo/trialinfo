@@ -5,9 +5,11 @@ function parse_iso_date($scope, text) {
     var match;
     if (text == '')
       return null;
-    else if (match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/)) {
+    else if (match = text.match(/^(?:(\d{1,2})\.(\d{1,2})\.)?(\d{2}|\d{4})$/)) {
       if (match[3] <= 99)
 	match[3] = +match[3] + 100 * (19 + (match[3] <= (new Date()).getYear() % 100));
+      if (match[1] === undefined && match[2] === undefined)
+	return match[3] + '-00-00';
       var date = new Date(match[3], match[2] - 1, match[1]);
       if (date.getFullYear() == match[3] &&
 	  date.getMonth() == match[2] - 1 &&
@@ -22,10 +24,13 @@ function format_iso_date($scope, value, format) {
   if (value == null)
     return '';
   if (typeof value == 'string' &&
-      (match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
-    return $scope.$eval('date | date:"' + format + '"',
-		        {date: new Date(match[1], match[2] - 1, match[3])});
-  else
+      (match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+    if (match[2] == '00' && match[3] == '00')
+      return match[1]
+    else
+      return $scope.$eval('date | date:"' + format + '"',
+			  {date: new Date(match[1], match[2] - 1, match[3])});
+  } else
     return value;
 }
 
