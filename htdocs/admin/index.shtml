@@ -39,11 +39,12 @@
     <script src="api.js"></script>
     <script src="main/controller.js"></script>
     <script src="veranstaltung/controller.js"></script>
-    <script src="veranstaltung/liste/controller.js"></script>
     <script src="nennungen/controller.js"></script>
     <script src="punkte/controller.js"></script>
     <script src="einstellungen/controller.js"></script>
     <script src="sektionen/controller.js"></script>
+    <script src="veranstaltung/auswertung/controller.js"></script>
+    <script src="veranstaltung/liste/controller.js"></script>
     <script src="vareihe/controller.js"></script>
     <script>
 
@@ -71,6 +72,7 @@
       application.controller('nennungenController', nennungenController);
       application.controller('einstellungenController', einstellungenController);
       application.controller('sektionenController', sektionenController);
+      application.controller('veranstaltungAuswertungController', veranstaltungAuswertungController);
       application.controller('veranstaltungListeController', veranstaltungListeController);
       application.controller('vareiheController', vareiheController);
 
@@ -111,6 +113,12 @@
 	    controller: 'sektionenController',
 	    templateUrl: 'sektionen/index.html',
 	    resolve: sektionenController.resolve
+	  }).when('/veranstaltung/:id/auswertung', {
+	    titel: 'Auswertung',
+	    controller: veranstaltungAuswertungController,
+	    templateUrl: 'veranstaltung/auswertung/index.html',
+	    resolve: veranstaltungAuswertungController.resolve,
+	    reloadOnSearch: false
 	  }).when('/veranstaltung/:id/liste', {
 	    titel: 'Fahrerliste',
 	    controller: veranstaltungListeController,

@@ -69,6 +69,8 @@ ADMIN_FILES = \
 	htdocs/admin/sektionen/index.html \
 	htdocs/admin/vareihe/controller.js \
 	htdocs/admin/vareihe/index.html \
+	htdocs/admin/veranstaltung/auswertung/controller.js \
+	htdocs/admin/veranstaltung/auswertung/index.html \
 	htdocs/admin/veranstaltung/controller.js \
 	htdocs/admin/veranstaltung/index.html \
 	htdocs/admin/veranstaltung/liste/controller.js \
