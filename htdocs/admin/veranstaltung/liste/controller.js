@@ -1,6 +1,6 @@
 'use strict;'
 
-function listeController($scope, $sce, $route, $location, $timeout, veranstaltung, fahrerliste) {
+function veranstaltungListeController($scope, $sce, $route, $location, $timeout, veranstaltung, fahrerliste) {
   $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
@@ -529,13 +529,13 @@ function listeController($scope, $sce, $route, $location, $timeout, veranstaltun
   $scope.$emit('$routeUpdate');
 }
 
-listeController.resolve = {
+veranstaltungListeController.resolve = {
   veranstaltung: function($q, $http, $route) {
     return http_request($q, $http.get('/api/veranstaltung',
 				      {params: $route.current.params}));
   },
   fahrerliste: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/fahrerliste',
+    return http_request($q, $http.get('/api/veranstaltung/liste',
 				      {params: $route.current.params}));
   },
 };

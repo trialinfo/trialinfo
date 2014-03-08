@@ -3,7 +3,7 @@
 <span ng-repeat="wertung in wertungen track by $index" ng-if="wertung > 1">
 <a href="../ergebnisse/tageswertung.shtml?id={{veranstaltung.id}}&wertung={{wertung}}" target="tageswertung:{{veranstaltung.id}}">Auswertung {{veranstaltung.wertungen[wertung - 1].bezeichnung}}</a><br>
 </span>
-<a href="#/liste/{{veranstaltung.id}}">Fahrerliste</a><br>
+<a href="#/veranstaltung/{{veranstaltung.id}}/liste">Fahrerliste</a><br>
 <br>
 <a href="#/veranstaltung/{{veranstaltung.id}}/nennungen">Nennungen</a><br>
 <a href="#/veranstaltung/{{veranstaltung.id}}/punkte">Punktevergabe</a><br>

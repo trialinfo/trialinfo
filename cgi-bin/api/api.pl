@@ -603,7 +603,7 @@ if ($op eq 'GET/vareihen') {
 	$status = "404 Not Found";
 	$result = { error => "Veranstaltungsreihe $vareihe nicht gefunden" };
     }
-} elsif ($op eq "GET/fahrerliste") {
+} elsif ($op eq "GET/veranstaltung/liste") {
     my ($id) = parameter($q, qw(id));
     $dbh->begin_work;
     my $sth = $dbh->prepare(qq{
