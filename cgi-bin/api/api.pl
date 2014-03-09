@@ -650,7 +650,7 @@ if ($op eq 'GET/vareihen') {
 	    SELECT DISTINCT klasse
 	    FROM sektion
 	    WHERE id = ?
-	) AS _ USING (klasse)
+	) AS _ ON wertungsklasse = _.klasse
 	WHERE start AND id = ?
 	ORDER BY rang
     });
@@ -733,23 +733,15 @@ if ($op eq 'GET/vareihen') {
     $sth = $dbh->prepare(q{
 	SELECT klasse, runden, farbe, bezeichnung
 	FROM klasse
-	JOIN (
-	    SELECT DISTINCT klasse
-	    FROM sektion
-	    WHERE id = ?) AS _1 USING (klasse)
-	JOIN (
-	    SELECT DISTINCT wertungsklasse AS klasse
-	    FROM fahrer
-	    JOIN klasse USING (id, klasse)
-	    WHERE id = ? AND start) AS _2 USING (klasse)
 	WHERE id = ?
     });
-    $sth->execute($id, $id, $id);
+    $sth->execute($id);
     $veranstaltung->{klassen} = [];
     while (my $row = $sth->fetchrow_hashref) {
 	fixup_hashref($sth, $row);
 	my $klasse = $row->{klasse};
 	delete $row->{klasse};
+	next unless $fahrer_in_klassen->[$klasse - 1];
 
 	$veranstaltung->{klassen}[$klasse - 1] = $row;
     }
@@ -773,6 +765,38 @@ if ($op eq 'GET/vareihen') {
 	$row->{aktiv} = json_bool(!!$row->{aktiv});
 
 	$veranstaltung->{wertungen}[$wertung - 1] = $row;
+    }
+
+    $sth = $dbh->prepare(q{
+	SELECT klasse, sektion
+	FROM sektion
+	WHERE id = ?
+	ORDER BY sektion
+    });
+    $sth->execute($id);
+    $veranstaltung->{sektionen} = [];
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	my $klasse = $row[0];
+	next unless $fahrer_in_klassen->[$klasse - 1];
+
+	push @{$veranstaltung->{sektionen}[$klasse - 1]}, $row[1];
+    }
+
+    $sth = $dbh->prepare(q{
+	SELECT klasse, runde, sektion
+	FROM sektion_aus_wertung
+	WHERE id = ?
+	ORDER BY sektion
+    });
+    $sth->execute($id);
+    $veranstaltung->{sektionen_aus_wertung} = [];
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	my $klasse = $row[0];
+	next unless $fahrer_in_klassen->[$klasse - 1];
+
+	push @{$veranstaltung->{sektionen_aus_wertung}[$klasse - 1][$row[1] - 1]}, $row[2];
     }
 
     $result = { veranstaltung => $veranstaltung,
