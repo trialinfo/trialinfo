@@ -157,9 +157,11 @@ table.liste td, table.liste th {
 <div ng-repeat="gruppe in ergebnisliste" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung != '-'">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
-    <tr>
-      <th ng-repeat="feld in felder track by $index" ng-style="feld.style" ng-bind-html="feld.bezeichnung"></th>
-    </tr>
+    <thead>
+      <tr>
+	<th ng-repeat="feld in felder track by $index" ng-style="feld.style" ng-bind-html="feld.bezeichnung"></th>
+      </tr>
+    </thead>
     <tr ng-repeat="fahrer in gruppe">
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
     </tr>
