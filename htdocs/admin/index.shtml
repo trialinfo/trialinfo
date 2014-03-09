@@ -43,8 +43,9 @@
     <script src="punkte/controller.js"></script>
     <script src="einstellungen/controller.js"></script>
     <script src="sektionen/controller.js"></script>
+    <script src="veranstaltung/auswertung/controller.js"></script>
+    <script src="veranstaltung/liste/controller.js"></script>
     <script src="vareihe/controller.js"></script>
-    <script src="liste/controller.js"></script>
     <script>
 
       var HAVE_WEASYPRINT;
@@ -71,8 +72,9 @@
       application.controller('nennungenController', nennungenController);
       application.controller('einstellungenController', einstellungenController);
       application.controller('sektionenController', sektionenController);
+      application.controller('veranstaltungAuswertungController', veranstaltungAuswertungController);
+      application.controller('veranstaltungListeController', veranstaltungListeController);
       application.controller('vareiheController', vareiheController);
-      application.controller('listeController', listeController);
 
       application.config(function($routeProvider) {
 	$routeProvider.
@@ -111,6 +113,18 @@
 	    controller: 'sektionenController',
 	    templateUrl: 'sektionen/index.html',
 	    resolve: sektionenController.resolve
+	  }).when('/veranstaltung/:id/auswertung', {
+	    titel: 'Auswertung',
+	    controller: veranstaltungAuswertungController,
+	    templateUrl: 'veranstaltung/auswertung/index.html',
+	    resolve: veranstaltungAuswertungController.resolve,
+	    reloadOnSearch: false
+	  }).when('/veranstaltung/:id/liste', {
+	    titel: 'Fahrerliste',
+	    controller: veranstaltungListeController,
+	    templateUrl: 'veranstaltung/liste/index.html',
+	    resolve: veranstaltungListeController.resolve,
+	    reloadOnSearch: false
 	  }).when('/vareihe/neu', {
 	    controller: 'vareiheController',
 	    templateUrl: 'vareihe/index.html',
@@ -119,12 +133,6 @@
 	    controller: 'vareiheController',
 	    templateUrl: 'vareihe/index.html',
 	    resolve: vareiheController.resolve
-	  }).when('/liste/:id', {
-	    titel: 'Fahrerliste',
-	    controller: listeController,
-	    templateUrl: 'liste/index.html',
-	    resolve: listeController.resolve,
-	    reloadOnSearch: false
 	  }).otherwise({
 	    redirectTo: '/'
 	  });

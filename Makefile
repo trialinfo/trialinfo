@@ -90,8 +90,6 @@ ADMIN_FILES = \
 	htdocs/admin/hilfe/index.html \
 	htdocs/admin/.htaccess \
 	htdocs/admin/index.shtml \
-	htdocs/admin/liste/controller.js \
-	htdocs/admin/liste/index.html \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
 	htdocs/admin/nennungen/controller.js \
@@ -102,8 +100,12 @@ ADMIN_FILES = \
 	htdocs/admin/sektionen/index.html \
 	htdocs/admin/vareihe/controller.js \
 	htdocs/admin/vareihe/index.html \
+	htdocs/admin/veranstaltung/auswertung/controller.js \
+	htdocs/admin/veranstaltung/auswertung/index.html \
 	htdocs/admin/veranstaltung/controller.js \
 	htdocs/admin/veranstaltung/index.html \
+	htdocs/admin/veranstaltung/liste/controller.js \
+	htdocs/admin/veranstaltung/liste/index.html \
 	htdocs/api/.htaccess \
 
 WEB_FILES = \
