@@ -134,7 +134,7 @@ table.wertung tr td.wichtig {
     <tr ng-repeat="fahrer in fahrer_in_klassen[klasse - 1]" ng-class-even="'alt'">
       <td style="text-align:right">{{fahrer.ausfall || fahrer.ausser_konkurrenz ? '' : (anzeige.alle ? fahrer.rang : fahrer.wertungen[anzeige.wertung - 1].rang) + '.'}}</td>
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
-      <td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}">{{fahrer.punkte_pro_runde[runde - 1] === undefined ? (fahrer.ausfall ? '-' : null) : fahrer.punkte_pro_runde[runde - 1]}}</td>
+      <td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.einzelpunkte[runde - 1]"></td>
       <td style="text-align:right" ng-if="veranstaltung.klassen[klasse - 1].zusatzpunkte">{{fahrer.zusatzpunkte || ''}}</td>
       <td style="text-align:center" ng-if="fahrer.ausfall" colspan="{{5 + veranstaltung.klassen[klasse - 1].stechen + veranstaltung.vierpunktewertung + feature.spalte5er}}">{{ausfall(fahrer)}}</td>
       <td style="text-align:right" ng-if="!fahrer.ausfall">{{fahrer.punkte}}</td>
