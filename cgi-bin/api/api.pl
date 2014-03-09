@@ -646,10 +646,15 @@ if ($op eq 'GET/vareihen') {
 	       zusatzpunkte, punkte, s0, s1, s2, s3, s4, s5
 	FROM fahrer
 	JOIN klasse USING (id, klasse)
+	JOIN (
+	    SELECT DISTINCT klasse
+	    FROM sektion
+	    WHERE id = ?
+	) AS _ USING (klasse)
 	WHERE start AND id = ?
 	ORDER BY rang
     });
-    $sth->execute($id);
+    $sth->execute($id, $id);
     my $fahrer = {};
     my $fahrer_in_klassen = [];
     while (my $row = $sth->fetchrow_hashref) {
