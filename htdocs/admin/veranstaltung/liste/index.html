@@ -6,7 +6,7 @@
 <style type="text/css" ng-bind-html="print_style()">
 </style>
 
-<h1><a href="" ng-click="einstellungen($event)">Fahrerliste {{veranstaltung.wertungen[0].titel}}</a></h1>
+<h1><a href="" ng-click="einstellungen($event)">{{veranstaltung.wertungen[0].titel}}</a></h1>
 <div ng-if="fold.einstellungen" class="no-print">
   <p>
     <form name="form" ng-model="anzeige.filter">
@@ -99,7 +99,7 @@
 	  <tr><th align="right">Felder</th>
 	    <td>
 	      <span ng-repeat="_ in anzeige.felder track by $index">
-		<select ng-model="anzeige.felder[$index]" ng-options="feld.value as feld.name for feld in feldliste">
+		<select ng-model="anzeige.felder[$index]" ng-options="feld.key as feld.name for feld in feldliste">
 		</select>
 	      </span>
 	    </td></tr>
@@ -154,7 +154,7 @@ table.liste td, table.liste th {
 }
 </style>
 
-<div ng-repeat="gruppe in ergebnisliste" ng-class="$first ? '' : anzeige.seitenumbruch ? 'page-break' : ''">
+<div ng-repeat="gruppe in ergebnisliste" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung != '-'">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
     <tr>

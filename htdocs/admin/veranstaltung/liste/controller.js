@@ -52,7 +52,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     if (fahrer.bundesland)
       land_bundesland.push('(' + fahrer.bundesland + ')');
     return land_bundesland.join(' ');
-  }
+  };
 
   $scope.wertungsbezeichnung = function(wertung) {
     var w = veranstaltung.wertungen[wertung - 1];
@@ -61,70 +61,87 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 
   var definierte_felder = {
     startnummer: 
-      { bezeichnung: '<span title="Startnummer">Nr.</span>',
+      { name: 'Startnummer',
+	bezeichnung: '<span title="Startnummer">Nr.</span>',
 	ausdruck: "startnummer < 0 ? null : startnummer",
 	style: { 'text-align': 'center' } },
     klasse:
-      { bezeichnung: '<span title="Klasse (in Nennung)">Kl.</span>',
+      { name: 'Klasse',
+	bezeichnung: '<span title="Klasse (in Nennung)">Kl.</span>',
 	ausdruck: "klasse",
 	style: { 'text-align': 'center' } },
     name:
-      { bezeichnung: 'Name',
+      { name: 'Name',
+	bezeichnung: 'Name',
 	ausdruck: "nachname + ' ' + vorname",
 	style: { 'text-align': 'left' } },
     geburtsdatum:
-      { bezeichnung: 'Geburtsdatum',
+      { name: 'Geburtsdatum',
+	bezeichnung: 'Geburtsdatum',
 	ausdruck: "geburtsdatum | date:'d.M.yyyy'",
 	style: { 'text-align': 'center' } },
     wohnort:
-      { bezeichnung: 'Wohnort',
+      { name: 'Wohnort',
+	bezeichnung: 'Wohnort',
 	ausdruck: "wohnort",
 	style: { 'text-align': 'left' } },
     club:
-      { bezeichnung: 'Club',
+      { name: 'Club',
+	bezeichnung: 'Club',
 	ausdruck: "club",
 	style: { 'text-align': 'left' } },
     fahrzeug:
-      { bezeichnung: 'Fahrzeug',
+      { name: 'Fahrzeug',
+	bezeichnung: 'Fahrzeug',
 	ausdruck: "fahrzeug",
 	style: { 'text-align': 'left' } },
     lbl:
-      { bezeichnung: 'Land',
+      { name: 'Land (Bundesland)',
+	bezeichnung: '<span title="Land (Bundesland)">Land</span>',
 	ausdruck: "land_bundesland(fahrer)",
 	style: { 'text-align': 'left' } },
     startzeit:
-      { bezeichnung: 'Startzeit',
+      { name: 'Startzeit',
+	bezeichnung: 'Startzeit',
 	ausdruck: "startzeit | date:'H:mm'",
 	style: { 'text-align': 'center' } },
     zielzeit:
-      { bezeichnung: 'Zielzeit',
+      { name: 'Zielzeit',
+	bezeichnung: 'Zielzeit',
 	ausdruck: "zielzeit | date:'H:mm'",
 	style: { 'text-align': 'center' } },
     nennungseingang:
-      { bezeichnung: 'Nennungseingang',
+      { name: 'Nennungseingang',
+	bezeichnung: 'Nennungseingang',
 	ausdruck: "nennungseingang ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
     start:
-      { bezeichnung: 'Start',
+      { name: 'Start',
+	bezeichnung: 'Start',
 	ausdruck: "start ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
     start_morgen:
-      { bezeichnung: 'Start morgen',
+      { name: 'Start morgen',
+	bezeichnung: 'Start morgen',
 	ausdruck: "start_morgen ? 'Ja' : ''",
 	style: { 'text-align': 'center' } },
     versicherung:
-      { bezeichnung: 'Versicherung',
+      { name: 'Versicherung',
+	bezeichnung: 'Versicherung',
 	ausdruck: "versicherung",
 	style: { 'text-align': 'left' } },
     lizenznummer:
-      { bezeichnung: 'Lizenznr.',
+      { name: 'Lizenznummer',
+	bezeichnung: 'Lizenznr.',
 	ausdruck: "lizenznummer",
 	style: { 'text-align': 'left' } },
   };
   angular.forEach([1, 2, 3, 4], function(wertung) {
     if ($scope.features['wertung' + wertung]) {
+      var bezeichnung = $scope.wertungsbezeichnung(wertung);
       definierte_felder['wertung' + wertung] = {
-	bezeichnung: $scope.wertungsbezeichnung(wertung),
+	name: bezeichnung,
+	bezeichnung: bezeichnung,
 	ausdruck: "wertungen[" + (wertung - 1) + "] ? 'Ja' : ''",
 	style: { 'text-align': 'center' }
       };
@@ -135,37 +152,20 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   });
 
   $scope.feldliste = (function() {
-    var feldliste = [
-      { value: '', name: '' },
-      { value: 'name', name: 'Name' }
-    ];
-    angular.forEach([
-      { value: 'club', name: 'Club' },
-      { value: 'fahrzeug', name: 'Fahrzeug' },
-      { value: 'geburtsdatum', name: 'Geburtsdatum' },
-      { value: 'klasse', name: 'Klasse (in Nennung)' },
-      { value: 'lizenznummer', name: 'Lizenznummer' },
-      { value: 'start', name: 'Fahrer startet' },
-      { value: 'start_morgen', name: 'Fahrer startet morgen' },
-      { value: 'startnummer', name: 'Startnummer' },
-      { value: 'versicherung', name: 'Versicherung' },
-      { value: 'wohnort', name: 'Wohnort' },
-      { value: 'startzeit', name: 'Startzeit' },
-      { value: 'zielzeit', name: 'Zielzeit' },
-      { value: 'nennungseingang', name: 'Nennungseingang' }
-    ], function(feld) {
-      if ($scope.features[feld.value])
-	feldliste.push(feld);
+    var felder = [ 'name' ];
+    angular.forEach(definierte_felder, function(_, feld) {
+      if ($scope.features[feld])
+	felder.push(feld);
     });
     if ($scope.features.land || $scope.features.bundesland)
-      feldliste.push({ value: 'lbl', name: 'Land (Bundesland)' });
-    angular.forEach([1, 2, 3, 4], function(wertung) {
-      if ($scope.features['wertung' + wertung]) {
-	feldliste.push({ value: 'wertung' + wertung,
-			 name: $scope.wertungsbezeichnung(wertung) });
-      }
+      felder.push('lbl');
+    var feldliste = [];
+    angular.forEach(felder, function(feld) {
+      feldliste.push({ key: feld, name: definierte_felder[feld].name });
     });
-    return feldliste.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    feldliste = feldliste.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    feldliste.unshift({ key: '', name: '' });
+    return feldliste;
   })();
 
   function generic_compare(v1, v2) {
@@ -401,21 +401,17 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     delete search.felder;
 
     angular.forEach(search, function(value, key) {
-      if (value === null || value === '')
+      if (value === null || value === '' || value === false)
 	delete search[key];
     });
-
-    if (!search.seitenumbruch)
-      delete search.seitenumbruch;
 
     return search;
   }
 
   function url_aktualisieren() {
-    var url_alt = $location.search();
-    var url_neu = nach_url($scope.anzeige);
-    if (!angular.equals(url_alt, url_neu))
-      $location.search(url_neu).replace();
+    var url = $location.search();
+    if (!url.length || !angular.equals($scope.anzeige, von_url(url)))
+      $location.search(nach_url($scope.anzeige)).replace();
   }
 
   function aktualisieren() {
@@ -476,6 +472,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       });
     });
   };
+
   $scope.einstellungen = function(event) {
     event.preventDefault();
     event.target.blur();
