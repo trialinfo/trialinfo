@@ -156,6 +156,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     if ($scope.anzeige.wertung == null)
       $scope.anzeige.alle = true;
 
+    $scope.spalten = [];
     var fahrer_in_klassen = [];
     angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, index) {
       if (fahrer_in_klasse) {
@@ -173,18 +174,15 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	}
       }
       if (fahrer_in_klasse) {
-	var klasse = veranstaltung.klassen[index];
-	klasse.zusatzpunkte = false;
-	klasse.stechen = false;
-	klasse.wertungspunkte = false;
+	var spalten = $scope.spalten[index] = {};
 	angular.forEach(fahrer_in_klasse, function(fahrer) {
 	  if (fahrer.zusatzpunkte)
-	    klasse.zusatzpunkte = true;
+	    spalten.zusatzpunkte = true;
 	  if (fahrer.stechen)
-	    klasse.stechen = true;
+	    spalten.stechen = true;
 	  try {
 	    if (fahrer.wertungen[$scope.anzeige.wertung - 1].punkte)
-	      klasse.wertungspunkte = true;
+	      spalten.wertungspunkte = true;
 	  } catch (_) { }
 	});
 	fahrer_vergleichen(fahrer_in_klasse);
