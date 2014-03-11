@@ -156,6 +156,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     if ($scope.anzeige.wertung == null)
       $scope.anzeige.alle = true;
 
+    $scope.spalten = [];
     var fahrer_in_klassen = [];
     angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, index) {
       if (fahrer_in_klasse) {
@@ -173,18 +174,15 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	}
       }
       if (fahrer_in_klasse) {
-	var klasse = veranstaltung.klassen[index];
-	klasse.zusatzpunkte = false;
-	klasse.stechen = false;
-	klasse.wertungspunkte = false;
+	var spalten = $scope.spalten[index] = {};
 	angular.forEach(fahrer_in_klasse, function(fahrer) {
 	  if (fahrer.zusatzpunkte)
-	    klasse.zusatzpunkte = true;
+	    spalten.zusatzpunkte = true;
 	  if (fahrer.stechen)
-	    klasse.stechen = true;
+	    spalten.stechen = true;
 	  try {
 	    if (fahrer.wertungen[$scope.anzeige.wertung - 1].punkte)
-	      klasse.wertungspunkte = true;
+	      spalten.wertungspunkte = true;
 	  } catch (_) { }
 	});
 	fahrer_vergleichen(fahrer_in_klasse);
@@ -253,7 +251,8 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     name:
       { name: 'Name',
 	bezeichnung: 'Name',
-	ausdruck: "nachname + ' ' + vorname",
+	/* FIXME: <br> nach Bewerber! */
+	ausdruck: "(bewerber ? bewerber + ': ' : '') + nachname + ' ' + vorname",
 	style: { 'text-align': 'left', 'padding-right': '1em' } },
     fahrzeug:
       { name: 'Fahrzeug',
@@ -407,6 +406,9 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     if (anzeige['font-size'] !== undefined)
       anzeige['font-size'] = +anzeige['font-size'];
 
+    if (anzeige.dauer !== undefined)
+      anzeige.dauer = +anzeige.dauer;
+
     anzeige.seitenumbruch = !!anzeige.seitenumbruch;
 
     return anzeige;
@@ -416,8 +418,6 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     var search = $location.search();
     angular.forEach({
       wertung: veranstaltung.wertungen.length ? 1 : null,
-      /* alle: true, */
-      /* klasse: [], */
       feld: ['startnummer', 'name'],
       'page-size': 'A4',
       'font-size': 10,
@@ -432,6 +432,126 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     angular.extend($scope.anzeige, von_url(search));
   });
   $scope.$emit('$routeUpdate');
+
+  function seite_zu_lange() {
+    var body = document.body;
+    var doc = document.documentElement;
+    var documentHeight = Math.max(
+      body.scrollHeight, doc.scrollHeight,
+      body.offsetHeight, doc.offsetHeight,
+      doc.clientHeight);
+
+    var doc = window.document.documentElement;
+    var windowHeight = doc.clientHeight;
+
+    return documentHeight > windowHeight;
+  }
+
+  function seite_anzeigen(position) {
+    if (!position)
+      position = [undefined, 0];
+    var klassen = document.querySelectorAll('.klasse');
+    var k, fahrer, anzahl_klassen = 0, anzahl_fahrer = 0;
+
+    for (k = 0; k < klassen.length; k++)
+      angular.element(klassen[k]).addClass('ng-hide');
+    if (position[0] !== undefined) {
+      for (k = 0; k < klassen.length; k++) {
+	if (k == position[0]) {
+	  fahrer = klassen[k].querySelectorAll('.fahrer');
+	  if (position[1] >= fahrer.length) {
+	    fahrer = undefined;
+	    k++;
+	  }
+	  break;
+	}
+      }
+    }
+    if (k == klassen.length) {
+      position = [0, 0, 0];
+      k = 0;
+    }
+
+    var offset = position[1];
+    var undo = false;
+    for(; k < klassen.length; k++, offset = 0) {
+      if (!fahrer)
+	fahrer = klassen[k].querySelectorAll('.fahrer');
+      for (var f = 0; f < fahrer.length; f++)
+	angular.element(fahrer[f]).addClass('ng-hide');
+      if (offset < fahrer.length) {
+	angular.element(klassen[k]).removeClass('ng-hide');
+	anzahl_klassen++;
+      }
+      while (offset < fahrer.length) {
+	var offset_alt = offset;
+
+	offset++;
+	if (k == position[0] &&
+	    offset == position[1] + 1 &&
+	    offset < fahrer.length)
+	  offset++;
+	while (offset < 5 && offset < fahrer.length)
+	  offset++;
+	if (offset + 1 == fahrer.length)
+	  offset++;
+	for (var o = offset_alt; o < offset; o++)
+	  angular.element(fahrer[o]).removeClass('ng-hide');
+	anzahl_fahrer += offset - offset_alt;
+
+	if (seite_zu_lange()) {
+	  if (undo) {
+	    anzahl_fahrer -= offset - offset_alt;
+	    if (offset_alt == 0) {
+	      angular.element(klassen[k]).addClass('ng-hide');
+	      anzahl_klassen--;
+	      offset = offset_alt;
+	    } else {
+	      while (offset > offset_alt) {
+		offset--;
+		angular.element(fahrer[offset]).addClass('ng-hide');
+	      }
+	    }
+	  }
+	  return [k, offset, anzahl_klassen, anzahl_fahrer];
+	}
+	undo = true;
+      }
+      fahrer = undefined;
+    }
+    return [k, 0, anzahl_klassen, anzahl_fahrer];
+  }
+
+  function alles_anzeigen() {
+    var klassen = document.querySelectorAll('.klasse');
+
+    angular.forEach(klassen, function(klasse) {
+      var fahrer = klasse.querySelectorAll('.fahrer');
+
+      angular.forEach(fahrer, function(fahrer) {
+	angular.element(fahrer).removeClass('ng-hide');
+      });
+      angular.element(klasse).removeClass('ng-hide');
+    });
+  }
+
+  var timeout_promise;
+  $scope.$watch('anzeige.dauer', function() {
+    if (timeout_promise)
+      $timeout.cancel(timeout_promise);
+    if ($scope.anzeige.dauer != null) {
+      var position;
+
+      (function animieren() {
+	if ($scope.anzeige.dauer != null) {
+	  position = seite_anzeigen(position);
+	  var dauer = 500 + (position[2] + position[3]) * 500 * Math.pow(2, $scope.anzeige.dauer / 2);
+	  timeout_promise = $timeout(animieren, dauer);
+        }
+      })();
+    } else
+      alles_anzeigen();
+  });
 }
 
 veranstaltungAuswertungController.resolve = {
