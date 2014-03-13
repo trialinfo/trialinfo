@@ -40,11 +40,11 @@
 	    <td>
 	      <select ng-model="anzeige.dauer" nullable>
 		<option value="">Aus</option>
-		<option value="2">Sehr langsam</option>
-		<option value="1">Langsam</option>
-		<option value="0">Normal</option>
-		<option value="-1">Schnell</option>
 		<option value="-2">Sehr schnell</option>
+		<option value="-1">Schnell</option>
+		<option value="0">Normal</option>
+		<option value="1">Langsam</option>
+		<option value="2">Sehr langsam</option>
 	      </select>
 	    </td></tr>
 	</table>
@@ -119,7 +119,7 @@ table.wertung tr td.wichtig {
 }
 </style>
 
-<p>{{zusammenfassung}}</p>
+<p ng-if="anzeige.dauer == null">{{zusammenfassung}}</p>
 <div ng-repeat="klasse in klassen" ng-if="anzeige.klassen[klasse - 1] && fahrer_in_klassen[klasse - 1]" class="klasse" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2>{{veranstaltung.klassen[klasse - 1].bezeichnung}}</h2>
   <table class="wertung">
@@ -142,7 +142,7 @@ table.wertung tr td.wichtig {
     </thead>
       <!-- Spaltenbreiten? -->
       <!-- Druckbarkeit? Kontrollierter Seitenumbruch zwischen Klassen? -->
-    <tr ng-repeat="fahrer in fahrer_in_klassen[klasse - 1]" class="fahrer" ng-class-even="'alt'">
+    <tr ng-repeat="fahrer in fahrer_in_klassen[klasse - 1] track by fahrer.startnummer" class="fahrer" ng-class-even="'alt'">
       <td style="text-align:right">{{fahrer.ausfall || fahrer.ausser_konkurrenz ? '' : (anzeige.alle ? fahrer.rang : fahrer.wertungen[anzeige.wertung - 1].rang) + '.'}}</td>
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
       <td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.einzelpunkte[runde - 1]"></td>
