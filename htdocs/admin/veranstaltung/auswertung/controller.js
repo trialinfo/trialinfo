@@ -547,11 +547,17 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   var timeout_promise;
   var http_request;
   var cancel_http_request;
-  $scope.$watch('anzeige.dauer', function() {
+
+  function stop() {
     if (timeout_promise)
       $timeout.cancel(timeout_promise);
     if (cancel_http_request)
       cancel_http_request.resolve();
+  }
+  $scope.$on('$destroy', stop);
+
+  $scope.$watch('anzeige.dauer', function() {
+    stop();
 
     if ($scope.anzeige.dauer != null) {
       var position;
