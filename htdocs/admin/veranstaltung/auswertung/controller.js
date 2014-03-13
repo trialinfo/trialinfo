@@ -1,79 +1,87 @@
 'use strict;'
 
-function veranstaltungAuswertungController($scope, $sce, $route, $location, $timeout, auswertung) {
+function veranstaltungAuswertungController($scope, $sce, $route, $location, $timeout, $http, $q, auswertung) {
   $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.anzeige = { felder: [], klassen: [] };
 
-  var veranstaltung = auswertung.veranstaltung;
-  $scope.veranstaltung = veranstaltung;
-  $scope.$root.kontext(veranstaltung.wertungen[($scope.anzeige.wertung || 1) - 1].titel);
-  $scope.klassen = (function() {
-    var klassen = [];
-    angular.forEach(auswertung.fahrer_in_klassen, function(value, index) {
-      if (value)
-	klassen.push(index + 1);
-    });
-    return klassen;
-  })();
-  angular.forEach($scope.klassen, function(klasse) {
-    $scope.anzeige.klassen[klasse - 1] = true;
-  });
+  var auswertung_alt, veranstaltung;
 
-  $scope.wertungen = (function() {
-    var wertungen = [];
-    angular.forEach(veranstaltung.wertungen, function(wertung, index) {
-      if (wertung.aktiv)
-	wertungen.push({ wertung: index + 1, bezeichnung: wertung.bezeichnung });
-    });
-    return wertungen;
-  })();
-
-  (function() {
-    var sektionen_aus_wertung = [];
-    angular.forEach(veranstaltung.sektionen, function(klasse, klasse_index) {
-      if (klasse) {
-	sektionen_aus_wertung[klasse_index] = [];
-	try {
-	  for (var runde = 1; runde <= veranstaltung.klassen[klasse_index].runden; runde++)
-	    sektionen_aus_wertung[klasse_index][runde - 1] = [];
-	} catch(_) { }
-      }
-    });
-    angular.forEach(veranstaltung.sektionen_aus_wertung, function(klasse, klasse_index) {
-      if (klasse) {
-	angular.forEach(klasse, function(runde, runde_index) {
-	  angular.forEach(runde, function(sektion) {
-	    try {
-	      sektionen_aus_wertung[klasse_index][runde_index][sektion - 1] = true;
-	    } catch (_) { }
-	  });
-	});
-      }
+  function auswertung_zuweisen(a) {
+    auswertung_alt = angular.copy(a);
+    auswertung = a;
+    veranstaltung = auswertung.veranstaltung;
+    $scope.veranstaltung = veranstaltung;
+    $scope.$root.kontext(veranstaltung.wertungen[($scope.anzeige.wertung || 1) - 1].titel);
+    $scope.klassen = (function() {
+      var klassen = [];
+      angular.forEach(auswertung.fahrer_in_klassen, function(value, index) {
+	if (value)
+	  klassen.push(index + 1);
+      });
+      return klassen;
+    })();
+    angular.forEach($scope.klassen, function(klasse) {
+      if ($scope.anzeige.klassen[klasse - 1] === undefined)
+	$scope.anzeige.klassen[klasse - 1] = true;
     });
 
-    angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, klasse_index) {
-      angular.forEach(fahrer_in_klasse, function(fahrer) {
-	fahrer.einzelpunkte = [];
-	for (runde = 1; runde <= veranstaltung.klassen[klasse_index].runden; runde++) {
-	  var einzelpunkte = [];
+    $scope.wertungen = (function() {
+      var wertungen = [];
+      angular.forEach(veranstaltung.wertungen, function(wertung, index) {
+	if (wertung.aktiv)
+	  wertungen.push({ wertung: index + 1, bezeichnung: wertung.bezeichnung });
+      });
+      return wertungen;
+    })();
+
+    (function() {
+      var sektionen_aus_wertung = [];
+      angular.forEach(veranstaltung.sektionen, function(klasse, klasse_index) {
+	if (klasse) {
+	  sektionen_aus_wertung[klasse_index] = [];
 	  try {
-	    angular.forEach(veranstaltung.sektionen[fahrer.klasse - 1], function(sektion) {
-	      if (sektionen_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1])
-		einzelpunkte.push('-');
-	      else
-		einzelpunkte.push(fahrer.punkte_pro_sektion[runde - 1][sektion - 1]);
-	    });
-	  } catch (_) { }
-	  var punkte_in_runde = fahrer.punkte_pro_runde[runde - 1];
-	  if (punkte_in_runde === undefined)
-	    punkte_in_runde = fahrer.ausfall ? '-' : '';
-	  fahrer.einzelpunkte.push($sce.trustAsHtml(
-	    einzelpunkte.length == 0 ? punkte_in_runde :
-	    '<span title="' + einzelpunkte.join(' ') + '">' + punkte_in_runde + '</span>'));
+	    for (var runde = 1; runde <= veranstaltung.klassen[klasse_index].runden; runde++)
+	      sektionen_aus_wertung[klasse_index][runde - 1] = [];
+	  } catch(_) { }
 	}
       });
-    });
-  })();
+      angular.forEach(veranstaltung.sektionen_aus_wertung, function(klasse, klasse_index) {
+	if (klasse) {
+	  angular.forEach(klasse, function(runde, runde_index) {
+	    angular.forEach(runde, function(sektion) {
+	      try {
+		sektionen_aus_wertung[klasse_index][runde_index][sektion - 1] = true;
+	      } catch (_) { }
+	    });
+	  });
+	}
+      });
+
+      angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, klasse_index) {
+	angular.forEach(fahrer_in_klasse, function(fahrer) {
+	  fahrer.einzelpunkte = [];
+	  for (runde = 1; runde <= veranstaltung.klassen[klasse_index].runden; runde++) {
+	    var einzelpunkte = [];
+	    try {
+	      angular.forEach(veranstaltung.sektionen[fahrer.klasse - 1], function(sektion) {
+		if (sektionen_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1])
+		  einzelpunkte.push('-');
+		else
+		  einzelpunkte.push(fahrer.punkte_pro_sektion[runde - 1][sektion - 1]);
+	      });
+	    } catch (_) { }
+	    var punkte_in_runde = fahrer.punkte_pro_runde[runde - 1];
+	    if (punkte_in_runde === undefined)
+	      punkte_in_runde = fahrer.ausfall ? '-' : '';
+	    fahrer.einzelpunkte.push($sce.trustAsHtml(
+	      einzelpunkte.length == 0 ? punkte_in_runde :
+	      '<span title="' + einzelpunkte.join(' ') + '">' + punkte_in_runde + '</span>'));
+	  }
+	});
+      });
+    })();
+  }
+  auswertung_zuweisen(auswertung);
 
   function nach_url(anzeige) {
     var search = angular.copy(anzeige);
@@ -158,7 +166,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 
     $scope.spalten = [];
     var fahrer_in_klassen = [];
-    angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, index) {
+    angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, klasse_index) {
       if (fahrer_in_klasse) {
 	if (!$scope.anzeige.alle) {
 	  var kopie = [];
@@ -174,7 +182,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	}
       }
       if (fahrer_in_klasse) {
-	var spalten = $scope.spalten[index] = {};
+	var spalten = $scope.spalten[klasse_index] = {};
 	angular.forEach(fahrer_in_klasse, function(fahrer) {
 	  if (fahrer.zusatzpunkte)
 	    spalten.zusatzpunkte = true;
@@ -184,6 +192,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	    if (fahrer.wertungen[$scope.anzeige.wertung - 1].punkte)
 	      spalten.wertungspunkte = true;
 	  } catch (_) { }
+	  /* FIXME: Andere leere Spalten auch unterdrücken ... */
 	});
 	fahrer_vergleichen(fahrer_in_klasse);
       }
@@ -536,22 +545,46 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   }
 
   var timeout_promise;
+  var http_request;
+  var cancel_http_request;
   $scope.$watch('anzeige.dauer', function() {
     if (timeout_promise)
       $timeout.cancel(timeout_promise);
+    if (cancel_http_request)
+      cancel_http_request.resolve();
+
     if ($scope.anzeige.dauer != null) {
       var position;
 
       (function animieren() {
 	if ($scope.anzeige.dauer != null) {
+	  if (http_request) {
+	    http_request.
+	      success(function(auswertung_neu) {
+		if (!angular.equals(auswertung_alt, auswertung_neu)) {
+		  auswertung_zuweisen(auswertung_neu);
+		  aktualisieren();
+		}
+	      });
+	    http_request = undefined;
+	  }
+
 	  position = seite_anzeigen(position);
-	  var dauer = 500 + (position[2] + position[3]) * 500 * Math.pow(2, $scope.anzeige.dauer / 2);
+
+	  cancel_http_request = $q.defer();
+	  http_request = $http.get('/api/veranstaltung/auswertung',
+				   {params: $route.current.params,
+				    timeout: cancel_http_request.promise});
+
+	  var dauer = 400 + (position[2] + position[3]) * 400 * Math.pow(2, $scope.anzeige.dauer / 2);
 	  timeout_promise = $timeout(animieren, dauer);
         }
       })();
     } else
       alles_anzeigen();
   });
+
+  /* $scope.netzwerkfehler = ...; */
 }
 
 veranstaltungAuswertungController.resolve = {
