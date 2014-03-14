@@ -1,1 +1,1 @@
-RedirectMatch permanent ^/$ http://@HOST@/ergebnisse/
+RedirectMatch permanent ^/$ /ergebnisse/

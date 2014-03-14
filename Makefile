@@ -160,7 +160,6 @@ generate_web_file = \
 	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g'
 
 $(GENERATED_WEB_FILES): %: %.in
-	@# $(HOST)
 	@echo "$< -> $@"
 	@$(generate_web_file) < $< > $@.tmp
 	@mv $@.tmp $@

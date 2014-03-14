@@ -1,5 +1,5 @@
 DirectoryIndex index.shtml
-Options +Includes
+Options Includes
 SetEnv HAVE_WEASYPRINT @HAVE_WEASYPRINT@
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
 AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup
