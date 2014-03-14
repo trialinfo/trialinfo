@@ -6,7 +6,6 @@ SED = sed
 
 HAVE_WEASYPRINT_testing = 1
 
-HOST = localhost
 AUTH_PREFIX = $(PWD)
 
 DOWNLOAD_FILES = \
@@ -113,7 +112,6 @@ generate_web_file = \
 	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g'
 
 $(GENERATED_WEB_FILES): %: %.in
-	@# $(HOST)
 	@echo "$< -> $@"
 	@$(generate_web_file) < $< > $@.tmp
 	@mv $@.tmp $@
