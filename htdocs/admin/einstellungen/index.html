@@ -3,7 +3,7 @@
   <fieldset style="display:inline">
     <legend>Allgemein</legend>
     <table>
-      <tr ng-if="!veranstaltung.id">
+      <tr ng-if="!veranstaltung.id && veranstaltungen.length">
 	<th align="right"><label for="titel">Basierend auf</label></th>
 	<td>
 	  <select ng-model="veranstaltung.basis.id" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen | filter:sichtbar">
