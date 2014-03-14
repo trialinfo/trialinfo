@@ -135,6 +135,9 @@ function beim_verlassen_warnen($scope, geaendert) {
 	    event.preventDefault();
       }
     });
+  $scope.$on('$destroy', function() {
+    window.onbeforeunload = undefined;
+  });
 }
 
 function veranstaltung_loeschen($http, id, version) {
