@@ -269,7 +269,7 @@ CREATE TABLE vareihe_klasse (
   wertungsklasse INT,
   laeufe INT,
   streichresultate INT,
-  PRIMARY KEY (vareihe, klasse)
+  PRIMARY KEY (vareihe, wertungsklasse)
 );
 };
 

@@ -536,7 +536,7 @@ sub force_utf8_on(@) {
 }
 
 sub sql_value($) {
-    my ($_) = @_;
+    local ($_) = @_;
 
     return "NULL"
 	unless defined $_;
