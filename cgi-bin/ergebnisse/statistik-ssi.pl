@@ -113,7 +113,7 @@ unless (defined $id) {
 		FROM vareihe_veranstaltung
 		JOIN vareihe USING (vareihe)
 		JOIN vareihe_klasse USING (vareihe)
-		JOIN klasse USING (id, klasse)
+		JOIN klasse USING (id, wertungsklasse)
 		WHERE klasse.gestartet) AS _ USING (id)
 	    WHERE aktiv AND vareihe = ? AND wertung = ?
 	    GROUP BY id
@@ -130,7 +130,7 @@ unless (defined $id) {
 		FROM vareihe_veranstaltung
 		JOIN vareihe USING (vareihe)
 		JOIN vareihe_klasse USING (vareihe)
-		JOIN klasse USING (id, klasse)
+		JOIN klasse USING (id, wertungsklasse)
 		WHERE klasse.gestartet) AS _ USING (id)
 	    WHERE aktiv AND wertung = ?
 	    GROUP BY id
@@ -166,9 +166,10 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, sektion, punkte.punkte
+    SELECT wertungsklasse AS klasse, sektion, punkte.punkte
     FROM punkte
     JOIN fahrer USING (id, startnummer)
+    JOIN klasse USING (id, klasse)
     WHERE id = ? AND punkte.punkte <= 5
 });
 $sth->execute($id);
