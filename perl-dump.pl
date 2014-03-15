@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Copyright (C) 2013  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
@@ -25,7 +25,7 @@ use Getopt::Long;
 use Data::Dumper;
 use Trialtool;
 #use Wertungen;
-use TrialToolkit;
+use Auswertung;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";

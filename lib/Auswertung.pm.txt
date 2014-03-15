@@ -1,4 +1,4 @@
-package TrialToolkit;
+package Auswertung;
 
 use utf8;
 require Exporter;

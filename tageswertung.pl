@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Auswertung einer Veranstaltung machen ("Tageswertung")
 
@@ -29,7 +29,7 @@ use Trialtool;
 use Timestamp;
 use RenderOutput;
 use Wertungen;
-use TrialToolkit;
+use Auswertung;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";

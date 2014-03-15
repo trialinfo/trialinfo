@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Copyright (C) 2014  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
@@ -18,7 +18,7 @@
 use utf8;
 use DBI;
 use Getopt::Long;
-use TrialToolkit;
+use Auswertung;
 use strict;
 
 my $result = GetOptions("db=s" => \$database,

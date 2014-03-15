@@ -8,7 +8,7 @@
 
 <!--
   Datenerfassung über TrialTool, http://www.ortwinsann.de/trialtool/.
-  Aufbereitung über TrialToolkit, https://github.com/andreas-gruenbacher/trial-toolkit.
+  Aufbereitung über Trial-Auswertung, https://github.com/andreas-gruenbacher/trial-auswertung.
 -->
 
 <!--#if expr="$QUERY_STRING=/animiert/" -->

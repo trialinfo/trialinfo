@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I../../trial-toolkit
+#! /usr/bin/perl -w -I../../lib
 
 use utf8;
 use CGI qw(:cgi header);
@@ -10,7 +10,7 @@ use JSON_bool;
 use DBI qw(:sql_types);
 use Datenbank;
 use DatenbankAktualisieren;
-use TrialToolkit;
+use Auswertung;
 use strict;
 #use Data::Dumper;
 

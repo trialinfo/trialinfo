@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I../../trial-toolkit
+#! /usr/bin/perl -w -I../../lib
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
@@ -21,7 +21,7 @@ use CGI;
 use DBI;
 use RenderOutput;
 use Datenbank;
-use TrialToolkit;
+use Auswertung;
 use List::Util qw(max);
 use strict;
 

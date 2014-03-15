@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit -Itrial-toolkit/trial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Veranstaltung zurücksetzen unf zwischen Veranstaltungsarten umschalten (ÖTSV)
 

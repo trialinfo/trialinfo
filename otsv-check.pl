@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Verschiedene Konsistenzprüfungen für den ÖTSV
 

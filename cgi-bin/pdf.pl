@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I../../trial-toolkit
+#! /usr/bin/perl -w -I../../lib
 
 use CGI;
 use File::Temp qw(tempfile);

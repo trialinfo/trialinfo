@@ -74,15 +74,15 @@ dem Punkt Web Server-Konfiguration beschrieben.
 Konfiguration
 -------------
 
-Die Scripts lassen sich über die Datei trial-toolkit/TrialToolkit.pm
-konfigurieren.  Die Einstellungen dort betreffen Dinge wir den Datenbankzugang
-(nur benötigt, wenn eine Datenbank eingesetzt wird) und die Spurfarben der
-einzelnen Klassen.  Viele dieser Einstellungen können auch auf der
-Kommandozeile vorgenommen oder überschrieben werden.
+Die Scripts lassen sich über die Datei lib/Auswertung.pm konfigurieren.  Die
+Einstellungen dort betreffen Dinge wir den Datenbankzugang (nur benötigt, wenn
+eine Datenbank eingesetzt wird) und die Spurfarben der einzelnen Klassen.
+Viele dieser Einstellungen können auch auf der Kommandozeile vorgenommen oder
+überschrieben werden.
 
 Achtung: Diese Datei muss per Hand erzeugt werden, teilweise BEVOR DIE SCRIPTS
 VERWENDET WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in der Datei
-trial-toolkit/TrialToolkit.pm.txt.
+lib/Auswertung.pm.txt.
 
 
 Administration
@@ -175,16 +175,16 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 
   Beispielkonfiguration für Apache:
 
-    ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-toolkit/cgi-bin
-    Alias /ergebnisse /home/agruen/trial-toolkit/htdocs
+    ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-auswertung/cgi-bin
+    Alias /ergebnisse /home/agruen/trial-auswertung/htdocs
 
-    <Directory "/home/agruen/trial-toolkit/htdocs">
+    <Directory "/home/agruen/trial-auswertung/htdocs">
 	AllowOverride All
 	Order allow,deny
 	Allow from all
     </Directory>
 
-    <Directory "/home/agruen/trial-toolkit/cgi-bin">
+    <Directory "/home/agruen/trial-auswertung/cgi-bin">
 	SetHandler cgi-script
 	Options ExecCGI
     </Directory>
@@ -208,9 +208,9 @@ Die Verzeichnisse htdocs/admin/ und cgi-bin/api/ geben Zugriff auf die
 Datenbank-Administration.  Standardmäßig hat hier nur der Benutzer "admin"
 Zugriff; dieser Benutzer muss zuerst in der Datei .htpasswd angelegt werden.
 
-Außerdem muss in der Datei trial-toolkit/TrialToolkit.pm definiert werden, auf
-welche Datenbank die CGI-Scripts mit welchem Benutzernamen und Kennwort
-zugreifen sollen (siehe auch Punkt Konfiguration weiter oben).
+Außerdem muss in der Datei lib/Auswertung.pm definiert werden, auf welche
+Datenbank die CGI-Scripts mit welchem Benutzernamen und Kennwort zugreifen
+sollen (siehe auch Punkt Konfiguration weiter oben).
 
 
 Beispiele zur Verwendung
@@ -250,7 +250,7 @@ Beispiele zur Verwendung
 	--create-tables
 
  Wenn die Datenbank nicht explizit angegeben wird, wird auf die in
- trial-toolkit/TrialToolkit.pm definierte Datenbank zugegriffen.
+ lib/Auswertung.pm definierte Datenbank zugegriffen.
 
 
  Einmaliger Import der Daten von 2012 in die Datenbank:

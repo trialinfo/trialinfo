@@ -2,7 +2,7 @@
 <html ng-app='application'>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title ng-bind="$root.titel">Veranstaltungsverwaltung</title>
+    <title ng-bind="$root.titel">Trial-Auswertung</title>
     <style type="text/css">
       *
       {
@@ -79,7 +79,7 @@
       application.config(function($routeProvider) {
 	$routeProvider.
 	  when('/', {
-	    titel: 'Veranstaltungsverwaltung',
+	    titel: 'Trial-Auswertung',
 	    controller: 'mainController',
 	    templateUrl: 'main/index.html',
 	    resolve: mainController.resolve

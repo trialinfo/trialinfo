@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Auswertung über mehrere Veranstaltungen machen ("Jahreswertung")
 
@@ -28,7 +28,7 @@ use Getopt::Long;
 use Trialtool;
 use Wertungen;
 use RenderOutput;
-use TrialToolkit;
+use Auswertung;
 use Timestamp;
 use strict;
 
