@@ -1,4 +1,4 @@
-NAME = trial-toolkit
+NAME = trial-auswertung
 VERSION = 0.16
 
 CURL = curl
@@ -33,15 +33,15 @@ DOWNLOAD_FILES = \
 	htdocs/js/validate.js \
 
 COMMON_FILES = \
-	trial-toolkit/DatenbankAktualisieren.pm \
-	trial-toolkit/Datenbank.pm \
-	trial-toolkit/JSON_bool.pm \
-	trial-toolkit/Parse/Binary/FixedFormat.pm \
-	trial-toolkit/RenderOutput.pm \
-	trial-toolkit/Timestamp.pm \
-	trial-toolkit/TrialToolkit.pm.txt \
-	trial-toolkit/Trialtool.pm \
-	trial-toolkit/Wertungen.pm \
+	lib/DatenbankAktualisieren.pm \
+	lib/Datenbank.pm \
+	lib/JSON_bool.pm \
+	lib/Parse/Binary/FixedFormat.pm \
+	lib/RenderOutput.pm \
+	lib/Timestamp.pm \
+	lib/Auswertung.pm.txt \
+	lib/Trialtool.pm \
+	lib/Wertungen.pm \
 
 LOCAL_FILES = \
 	db-sync.pl \

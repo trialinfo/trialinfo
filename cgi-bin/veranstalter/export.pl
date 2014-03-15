@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I../../trial-toolkit
+#! /usr/bin/perl -w -I../../lib
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
@@ -20,7 +20,7 @@ use CGI;
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use Datenbank;
-use TrialToolkit;
+use Auswertung;
 use Trialtool;
 use strict;
 

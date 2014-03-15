@@ -25,7 +25,7 @@ use utf8;
 use List::Util qw(min max);
 use POSIX qw(modf);
 use RenderOutput;
-use TrialToolkit;
+use Auswertung;
 use strict;
 
 sub wertungsklassen_setzen($$) {
@@ -543,7 +543,7 @@ sub tageswertung(@) {
   # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
   # nach_relevanz klassen statistik_pro_klasse statistik_gesamt
     my %args = (
-	klassenfarben => $TrialToolkit::klassenfarben,
+	klassenfarben => $Auswertung::klassenfarben,
 	@_,
     );
 
@@ -941,7 +941,7 @@ sub jahreswertung(@) {
     # veranstaltungen wertung laeufe_gesamt streichresultate klassenfarben
     # spalten klassen nach_relevanz
     my %args = (
-	klassenfarben => $TrialToolkit::klassenfarben,
+	klassenfarben => $Auswertung::klassenfarben,
 	@_,
     );
 

@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -I../../trial-toolkit
+#! /usr/bin/perl -w -I../../lib
 
 # Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
@@ -22,7 +22,7 @@ use DBI;
 use RenderOutput;
 use Wertungen;
 use Datenbank;
-use TrialToolkit;
+use Auswertung;
 use Timestamp;
 use strict;
 

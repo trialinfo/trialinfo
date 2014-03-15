@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Daten aus SQL-Datenbank in Trialtool-Dateien exportieren
 
@@ -27,7 +27,7 @@ use File::Glob ':glob';
 use Encode qw(encode);
 use Encode::Locale qw(decode_argv);
 use File::Temp qw(tempfile);
-use TrialToolkit;
+use Auswertung;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";

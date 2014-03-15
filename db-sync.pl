@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w -Itrial-toolkit
+#! /usr/bin/perl -w -Ilib
 
 # Trialtool: Daten in eine SQL-Datenbank kopieren und/oder synchron halten
 
@@ -32,7 +32,7 @@ use IO::Tee;
 use Datenbank;
 use DatenbankAktualisieren;
 use Timestamp;
-use TrialToolkit;
+use Auswertung;
 use strict;
 
 my $STDOUT_encoding = -t STDOUT ? "console_out" : "UTF-8";
