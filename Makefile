@@ -8,6 +8,20 @@ HAVE_WEASYPRINT_testing = 1
 
 AUTH_PREFIX = $(PWD)
 
+# Laut Dokumentation unterstützt Apache ab Version 2.3.13 eine neue Syntax für
+# die Ausdrücke in SSI #if-Befehlen. Die neue Syntax ist ab Version 2.4 per
+# Default aktiviert, wir verwenden aber noch die alte Syntax, die mit folgendem
+# Kommando aktiviert werden muss:
+#
+#   SSILegacyExprParser on
+#
+# Der momentane Server unterstützt Option SSILegacyExprParser aber noch nicht
+# und stolpert über diese Anweisung.
+#
+SSI_LEGACY_EXPR_PARSER_testing = 1
+SSI_LEGACY_EXPR_PARSER_staging = 0
+SSI_LEGACY_EXPR_PARSER_production = 0
+
 DOWNLOAD_FILES = \
 	htdocs/js/jquery.js \
 	htdocs/js/jquery.min.js \
@@ -106,15 +120,26 @@ download: $(DOWNLOAD_FILES)
 testing: download
 	@$(MAKE) -s $(GENERATED_WEB_FILES) WHAT=testing
 
+ifeq ($(SSI_LEGACY_EXPR_PARSER_$(WHAT)),1)
+SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
+else
+SSI_LEGACY_EXPR_PARSER=-e '/^@SSI_LEGACY_EXPR_PARSER@$$/d'
+endif
+
 generate_web_file = \
 	$(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' \
 	       -e 's:@HOST@:$(HOST):g' \
-	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g'
+	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g' \
+	       $(SSI_LEGACY_EXPR_PARSER)
 
+.PHONY: $(GENERATED_WEB_FILES)
 $(GENERATED_WEB_FILES): %: %.in
-	@echo "$< -> $@"
 	@$(generate_web_file) < $< > $@.tmp
-	@mv $@.tmp $@
+	@if ! test -f "$@" || \
+	   ! cmp -s "$@" "$@.tmp"; then \
+	  echo "$< -> $@"; \
+	  mv $@.tmp $@; \
+	fi
 
 htdocs/js/jquery.js htdocs/js/jquery.min.js:
 	@mkdir -p $(dir $@)

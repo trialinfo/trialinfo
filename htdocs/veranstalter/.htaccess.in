@@ -1,6 +1,6 @@
 DirectoryIndex index.shtml
 Options Indexes Includes
-
+@SSI_LEGACY_EXPR_PARSER@
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
 AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup
 AuthName "Protected"
