@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+
+<!--
+Trial-Auswertung
+https://github.com/andreas-gruenbacher/trial-auswertung
+
+Copyright 2012-2014  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
 <html ng-app='application'>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
