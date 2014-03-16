@@ -545,7 +545,6 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   $scope.$on('$routeUpdate', function() {
     var search = $location.search();
     angular.forEach({
-      startnummer: 'yes',
       start: 'yes',
       gruppierung: 'wertungsklasse',
       reihenfolge: 'startnummer',

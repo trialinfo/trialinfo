@@ -283,7 +283,7 @@ if ($op eq 'GET/vareihen') {
 
     die "Ungültige Startnummer\n"
 	if defined $fahrer1->{startnummer} &&
-	   $fahrer1->{startnummer} !~ /^\d+$/;
+	   $fahrer1->{startnummer} !~ /^-?\d+$/;
 
     my $fahrer0;
     eval {

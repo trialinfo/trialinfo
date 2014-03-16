@@ -168,7 +168,7 @@ function numericDirective() {
   };
 }
 
-// Model: true, false, or null, View: 'yes', 'no', ''
+// Model: true, false, or null, View: 'yes', 'no', '-'
 function yesNoNullDirective() {
   return {
     restrict: 'A',

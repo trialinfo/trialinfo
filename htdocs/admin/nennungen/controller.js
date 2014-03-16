@@ -160,11 +160,6 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     if (version === undefined)
       version = 0;
     var fahrer = $scope.fahrer;
-    if (fahrer.startnummer == null) {
-      fahrer.nennungseingang = false;
-      fahrer.start = false;
-      fahrer.start_morgen = false;
-    }
     if (fahrer.start)
       fahrer.nennungseingang = true;
     if (fahrer.startnummer_intern !== undefined) {

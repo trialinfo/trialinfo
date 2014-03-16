@@ -44,7 +44,7 @@
 	  <tr ng-if="features.start_morgen"><th align="right">Fahrer startet morgen</th>
 	    <td>
 	      <select ng-model="anzeige.start_morgen" yes-no-null>
-		<option value=""></option>
+		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
 	      </select>
@@ -54,7 +54,7 @@
 	    <th align="right">{{wertungsbezeichnung(wertung)}}</th>
 	    <td>
 	      <select ng-model="anzeige['wertung' + wertung]" yes-no-null>
-		<option value=""></option>
+		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
 	      </select>
