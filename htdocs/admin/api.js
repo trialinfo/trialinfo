@@ -67,7 +67,8 @@ function fahrer_suchen($http, id, suchbegriff) {
 function fahrer_speichern($http, id, startnummer, version, fahrer) {
   var params = {
     id: id,
-    version: version
+    version: version,
+    mtime: Math.trunc(new Date().getTime() / 1000)
   };
   if (startnummer !== undefined)
     params.startnummer = startnummer;
@@ -77,7 +78,8 @@ function fahrer_speichern($http, id, startnummer, version, fahrer) {
 function veranstaltung_speichern($http, id, veranstaltung) {
   var params = {
     id: id,
-    version: veranstaltung.version
+    version: veranstaltung.version,
+    mtime: Math.trunc(new Date().getTime() / 1000)
   };
   return $http.put('/api/veranstaltung', veranstaltung, {params: params});
 }

@@ -4,6 +4,8 @@ use utf8;
 use CGI qw(:cgi header);
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use CGI::Carp qw(fatalsToBrowser);
+use Time::localtime;
+use POSIX qw(strftime);
 use Encode qw(_utf8_on);
 use JSON;
 use JSON_bool;
@@ -310,6 +312,16 @@ if ($op eq 'GET/vareihen') {
 	}
 	einen_fahrer_aktualisieren $do_sql, $id, $fahrer0, $fahrer1, 1;
 	wertung_aktualisieren $dbh, $do_sql, $id;
+
+	my $mtime = $q->url_param('mtime');
+	if ($mtime) {
+	    $mtime = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
+	    $dbh->do(q{
+		UPDATE veranstaltung
+		SET mtime = ?, version = version + 1
+		WHERE id = ?
+	    }, undef, $mtime, $id);
+	}
 	$dbh->commit;
     };
     if ($@) {
@@ -340,6 +352,11 @@ if ($op eq 'GET/vareihen') {
 
     my $cfg0;
     my $id_neu;
+
+    my $mtime = $q->url_param('mtime');
+    if ($mtime) {
+	$cfg1->{mtime} = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
+    }
 
     eval {
 	$dbh->begin_work;
