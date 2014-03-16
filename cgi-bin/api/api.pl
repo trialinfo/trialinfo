@@ -278,7 +278,8 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $fahrer1 = from_json($putdata);
 
-    print STDERR "$putdata\n";
+    print STDERR "$putdata\n"
+	if $cgi_verbose;
 
     die "Ungültige Startnummer\n"
 	if defined $fahrer1->{startnummer} &&
@@ -334,7 +335,8 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $cfg1 = from_json($putdata);
 
-    print STDERR "$putdata\n";
+    print STDERR "$putdata\n"
+	if $cgi_verbose;
 
     my $cfg0;
     my $id_neu;
@@ -391,7 +393,8 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $data1 = from_json($putdata);
 
-    print STDERR "$putdata\n";
+    print STDERR "$putdata\n"
+	if $cgi_verbose;
 
     my $data0;
     eval {
