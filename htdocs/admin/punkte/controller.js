@@ -113,7 +113,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 	  for (var index = 0; index < sektionen.length; index++) {
 	    var sektion = sektionen[index];
 	    var punkte = punkte_pro_sektion[runde - 1][sektion - 1];
-	    if ((punkte === undefined || punkte === null) &&
+	    if (punkte == null &&
 		sektion_in_wertung(wertungsklasse, runde, sektion)) {
 	      set_focus('#punkte_' + runde + '_' + sektion, $timeout);
 	      return;
@@ -162,7 +162,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
       for (var index = 0; index < sektionen.length; index++) {
 	var sektion = sektionen[index];
 	var punkte = fahrer.punkte_pro_sektion[runde - 1][sektion - 1];
-	if ((punkte === null || punkte === undefined) &&
+	if ((punkte == null) &&
 	    sektion_in_wertung(wertungsklasse, runde, sektion))
 	  return runde;
       }
@@ -215,7 +215,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 	    var sektion = sektionen[index];
 	    if (sektion_in_wertung(wertungsklasse, runde, sektion)) {
 	      var punkte = fahrer.punkte_pro_sektion[runde - 1][sektion - 1];
-	      if (punkte === null || punkte === undefined)
+	      if (punkte == null)
 		sektion_ausgelassen = true;
 	      else if (!sektion_ausgelassen) {
 		if (punkte == -1)
@@ -292,7 +292,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   };
 
   $scope.klassensymbol = function() {
-    if ($scope.wertungsklasse !== null && $scope.wertungsklasse !== undefined) {
+    if ($scope.wertungsklasse != null) {
       var farbe = veranstaltung.klassen[$scope.wertungsklasse - 1].farbe;
       if (farbe) {
 	return $sce.trustAsHtml(

@@ -169,6 +169,8 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   })();
 
   function generic_compare(v1, v2) {
+    if ((v1 == null) || (v2 == null))
+      return (v1 == null) - (v2 == null);
     var t1 = typeof v1;
     var t2 = typeof v2;
     if (t1 == t2) {
