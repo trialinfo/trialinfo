@@ -70,7 +70,7 @@
 	    <th align="right">Klasse</th>
 	    <td>
 	      <span ng-repeat="sektionen in veranstaltung.sektionen track by $index" ng-if="sektionen && sektionen.length"><input type="checkbox" ng-model="anzeige.klassen[$index + 1]" id="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}"><label for="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}">{{$index + 1}}</label> </span>
-	      <input type="checkbox" ng-model="anzeige.klassen['-']" id="keine_klasse" title="Keine Klasse zugeordnet"><label for="keine_klasse" title="Keine Klasse zugeordnet">Keine</label>
+	      <input type="checkbox" ng-model="anzeige.andere_klassen" id="andere_klassen"><label for="andere_klassen">Andere</label>
 	    </td>
 	  </tr>
 	  <tr><th align="right">Gruppieren nach</th>

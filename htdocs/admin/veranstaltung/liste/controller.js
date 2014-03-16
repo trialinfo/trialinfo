@@ -38,10 +38,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     fahrer.wertungen = wertungen;
 
     if (fahrer.klasse !== null) {
-      var klasse = veranstaltung.klassen[fahrer.klasse - 1];
-      fahrer.wertungsklasse = klasse.wertungsklasse;
-      if (klasse.keine_wertung1)
-	fahrer.wertungen[0] = false;
+      try {
+	var klasse = veranstaltung.klassen[fahrer.klasse - 1];
+	fahrer.wertungsklasse = klasse.wertungsklasse;
+	if (klasse.keine_wertung1)
+	  fahrer.wertungen[0] = false;
+      } catch(_) { }
     }
   });
 
@@ -210,7 +212,9 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     if (anzeige.max !== null &&
 	fahrer.startnummer > anzeige.max)
       return false;
-    return anzeige.klassen[fahrer.wertungsklasse === null ? '-' : fahrer.wertungsklasse];
+    return anzeige.andere_klassen ?
+      anzeige.klassen[fahrer.wertungsklasse] !== false :
+      anzeige.klassen[fahrer.wertungsklasse];
   }
 
   function make_compare(comparators) {
@@ -240,15 +244,20 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     return result;
   }
 
+  function klasse_andere(fahrer) {
+    return $scope.anzeige.klassen[fahrer.wertungsklasse] !== undefined ?
+      fahrer.wertungsklasse : null;
+  }
+
   var gruppieren_funktionen = {
     wertungsklasse: {
       heading: function(f) {
-	return f.wertungsklasse > 0 ?
+	return klasse_andere(f) != null ?
 	       veranstaltung.klassen[f.wertungsklasse - 1].bezeichnung :
-	       'Keiner Klasse zugeordnet'
+	       'Andere Klassen';
       },
       compare: function(f1, f2) {
-	return generic_compare(f1.wertungsklasse, f2.wertungsklasse);
+	return generic_compare(klasse_andere(f1), klasse_andere(f2));
       }
     },
     wohnort: {
@@ -353,14 +362,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       else
         anzeige[option] = +anzeige[option];
     });
-
     var klassen = startende_klassen();
-    klassen['-'] = true;
     angular.forEach(anzeige.klasse, function(klasse) {
-      klassen[klasse] = false;
+      if (klassen[klasse] !== undefined)
+	klassen[klasse] = false;
     });
     anzeige.klassen = klassen;
     delete anzeige.klasse;
+    anzeige.andere_klassen = anzeige.andere_klassen == 'yes';
 
     var felder = anzeige.feld || [];
     if (typeof felder === 'string')
@@ -395,6 +404,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     if (versteckte_klassen.length)
       search.klasse = versteckte_klassen;
     delete search.klassen;
+    search.andere_klassen = search.andere_klassen ? 'yes' : 'no';
 
     var felder = search.felder;
     if (felder[felder.length - 1] === '')
@@ -511,7 +521,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       start: 'yes',
       gruppierung: 'wertungsklasse',
       reihenfolge: 'startnummer',
-      klasse: ['-'],
+      andere_klassen: 'yes',
       feld: ['startnummer', 'name'],
       'page-size': 'A4',
       'font-size': 10,
