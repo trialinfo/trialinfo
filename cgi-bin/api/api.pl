@@ -7,14 +7,13 @@ use CGI::Carp qw(fatalsToBrowser);
 use Encode qw(_utf8_on);
 use JSON;
 use JSON_bool;
-use DBI qw(:sql_types);
 use Datenbank;
 use DatenbankAktualisieren;
 use Auswertung;
 use strict;
 #use Data::Dumper;
 
-my $trace_sql = 1;
+my $trace_sql = $cgi_verbose;
 
 binmode STDOUT, ':encoding(utf8)';
 

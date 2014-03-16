@@ -1,3 +1,4 @@
 Options SymLinksIfOwnerMatch
 RewriteEngine on
-RewriteRule ^(.+) /cgi-bin/api/api.pl?op=$1 [QSA]
+RewriteRule ^(veranstaltung/auswertung)$ /cgi-bin/api/public-api.pl?op=$1 [QSA,L]
+RewriteRule ^(.+) /cgi-bin/api/api.pl?op=$1 [QSA,L]

@@ -3,4 +3,7 @@ AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup
 AuthName "Protected"
 AuthType Basic
 AuthBasicProvider file
-Require group admin
+
+<Files api.pl>
+  Require group admin
+</Files>

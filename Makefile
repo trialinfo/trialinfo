@@ -65,6 +65,7 @@ GENERATED_WEB_FILES = \
 ADMIN_FILES = \
 	cgi-bin/api/api.pl \
 	cgi-bin/api/.htaccess \
+	cgi-bin/api/public-api.pl \
 	htdocs/admin/api.js \
 	htdocs/admin/directives.js \
 	htdocs/admin/einstellungen/controller.js \
