@@ -251,7 +251,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       else
 	startnummer = +startnummer;
     }
-    if (startnummer === undefined || startnummer === null ||
+    if (startnummer == null ||
 	startnummer === $scope.fahrer_alt.startnummer) {
       $scope.startnummer_belegt = undefined;
       return true;
@@ -291,7 +291,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       klasse = undefined;
     else
       klasse = +klasse;
-    if (klasse === undefined || klasse === null)
+    if (klasse == null)
       return true;
     klasse = veranstaltung.klassen[klasse - 1];
     return klasse && klasse.bezeichnung != null && klasse.bezeichnung != '';

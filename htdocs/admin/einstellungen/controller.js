@@ -214,7 +214,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     $scope.veranstaltung.basis = { id: null };
     $scope.$watch('veranstaltung.basis.id', function() {
       var basis = $scope.veranstaltung.basis.id;
-      if (basis !== null && basis !== undefined) {
+      if (basis != null) {
 	$http.get('/api/veranstaltung', {'params': {'id': basis}}).
 	  success(function(veranstaltung) {
 	    veranstaltung.basis = {
