@@ -609,7 +609,7 @@ if ($op eq 'GET/vareihen') {
 	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
 	       nennungseingang, start, start_morgen, geburtsdatum,
 	       wohnort, club, fahrzeug, versicherung, land, bundesland,
-	       lizenznummer, runden
+	       lizenznummer, runden, ausfall
 	FROM fahrer
 	WHERE id = ?
     });
