@@ -143,7 +143,7 @@ sub cfg_aus_datenbank($$;$) {
     my $cfg;
 
     my $nur_trialtool = $ohne_trialtool ? '' :
-	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, dat_mtime, cfg_mtime';
+	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, mtime';
     my $sth = $dbh->prepare(qq{
 	SELECT version, id, basis, dateiname, datum, art, aktiv, vierpunktewertung,
 	       wertungsmodus, punkte_sektion_auslassen, wertungspunkte_234,
