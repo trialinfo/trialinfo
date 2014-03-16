@@ -38,10 +38,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     fahrer.wertungen = wertungen;
 
     if (fahrer.klasse !== null) {
-      var klasse = veranstaltung.klassen[fahrer.klasse - 1];
-      fahrer.wertungsklasse = klasse.wertungsklasse;
-      if (klasse.keine_wertung1)
-	fahrer.wertungen[0] = false;
+      try {
+	var klasse = veranstaltung.klassen[fahrer.klasse - 1];
+	fahrer.wertungsklasse = klasse.wertungsklasse;
+	if (klasse.keine_wertung1)
+	  fahrer.wertungen[0] = false;
+      } catch(_) { }
     }
   });
 
@@ -64,77 +66,97 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       { name: 'Startnummer',
 	bezeichnung: '<span title="Startnummer">Nr.</span>',
 	ausdruck: "startnummer < 0 ? null : startnummer",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     klasse:
       { name: 'Klasse',
 	bezeichnung: '<span title="Klasse (in Nennung)">Kl.</span>',
 	ausdruck: "klasse",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     name:
       { name: 'Name',
 	bezeichnung: 'Name',
 	ausdruck: "nachname + ' ' + vorname",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
     geburtsdatum:
       { name: 'Geburtsdatum',
 	bezeichnung: 'Geburtsdatum',
 	ausdruck: "geburtsdatum | date:'d.M.yyyy'",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     wohnort:
       { name: 'Wohnort',
 	bezeichnung: 'Wohnort',
 	ausdruck: "wohnort",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
     club:
       { name: 'Club',
 	bezeichnung: 'Club',
 	ausdruck: "club",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
     fahrzeug:
       { name: 'Fahrzeug',
 	bezeichnung: 'Fahrzeug',
 	ausdruck: "fahrzeug",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
     lbl:
       { name: 'Land (Bundesland)',
 	bezeichnung: '<span title="Land (Bundesland)">Land</span>',
 	ausdruck: "land_bundesland(fahrer)",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
     startzeit:
       { name: 'Startzeit',
 	bezeichnung: 'Startzeit',
 	ausdruck: "startzeit | date:'H:mm'",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     zielzeit:
       { name: 'Zielzeit',
 	bezeichnung: 'Zielzeit',
 	ausdruck: "zielzeit | date:'H:mm'",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     nennungseingang:
       { name: 'Nennungseingang',
 	bezeichnung: 'Nennungseingang',
 	ausdruck: "nennungseingang ? 'Ja' : ''",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     start:
       { name: 'Start',
 	bezeichnung: 'Start',
 	ausdruck: "start ? 'Ja' : ''",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     start_morgen:
       { name: 'Start morgen',
 	bezeichnung: 'Start morgen',
 	ausdruck: "start_morgen ? 'Ja' : ''",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	feature: true },
     versicherung:
       { name: 'Versicherung',
 	bezeichnung: 'Versicherung',
 	ausdruck: "versicherung",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
     lizenznummer:
       { name: 'Lizenznummer',
 	bezeichnung: 'Lizenznr.',
 	ausdruck: "lizenznummer",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	feature: true },
+    aktuelle_runde:
+      { name: 'Aktuelle Runde',
+	bezeichnung: '<span title="Aktuelle Runde">In Runde</span>',
+	ausdruck: "(!start || ausfall || runden >= veranstaltung.klassen[klasse - 1]['runden']) ? null : runden + 1",
+	style: { 'text-align': 'center' } },
   };
   angular.forEach([1, 2, 3, 4], function(wertung) {
     if ($scope.features['wertung' + wertung]) {
@@ -153,9 +175,9 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 
   $scope.feldliste = (function() {
     var felder = [ 'name' ];
-    angular.forEach(definierte_felder, function(_, feld) {
-      if ($scope.features[feld])
-	felder.push(feld);
+    angular.forEach(definierte_felder, function(feld, name) {
+      if (!feld.feature || $scope.features[name])
+	felder.push(name);
     });
     if ($scope.features.land || $scope.features.bundesland)
       felder.push('lbl');
@@ -210,7 +232,9 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     if (anzeige.max !== null &&
 	fahrer.startnummer > anzeige.max)
       return false;
-    return anzeige.klassen[fahrer.wertungsklasse === null ? '-' : fahrer.wertungsklasse];
+    return anzeige.andere_klassen ?
+      anzeige.klassen[fahrer.wertungsklasse] !== false :
+      anzeige.klassen[fahrer.wertungsklasse];
   }
 
   function make_compare(comparators) {
@@ -240,15 +264,20 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     return result;
   }
 
+  function klasse_andere(fahrer) {
+    return $scope.anzeige.klassen[fahrer.wertungsklasse] !== undefined ?
+      fahrer.wertungsklasse : null;
+  }
+
   var gruppieren_funktionen = {
     wertungsklasse: {
       heading: function(f) {
-	return f.wertungsklasse > 0 ?
+	return klasse_andere(f) != null ?
 	       veranstaltung.klassen[f.wertungsklasse - 1].bezeichnung :
-	       'Keiner Klasse zugeordnet'
+	       'Andere Klassen';
       },
       compare: function(f1, f2) {
-	return generic_compare(f1.wertungsklasse, f2.wertungsklasse);
+	return generic_compare(klasse_andere(f1), klasse_andere(f2));
       }
     },
     wohnort: {
@@ -353,14 +382,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       else
         anzeige[option] = +anzeige[option];
     });
-
     var klassen = startende_klassen();
-    klassen['-'] = true;
     angular.forEach(anzeige.klasse, function(klasse) {
-      klassen[klasse] = false;
+      if (klassen[klasse] !== undefined)
+	klassen[klasse] = false;
     });
     anzeige.klassen = klassen;
     delete anzeige.klasse;
+    anzeige.andere_klassen = anzeige.andere_klassen == 'yes';
 
     var felder = anzeige.feld || [];
     if (typeof felder === 'string')
@@ -395,6 +424,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     if (versteckte_klassen.length)
       search.klasse = versteckte_klassen;
     delete search.klassen;
+    search.andere_klassen = search.andere_klassen ? 'yes' : 'no';
 
     var felder = search.felder;
     if (felder[felder.length - 1] === '')
@@ -487,6 +517,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       $scope.anzeige.start = null;
     }
   });
+  $scope.$watch('anzeige.start', function() {
+    if (!$scope.anzeige.start)
+      $scope.anzeige.unterwegs = false;
+  });
+  $scope.$watch('anzeige.unterwegs', function() {
+    if ($scope.anzeige.unterwegs)
+      $scope.anzeige.start = true;
+  });
   $scope.$watch('anzeige', aktualisieren, true);
   $scope.$watch('anzeige.felder', function() {
     var felder = $scope.anzeige.felder;
@@ -511,7 +549,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       start: 'yes',
       gruppierung: 'wertungsklasse',
       reihenfolge: 'startnummer',
-      klasse: ['-'],
+      andere_klassen: 'yes',
       feld: ['startnummer', 'name'],
       'page-size': 'A4',
       'font-size': 10,
