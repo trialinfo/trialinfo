@@ -137,9 +137,11 @@ generate_web_file = \
 $(GENERATED_WEB_FILES): %: %.in
 	@$(generate_web_file) < $< > $@.tmp
 	@if ! test -f "$@" || \
-	   ! cmp -s "$@" "$@.tmp"; then \
+	    ! cmp -s "$@" "$@.tmp"; then \
 	  echo "$< -> $@"; \
 	  mv $@.tmp $@; \
+	else \
+	  rm -f $@.tmp; \
 	fi
 
 htdocs/js/jquery.js htdocs/js/jquery.min.js:
