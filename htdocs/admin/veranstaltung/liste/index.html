@@ -107,7 +107,7 @@
 	</table>
       </fieldset><br>
     </form>
-    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST">
+    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST" ng-if="HAVE_WEASYPRINT">
       <fieldset style="display:inline">
 	<legend>Drucken</legend>
 	<table>
@@ -138,7 +138,7 @@
 	    </td>
 	  </tr>
 	  <tr><th></th>
-	    <td><button ng-if="HAVE_WEASYPRINT" type="submit" ng-click="pdf_erzeugen($event)">PDF erzeugen</button></td>
+	    <td><button type="submit" ng-click="pdf_erzeugen($event)">PDF erzeugen</button></td>
 	  </tr>
 	</table>
       </fieldset>
