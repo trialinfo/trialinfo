@@ -120,7 +120,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
   $scope.$watch('fahrer.geburtsdatum', function(geburtsdatum) {
     var match;
-    if (geburtsdatum === undefined || geburtsdatum === null ||
+    if (geburtsdatum == null ||
         !(match = geburtsdatum.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
       delete $scope.alter;
       delete $scope.jahrgang_alter;
