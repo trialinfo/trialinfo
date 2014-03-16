@@ -518,12 +518,6 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     $scope.fold.einstellungen = !$scope.fold.einstellungen;
   }
 
-  $scope.$watch('anzeige.startnummer', function() {
-    if ($scope.anzeige.startnummer !== true) {
-      $scope.anzeige.nennungseingang = null;
-      $scope.anzeige.start = null;
-    }
-  });
   $scope.$watch('anzeige.start', function() {
     if (!$scope.anzeige.start)
       $scope.anzeige.unterwegs = false;
