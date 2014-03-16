@@ -348,7 +348,7 @@ Weasyprint ist zwar speziell für die Ergebnislisten mit ihren großen Tabellen
 sehr langsam, dafür erzeugt es aber einen ordentlichen Seitenumbruch, was z.B.
 WebKit-basierte Lösungen wie wkhtmltopdf nur sehr mangelhaft beherrschen.
 
-  yum install python-lxml weasyprint
+  yum install weasyprint
 
 
 Lizenz

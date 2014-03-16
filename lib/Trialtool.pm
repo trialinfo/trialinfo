@@ -428,7 +428,7 @@ sub dat_datei_parsen($$$) {
 	# ausgelassen hat.
 	$fahrer->{runden} = runden_zaehlen($fahrer->{runden});
 	$fahrer->{punkte_pro_sektion} = punkte_aufteilen([
-	    map { $_ > 5 ? -1 : $_ } @{$fahrer->{punkte_pro_sektion}} ]);
+	    map { $_ > 6 ? -1 : $_ } @{$fahrer->{punkte_pro_sektion}} ]);
 	delete $fahrer->{r};
 	if ($fahrer->{geburtsdatum} =~ /^(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})$/) {
 	    my $jahr;

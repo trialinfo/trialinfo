@@ -129,8 +129,8 @@ if ($list) {
 						   UNLINK => 1);
 		cfg_datei_schreiben $cfg_fh, $cfg;
 		$cfg_fh->flush;
-		my $cfg_mtime = timestamp_mtime($cfg->{cfg_mtime});
-		utime $cfg_mtime, $cfg_mtime, $cfg_fh;
+		my $mtime = timestamp_mtime($cfg->{mtime});
+		utime $mtime, $mtime, $cfg_fh;
 
 		print "$dateiname.dat\n";
 		my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
@@ -139,8 +139,7 @@ if ($list) {
 						   UNLINK => 1);
 		dat_datei_schreiben $dat_fh, $cfg, $fahrer_nach_startnummer;
 		$dat_fh->flush;
-		my $dat_mtime = timestamp_mtime($cfg->{dat_mtime});
-		utime $dat_mtime, $dat_mtime, $dat_fh;
+		utime $mtime, $mtime, $dat_fh;
 
 		unless (rename $cfg_name, encode(locale_fs => "$dateiname.cfg")) {
 		    die "$dateiname.cfg: $!\n";

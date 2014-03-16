@@ -232,6 +232,13 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     if (anzeige.max !== null &&
 	fahrer.startnummer > anzeige.max)
       return false;
+    if (anzeige.unterwegs) {
+      try {
+	var klasse = veranstaltung.klassen[fahrer.klasse - 1];
+	if (!fahrer.start || fahrer.ausfall || fahrer.runden >= klasse.runden)
+	  return false;
+      } catch(_) { }
+    }
     return anzeige.andere_klassen ?
       anzeige.klassen[fahrer.wertungsklasse] !== false :
       anzeige.klassen[fahrer.wertungsklasse];
@@ -511,12 +518,6 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     $scope.fold.einstellungen = !$scope.fold.einstellungen;
   }
 
-  $scope.$watch('anzeige.startnummer', function() {
-    if ($scope.anzeige.startnummer !== true) {
-      $scope.anzeige.nennungseingang = null;
-      $scope.anzeige.start = null;
-    }
-  });
   $scope.$watch('anzeige.start', function() {
     if (!$scope.anzeige.start)
       $scope.anzeige.unterwegs = false;

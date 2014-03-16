@@ -170,8 +170,6 @@ CREATE TABLE veranstaltung (
   basis INT, -- veranstaltung
   datum DATE,
   mtime TIMESTAMP NULL,
-  dat_mtime TIMESTAMP NULL,
-  cfg_mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
   art VARCHAR(20),  -- Art der Veranstaltung
   aktiv BOOLEAN,
@@ -349,17 +347,17 @@ sub status($) {
     my ($dateiname) = @_;
     my $cfg_mtime = mtime_timestamp("$dateiname.cfg");
     my $dat_mtime = mtime_timestamp("$dateiname.dat");
+    my $mtime = max_timestamp($cfg_mtime, $dat_mtime);
 
     foreach my $id (keys %$veranstaltungen) {
 	my $cfg = $veranstaltungen->{$id}{cfg};
 	if (defined $cfg->{dateiname} && $cfg->{dateiname} eq basename $dateiname) {
-	    my $changed = $cfg->{cfg_mtime} ne $cfg_mtime ||
-			  $cfg->{dat_mtime} ne $dat_mtime;
-	    return ($id, $changed, $cfg_mtime, $dat_mtime);
+	    my $changed = $cfg->{mtime} ne $mtime;
+	    return ($id, $changed, $mtime);
 	}
     }
 
-    return (undef, 1, $cfg_mtime, $dat_mtime);
+    return (undef, 1, $mtime);
 }
 
 sub commit_or_rollback($) {
@@ -377,7 +375,7 @@ sub veranstaltungen_aus_datenbank($) {
     my $veranstaltungen;
 
     my $sth = $dbh->prepare(q{
-	SELECT id, dateiname, cfg_mtime, dat_mtime
+	SELECT id, dateiname, mtime
 	FROM veranstaltung
     });
     $sth->execute;
@@ -656,7 +654,7 @@ do {
 
 	    while ($erster_check || $neu_uebertragen || $poll_interval) {
 		foreach my $dateiname (trialtool_dateien @ARGV) {
-		    my ($id, $veraendert, $cfg_mtime, $dat_mtime) =
+		    my ($id, $veraendert, $mtime) =
 			status($dateiname);
 
 		    if ($delete) {
@@ -695,9 +693,7 @@ do {
 			$cfg->{punkteteilung} = $punkteteilung;
 			rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer, $cfg;
 
-			$cfg->{cfg_mtime} = $cfg_mtime;
-			$cfg->{dat_mtime} = $dat_mtime;
-			$cfg->{mtime} = max_timestamp($cfg_mtime, $dat_mtime);
+			$cfg->{mtime} = $mtime;
 			$cfg->{aktiv} = $aktiv;
 			$cfg->{vareihen} = $vareihe;
 			features_aktualisieren $cfg, $features;

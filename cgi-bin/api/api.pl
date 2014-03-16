@@ -4,17 +4,18 @@ use utf8;
 use CGI qw(:cgi header);
 #use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use CGI::Carp qw(fatalsToBrowser);
+use Time::localtime;
+use POSIX qw(strftime);
 use Encode qw(_utf8_on);
 use JSON;
 use JSON_bool;
-use DBI qw(:sql_types);
 use Datenbank;
 use DatenbankAktualisieren;
 use Auswertung;
 use strict;
 #use Data::Dumper;
 
-my $trace_sql = 1;
+my $trace_sql = $cgi_verbose;
 
 binmode STDOUT, ':encoding(utf8)';
 
@@ -279,7 +280,8 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $fahrer1 = from_json($putdata);
 
-    print STDERR "$putdata\n";
+    print STDERR "$putdata\n"
+	if $cgi_verbose;
 
     die "Ungültige Startnummer\n"
 	if defined $fahrer1->{startnummer} &&
@@ -310,6 +312,16 @@ if ($op eq 'GET/vareihen') {
 	}
 	einen_fahrer_aktualisieren $do_sql, $id, $fahrer0, $fahrer1, 1;
 	wertung_aktualisieren $dbh, $do_sql, $id;
+
+	my $mtime = $q->url_param('mtime');
+	if ($mtime) {
+	    $mtime = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
+	    $dbh->do(q{
+		UPDATE veranstaltung
+		SET mtime = ?, version = version + 1
+		WHERE id = ?
+	    }, undef, $mtime, $id);
+	}
 	$dbh->commit;
     };
     if ($@) {
@@ -335,10 +347,16 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $cfg1 = from_json($putdata);
 
-    print STDERR "$putdata\n";
+    print STDERR "$putdata\n"
+	if $cgi_verbose;
 
     my $cfg0;
     my $id_neu;
+
+    my $mtime = $q->url_param('mtime');
+    if ($mtime) {
+	$cfg1->{mtime} = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
+    }
 
     eval {
 	$dbh->begin_work;
@@ -392,7 +410,8 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $data1 = from_json($putdata);
 
-    print STDERR "$putdata\n";
+    print STDERR "$putdata\n"
+	if $cgi_verbose;
 
     my $data0;
     eval {
@@ -610,7 +629,7 @@ if ($op eq 'GET/vareihen') {
 	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
 	       nennungseingang, start, start_morgen, geburtsdatum,
 	       wohnort, club, fahrzeug, versicherung, land, bundesland,
-	       lizenznummer, runden
+	       lizenznummer, runden, ausfall
 	FROM fahrer
 	WHERE id = ?
     });

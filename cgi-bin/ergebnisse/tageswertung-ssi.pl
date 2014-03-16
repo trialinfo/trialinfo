@@ -62,7 +62,7 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
-	SELECT id, vareihe.bezeichnung, wertung, titel, dat_mtime, cfg_mtime,
+	SELECT id, vareihe.bezeichnung, wertung, titel, mtime,
 	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
@@ -73,7 +73,7 @@ if (defined $vareihe) {
     $sth->execute($id, $vareihe);
 } elsif (defined $id) {
     $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, dat_mtime, cfg_mtime,
+	SELECT id, NULL, wertung, titel, mtime,
 	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)

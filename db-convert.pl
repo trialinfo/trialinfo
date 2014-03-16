@@ -220,6 +220,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    UPDATE veranstaltung
 	    SET mtime = CASE WHEN dat_mtime > cfg_mtime THEN dat_mtime ELSE cfg_mtime END;
 
+	    ALTER TABLE veranstaltung
+	    DROP COLUMN cfg_mtime, DROP COLUMN dat_mtime;
+
 	    INSERT INTO veranstaltung_feature
 		SELECT id, "email"
 		FROM veranstaltung;
