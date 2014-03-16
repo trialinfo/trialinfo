@@ -1,6 +1,6 @@
 #! /usr/bin/perl -w -I../../lib
 
-# Copyright (C) 2012  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
+# Copyright 2012-2014  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free Software
