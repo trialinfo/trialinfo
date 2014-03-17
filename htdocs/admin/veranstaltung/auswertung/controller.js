@@ -307,8 +307,12 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   };
 
   $scope.ausfall = function(fahrer) {
-    return fahrer.ausser_konkurrenz ? "außer konkurrenz" :
-	   fahrer.ausfall ? ausfall[fahrer.ausfall] : undefined;
+    var grund = [];
+    if (fahrer.ausser_konkurrenz)
+      grund.push('außer konkurrenz');
+    if (fahrer.ausfall)
+      grund.push(ausfall[fahrer.ausfall]);
+    return grund.join(', ');
   };
 
   $scope.klassensymbol = function(klasse) {
