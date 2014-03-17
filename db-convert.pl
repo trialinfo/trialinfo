@@ -148,7 +148,8 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ADD COLUMN verborgen BOOL;
 
 	    ALTER TABLE klasse ADD COLUMN wertungsklasse INT;
-	    ALTER TABLE klasse ADD COLUMN keine_wertung1 BOOLEAN;
+	    ALTER TABLE klasse ADD COLUMN keine_wertung1 BOOLEAN,
+			       ADD COLUMN ausser_konkurrenz BOOLEAN;
 	    ALTER TABLE vareihe_klasse CHANGE COLUMN klasse wertungsklasse INT;
 
 	    UPDATE klasse SET wertungsklasse = klasse;

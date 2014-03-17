@@ -199,7 +199,8 @@ sub cfg_aus_datenbank($$;$) {
     }
 
     $sth = $dbh->prepare(q{
-	SELECT klasse, bezeichnung, fahrzeit, runden, farbe, wertungsklasse, keine_wertung1
+	SELECT klasse, bezeichnung, fahrzeit, runden, farbe, wertungsklasse,
+	       keine_wertung1, ausser_konkurrenz
 	FROM klasse
 	WHERE id = ?
     });

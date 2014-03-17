@@ -41,20 +41,26 @@ sub wertungsklassen_setzen($$) {
     }
 }
 
+sub ausser_konkurrenz($$) {
+    my ($fahrer, $cfg) = @_;
+
+    return $fahrer->{ausser_konkurrenz} ||
+	   (defined $fahrer->{klasse} &&
+	    $cfg->{klassen}[$fahrer->{klasse} - 1]{ausser_konkurrenz}) ||
+	   0;
+}
+
 sub rang_vergleich($$$) {
     my ($a, $b, $cfg) = @_;
 
-    if (($a->{ausser_konkurrenz} // 0) != ($b->{ausser_konkurrenz} // 0)) {
-	return $a->{ausser_konkurrenz} <=> $b->{ausser_konkurrenz};
+    if (ausser_konkurrenz($a, $cfg) != ausser_konkurrenz($b, $cfg)) {
+	return ausser_konkurrenz($a, $cfg) <=> ausser_konkurrenz($b, $cfg);
     }
 
     if ($a->{ausfall} != $b->{ausfall}) {
 	# Fahrer ohne Ausfall zuerst
 	return $a->{ausfall} <=> $b->{ausfall}
 	    if !$a->{ausfall} != !$b->{ausfall};
-	# Danach Fahrer, die nicht aus der Wertung sind
-	return ($a->{ausfall} == 4) <=> ($b->{ausfall} == 4)
-	    if ($a->{ausfall} == 4) != ($b->{ausfall} == 4);
     }
 
     # Abfallend nach gefahrenen Sektionen: dadurch werden die Fahrer auf dann
@@ -331,7 +337,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		    my ($m, $n);
 		    for ($m = 0; $m < @$fahrer_in_klasse; $m = $n) {
 			my $fahrer_m = $fahrer_in_klasse->[$m];
-			if ($fahrer_m->{ausser_konkurrenz} ||
+			if (ausser_konkurrenz($fahrer_m, $cfg) ||
 			    $fahrer_m->{ausfall} ||
 			    $fahrer_m->{runden} < $runden ||
 			    !defined $fahrer_m->{wertungen}[$wertung - 1]{rang}) {
@@ -342,7 +348,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			my $anzahl_fahrer = 1;
 			for ($n = $m + 1; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
-			    next if $fahrer_n->{ausser_konkurrenz} ||
+			    next if ausser_konkurrenz($fahrer_n, $cfg) ||
 				    $fahrer_n->{ausfall} ||
 				    !defined $fahrer_n->{wertungen}[$wertung - 1]{rang};
 			    last if $fahrer_m->{wertungen}[$wertung - 1]{rang} !=
@@ -357,7 +363,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			}
 			for ($n = $m; $n < @$fahrer_in_klasse; $n++) {
 			    my $fahrer_n = $fahrer_in_klasse->[$n];
-			    next if $fahrer_n->{ausser_konkurrenz} ||
+			    next if ausser_konkurrenz($fahrer_n, $cfg) ||
 				    $fahrer_n->{ausfall} ||
 				    !defined $fahrer_n->{wertungen}[$wertung - 1]{rang};
 			    last if $fahrer_m->{wertungen}[$wertung - 1]{rang} !=
@@ -369,7 +375,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		} else {
 		    foreach my $fahrer (@$fahrer_in_klasse) {
 			my $wr = $fahrer->{wertungen}[$wertung - 1]{rang};
-			next if $fahrer->{ausser_konkurrenz} ||
+			next if ausser_konkurrenz($fahrer, $cfg) ||
 				$fahrer->{ausfall} ||
 				$fahrer->{runden} < $runden ||
 				!defined $wr;
@@ -485,32 +491,32 @@ sub wertungspunkte($$) {
     return sprintf("%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
 }
 
-sub klassenstatistik($$$) {
-    my ($fahrer_in_klasse, $fahrer_gesamt, $ausfall) = @_;
+sub klassenstatistik($$$$) {
+    my ($fahrer_in_klasse, $fahrer_gesamt, $ausfall, $cfg) = @_;
 
     foreach my $fahrer (@$fahrer_in_klasse) {
 	if ($fahrer->{start}) {
 	    $$fahrer_gesamt++;
 	    $ausfall->{$fahrer->{ausfall}}++;
 	    $ausfall->{ausser_konkurrenz}++
-		if $fahrer->{ausser_konkurrenz};
+		if ausser_konkurrenz($fahrer, $cfg);
 	}
     }
 }
 
-sub fahrerstatistik($$) {
-    my ($fahrer_nach_klassen, $klasse) = @_;
+sub fahrerstatistik($$$) {
+    my ($fahrer_nach_klassen, $klasse, $cfg) = @_;
 
     my $fahrer_gesamt = 0;
     my $ausfall = {};
 
     if (defined $klasse) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	klassenstatistik $fahrer_in_klasse, \$fahrer_gesamt, $ausfall;
+	klassenstatistik $fahrer_in_klasse, \$fahrer_gesamt, $ausfall, $cfg;
    } else {
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	    klassenstatistik $fahrer_in_klasse, \$fahrer_gesamt, $ausfall;
+	    klassenstatistik $fahrer_in_klasse, \$fahrer_gesamt, $ausfall, $cfg;
 	}
     }
 
@@ -583,7 +589,7 @@ sub tageswertung(@) {
     }
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($args{fahrer_nach_startnummer});
-    doc_p fahrerstatistik($fahrer_nach_klassen, undef)
+    doc_p fahrerstatistik($fahrer_nach_klassen, undef, $args{cfg})
 	if $args{statistik_gesamt};
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
@@ -698,7 +704,7 @@ sub tageswertung(@) {
 
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $row;
-	    if (!($fahrer->{ausser_konkurrenz} || $fahrer->{ausfall})) {
+	    if (!(ausser_konkurrenz($fahrer, $args{cfg}) || $fahrer->{ausfall})) {
 		push @$row, "$fahrer->{rang}.";
 	    } else {
 		push @$row, "";
@@ -722,7 +728,7 @@ sub tageswertung(@) {
 			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
 			push @$fmt, "title=\"$punkte_pro_sektion\"";
 		    }
-		} elsif ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
+		} elsif ($fahrer->{ausfall}) {
 		    $punkte = "-";
 		}
 
@@ -747,10 +753,11 @@ sub tageswertung(@) {
 	    push @$row, $fahrer->{zusatzpunkte} || ""
 		if $zusatzpunkte;
 
-	    if ($fahrer->{ausser_konkurrenz} || $fahrer->{ausfall} || $fahrer->{runden} == 0) {
+	    if (ausser_konkurrenz($fahrer, $args{cfg}) ||
+		$fahrer->{ausfall} || $fahrer->{runden} == 0) {
 		my @details = ();
 		push @details, "außer konkurrenz"
-		    if $fahrer->{ausser_konkurrenz};
+		    if ausser_konkurrenz($fahrer, $args{cfg});
 		push @details, $ausfall->{$fahrer->{ausfall}}
 		    if $fahrer->{ausfall};
 		push @$row, [ join(", ", @details), $ausfall_fmt ];
@@ -777,7 +784,7 @@ sub tageswertung(@) {
 	    push @$body, $row;
 	}
 	doc_table header => $header, body => $body, format => $format;
-	doc_p fahrerstatistik($fahrer_nach_klassen, $klasse)
+	doc_p fahrerstatistik($fahrer_nach_klassen, $klasse, $args{cfg})
 	    if $args{statistik_pro_klasse};
 	print "</div>\n"
 	    if $RenderOutput::html;

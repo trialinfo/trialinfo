@@ -136,6 +136,7 @@
 	<th>Fahrzeit</th>
 	<th>Wertung<br>in Klasse</th>
 	<th>Keine<br>Wertung&nbsp;1</th>
+	<th>Außer<br>Konkurrenz</th>
       </tr>
       <tr ng-repeat="klasse in veranstaltung.klassen track by $index">
 	<th>{{$index + 1}}</th>
@@ -167,6 +168,9 @@
 	</td>
 	<td align="center">
 	  <input type="checkbox" ng-model="klasse.keine_wertung1">
+	</td>
+	<td align="center">
+	  <input type="checkbox" ng-model="klasse.ausser_konkurrenz">
 	</td>
       </tr>
     </table>

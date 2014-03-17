@@ -104,8 +104,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   function punkte_fokusieren() {
     try {
       var fahrer = $scope.fahrer;
-      if (fahrer.start &&
-	  (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
+      if (fahrer.start && !fahrer.ausfall) {
 	var wertungsklasse = wertungs_klasse(fahrer);
 	var sektionen = veranstaltung.sektionen[wertungsklasse - 1];
 	var punkte_pro_sektion = fahrer.punkte_pro_sektion;
@@ -173,7 +172,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 
   $scope.rundenfarbe = function() {
     var fahrer = $scope.fahrer;
-    if ($scope.fahrer_startet() && (fahrer.ausfall == 0 || fahrer.ausfall == 4)) {  /* 4 == Aus der Wertung */
+    if ($scope.fahrer_startet() && !fahrer.ausfall) {
       var runde = $scope.aktuelle_runde(fahrer);
       if (runde)
 	return veranstaltung.kartenfarben[runde - 1];
