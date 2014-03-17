@@ -578,6 +578,11 @@ sub dat_datei_schreiben($$$) {
 
 	    $fahrer->{punkteverteilung}[5] = 0;  # Anzahl der 5er ist immer auf 0 gesetzt ...
 
+	    $fahrer->{wertungen}[0] = json_bool(0)
+		if defined $fahrer->{klasse} &&
+		   $cfg->{klassen}[$fahrer->{klasse} - 1]{keine_wertung1};
+	    $fahrer->{wertungen} = [ map { $_ && $_->{aktiv} ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
+
 	    $fahrer->{klasse} = 99
 		unless defined $fahrer->{klasse};
 
@@ -588,7 +593,6 @@ sub dat_datei_schreiben($$$) {
 		}
 	    }
 
-	    $fahrer->{wertungen} = [ map { $_ && $_->{aktiv} ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
 	    $fahrer->{nennungseingang} = json_unbool($fahrer->{nennungseingang});
 	    $fahrer->{start} = json_unbool($fahrer->{start});
 	    encode_strings($fahrer, $dat_format);
