@@ -61,9 +61,6 @@ sub rang_vergleich($$$) {
 	# Fahrer ohne Ausfall zuerst
 	return $a->{ausfall} <=> $b->{ausfall}
 	    if !$a->{ausfall} != !$b->{ausfall};
-	# Danach Fahrer, die nicht aus der Wertung sind
-	return ($a->{ausfall} == 4) <=> ($b->{ausfall} == 4)
-	    if ($a->{ausfall} == 4) != ($b->{ausfall} == 4);
     }
 
     # Abfallend nach gefahrenen Sektionen: dadurch werden die Fahrer auf dann
@@ -731,7 +728,7 @@ sub tageswertung(@) {
 			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
 			push @$fmt, "title=\"$punkte_pro_sektion\"";
 		    }
-		} elsif ($fahrer->{ausfall} != 0 && $fahrer->{ausfall} != 4) {
+		} elsif ($fahrer->{ausfall}) {
 		    $punkte = "-";
 		}
 
