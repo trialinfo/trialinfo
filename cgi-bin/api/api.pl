@@ -318,7 +318,7 @@ if ($op eq 'GET/vareihen') {
 	    $mtime = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
 	    $dbh->do(q{
 		UPDATE veranstaltung
-		SET mtime = ?, version = version + 1
+		SET mtime = ?
 		WHERE id = ?
 	    }, undef, $mtime, $id);
 	}
