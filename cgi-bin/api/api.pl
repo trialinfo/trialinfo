@@ -661,7 +661,7 @@ if ($op eq 'GET/vareihen') {
     my $sth = $dbh->prepare(q{
 	SELECT startnummer, wertungsklasse AS klasse, nachname, vorname, geburtsdatum,
 	       wohnort, club, fahrzeug, land, bundesland, lizenznummer,
-	       bewerber, rang, fahrer.runden, ausser_konkurrenz, ausfall,
+	       bewerber, rang, fahrer.runden, fahrer.ausser_konkurrenz, ausfall,
 	       zusatzpunkte, punkte, s0, s1, s2, s3, s4, s5
 	FROM fahrer
 	JOIN klasse USING (id, klasse)
