@@ -18,7 +18,7 @@
 package DatenbankAktualisieren;
 use Trialtool qw(gestartete_klassen);
 use Datenbank qw(cfg_aus_datenbank wertung_aus_datenbank equal);
-use Wertungen qw(rang_und_wertungspunkte_berechnen);
+use Berechnung qw(rang_und_wertungspunkte_berechnen);
 use Storable qw(dclone);
 use JSON_bool;
 

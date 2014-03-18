@@ -55,13 +55,16 @@ DOWNLOAD_FILES = \
 
 COMMON_FILES = \
 	htdocs/ergebnisse.css \
+	lib/Auswertung.pm.txt \
+	lib/Berechnung.pm \
 	lib/DatenbankAktualisieren.pm \
 	lib/Datenbank.pm \
+	lib/Jahreswertung.pm \
 	lib/JSON_bool.pm \
 	lib/Parse/Binary/FixedFormat.pm \
 	lib/RenderOutput.pm \
+	lib/Tageswertung.pm \
 	lib/Timestamp.pm \
-	lib/Auswertung.pm.txt \
 	lib/Trialtool.pm \
 	lib/Wertungen.pm \
 

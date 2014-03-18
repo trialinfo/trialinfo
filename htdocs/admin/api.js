@@ -187,3 +187,23 @@ function netzwerkfehler(data, status) {
 	   'HTTP-Request ist ' + (status ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
 	(typeof data === 'object' && data.error !== undefined ? '\n\n' + data.error : ''));
 }
+
+var wertungspunkte = (function() {
+  var bruch_zeichen = [ [1/4, '¼'], [1/3, '⅓'], [1/2, '½'], [2/3, '⅔'], [3/4, '¾'] ];
+  var eps = 1 / (1 << 13);
+
+  return function(wertungspunkte) {
+    if (wertungspunkte == null)
+      return wertungspunkte;
+    var komma = Math.abs(wertungspunkte % 1);
+    if (komma) {
+      for (var n = 0; n < bruch_zeichen.length; n++) {
+	var wert = bruch_zeichen[n][0];
+	if (komma >= wert - eps && komma <= wert + eps)
+	  return Math.trunc(wertungspunkte) + bruch_zeichen[n][1];
+      }
+      return wertungspunkte.toFixed(2).replace(/0+$/, '');
+    } else
+      return wertungspunkte;
+  };
+})();

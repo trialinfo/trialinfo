@@ -28,7 +28,8 @@ use Getopt::Long;
 use Trialtool;
 use Timestamp;
 use RenderOutput;
-use Wertungen;
+use Berechnung;
+use Tageswertung;
 use Auswertung;
 use strict;
 

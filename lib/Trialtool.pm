@@ -500,6 +500,9 @@ sub dat_datei_schreiben($$$) {
 
 	if (exists $fahrer_nach_startnummern->{$startnummer}) {
 	    my $fahrer = { %{$fahrer_nach_startnummern->{$startnummer}} };
+	    my $wertungsklasse = $cfg->{klassen}[$fahrer->{klasse} - 1]{wertungsklasse}
+		if defined $fahrer->{klasse};
+	    $fahrer->{wertungsklasse} = $wertungsklasse // $fahrer->{klasse};
 	    if (($fahrer->{ausser_konkurrenz} ||
 		 (defined $fahrer->{klasse} &&
 		  $cfg->{klassen}[$fahrer->{klasse} - 1]{ausser_konkurrenz})) &&
@@ -547,8 +550,8 @@ sub dat_datei_schreiben($$$) {
 
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion};
 
-	    if ($cfg->{sektionen_aus_wertung} && defined $fahrer->{klasse}) {
-		if (my $runden = $cfg->{sektionen_aus_wertung}[$fahrer->{klasse} - 1]) {
+	    if ($cfg->{sektionen_aus_wertung} && defined $fahrer->{wertungsklasse}) {
+		if (my $runden = $cfg->{sektionen_aus_wertung}[$fahrer->{wertungsklasse} - 1]) {
 		    for (my $runde = 0; $runde < @$runden; $runde++) {
 			if (my $sektionen = $runden->[$runde]) {
 			    foreach my $sektion ($sektionen) {
@@ -586,6 +589,7 @@ sub dat_datei_schreiben($$$) {
 		   $cfg->{klassen}[$fahrer->{klasse} - 1]{keine_wertung1};
 	    $fahrer->{wertungen} = [ map { $_ && $_->{aktiv} ? 'J' : 'N' } @{$fahrer->{wertungen}} ];
 
+	    $fahrer->{klasse} = $fahrer->{wertungsklasse};
 	    $fahrer->{klasse} = 99
 		unless defined $fahrer->{klasse};
 

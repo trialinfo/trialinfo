@@ -22,7 +22,7 @@ use POSIX qw(mktime);
 use DBI qw(:sql_types looks_like_number);
 use Storable qw(dclone);
 use JSON_bool;
-use Wertungen;
+use Berechnung;
 
 require Exporter;
 @ISA = qw(Exporter);
