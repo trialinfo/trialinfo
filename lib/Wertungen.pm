@@ -87,8 +87,8 @@ sub wertungspunkte($$) {
 
 	foreach my $wert (keys %$bruch_zeichen) {
 	    return "$ganzzahl$bruch_zeichen->{$wert}"
-		if $komma >= $wert - $eps &&
-		   $komma <= $wert + $eps;
+		if abs($komma) >= $wert - $eps &&
+		   abs($komma) <= $wert + $eps;
 	}
     }
     my $prec = 2; # Maximale Nachkommastellen
