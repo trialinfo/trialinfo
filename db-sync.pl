@@ -20,7 +20,7 @@
 use utf8;
 use DBI;
 use Trialtool;
-use Wertungen;
+use Berechnung;
 use Getopt::Long;
 use File::Glob ':glob';
 use File::Basename;

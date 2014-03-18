@@ -24,7 +24,6 @@ use File::Glob ':glob';
 use Getopt::Long;
 use Data::Dumper;
 use Trialtool;
-#use Wertungen;
 use Auswertung;
 use strict;
 
