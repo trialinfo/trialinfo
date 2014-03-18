@@ -594,6 +594,14 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       alles_anzeigen();
   });
 
+  $scope.wertungspunkte = function(fahrer) {
+    var wp;
+    try {
+      wp = fahrer.wertungen[$scope.anzeige.wertung - 1].punkte;
+    } catch(_) { }
+    return veranstaltung.punkteteilung ? wertungspunkte(wp) : wp;
+  }
+
   /* $scope.netzwerkfehler = ...; */
 }
 

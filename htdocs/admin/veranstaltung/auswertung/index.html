@@ -149,7 +149,7 @@ table.wertung tr td.wichtig {
 	<td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.einzelpunkte[runde - 1]"></td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].zusatzpunkte">{{fahrer.zusatzpunkte || ''}}</td>
 	<td style="text-align:center" colspan="{{5 + spalten[klasse - 1].stechen + veranstaltung.vierpunktewertung + feature.spalte5er}}">{{ausfall(fahrer)}}</td>
-	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{fahrer.wertungen[anzeige.wertung - 1].punkte}}</td>
+	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{wertungspunkte(fahrer)}}</td>
       </tr>
       <tr class="fahrer" ng-class-even="'alt'" ng-if="!(fahrer.ausfall || fahrer.ausser_konkurrenz)">
 	<td style="text-align:right">{{(anzeige.alle ? fahrer.rang : fahrer.wertungen[anzeige.wertung - 1].rang) + '.'}}</td>
@@ -164,7 +164,7 @@ table.wertung tr td.wichtig {
 	<td style="text-align:right" ng-if="veranstaltung.vierpunktewertung" class="verteilung {{fahrer.verteilung_klasse[4]}}">{{fahrer.punkteverteilung[4]}}</td>
 	<td style="text-align:right" ng-if="feature.spalte5er" class="verteilung {{fahrer.verteilung_klasse[5]}}">{{fahrer.punkteverteilung[5]}}</td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].stechen">{{fahrer.stechen ? fahrer.stechen + '.' : ''}}</td>
-	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{fahrer.wertungen[anzeige.wertung - 1].punkte}}</td>
+	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{wertungspunkte(fahrer)}}</td>
       </tr>
     </tbody>
   </table>
