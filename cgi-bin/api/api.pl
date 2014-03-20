@@ -11,6 +11,7 @@ use JSON;
 use JSON_bool;
 use Datenbank;
 use DatenbankAktualisieren;
+use Trialtool;
 use Auswertung;
 use strict;
 use Compress::Zlib;
@@ -155,7 +156,76 @@ sub veranstaltung_reset($$$) {
     # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
 }
 
+sub export($$$) {
+    my ($id, $headers, $json) = @_;
+    my $result;
+
+    $result = {
+	format => 'trial-auswertung 1',
+	veranstaltung => cfg_aus_datenbank($dbh, $id, 1),
+	fahrer => fahrer_aus_datenbank($dbh, $id),
+	vareihen => vareihen_aus_datenbank($dbh, $id)
+    };
+    my $basis_tag;
+    if ($result->{veranstaltung}{basis}{id}) {
+	my $sth = $dbh->prepare(q{
+	    SELECT tag
+	    FROM veranstaltung
+	    WHERE id = ?
+	});
+	$sth->execute($result->{veranstaltung}{basis}{id});
+	my @row = $sth->fetchrow_array;
+	fixup_arrayref($sth, \@row);
+	$basis_tag = $row[0];
+    }
+    if ($basis_tag) {
+	$result->{veranstaltung}{basis} = $basis_tag;
+    } else {
+	delete $result->{veranstaltung}{basis};
+    }
+    delete $result->{veranstaltung}{dateiname};
+    delete $result->{veranstaltung}{id};
+
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    my $dateiname = dateiname($dbh, $id, $result->{veranstaltung});
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.tra\""
+	if $dateiname;
+
+    $result = "/* trial-auswertung 1 */\n" . $json->canonical->encode($result);
+    $result = Encode::encode_utf8($result);
+    $result = Compress::Zlib::memGzip($result);
+    return $result;
+}
+
+sub cfg_export($$) {
+    my ($id, $headers) = @_;
+    my $cfg = cfg_aus_datenbank($dbh, $id);
+
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    my $dateiname = dateiname($dbh, $id, $cfg);
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.cfg\""
+	if $dateiname;
+
+    return cfg_datei_daten($cfg);
+}
+
+sub dat_export($$) {
+    my ($id, $headers) = @_;
+    my $cfg = cfg_aus_datenbank($dbh, $id);
+    my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
+
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    my $dateiname = dateiname($dbh, $id, $cfg);
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.dat\""
+	if $dateiname;
+
+    return dat_datei_daten($cfg, $fahrer_nach_startnummer);
+}
+
 my $result;
+my $headers = {
+    'Content-Type' => 'application/json',
+};
 my $status = '200 OK';
 my $json = JSON->new;
 if ($op eq 'GET/vareihen') {
@@ -219,6 +289,15 @@ if ($op eq 'GET/vareihen') {
 } elsif ($op eq "GET/veranstaltung") {
     my ($id) = parameter($q, qw(id));
     $result = cfg_aus_datenbank($dbh, $id, 1);
+} elsif ($op eq "GET/veranstaltung/export") {
+    my ($id, $type) = parameter($q, qw(id));
+    $result = export($id, $headers, $json);
+} elsif ($op eq "GET/trialtool/cfg") {
+    my ($id) = parameter($q, qw(id));
+    $result = cfg_export($id, $headers);
+} elsif ($op eq "GET/trialtool/dat") {
+    my ($id) = parameter($q, qw(id));
+    $result = dat_export($id, $headers);
 } elsif ($op eq "GET/veranstaltung/vorschlaege") {
     my @params = parameter($q, qw(id));
     foreach my $feld (qw(bundesland land fahrzeug club)) {
@@ -663,19 +742,19 @@ if ($op eq 'GET/vareihen') {
     $result->{error} = "Operation '$op' not defined";
 }
 
-# Note: The result must be a list or an object to be valid JSON!
-$result = $result ? $json->encode($result) : '{}';
-$result = Encode::encode_utf8($result);
+if ($headers->{'Content-Type'} eq 'application/json') {
+    # Note: The result must be a list or an object to be valid JSON!
+    $result = $result ? $json->encode($result) : '{}';
+    $result = Encode::encode_utf8($result);
+    $headers->{'Charset'} = 'utf-8';
 
-my $headers = {
-    type => 'application/json',
-    charset => 'utf-8',
-    status => $status
-};
-if (($ENV{HTTP_ACCEPT_ENCODING} // '') =~ /\bgzip\b/) {
-    $headers->{'Content-Encoding'} = 'gzip';
-    $result = Compress::Zlib::memGzip($result);
+    if (($ENV{HTTP_ACCEPT_ENCODING} // '') =~ /\bgzip\b/) {
+	$headers->{'Content-Encoding'} = 'gzip';
+	$result = Compress::Zlib::memGzip($result);
+    }
 }
+
+$headers->{status} = $status;
 $headers->{'Content-Length'} = length($result);
 
 print header($headers);

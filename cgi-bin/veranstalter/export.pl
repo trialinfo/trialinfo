@@ -38,32 +38,17 @@ if ($type !~ /^(cfg|dat)$/) {
     die "Invalid type specified\n";
 }
 
-my $sth = $dbh->prepare(q{
-    SELECT dateiname
-    FROM veranstaltung
-    WHERE id = ?
-});
-$sth->execute($id);
-if (my @row = $sth->fetchrow_array) {
-    $dateiname = $row[0];
-} else {
-    die "Keine Veranstaltung mit dieser id gefunden\n";
-}
+my $cfg = cfg_aus_datenbank($dbh, $id);
+$dateiname = dateiname($dbh, $id, $cfg)
+    unless $dateiname;
 
 if ($type eq 'cfg') {
-    my $cfg = cfg_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
 			 "filename=\"$dateiname.cfg\"");
     binmode STDOUT, ":bytes";
     print cfg_datei_daten($cfg);
 } else {
-    #use Data::Dumper;
-    #print $q->header(-type => 'text/plain', -charset=>'utf-8');
-    #print Dumper($cfg), "\n";
-    #exit;
-
-    my $cfg = cfg_aus_datenbank($dbh, $id);
     my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .

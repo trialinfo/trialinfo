@@ -27,9 +27,9 @@ use Berechnung;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
-	     vareihe_aus_datenbank
+	     vareihe_aus_datenbank vareihen_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
-	     equal fixup_arrayref fixup_hashref);
+	     equal fixup_arrayref fixup_hashref dateiname);
 use strict;
 
 # Vergleicht zwei Werte als Strings, wobei undef == undef.
@@ -519,6 +519,55 @@ sub vareihe_aus_datenbank($$) {
     return $result;
 }
 
+sub vareihen_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+    my $vareihen = {};
+
+    my $sth = $dbh->prepare(q{
+	SELECT tag, vareihe, version, bezeichnung, kuerzel, wertung, verborgen
+	FROM vareihe
+	JOIN vareihe_veranstaltung USING (vareihe)
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $vareihe = $row->{vareihe};
+	delete $row->{vareihe};
+	$row->{klassen} = [];
+	$row->{startnummern} = [];
+	$vareihen->{$vareihe} = $row;
+    }
+    $sth = $dbh->prepare(q{
+	SELECT vareihe, wertungsklasse AS klasse, laeufe, streichresultate
+	FROM vareihe_klasse
+	JOIN vareihe_veranstaltung USING (vareihe)
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $vareihe = $row->{vareihe};
+	delete $row->{vareihe};
+	push @{$vareihen->{$vareihe}{klassen}}, $row
+	    if exists $vareihen->{$vareihe};
+    }
+    $sth = $dbh->prepare(q{
+	SELECT vareihe, startnummer AS alt, neue_startnummer AS neu
+	FROM neue_startnummer
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $vareihe = $row->{vareihe};
+	delete $row->{vareihe};
+	push @{$vareihen->{$vareihe}{startnummern}}, $row
+	    if exists $vareihen->{$vareihe};
+    }
+    return [ map { $vareihen->{$_} } sort { $a <=> $b } keys %$vareihen ];
+}
+
 sub db_utf8($) {
     my ($database) = @_;
 
@@ -577,6 +626,36 @@ sub trace_sql($$$) {
 	    return;
 	},
      };
+}
+
+sub dateiname($$$) {
+    my ($dbh, $id, $veranstaltung) = @_;
+    my $dateiname;
+
+    my $sth = $dbh->prepare(q{
+	SELECT dateiname
+	FROM veranstaltung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    ($dateiname) = $sth->fetchrow_array;
+
+    unless ($dateiname) {
+	my $dateiname = [];
+	push @$dateiname, $veranstaltung->{datum}
+	    if $veranstaltung->{datum};
+	my $titel = $veranstaltung->{wertungen}[0]{titel};
+	if ($titel) {
+	    $titel =~ s<[/:\\]><->g;
+	    push @$dateiname, $titel;
+	}
+	if (@$dateiname) {
+	    $dateiname = join(' ', @$dateiname);
+	} else {
+	    $dateiname = undef;
+	}
+    }
+    return $dateiname;
 }
 
 1;
