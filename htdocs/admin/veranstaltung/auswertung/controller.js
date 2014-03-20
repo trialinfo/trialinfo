@@ -586,7 +586,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 				   {params: $route.current.params,
 				    timeout: cancel_http_request.promise});
 
-	  var dauer = 400 + (position[2] + position[3]) * 400 * Math.pow(2, $scope.anzeige.dauer / 2);
+	  var dauer = (position[2] * 1000 + position[3] * 400) * Math.pow(2, $scope.anzeige.dauer / 2);
 	  timeout_promise = $timeout(animieren, dauer);
         }
       })();
@@ -594,12 +594,21 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       alles_anzeigen();
   });
 
+  $scope.gesamtpunkte = function(fahrer) {
+    return fahrer.punkte == null ? null :
+      wertungspunkte(fahrer.punkte, veranstaltung.punkteteilung);
+  }
+
+  $scope.zusatzpunkte = function(fahrer) {
+    return wertungspunkte(fahrer.zusatzpunkte, veranstaltung.punkteteilung) || '';
+  }
+
   $scope.wertungspunkte = function(fahrer) {
     var wp;
     try {
       wp = fahrer.wertungen[$scope.anzeige.wertung - 1].punkte;
     } catch(_) { }
-    return veranstaltung.punkteteilung ? wertungspunkte(wp) : wp;
+    return wertungspunkte(wp, veranstaltung.punkteteilung);
   }
 
   /* $scope.netzwerkfehler = ...; */

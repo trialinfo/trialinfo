@@ -13,6 +13,7 @@ use Datenbank;
 use DatenbankAktualisieren;
 use Auswertung;
 use strict;
+use Compress::Zlib;
 #use Data::Dumper;
 
 my $trace_sql = $cgi_verbose;
@@ -661,6 +662,21 @@ if ($op eq 'GET/vareihen') {
     $result->{error} = "Operation '$op' not defined";
 }
 
-print header(-type => 'application/json', -charset => 'utf-8', -status => $status);
 # Note: The result must be a list or an object to be valid JSON!
-print $result ? to_json($result) : '{}';
+$result = $result ? to_json($result) : '{}';
+$result = Encode::encode_utf8($result);
+
+my $headers = {
+    type => 'application/json',
+    charset => 'utf-8',
+    status => $status
+};
+if (($ENV{HTTP_ACCEPT_ENCODING} // '') =~ /\bgzip\b/) {
+    $headers->{'Content-Encoding'} = 'gzip';
+    $result = Compress::Zlib::memGzip($result);
+}
+$headers->{'Content-Length'} = length($result);
+
+print header($headers);
+binmode STDOUT;
+print $result;

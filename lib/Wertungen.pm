@@ -72,6 +72,11 @@ sub log10($) {
 sub wertungspunkte($$) {
     my ($wertungspunkte, $punkteteilung) = @_;
     return undef unless defined $wertungspunkte;
+    my $vorzeichen = '';
+    if ($wertungspunkte < 0) {
+	$vorzeichen = '−';  # Minuszeichen, kein Bindestrich!
+	$wertungspunkte = -$wertungspunkte;
+    }
     my ($komma, $ganzzahl) = modf($wertungspunkte);
     if ($komma && $punkteteilung) {
 	my $bruch_zeichen = {
@@ -86,13 +91,13 @@ sub wertungspunkte($$) {
 	my $eps = 1 / (1 << 13);
 
 	foreach my $wert (keys %$bruch_zeichen) {
-	    return "$ganzzahl$bruch_zeichen->{$wert}"
-		if abs($komma) >= $wert - $eps &&
-		   abs($komma) <= $wert + $eps;
+	    return "$vorzeichen$ganzzahl$bruch_zeichen->{$wert}"
+		if $komma >= $wert - $eps &&
+		   $komma <= $wert + $eps;
 	}
     }
     my $prec = 2; # Maximale Nachkommastellen
-    return sprintf("%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
+    return sprintf("$vorzeichen%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
 }
 
 1;
