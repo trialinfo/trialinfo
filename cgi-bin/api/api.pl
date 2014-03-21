@@ -157,6 +157,7 @@ sub veranstaltung_reset($$$) {
 
 my $result;
 my $status = '200 OK';
+my $json = JSON->new;
 if ($op eq 'GET/vareihen') {
     my $sth = $dbh->prepare(q{
 	SELECT vareihe, bezeichnung, kuerzel, verborgen
@@ -279,7 +280,7 @@ if ($op eq 'GET/vareihen') {
     my $startnummer = $q->url_param('startnummer');  # Alte Startnummer
     my $putdata = $q->param('PUTDATA');
     _utf8_on($putdata);
-    my $fahrer1 = from_json($putdata);
+    my $fahrer1 = $json->decode($putdata);
 
     print STDERR "$putdata\n"
 	if $cgi_verbose;
@@ -346,7 +347,7 @@ if ($op eq 'GET/vareihen') {
     my $id = $q->url_param('id');  # Alte ID
     my $putdata = $q->param('PUTDATA');
     _utf8_on($putdata);
-    my $cfg1 = from_json($putdata);
+    my $cfg1 = $json->decode($putdata);
 
     print STDERR "$putdata\n"
 	if $cgi_verbose;
@@ -409,7 +410,7 @@ if ($op eq 'GET/vareihen') {
     my $vareihe = $q->url_param('vareihe');  # Alte vareihe-ID
     my $putdata = $q->param('PUTDATA');
     _utf8_on($putdata);
-    my $data1 = from_json($putdata);
+    my $data1 = $json->decode($putdata);
 
     print STDERR "$putdata\n"
 	if $cgi_verbose;
@@ -663,7 +664,7 @@ if ($op eq 'GET/vareihen') {
 }
 
 # Note: The result must be a list or an object to be valid JSON!
-$result = $result ? to_json($result) : '{}';
+$result = $result ? $json->encode($result) : '{}';
 $result = Encode::encode_utf8($result);
 
 my $headers = {
