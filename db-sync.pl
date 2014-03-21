@@ -165,6 +165,7 @@ CREATE TABLE sektion_aus_wertung (
 
 DROP TABLE IF EXISTS veranstaltung;
 CREATE TABLE veranstaltung (
+  tag CHAR(16) NOT NULL,
   version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
   basis INT, -- veranstaltung
@@ -251,6 +252,7 @@ my @create_reihen_tables = split /;/, q{
 -- Veranstaltungsreihe
 DROP TABLE IF EXISTS vareihe;
 CREATE TABLE vareihe (
+  tag CHAR(16) NOT NULL,
   version INT NOT NULL DEFAULT 1,
   vareihe INT,
   wertung INT, -- Wertung im Trialtool

@@ -21,6 +21,7 @@ use Datenbank qw(cfg_aus_datenbank wertung_aus_datenbank equal);
 use Berechnung qw(rang_und_wertungspunkte_berechnen);
 use Storable qw(dclone);
 use JSON_bool;
+use Tag;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -586,12 +587,16 @@ sub veranstaltung_aktualisieren($$$$) {
 	    and $changed = 1;
     }
 
+    while (!$alt && !$neu->{tag}) {
+	$neu->{tag} = random_tag(16);
+    }
+
     my $felder = [];
     my $felder_alt = $alt ? [] : undef;
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
 	foreach my $feld (qw(
-	    dateiname datum art aktiv vierpunktewertung wertungsmodus
+	    tag dateiname datum art aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
 	    wertung1_markiert versicherung ergebnislistenbreite
 	    ergebnisliste_feld mtime punkteteilung)) {
@@ -695,11 +700,15 @@ sub vareihe_aktualisieren($$$$) {
 	    and $changed = 1;
     }
 
+    while (!$alt && !$neu->{tag}) {
+	$neu->{tag} = random_tag(16);
+    }
+
     my $felder = [];
     my $felder_alt = $alt ? [] : undef;
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
-	foreach my $feld (qw(wertung bezeichnung kuerzel verborgen)) {
+	foreach my $feld (qw(tag wertung bezeichnung kuerzel verborgen)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;
 		push @$felder_alt, $alt->{$feld}

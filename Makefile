@@ -42,6 +42,7 @@ COMMON_FILES = \
 	lib/JSON_bool.pm \
 	lib/Parse/Binary/FixedFormat.pm \
 	lib/RenderOutput.pm \
+	lib/Tag.pm \
 	lib/Tageswertung.pm \
 	lib/Timestamp.pm \
 	lib/Trialtool.pm \

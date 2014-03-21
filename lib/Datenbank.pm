@@ -47,7 +47,8 @@ sub fixup_value($$) {
     my ($ref, $type) = @_;
 
     if (defined $$ref) {
-	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_TIMESTAMP || $type == SQL_VARCHAR) {
+	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_TIMESTAMP ||
+	    $type == SQL_VARCHAR || $type == SQL_CHAR) {
 	} elsif ($type == SQL_TINYINT) {
 	    # FIXME: what other types for boolean?
 	    $$ref = json_bool($$ref);
@@ -145,9 +146,9 @@ sub cfg_aus_datenbank($$;$) {
     my $nur_trialtool = $ohne_trialtool ? '' :
 	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, mtime';
     my $sth = $dbh->prepare(qq{
-	SELECT version, id, basis, dateiname, datum, art, aktiv, vierpunktewertung,
-	       wertungsmodus, punkte_sektion_auslassen, wertungspunkte_234,
-	       wertung1_markiert, versicherung, mtime,
+	SELECT tag, version, id, basis, dateiname, datum, art, aktiv,
+	       vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
+	       wertungspunkte_234, wertung1_markiert, versicherung, mtime,
 	       punkteteilung$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
@@ -466,7 +467,7 @@ sub vareihe_aus_datenbank($$) {
     my $result;
 
     my $sth = $dbh->prepare(q{
-	SELECT version, vareihe, bezeichnung, kuerzel, wertung, verborgen
+	SELECT tag, version, vareihe, bezeichnung, kuerzel, wertung, verborgen
 	FROM vareihe
 	WHERE vareihe = ?
     });
@@ -577,3 +578,5 @@ sub trace_sql($$$) {
 	},
      };
 }
+
+1;
