@@ -410,6 +410,8 @@ if ($op eq 'GET/vareihen') {
 
 	my $veranstaltung = cfg_parsen($data->{cfg});
 	my $fahrer = dat_parsen($data->{dat}, $veranstaltung, 0);
+	$veranstaltung->{aktiv} = json_bool(1);
+	# $veranstaltung->{datum}, $veranstaltung->{mtime}
 	$result = importieren($veranstaltung, $fahrer, undef);
     };
     if ($@) {

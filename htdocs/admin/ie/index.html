@@ -1,0 +1,72 @@
+<h1>Import und Export</h1>
+<form>
+  <table>
+    <tbody>
+      <tr>
+	<th align="right"><label for="format">Format</label></th>
+	<td>
+	  <select ng-model="format" id="format" ng-disabled="busy">
+	    <option value="trial-auswertung">Trial-Auswertung</option>
+	    <option value="trialtool">TrialTool</option>
+	  </select>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="operation">Operation</label></th>
+	<td>
+	  <select ng-model="operation" id="operation" ng-disabled="busy">
+	    <option value="export">Exportieren</option>
+	    <option value="import">Importieren</option>
+	  </select>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="operation == 'import' && format == 'trial-auswertung'">
+      <tr>
+	<th align="right">Datei</th>
+	<td>
+	  <input type="file" onchange="angular.element(this).scope().import()" id="tra_datei" ng-disabled="busy"><br>
+	  <span style="color:red">{{tra_datei_fehler}}</span>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="operation == 'import' && format == 'trialtool'">
+      <tr>
+	<th align="right">cfg-Datei</th>
+	<td>
+	  <input type="file" onchange="angular.element(this).scope().import()" id="cfg_datei" ng-disabled="busy"><br>
+	  <span style="color:red">{{cfg_datei_fehler}}</span>
+	</td>
+      </tr>
+      <tr>
+	<th align="right">dat-Datei</th>
+	<td>
+	  <input type="file" onchange="angular.element(this).scope().import()" id="dat_datei" ng-disabled="busy"><br>
+	  <span style="color:red">{{dat_datei_fehler}}</span>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="operation == 'export' && format == 'trial-auswertung'">
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar">
+	    <a href="/api/veranstaltung/export?id={{veranstaltung.id}}">{{veranstaltung.titel}}</a><br>
+	  </span>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="operation == 'export' && format == 'trialtool'">
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar">
+	    {{veranstaltung.titel}}:
+	    <a href="/api/trialtool/cfg?id={{veranstaltung.id}}">cfg</a>,
+	    <a href="/api/trialtool/dat?id={{veranstaltung.id}}">dat</a><br>
+	  </span>
+	</td>
+      </tr>
+    </tbody>
+  </table>
+</form>

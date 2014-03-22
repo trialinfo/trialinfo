@@ -55,6 +55,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="veranstaltung/auswertung/controller.js"></script>
     <script src="veranstaltung/liste/controller.js"></script>
     <script src="vareihe/controller.js"></script>
+    <script src="ie/controller.js"></script>
     <script>
 
       var HAVE_WEASYPRINT;
@@ -84,6 +85,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.controller('veranstaltungAuswertungController', veranstaltungAuswertungController);
       application.controller('veranstaltungListeController', veranstaltungListeController);
       application.controller('vareiheController', vareiheController);
+      application.controller('ieController', ieController);
 
       application.config(function($routeProvider) {
 	$routeProvider.
@@ -142,6 +144,10 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    controller: 'vareiheController',
 	    templateUrl: 'vareihe/index.html',
 	    resolve: vareiheController.resolve
+	  }).when('/ie', {
+	    controller: 'ieController',
+	    templateUrl: 'ie/index.html',
+	    resolve: ieController.resolve
 	  }).otherwise({
 	    redirectTo: '/'
 	  });
