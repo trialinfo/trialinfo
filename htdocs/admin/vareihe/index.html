@@ -62,22 +62,29 @@
   </fieldset><br>
   <fieldset style="display:inline">
     <legend>Startnummernänderungen</legend>
-    <table>
-      <tr>
-	<th>Veranstaltung</th>
-	<th>Von</th>
-	<th>Nach</th>
-      </tr>
-      <tr ng-repeat="aenderung in vareihe.startnummern track by $index">
-	<td align="center">
-	  <select ng-model="aenderung.id" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen">
-	    <option value=""></option>
-	  </select>
-	</td>
-	<td align="center"><input type="number" size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.alt" style="text-align:center"></td>
-	<td align="center"><input type="number" size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.neu" style="text-align:center"></td>
-      </tr>
-    </table>
+    <span ng-repeat="veranstaltung in veranstaltungen | filter:in_vareihe" ng-init="aenderungen = vareihe.startnummern[veranstaltung.id]">
+      <fieldset style="display:inline">
+	<legend>{{veranstaltung.titel}}</legend>
+	<table>
+	  <tr>
+	    <th align="right"></th>
+	    <th ng-repeat="aenderung in aenderungen track by $index" align="center"></th>
+	  </tr>
+	  <tr>
+	    <th align="right">Von</th>
+	    <td ng-repeat="aenderung in aenderungen track by $index" align="center">
+	      <input type="number" size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.alt" style="text-align:center">
+	    </td>
+	  </tr>
+	  <tr>
+	    <th align="right">Nach</th>
+	    <td align="center" ng-repeat="aenderung in aenderungen track by $index" align="center">
+	      <input type="number" size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.neu" style="text-align:center">
+	    </td>
+	  </tr>
+	</table>
+      </fieldset><br>
+    </span>
   </fieldset><br>
   <p>
     <button type="button" ng-disabled="!(geaendert() && form.$valid) || busy" ng-click="speichern()">Speichern</button>

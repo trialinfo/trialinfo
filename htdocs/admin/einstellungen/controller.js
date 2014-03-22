@@ -193,7 +193,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   beim_verlassen_warnen($scope, $scope.geaendert);
 
   if (veranstaltungen) {
-    veranstaltungen.reverse();
+    //veranstaltungen.reverse();
     $scope.veranstaltungen = veranstaltungen;
 
     function eindeutiger_titel(titel, veranstaltungen) {

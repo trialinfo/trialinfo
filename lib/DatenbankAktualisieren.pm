@@ -652,8 +652,12 @@ sub startnummern_hash($) {
 
     my $hash = {};
     if ($vareihe && $vareihe->{startnummern}) {
-	foreach my $data (@{$vareihe->{startnummern}}) {
-	    $hash->{"$data->{id}:$data->{alt}"} = [$data->{neu}];
+	foreach my $id (keys %{$vareihe->{startnummern}}) {
+	    my $aenderungen = $vareihe->{startnummern}{$id};
+	    foreach my $aenderung (@$aenderungen) {
+	      next unless defined $aenderung->{alt};
+	      $hash->{"$id:$aenderung->{alt}"} = [$aenderung->{neu}];
+	    }
 	}
     }
     return $hash;

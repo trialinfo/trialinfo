@@ -508,10 +508,12 @@ sub vareihe_aus_datenbank($$) {
 	ORDER BY datum, startnummer
     });
     $sth->execute($vareihe);
-    $result->{startnummern} = [];
-    while (my $startnummer = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $startnummer);
-	push @{$result->{startnummern}}, $startnummer;
+    $result->{startnummern} = {};
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $id = $row->{id};
+	delete $row->{id};
+	push @{$result->{startnummern}{$id}}, $row;
     }
     return $result;
 }
