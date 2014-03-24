@@ -35,8 +35,8 @@ package Trialtool;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(cfg_datei_parsen cfg_datei_schreiben dat_datei_parsen
-	     dat_datei_schreiben trialtool_dateien gestartete_klassen);
+@EXPORT = qw(cfg_datei_parsen cfg_parsen cfg_datei_daten dat_datei_parsen
+	     dat_parsen dat_datei_daten trialtool_dateien gestartete_klassen);
 
 use File::Spec::Functions;
 use Parse::Binary::FixedFormat;
@@ -211,12 +211,9 @@ my %kartenfarben_in = (
 );
 my %kartenfarben_out = map { $kartenfarben_in{$_} => $_ } keys %kartenfarben_in;
 
-sub cfg_datei_parsen($) {
-    my ($dateiname) = @_;
+sub cfg_parsen($) {
+    my ($cfg) = @_;
 
-    my $fh = new FileHandle(encode(locale_fs => $dateiname));
-    binmode $fh, ":bytes";
-    my $cfg = do { local $/; <$fh> };
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
     $cfg = $cfg_parser->unformat($cfg);
     decode_strings($cfg, $cfg_format);
@@ -286,10 +283,18 @@ sub cfg_datei_parsen($) {
     return $cfg;
 }
 
-sub cfg_datei_schreiben($$) {
-    my ($fh, $cfg) = @_;
+sub cfg_datei_parsen($) {
+    my ($dateiname) = @_;
 
+    my $fh = new FileHandle(encode(locale_fs => $dateiname));
     binmode $fh, ":bytes";
+    my $cfg = do { local $/; <$fh> };
+    return cfg_parsen($cfg);
+}
+
+sub cfg_datei_daten($) {
+    my ($cfg) = @_;
+
     my $cfg_parser = new Parse::Binary::FixedFormat($cfg_format);
 
     $cfg = { %{$cfg} };
@@ -360,7 +365,7 @@ sub cfg_datei_schreiben($$) {
     $cfg->{ergebnisliste_feld} = $ergebnisliste_felder[$cfg->{ergebnisliste_feld}];
 
     encode_strings($cfg, $cfg_format);
-    print $fh $cfg_parser->format($cfg);
+    return $cfg_parser->format($cfg);
 }
 
 sub runden_zaehlen($) {
@@ -384,14 +389,19 @@ sub punkte_aufteilen($) {
 sub dat_datei_parsen($$$) {
     my ($dateiname, $cfg, $nur_fahrer) = @_;
 
-    my $startnummern = $nur_fahrer ? 999 : 1600;
     my $fh = new FileHandle(encode(locale_fs => $dateiname));
     binmode $fh, ":bytes";
     my $dat = do { local $/; <$fh> };
+    return dat_parsen($dat, $cfg, $nur_fahrer);
+}
+
+sub dat_parsen($$$) {
+    my ($dat, $cfg, $nur_fahrer) = @_;
     my $fahrer_nach_startnummern;
 
     $cfg->{neue_startnummern} = {};
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
+    my $startnummern = $nur_fahrer ? 999 : 1600;
     for (my $n = 1; $n <= $startnummern; $n++) {
 	my $startnummer = $n;
 	my $fahrer_binaer = substr($dat, ($n - 1) * 847, 847);
@@ -481,12 +491,11 @@ sub dat_datei_parsen($$$) {
     return $fahrer_nach_startnummern;
 }
 
-sub dat_datei_schreiben($$$) {
-    my ($fh, $cfg, $fahrer_nach_startnummern) = @_;
+sub dat_datei_daten($$) {
+    my ($cfg, $fahrer_nach_startnummern) = @_;
     my $leerer_fahrer = "\0" x 4 . " " x 573 . "00.0000.00NNNN" .
 			"\0" x 4 . "0NNNNN" . "\0" x 96 . "\6\0" x 75;
-
-    binmode $fh, ":bytes";
+    my $dat_datei = '';
 
     my $fahrer_parser = new Parse::Binary::FixedFormat($dat_format);
 
@@ -603,11 +612,12 @@ sub dat_datei_schreiben($$$) {
 	    $fahrer->{nennungseingang} = json_unbool($fahrer->{nennungseingang});
 	    $fahrer->{start} = json_unbool($fahrer->{start});
 	    encode_strings($fahrer, $dat_format);
-	    print $fh $fahrer_parser->format($fahrer);
+	    $dat_datei .= $fahrer_parser->format($fahrer);
 	} else {
-	    print $fh $leerer_fahrer;
+	    $dat_datei .= $leerer_fahrer;
 	}
     }
+    return $dat_datei;
 }
 
 # Nimmt eine Liste von Datei- / Verzeichnisnamen aus Argument, und liefert eine

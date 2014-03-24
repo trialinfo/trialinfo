@@ -21,7 +21,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use Datenbank;
 use Auswertung;
-use Trialtool;
+use Trialtool qw(cfg_datei_daten dat_datei_daten);
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';
@@ -55,7 +55,8 @@ if ($type eq 'cfg') {
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
 			 "filename=\"$dateiname.cfg\"");
-    cfg_datei_schreiben(\*STDOUT, $cfg);
+    binmode STDOUT, ":bytes";
+    print cfg_datei_daten($cfg);
 } else {
     #use Data::Dumper;
     #print $q->header(-type => 'text/plain', -charset=>'utf-8');
@@ -67,5 +68,6 @@ if ($type eq 'cfg') {
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
 			 "filename=\"$dateiname.dat\"");
-    dat_datei_schreiben(\*STDOUT, $cfg, $fahrer_nach_startnummer);
+    binmode STDOUT, ":bytes";
+    print dat_datei_daten($cfg, $fahrer_nach_startnummer);
 }
