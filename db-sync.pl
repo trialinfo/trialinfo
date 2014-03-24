@@ -732,6 +732,7 @@ do {
 	}
     };
     if ($@) {
+	print STDERR "$@";
 	$dbh->disconnect;
 	# Der Datenstand am Server stimmt vielleicht nicht mehr mit dem
 	# lokal zwischengespeicherten Datenstand übereinzustimmen.
