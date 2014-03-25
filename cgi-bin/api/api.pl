@@ -11,10 +11,13 @@ use JSON;
 use JSON_bool;
 use Datenbank;
 use DatenbankAktualisieren;
+use Trialtool;
 use Auswertung;
-use strict;
+use Tag;
 use Compress::Zlib;
+use MIME::Base64;
 #use Data::Dumper;
+use strict;
 
 my $trace_sql = $cgi_verbose;
 
@@ -155,8 +158,148 @@ sub veranstaltung_reset($$$) {
     # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
 }
 
+sub export($$$) {
+    my ($id, $headers, $json) = @_;
+    my $result;
+
+    $result = {
+	format => 'trial-auswertung 1',
+	veranstaltung => cfg_aus_datenbank($dbh, $id, 1),
+	fahrer => fahrer_aus_datenbank($dbh, $id),
+	vareihen => vareihen_aus_datenbank($dbh, $id)
+    };
+    my $basis_tag;
+    if ($result->{veranstaltung}{basis}{id}) {
+	my $sth = $dbh->prepare(q{
+	    SELECT tag
+	    FROM veranstaltung
+	    WHERE id = ?
+	});
+	$sth->execute($result->{veranstaltung}{basis}{id});
+	my @row = $sth->fetchrow_array;
+	fixup_arrayref($sth, \@row);
+	$basis_tag = $row[0];
+    }
+    if ($basis_tag) {
+	$result->{veranstaltung}{basis} = $basis_tag;
+    } else {
+	delete $result->{veranstaltung}{basis};
+    }
+    delete $result->{veranstaltung}{dateiname};
+    delete $result->{veranstaltung}{id};
+
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    my $dateiname = dateiname($dbh, $id, $result->{veranstaltung});
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.tra\""
+	if $dateiname;
+
+    $result = "/* trial-auswertung 1 */\n" . $json->canonical->encode($result);
+    $result = Encode::encode_utf8($result);
+    $result = Compress::Zlib::memGzip($result);
+    return $result;
+}
+
+sub cfg_export($$) {
+    my ($id, $headers) = @_;
+    my $cfg = cfg_aus_datenbank($dbh, $id);
+
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    my $dateiname = dateiname($dbh, $id, $cfg);
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.cfg\""
+	if $dateiname;
+
+    return cfg_datei_daten($cfg);
+}
+
+sub dat_export($$) {
+    my ($id, $headers) = @_;
+    my $cfg = cfg_aus_datenbank($dbh, $id);
+    my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
+
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    my $dateiname = dateiname($dbh, $id, $cfg);
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.dat\""
+	if $dateiname;
+
+    return dat_datei_daten($cfg, $fahrer_nach_startnummer);
+}
+
+sub importieren($$$) {
+    my ($veranstaltung, $fahrer, $vareihen) = @_;
+
+    $dbh->begin_work;
+    my $sth = $dbh->prepare(q{
+	SELECT MAX(id)
+	FROM veranstaltung
+    });
+    $sth->execute;
+    my @row = $sth->fetchrow_array;
+    my $id = ($row[0] // 0) + 1;
+    $veranstaltung->{id} = $id;
+    $veranstaltung->{tag} = random_tag(16);
+    $veranstaltung->{wertungen}[0]{titel} .= ' (importiert)';
+
+    if ($veranstaltung->{basis}) {
+	my $sth = $dbh->prepare(q{
+	    SELECT id
+	    FROM veranstaltung
+	    where tag = ?
+	});
+	$sth->execute($veranstaltung->{basis});
+	my @row = $sth->fetchrow_array;
+	if (defined $row[0]) {
+	    $veranstaltung->{basis} = { id => $row[0] };
+	} else {
+	    print STDERR "Vorherige Veranstaltung mit Tag " .
+		  "$veranstaltung->{basis} nicht gefunden\n";
+	    delete $veranstaltung->{basis};
+	}
+    }
+    veranstaltung_aktualisieren $do_sql, $id, undef, $veranstaltung;
+    fahrer_aktualisieren $do_sql, $id, undef, $fahrer, 1;
+    foreach my $data (@$vareihen) {
+	my $sth = $dbh->prepare(q{
+	    SELECT vareihe
+	    FROM vareihe
+	    WHERE tag = ?
+	});
+	$sth->execute($data->{tag});
+	my ($data0, $data1);
+	my $vareihe;
+	if (($vareihe) = $sth->fetchrow_array) {
+	    $data0 = vareihe_aus_datenbank($dbh, $vareihe);
+	    $data1 = { %$data0 };
+	    $data1->{veranstaltungen} = [ @{$data1->{veranstaltungen}} ];
+	    $data1->{startnummern} = { %{$data1->{startnummern}} };
+	} else {
+	    print STDERR "Veranstaltungsreihe mit Tag $data1->{tag} " .
+		  "nicht gefunden\n";
+	    my $sth = $dbh->prepare(q{
+		SELECT MAX(vareihe)
+		FROM vareihe
+	    });
+	    $sth->execute;
+	    my @row = $sth->fetchrow_array;
+	    $vareihe = ($row[0] // 0) + 1;
+	    $data1 = { %$data };
+	    $data1->{veranstaltungen} = [ ];
+	    $data1->{startnummern} = { };
+	}
+	$data1->{startnummern}{$id} = $data->{startnummern};
+	push @{$data1->{veranstaltungen}}, $id;
+	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1;
+    }
+    wertung_aktualisieren $dbh, $do_sql, $id;
+    $dbh->commit;
+    return { id => $id };
+}
+
 my $result;
+my $headers = {
+    'Content-Type' => 'application/json',
+};
 my $status = '200 OK';
+my $json = JSON->new;
 if ($op eq 'GET/vareihen') {
     my $sth = $dbh->prepare(q{
 	SELECT vareihe, bezeichnung, kuerzel, verborgen
@@ -218,6 +361,67 @@ if ($op eq 'GET/vareihen') {
 } elsif ($op eq "GET/veranstaltung") {
     my ($id) = parameter($q, qw(id));
     $result = cfg_aus_datenbank($dbh, $id, 1);
+} elsif ($op eq "GET/veranstaltung/export") {
+    my ($id, $type) = parameter($q, qw(id));
+    $result = export($id, $headers, $json);
+} elsif ($op eq "GET/trialtool/cfg") {
+    my ($id) = parameter($q, qw(id));
+    $result = cfg_export($id, $headers);
+} elsif ($op eq "GET/trialtool/dat") {
+    my ($id) = parameter($q, qw(id));
+    $result = dat_export($id, $headers);
+} elsif ($op eq "POST/veranstaltung/import") {
+    eval {
+	my $data = decode_base64($q->param('POSTDATA'));
+	$data = Compress::Zlib::memGunzip($data)
+	    or die "Daten konnten nicht dekomprimiert werden\n";
+	_utf8_on($data);
+	$data = $json->decode($data)
+	    or die "Daten konnten nicht decodiert werden\n";
+	if (ref($data) ne "HASH" ||
+	    $data->{format} ne "trial-auswertung 1" ||
+	    ref($data->{veranstaltung}) ne "HASH" ||
+	    ref($data->{fahrer}) ne "HASH" ||
+	    ref($data->{vareihen}) ne "ARRAY") {
+	    die "Datenformat nicht unterstützt\n";
+	}
+	$result = importieren($data->{veranstaltung}, $data->{fahrer}, $data->{vareihen});
+    };
+    if ($@) {
+	print STDERR $@;
+	$status = '500 Internal Server Error';
+	$result->{error} = $@;
+	$dbh->disconnect;
+    } else {
+	$status = '200 Modified';
+    }
+} elsif ($op eq "POST/trialtool/import") {
+    eval {
+	my $data = $json->decode($q->param('POSTDATA'))
+	    or die "Daten konnten nicht decodiert werden\n";
+	if (ref($data) ne "HASH" ||
+	    !$data->{cfg} || !$data->{dat}) {
+	    die "Übertragungsformat nicht unterstützt\n";
+	}
+	$data->{cfg} = decode_base64($data->{cfg})
+	    or die "Daten konnten nicht decodiert werden\n";
+	$data->{dat} = decode_base64($data->{dat})
+	    or die "Daten konnten nicht decodiert werden\n";
+
+	my $veranstaltung = cfg_parsen($data->{cfg});
+	my $fahrer = dat_parsen($data->{dat}, $veranstaltung, 0);
+	$veranstaltung->{aktiv} = json_bool(1);
+	# $veranstaltung->{datum}, $veranstaltung->{mtime}
+	$result = importieren($veranstaltung, $fahrer, undef);
+    };
+    if ($@) {
+	print STDERR $@;
+	$status = '500 Internal Server Error';
+	$result->{error} = $@;
+	$dbh->disconnect;
+    } else {
+	$status = '200 Modified';
+    }
 } elsif ($op eq "GET/veranstaltung/vorschlaege") {
     my @params = parameter($q, qw(id));
     foreach my $feld (qw(bundesland land fahrzeug club)) {
@@ -279,7 +483,7 @@ if ($op eq 'GET/vareihen') {
     my $startnummer = $q->url_param('startnummer');  # Alte Startnummer
     my $putdata = $q->param('PUTDATA');
     _utf8_on($putdata);
-    my $fahrer1 = from_json($putdata);
+    my $fahrer1 = $json->decode($putdata);
 
     print STDERR "$putdata\n"
 	if $cgi_verbose;
@@ -346,7 +550,7 @@ if ($op eq 'GET/vareihen') {
     my $id = $q->url_param('id');  # Alte ID
     my $putdata = $q->param('PUTDATA');
     _utf8_on($putdata);
-    my $cfg1 = from_json($putdata);
+    my $cfg1 = $json->decode($putdata);
 
     print STDERR "$putdata\n"
 	if $cgi_verbose;
@@ -409,7 +613,7 @@ if ($op eq 'GET/vareihen') {
     my $vareihe = $q->url_param('vareihe');  # Alte vareihe-ID
     my $putdata = $q->param('PUTDATA');
     _utf8_on($putdata);
-    my $data1 = from_json($putdata);
+    my $data1 = $json->decode($putdata);
 
     print STDERR "$putdata\n"
 	if $cgi_verbose;
@@ -662,19 +866,19 @@ if ($op eq 'GET/vareihen') {
     $result->{error} = "Operation '$op' not defined";
 }
 
-# Note: The result must be a list or an object to be valid JSON!
-$result = $result ? to_json($result) : '{}';
-$result = Encode::encode_utf8($result);
+if ($headers->{'Content-Type'} eq 'application/json') {
+    # Note: The result must be a list or an object to be valid JSON!
+    $result = $result ? $json->encode($result) : '{}';
+    $result = Encode::encode_utf8($result);
+    $headers->{'Charset'} = 'utf-8';
 
-my $headers = {
-    type => 'application/json',
-    charset => 'utf-8',
-    status => $status
-};
-if (($ENV{HTTP_ACCEPT_ENCODING} // '') =~ /\bgzip\b/) {
-    $headers->{'Content-Encoding'} = 'gzip';
-    $result = Compress::Zlib::memGzip($result);
+    if (($ENV{HTTP_ACCEPT_ENCODING} // '') =~ /\bgzip\b/) {
+	$headers->{'Content-Encoding'} = 'gzip';
+	$result = Compress::Zlib::memGzip($result);
+    }
 }
+
+$headers->{status} = $status;
 $headers->{'Content-Length'} = length($result);
 
 print header($headers);

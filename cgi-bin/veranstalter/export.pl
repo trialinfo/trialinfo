@@ -21,7 +21,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
 use DBI;
 use Datenbank;
 use Auswertung;
-use Trialtool;
+use Trialtool qw(cfg_datei_daten dat_datei_daten);
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';
@@ -38,34 +38,21 @@ if ($type !~ /^(cfg|dat)$/) {
     die "Invalid type specified\n";
 }
 
-my $sth = $dbh->prepare(q{
-    SELECT dateiname
-    FROM veranstaltung
-    WHERE id = ?
-});
-$sth->execute($id);
-if (my @row = $sth->fetchrow_array) {
-    $dateiname = $row[0];
-} else {
-    die "Keine Veranstaltung mit dieser id gefunden\n";
-}
+my $cfg = cfg_aus_datenbank($dbh, $id);
+$dateiname = dateiname($dbh, $id, $cfg)
+    unless $dateiname;
 
 if ($type eq 'cfg') {
-    my $cfg = cfg_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
 			 "filename=\"$dateiname.cfg\"");
-    cfg_datei_schreiben(\*STDOUT, $cfg);
+    binmode STDOUT, ":bytes";
+    print cfg_datei_daten($cfg);
 } else {
-    #use Data::Dumper;
-    #print $q->header(-type => 'text/plain', -charset=>'utf-8');
-    #print Dumper($cfg), "\n";
-    #exit;
-
-    my $cfg = cfg_aus_datenbank($dbh, $id);
     my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
     print $q->header(-type => 'application/octet-stream',
 		     -Content_Disposition => 'attachment; ' .
 			 "filename=\"$dateiname.dat\"");
-    dat_datei_schreiben(\*STDOUT, $cfg, $fahrer_nach_startnummer);
+    binmode STDOUT, ":bytes";
+    print dat_datei_daten($cfg, $fahrer_nach_startnummer);
 }

@@ -20,6 +20,10 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
     $location.path('/veranstaltung/neu/einstellungen');
   };
 
+  $scope.import_export = function() {
+    $location.path('/ie');
+  };
+
   $scope.neue_vareihe = function() {
     $location.path('/vareihe/neu');
   };

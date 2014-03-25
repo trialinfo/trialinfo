@@ -27,9 +27,9 @@ use Berechnung;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
-	     vareihe_aus_datenbank
+	     vareihe_aus_datenbank vareihen_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
-	     equal fixup_arrayref fixup_hashref);
+	     equal fixup_arrayref fixup_hashref dateiname);
 use strict;
 
 # Vergleicht zwei Werte als Strings, wobei undef == undef.
@@ -47,7 +47,8 @@ sub fixup_value($$) {
     my ($ref, $type) = @_;
 
     if (defined $$ref) {
-	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_TIMESTAMP || $type == SQL_VARCHAR) {
+	if ($type == SQL_DATE || $type == SQL_TIME || $type == SQL_TIMESTAMP ||
+	    $type == SQL_VARCHAR || $type == SQL_CHAR) {
 	} elsif ($type == SQL_TINYINT) {
 	    # FIXME: what other types for boolean?
 	    $$ref = json_bool($$ref);
@@ -145,9 +146,9 @@ sub cfg_aus_datenbank($$;$) {
     my $nur_trialtool = $ohne_trialtool ? '' :
 	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, mtime';
     my $sth = $dbh->prepare(qq{
-	SELECT version, id, basis, dateiname, datum, art, aktiv, vierpunktewertung,
-	       wertungsmodus, punkte_sektion_auslassen, wertungspunkte_234,
-	       wertung1_markiert, versicherung, mtime,
+	SELECT tag, version, id, basis, dateiname, datum, art, aktiv,
+	       vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
+	       wertungspunkte_234, wertung1_markiert, versicherung, mtime,
 	       punkteteilung$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
@@ -466,7 +467,7 @@ sub vareihe_aus_datenbank($$) {
     my $result;
 
     my $sth = $dbh->prepare(q{
-	SELECT version, vareihe, bezeichnung, kuerzel, wertung, verborgen
+	SELECT tag, version, vareihe, bezeichnung, kuerzel, wertung, verborgen
 	FROM vareihe
 	WHERE vareihe = ?
     });
@@ -508,12 +509,63 @@ sub vareihe_aus_datenbank($$) {
 	ORDER BY datum, startnummer
     });
     $sth->execute($vareihe);
-    $result->{startnummern} = [];
-    while (my $startnummer = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $startnummer);
-	push @{$result->{startnummern}}, $startnummer;
+    $result->{startnummern} = {};
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $id = $row->{id};
+	delete $row->{id};
+	push @{$result->{startnummern}{$id}}, $row;
     }
     return $result;
+}
+
+sub vareihen_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+    my $vareihen = {};
+
+    my $sth = $dbh->prepare(q{
+	SELECT tag, vareihe, version, bezeichnung, kuerzel, wertung, verborgen
+	FROM vareihe
+	JOIN vareihe_veranstaltung USING (vareihe)
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $vareihe = $row->{vareihe};
+	delete $row->{vareihe};
+	$row->{klassen} = [];
+	$row->{startnummern} = [];
+	$vareihen->{$vareihe} = $row;
+    }
+    $sth = $dbh->prepare(q{
+	SELECT vareihe, wertungsklasse AS klasse, laeufe, streichresultate
+	FROM vareihe_klasse
+	JOIN vareihe_veranstaltung USING (vareihe)
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $vareihe = $row->{vareihe};
+	delete $row->{vareihe};
+	push @{$vareihen->{$vareihe}{klassen}}, $row
+	    if exists $vareihen->{$vareihe};
+    }
+    $sth = $dbh->prepare(q{
+	SELECT vareihe, startnummer AS alt, neue_startnummer AS neu
+	FROM neue_startnummer
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $vareihe = $row->{vareihe};
+	delete $row->{vareihe};
+	push @{$vareihen->{$vareihe}{startnummern}}, $row
+	    if exists $vareihen->{$vareihe};
+    }
+    return [ map { $vareihen->{$_} } sort { $a <=> $b } keys %$vareihen ];
 }
 
 sub db_utf8($) {
@@ -575,3 +627,35 @@ sub trace_sql($$$) {
 	},
      };
 }
+
+sub dateiname($$$) {
+    my ($dbh, $id, $veranstaltung) = @_;
+    my $dateiname;
+
+    my $sth = $dbh->prepare(q{
+	SELECT dateiname
+	FROM veranstaltung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    ($dateiname) = $sth->fetchrow_array;
+
+    unless ($dateiname) {
+	my $dateiname = [];
+	push @$dateiname, $veranstaltung->{datum}
+	    if $veranstaltung->{datum};
+	my $titel = $veranstaltung->{wertungen}[0]{titel};
+	if ($titel) {
+	    $titel =~ s<[/:\\]><->g;
+	    push @$dateiname, $titel;
+	}
+	if (@$dateiname) {
+	    $dateiname = join(' ', @$dateiname);
+	} else {
+	    $dateiname = undef;
+	}
+    }
+    return $dateiname;
+}
+
+1;

@@ -44,6 +44,7 @@ sub parameter($@) {
 
 my $result;
 my $status = '200 OK';
+my $json = JSON->new;
 if ($op eq "GET/veranstaltung/auswertung") {
     my ($id) = parameter($q, qw(id));
     my $sth = $dbh->prepare(q{
@@ -215,7 +216,7 @@ if ($op eq "GET/veranstaltung/auswertung") {
 }
 
 # Note: The result must be a list or an object to be valid JSON!
-$result = $result ? to_json($result) : '{}';
+$result = $result ? $json->encode($result) : '{}';
 $result = Encode::encode_utf8($result);
 
 my $headers = {

@@ -7,7 +7,7 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   vareihe_zuweisen(vareihe);
 
   if (veranstaltungen) {
-    veranstaltungen.reverse();
+    //veranstaltungen.reverse();
     $scope.veranstaltungen = veranstaltungen;
     angular.forEach(veranstaltungen, function (veranstaltung) {
       veranstaltungsdatum[veranstaltung.id] = veranstaltung.datum;
@@ -72,6 +72,17 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
     });
     if (!angular.equals(veranstaltungen, sorted))
       vareihe.veranstaltungen = sorted;
+
+    var startnummern = {};
+    angular.forEach(veranstaltungen, function(id) {
+      if (id == null)
+	return;
+      if (vareihe.startnummern[id])
+	startnummern[id] = vareihe.startnummern[id];
+      else
+	startnummern[id] = [];
+    });
+    vareihe.startnummern = startnummern;
   }
 
   $scope.$watch('vareihe.veranstaltungen', function() {
@@ -81,21 +92,18 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   }, true);
 
   function startnummern_normalisieren(vareihe) {
-    var startnummern = vareihe.startnummern;
-    if (!startnummern.length ||
-	(startnummern[startnummern.length - 1].id !== null &&
-	 startnummern[startnummern.length - 1].alt !== null))
-	startnummern.push({
-	  id: startnummern.length ? startnummern[startnummern.length - 1].id : null,
-	  alt: null
-	});
-    else {
-      for (var n = 0; n < startnummern.length - 1; n++)
-	if (startnummern[n].id === null || startnummern[n].alt === null) {
-	  startnummern.splice(n, 1);
-	  n--;
-	}
-    }
+    angular.forEach(vareihe.startnummern, function(aenderungen) {
+      if (!aenderungen.length ||
+	  aenderungen[aenderungen.length - 1].alt !== null)
+	  aenderungen.push({ alt: null, neu: null });
+      else {
+	for (var n = 0; n < aenderungen.length - 1; n++)
+	  if (aenderungen[n].alt == null) {
+	    aenderungen.splice(n, 1);
+	    n--;
+	  }
+      }
+    });
   }
 
   $scope.$watch('vareihe.startnummern', function() {
@@ -114,7 +122,7 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 	  bezeichnung: 'Neue Veranstaltungsreihe',
 	  klassen: [],
 	  veranstaltungen: [],
-	  startnummern: []
+	  startnummern: {}
 	};
       }
       klassen_normalisieren(vareihe);
@@ -127,9 +135,6 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   }
 
   $scope.geaendert = function() {
-    /* FIXME: Ändern der Veranstaltung in der zusätzlichen Zeile
-       für Startnummernänderungen wird als Änderung der
-       Veranstaltungsreihe interpretiert. */
     return !angular.equals($scope.vareihe_alt, $scope.vareihe);
   };
 
@@ -143,12 +148,6 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
     var klassen = vareihe.klassen;
     if (klassen.length && klassen[klassen.length - 1].klasse === null)
 	klassen.pop();
-    var startnummern = [];
-    angular.forEach(vareihe.startnummern, function(aenderung) {
-      if (aenderung.id !== null && aenderung.alt !== null)
-	startnummern.push(aenderung);
-    });
-    vareihe.startnummern = startnummern;
     $scope.busy = true;
     vareihe_speichern($http, vareihe.vareihe, vareihe).
       success(function(vareihe) {
@@ -198,6 +197,14 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 	  $scope.verwerfen();
       });
     }
+  };
+
+  $scope.in_vareihe = function(veranstaltung) {
+    var veranstaltungen = $scope.vareihe.veranstaltungen;
+    for (var n = 0; n < veranstaltungen.length; n++)
+      if (veranstaltung.id == veranstaltungen[n])
+	return true;
+    return false;
   };
 
   beim_verlassen_warnen($scope, $scope.geaendert);

@@ -63,6 +63,7 @@ COMMON_FILES = \
 	lib/JSON_bool.pm \
 	lib/Parse/Binary/FixedFormat.pm \
 	lib/RenderOutput.pm \
+	lib/Tag.pm \
 	lib/Tageswertung.pm \
 	lib/Timestamp.pm \
 	lib/Trialtool.pm \
@@ -107,6 +108,8 @@ ADMIN_FILES = \
 	htdocs/admin/einstellungen/index.html \
 	htdocs/admin/hilfe/index.html \
 	htdocs/admin/.htaccess \
+	htdocs/admin/ie/controller.js \
+	htdocs/admin/ie/index.html \
 	htdocs/admin/index.shtml \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
@@ -125,6 +128,7 @@ ADMIN_FILES = \
 	htdocs/admin/veranstaltung/liste/controller.js \
 	htdocs/admin/veranstaltung/liste/index.html \
 	htdocs/api/.htaccess \
+
 
 WEB_FILES = \
 	$(DOWNLOAD_FILES) \

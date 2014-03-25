@@ -19,6 +19,7 @@ use utf8;
 use DBI;
 use Getopt::Long;
 use Auswertung;
+use Tag;
 use strict;
 
 my $result = GetOptions("db=s" => \$database,
@@ -227,6 +228,12 @@ foreach my $sql (split /\s*;\s*/, q{
 	    INSERT INTO veranstaltung_feature
 		SELECT id, "email"
 		FROM veranstaltung;
+
+	    ALTER TABLE veranstaltung
+	    ADD COLUMN tag CHAR(16) NOT NULL FIRST;
+
+	    ALTER TABLE vareihe
+	    ADD COLUMN tag CHAR(16) NOT NULL FIRST;
         }) {
     $dbh->do($sql)
 	or die "$sql: $!\n";
@@ -235,8 +242,37 @@ create_version_trigger $dbh, 'veranstaltung';
 create_version_trigger $dbh, 'fahrer';
 create_version_trigger $dbh, 'vareihe';
 
+my $sth;
+
 $dbh->begin_work;
-my $sth = $dbh->prepare(qq{
+$sth = $dbh->prepare(qq{
+    SELECT id
+    FROM veranstaltung
+});
+$sth->execute;
+while (my @row = $sth->fetchrow_array) {
+    $dbh->do(q{
+	UPDATE veranstaltung
+	SET tag = ?
+	WHERE id = ?
+    }, undef, random_tag(16), $row[0]);
+}
+
+$sth = $dbh->prepare(qq{
+    SELECT vareihe
+    FROM vareihe
+});
+$sth->execute;
+while (my @row = $sth->fetchrow_array) {
+    my ($vareihe) = @row;
+    $dbh->do(q{
+	UPDATE vareihe
+	SET tag = ?
+	WHERE vareihe = ?
+    }, undef, random_tag(16), $row[0]);
+}
+
+$sth = $dbh->prepare(qq{
     SELECT id, startnummer, bemerkung
     FROM fahrer
 });
