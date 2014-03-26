@@ -298,6 +298,13 @@ my $result;
 my $headers = {
     'Content-Type' => 'application/json',
 };
+if (exists $ENV{'HTTP_ORIGIN'}) {
+    $headers->{'Access-Control-Allow-Origin'} = $ENV{'HTTP_ORIGIN'};
+    $headers->{'Access-Control-Allow-Credentials'} = 'true';
+    $headers->{'Access-Control-Allow-Methods'} = 'GET, POST, PUT, DELETE';
+    $headers->{'Access-Control-Allow-Headers'} = 'Content-Type';  # ', Accept'
+    $headers->{'Access-Control-Max-Age'} = 3600;
+}
 my $status = '200 OK';
 my $json = JSON->new;
 if ($op eq 'GET/vareihen') {
@@ -877,6 +884,10 @@ if ($headers->{'Content-Type'} eq 'application/json') {
 	$result = Compress::Zlib::memGzip($result);
     }
 }
+
+# FIXME: Wenn der Client den Content-Type nicht akzeptiert (Header Accept),
+# stattdessen Fehlercode liefern? (Die POST-Requests "akzeptieren" momentan
+# application/json nicht.)
 
 $headers->{status} = $status;
 $headers->{'Content-Length'} = length($result);
