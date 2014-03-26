@@ -102,6 +102,7 @@ ADMIN_FILES = \
 	htdocs/admin/punkte/index.html \
 	htdocs/admin/sektionen/controller.js \
 	htdocs/admin/sektionen/index.html \
+	htdocs/admin/sync/controller.js \
 	htdocs/admin/vareihe/controller.js \
 	htdocs/admin/vareihe/index.html \
 	htdocs/admin/veranstaltung/auswertung/controller.js \

@@ -3,8 +3,9 @@
 function externController($scope, $http, $location, veranstaltungen) {
   $scope.veranstaltungen = veranstaltungen;
   $scope.einstellungen = {
-    operation: 'export',
-    format: 'trial-auswertung'
+    operation: 'sync',
+    format: 'trial-auswertung',
+    timeout: 30,
   };
   try {
     $scope.einstellungen.veranstaltung = veranstaltungen[veranstaltungen.length - 1];
@@ -80,6 +81,16 @@ function externController($scope, $http, $location, veranstaltungen) {
     else
       return 'Trial';
   };
+
+  $scope.synchronize = function() {
+    var args = {
+      titel: $scope.einstellungen.veranstaltung.titel,
+      tag: $scope.einstellungen.veranstaltung.tag,
+      url: $scope.einstellungen.url,
+      timeout: $scope.einstellungen.timeout * 1000
+    };
+    $scope.$root.$broadcast('sync', args);
+  }
 }
 
 externController.resolve = {

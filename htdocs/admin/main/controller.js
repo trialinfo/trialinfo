@@ -20,7 +20,7 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
     $location.path('/veranstaltung/neu/einstellungen');
   };
 
-  $scope.import_export = function() {
+  $scope.sync_import_export = function() {
     $location.path('/extern');
   };
 

@@ -440,6 +440,7 @@ if ($op eq 'GET/vareihen') {
     $dbh->begin_work;
     $result = dat_export($id, $headers, $q->url_param('name'));
     $dbh->commit;
+} elsif ($op eq "OPTIONS/veranstaltung/import") {
 } elsif ($op eq "POST/veranstaltung/import") {
     eval {
 	my $data = decode_base64($q->param('POSTDATA'));
