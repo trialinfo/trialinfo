@@ -5,5 +5,7 @@ AuthType Basic
 AuthBasicProvider file
 
 <Files api.pl>
-  Require group admin
+  <LimitExcept OPTIONS>
+    Require group admin
+  </LimitExcept>
 </Files>
