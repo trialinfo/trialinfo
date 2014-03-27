@@ -940,6 +940,13 @@ if ($op eq 'GET/vareihen') {
     }
     $dbh->commit;
     $result = [ values %$fahrer ];
+} elsif ($op eq "GET/veranstaltung/dump") {
+    my ($tag) = parameter($q, qw(tag));
+    $dbh->begin_work;
+    my $id = veranstaltung_tag_to_id($dbh, $tag);
+    $result = export($id)
+	if $id;
+    $dbh->commit;
 } else {
     $status = "404 Not Found";
     $result->{error} = "Operation '$op' not defined";
