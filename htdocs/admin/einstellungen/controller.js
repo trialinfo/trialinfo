@@ -227,6 +227,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	      eindeutiger_titel(veranstaltung.wertungen[0].titel,
 				$scope.veranstaltungen);
 	    delete veranstaltung.datum;
+	    veranstaltung.dateiname = null;
 	    veranstaltung.reset = 'nennbeginn';
 	    veranstaltung_zuweisen(veranstaltung, true);
 	  }).
