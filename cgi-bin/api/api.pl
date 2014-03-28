@@ -709,7 +709,7 @@ if ($op eq 'GET/vareihen') {
 	foreach my $tabelle (qw(fahrer fahrer_wertung klasse punkte runde
 				sektion veranstaltung_feature kartenfarbe
 				wertung wertungspunkte neue_startnummer
-				vareihe_veranstaltung)) {
+				vareihe_veranstaltung sektion_aus_wertung)) {
 	    my $sth = $dbh->prepare(qq{
 		DELETE FROM $tabelle
 		WHERE id = ?

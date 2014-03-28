@@ -748,7 +748,7 @@ sub veranstaltung_duplizieren($$$) {
     foreach my $table (qw(fahrer fahrer_wertung klasse punkte runde sektion
 			  veranstaltung veranstaltung_feature kartenfarbe
 			  wertung wertungspunkte neue_startnummer
-			  vareihe_veranstaltung)) {
+			  vareihe_veranstaltung sektion_aus_wertung)) {
 	&$callback(qq{
 	    CREATE TEMPORARY TABLE ${table}_temp AS (SELECT * FROM $table WHERE id = ?)
 	}, [$id], undef);
