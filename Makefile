@@ -37,6 +37,20 @@ COMMON_FILES = \
 	lib/Class/Accessor/Lite.pm \
 	lib/Datenbank.pm \
 	lib/DatenbankAktualisieren.pm \
+	lib/JSON/Patch.pm \
+	lib/JSON/Patch/Context.pm \
+	lib/JSON/Patch/Exception.pm \
+	lib/JSON/Patch/Operator.pm \
+	lib/JSON/Patch/Operator/Add.pm \
+	lib/JSON/Patch/Operator/Copy.pm \
+	lib/JSON/Patch/Operator/Move.pm \
+	lib/JSON/Patch/Operator/Remove.pm \
+	lib/JSON/Patch/Operator/Replace.pm \
+	lib/JSON/Patch/Operator/Test.pm \
+	lib/JSON/Pointer.pm \
+	lib/JSON/Pointer/Context.pm \
+	lib/JSON/Pointer/Exception.pm \
+	lib/JSON/Pointer/Syntax.pm \
 	lib/JSON_bool.pm \
 	lib/Jahreswertung.pm \
 	lib/Parse/Binary/FixedFormat.pm \
@@ -173,6 +187,30 @@ htdocs/js/validate.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular-ui/ui-utils/raw/master/modules/validate/validate.js
+
+update-perl-json-pointer:
+	@set -xe; \
+	tmpdir=$$(mktemp -td); \
+	trap "rm -rf $$tmpdir" EXIT; \
+	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
+		https://github.com/zigorou/perl-json-pointer/archive/master.zip; \
+	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
+	files=($$(find $$tmpdir/perl-json-pointer-master/lib -type f -printf '%P\n')); \
+	( cd $$tmpdir/perl-json-pointer-master/lib; \
+	  cp --parents "$${files[@]}" $(PWD)/lib ); \
+	git add -v "$${files[@]/#/lib/}"
+
+update-perl-json-patch:
+	@set -xe; \
+	tmpdir=$$(mktemp -td); \
+	trap "rm -rf $$tmpdir" EXIT; \
+	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
+		https://github.com/zigorou/perl-json-patch/archive/master.zip; \
+	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
+	files=($$(find $$tmpdir/perl-json-patch-master/lib -type f -printf '%P\n')); \
+	( cd $$tmpdir/perl-json-patch-master/lib; \
+	  cp --parents "$${files[@]}" $(PWD)/lib ); \
+	git add -v "$${files[@]/#/lib/}"
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \
