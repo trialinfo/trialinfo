@@ -36,7 +36,7 @@ use strict;
 # Datensatz gelöscht, aktualisiert, oder ein neuer Datensatz eingefügt.
 #
 sub datensatz_aktualisieren($$$$$$$$$) {
-    my ($callback, $tabelle, $version_ref, $changed, $keys, $nonkeys, $kval, $alt, $neu) = @_;
+    my ($callback, $tabelle, $changed, $versionierung, $keys, $nonkeys, $kval, $alt, $neu) = @_;
     my ($sql, $args, $davor);
 
     #map { $_ = json_unbool($_) } @$kval;
@@ -57,31 +57,35 @@ sub datensatz_aktualisieren($$$$$$$$$) {
 		    push @$modified_new, $neu->[$n];
 		}
 	    }
-	    $nonkeys = $modified_nonkeys;
-	    $alt = $modified_old;
-	    $neu = $modified_new;
-	    if (($version_ref && $changed) || @$nonkeys) {
+	    if ($changed || @$modified_nonkeys) {
+		if ($versionierung >= 0) {
+		    push @$keys, 'version';
+		    push @$kval, $alt->[0];
+		}
+		if ($versionierung > 0) {
+		    if (!@$modified_nonkeys ||
+			$modified_nonkeys->[0] ne 'version') {
+			$neu->[0]++;
+			unshift @$modified_nonkeys, 'version';
+			unshift @$modified_old, $alt->[0];
+			unshift @$modified_new, $neu->[0];
+		    }
+		}
+		$nonkeys = $modified_nonkeys;
+		$alt = $modified_old;
+		$neu = $modified_new;
 		for (my $n = 0; $n < @$nonkeys; $n++) {
 		    push @$davor, [ $nonkeys->[$n], $alt->[$n] ];
 		}
-		if ($version_ref) {
-		    $sql = "UPDATE $tabelle " .
-			"SET " . join(", ", (
-			    "version = CASE WHEN version = ? THEN version + 1 ELSE -1 END",
-			    map { "$_ = ?" } @$nonkeys)) . " " .
-			"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
-		    $args = [$$version_ref, @$neu, @$kval];
-		} else {
-		    $sql = "UPDATE $tabelle " .
-			"SET " . join(", ", map { "$_ = ?" } @$nonkeys) . " " .
-			"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
-		    $args = [@$neu, @$kval];
-		}
+		$sql = "UPDATE $tabelle " .
+		    "SET " . join(", ", map { "$_ = ?" } @$nonkeys) . " " .
+		    "WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
+		$args = [@$neu, @$kval];
 	    }
 	} else {
-	    if ($version_ref) {
+	    if ($versionierung >= 0) {
 		push @$keys, 'version';
-		push @$kval, $$version_ref;
+		push @$kval, $alt->[0];
 	    }
 	    $sql = "DELETE FROM $tabelle " .
 		"WHERE " . join(" AND ", map { "$_ = ?" } @$keys);
@@ -90,9 +94,9 @@ sub datensatz_aktualisieren($$$$$$$$$) {
 	    # Datensatz mit einer anderen Version existiert?
 	}
     } elsif (defined $neu) {
-	if ($version_ref) {
-	    $nonkeys = [ @$nonkeys, 'version' ];
-	    $neu = [ @$neu, 1 ];
+	if ($versionierung >= 0) {
+	    $neu->[0] = 1
+		unless $neu->[0];
 	}
 	$sql = "INSERT INTO $tabelle (" . join(", ", @$keys, @$nonkeys) . ") " .
 	    "VALUES (" . join(", ", map { "?" } (@$keys, @$nonkeys)) . ")";
@@ -104,8 +108,6 @@ sub datensatz_aktualisieren($$$$$$$$$) {
 	    die "'$sql': $affected_rows statt 1 Datensatz betroffen" .
 		($neu ? "" : "; Version vermutlich ungültig") . "\n";
 	}
-	$$version_ref = $neu ? $$version_ref + 1 : 0
-	    if $version_ref;
 	return 1;
     }
     return undef;
@@ -136,7 +138,7 @@ sub hash_aktualisieren($$$$$$$) {
     my ($deletes, $updates, $inserts) = deletes_updates_inserts($alt, $neu);
     foreach my $hashkey (@$deletes) {
 	datensatz_aktualisieren $callback, $tabelle,
-		undef, undef,
+		undef, -1,
 		$keys, $nonkeys,
 		[@$const_keys, split(/:/, $hashkey)],
 		$alt->{$hashkey},
@@ -145,7 +147,7 @@ sub hash_aktualisieren($$$$$$$) {
     }
     foreach my $hashkey (@$updates) {
 	datensatz_aktualisieren $callback, $tabelle,
-		undef, undef,
+		undef, -1,
 		$keys, $nonkeys,
 		[@$const_keys, split(/:/, $hashkey)],
 		$alt->{$hashkey},
@@ -154,7 +156,7 @@ sub hash_aktualisieren($$$$$$$) {
     }
     foreach my $hashkey (@$inserts) {
 	datensatz_aktualisieren $callback, $tabelle,
-		undef, undef,
+		undef, -1,
 		$keys, $nonkeys,
 		[@$const_keys, split(/:/, $hashkey)],
 		undef,
@@ -307,16 +309,23 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	}
     }
 
-    my $version = $alt ? $alt->{version} : 0;
+    if ($versionierung >= 0) {
+	unshift @$felder, 'version';
+	unshift @$felder_alt, $alt->{version}
+	    if $alt;
+	unshift @$felder_neu, $neu->{version}
+	    if $neu;
+    }
+
     datensatz_aktualisieren $callback, 'fahrer',
-	    $versionierung ? \$version : undef, $changed,
+	    $changed, $versionierung,
 	    [qw(id startnummer)], $felder,
 	    [$id, $startnummer],
 	    $felder_alt,
 	    $felder_neu
 	and $changed = 1;
-    $neu->{version} = $version
-	if $neu;
+    $neu->{version} = $felder_neu->[0]
+	if $versionierung > 0 && $neu;
     return $changed;
 }
 
@@ -502,8 +511,8 @@ sub sektionen_aus_wertung_hash($) {
     return $hash;
 }
 
-sub veranstaltung_aktualisieren($$$$) {
-    my ($callback, $id, $alt, $neu) = @_;
+sub veranstaltung_aktualisieren($$$$$) {
+    my ($callback, $id, $alt, $neu, $versionierung) = @_;
     my $changed;
 
     if (!$neu || exists $neu->{wertungen}) {
@@ -615,15 +624,22 @@ sub veranstaltung_aktualisieren($$$$) {
 	}
     }
 
-    my $version = $alt ? $alt->{version} : 0;
+    if ($versionierung >= 0) {
+	unshift @$felder, 'version';
+	unshift @$felder_alt, $alt->{version}
+	    if $alt;
+	unshift @$felder_neu, $neu->{version}
+	    if $neu;
+    }
+
     datensatz_aktualisieren $callback, 'veranstaltung',
-	    \$version, $changed,
+	    $changed, $versionierung,
 	    [qw(id)], $felder,
 	    [$id],
 	    $felder_alt,
 	    $felder_neu
 	and $changed = 1;
-    $neu->{version} = $version;
+    $neu->{version} = $felder_neu->[0];
     return $changed;
 }
 
@@ -668,8 +684,8 @@ sub startnummern_hash($) {
     return $hash;
 }
 
-sub vareihe_aktualisieren($$$$) {
-    my ($callback, $vareihe, $alt, $neu) = @_;
+sub vareihe_aktualisieren($$$$$) {
+    my ($callback, $vareihe, $alt, $neu, $versionierung) = @_;
 
     my $changed;
 
@@ -718,15 +734,22 @@ sub vareihe_aktualisieren($$$$) {
 	}
     }
 
-    my $version = $alt ? $alt->{version} : 0;
+    if ($versionierung >= 0) {
+	unshift @$felder, 'version';
+	unshift @$felder_alt, $alt->{version}
+	    if $alt;
+	unshift @$felder_neu, $neu->{version}
+	    if $neu;
+    }
+
     datensatz_aktualisieren $callback, 'vareihe',
-	    \$version, $changed,
+	    $changed, $versionierung,
 	    [qw(vareihe)], $felder,
 	    [$vareihe],
 	    $felder_alt,
 	    $felder_neu
 	and $changed = 1;
-    $neu->{version} = $version;
+    $neu->{version} = $felder_neu->[0];
     return $changed;
 }
 
@@ -739,7 +762,7 @@ sub wertung_aktualisieren($$$) {
     $fahrer_nach_startnummer1 = dclone $fahrer_nach_startnummer0;
     rang_und_wertungspunkte_berechnen $fahrer_nach_startnummer1, $cfg;
     fahrer_aktualisieren $callback, $id,
-			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, 0;
+			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, -1;
 }
 
 sub veranstaltung_duplizieren($$$) {

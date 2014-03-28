@@ -255,7 +255,7 @@ sub importieren($$$) {
 	    delete $veranstaltung->{basis};
 	}
     }
-    veranstaltung_aktualisieren $do_sql, $id, undef, $veranstaltung;
+    veranstaltung_aktualisieren $do_sql, $id, undef, $veranstaltung, 1;
     fahrer_aktualisieren $do_sql, $id, undef, $fahrer, 1;
     foreach my $data (@$vareihen) {
 	my $sth = $dbh->prepare(q{
@@ -287,7 +287,7 @@ sub importieren($$$) {
 	}
 	$data1->{startnummern}{$id} = $data->{startnummern};
 	push @{$data1->{veranstaltungen}}, $id;
-	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1;
+	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
     }
     wertung_aktualisieren $dbh, $do_sql, $id;
     $dbh->commit;
@@ -593,7 +593,7 @@ if ($op eq 'GET/vareihen') {
 	    die "Invalid Row Version\n"
 		if $cfg0->{version} != $version;
 	}
-	veranstaltung_aktualisieren $do_sql, $id_neu, $cfg0, $cfg1;
+	veranstaltung_aktualisieren $do_sql, $id_neu, $cfg0, $cfg1, 1;
 	veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
 	    if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	wertung_aktualisieren $dbh, $do_sql, $id_neu;
@@ -644,7 +644,7 @@ if ($op eq 'GET/vareihen') {
 		or die "Konnte keine freie vareihe-ID finden\n";
 	    $vareihe = ($row[0] // 0) + 1;
 	}
-	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1;
+	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
 	$dbh->commit;
     };
     if ($@) {
