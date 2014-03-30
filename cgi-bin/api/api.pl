@@ -171,8 +171,8 @@ sub veranstaltung_tag_to_id($$) {
     return $id;
 }
 
-sub export($$$) {
-    my ($id, $headers, $json) = @_;
+sub export($) {
+    my ($id) = @_;
     my $result;
 
     $result = {
@@ -193,22 +193,12 @@ sub export($$$) {
 	fixup_arrayref($sth, \@row);
 	$basis_tag = $row[0];
     }
-    if ($basis_tag) {
-	$result->{veranstaltung}{basis} = $basis_tag;
-    } else {
-	delete $result->{veranstaltung}{basis};
+    foreach my $vareihe (@{$result->{vareihen}}) {
+	delete $vareihe->{version};
     }
+    $result->{veranstaltung}{basis} = $basis_tag;
     delete $result->{veranstaltung}{dateiname};
     delete $result->{veranstaltung}{id};
-
-    $headers->{'Content-Type'} = 'application/octet-stream';
-    my $dateiname = dateiname($dbh, $id, $result->{veranstaltung});
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.tra\""
-	if $dateiname;
-
-    $result = "/* trial-auswertung 1 */\n" . $json->canonical->encode($result);
-    $result = Encode::encode_utf8($result);
-    $result = Compress::Zlib::memGzip($result);
     return $result;
 }
 
@@ -424,14 +414,34 @@ if ($op eq 'GET/vareihen') {
     my ($id) = parameter($q, qw(id));
     $result = cfg_aus_datenbank($dbh, $id, 1);
 } elsif ($op eq "GET/veranstaltung/export") {
-    my ($id, $type) = parameter($q, qw(id));
-    $result = export($id, $headers, $json);
+    my $id;
+    eval {
+	my ($tag) = parameter($q, qw(tag));
+	$id = veranstaltung_tag_to_id($dbh, $tag);
+    };
+    if ($@) {
+	($id) = parameter($q, qw(id));
+    }
+    $dbh->begin_work;
+    $result = export($id);
+    my $dateiname = dateiname($dbh, $id, $result->{veranstaltung});
+    $dbh->commit;
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.tra\""
+	if $dateiname;
+    $result = "/* $result->{format} */\n" . $json->canonical->encode($result);
+    $result = Encode::encode_utf8($result);
+    $result = Compress::Zlib::memGzip($result);
 } elsif ($op eq "GET/trialtool/cfg") {
     my ($id) = parameter($q, qw(id));
+    $dbh->begin_work;
     $result = cfg_export($id, $headers);
+    $dbh->commit;
 } elsif ($op eq "GET/trialtool/dat") {
     my ($id) = parameter($q, qw(id));
+    $dbh->begin_work;
     $result = dat_export($id, $headers);
+    $dbh->commit;
 } elsif ($op eq "POST/veranstaltung/import") {
     eval {
 	my $data = decode_base64($q->param('POSTDATA'));
@@ -556,7 +566,7 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $fahrer1 = $json->decode($putdata);
 
-    print STDERR "$putdata\n"
+    print STDERR "Fahrer: $putdata\n"
 	if $cgi_verbose;
 
     die "Ungültige Startnummer\n"
@@ -623,7 +633,7 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $cfg1 = $json->decode($putdata);
 
-    print STDERR "$putdata\n"
+    print STDERR "Veranstaltung: $putdata\n"
 	if $cgi_verbose;
 
     my $cfg0;
@@ -687,7 +697,7 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $data1 = $json->decode($putdata);
 
-    print STDERR "$putdata\n"
+    print STDERR "Veranstaltungsreihe: $putdata\n"
 	if $cgi_verbose;
 
     my $data0;
