@@ -321,7 +321,7 @@ if ($op eq 'GET/vareihen') {
     }
 } elsif ($op eq "GET/veranstaltungen") {
     my $sth = $dbh->prepare(q{
-	SELECT id, datum, titel, aktiv
+	SELECT id, tag, datum, dateiname, titel, aktiv
 	FROM veranstaltung
 	LEFT JOIN wertung USING (id)
 	WHERE wertung = 1
