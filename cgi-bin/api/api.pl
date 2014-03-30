@@ -586,6 +586,7 @@ if ($op eq 'GET/vareihen') {
 	}
 	if (!defined $id && defined $cfg1->{basis}{id}) {
 	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}{id}, $id_neu);
+	    $cfg1->{tag} = random_tag(16);
 	    $version = 1;
 	}
 	if (defined $id || defined $cfg1->{basis}{id}) {
