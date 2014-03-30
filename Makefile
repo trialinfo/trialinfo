@@ -21,13 +21,14 @@ AUTH_PREFIX = $(PWD)
 SSI_LEGACY_EXPR_PARSER_testing = 1
 
 DOWNLOAD_FILES = \
-	htdocs/js/jquery.js \
-	htdocs/js/jquery.min.js \
-	htdocs/js/raphael.js \
-	htdocs/js/raphael-min.js \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
 	htdocs/js/angular-route.js \
+	htdocs/js/jquery.js \
+	htdocs/js/jquery.min.js \
+	htdocs/js/json-diff.js \
+	htdocs/js/raphael.js \
+	htdocs/js/raphael-min.js \
 	htdocs/js/validate.js \
 
 COMMON_FILES = \
@@ -211,6 +212,11 @@ update-perl-json-patch:
 	( cd $$tmpdir/perl-json-patch-master/lib; \
 	  cp --parents "$${files[@]}" $(PWD)/lib ); \
 	git add -v "$${files[@]/#/lib/}"
+
+htdocs/js/json-diff.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \
