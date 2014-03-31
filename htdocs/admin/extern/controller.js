@@ -1,6 +1,6 @@
 'use strict;'
 
-function ieController($scope, $http, $location, veranstaltungen) {
+function externController($scope, $http, $location, veranstaltungen) {
   $scope.veranstaltungen = veranstaltungen;
   $scope.operation = 'export';
   $scope.format = 'trial-auswertung';
@@ -96,7 +96,7 @@ function ieController($scope, $http, $location, veranstaltungen) {
   }
 }
 
-ieController.resolve = {
+externController.resolve = {
   veranstaltungen: function($q, $http) {
     return http_request($q, $http.get('/api/veranstaltungen'));
   },

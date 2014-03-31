@@ -21,7 +21,7 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
   };
 
   $scope.import_export = function() {
-    $location.path('/ie');
+    $location.path('/extern');
   };
 
   $scope.neue_vareihe = function() {

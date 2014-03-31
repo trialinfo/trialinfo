@@ -77,8 +77,8 @@ ADMIN_FILES = \
 	htdocs/admin/einstellungen/index.html \
 	htdocs/admin/hilfe/index.html \
 	htdocs/admin/.htaccess \
-	htdocs/admin/ie/controller.js \
-	htdocs/admin/ie/index.html \
+	htdocs/admin/extern/controller.js \
+	htdocs/admin/extern/index.html \
 	htdocs/admin/index.shtml \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
