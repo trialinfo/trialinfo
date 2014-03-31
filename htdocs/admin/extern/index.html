@@ -25,8 +25,14 @@
       <tr>
 	<th align="right">Datei</th>
 	<td>
-	  <input type="file" onchange="angular.element(this).scope().import()" id="tra_datei" ng-disabled="busy"><br>
+	  <input type="file" id="tra_datei" ng-disabled="busy"><br>
 	  <span style="color:red">{{tra_datei_fehler}}</span>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <button ng-click="import()" ng-disabled="busy">Importieren</button>
 	</td>
       </tr>
     </tbody>
@@ -34,15 +40,21 @@
       <tr>
 	<th align="right">cfg-Datei</th>
 	<td>
-	  <input type="file" onchange="angular.element(this).scope().import()" id="cfg_datei" ng-disabled="busy"><br>
+	  <input type="file" id="cfg_datei" ng-disabled="busy"><br>
 	  <span style="color:red">{{cfg_datei_fehler}}</span>
 	</td>
       </tr>
       <tr>
 	<th align="right">dat-Datei</th>
 	<td>
-	  <input type="file" onchange="angular.element(this).scope().import()" id="dat_datei" ng-disabled="busy"><br>
+	  <input type="file" id="dat_datei" ng-disabled="busy"><br>
 	  <span style="color:red">{{dat_datei_fehler}}</span>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <button ng-click="import()" ng-disabled="busy">Importieren</button>
 	</td>
       </tr>
     </tbody>

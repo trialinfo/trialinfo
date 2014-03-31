@@ -94,7 +94,6 @@ function externController($scope, $http, $location, veranstaltungen) {
 	dat_reader.readAsBinaryString(dat_datei.files[0]);
       }
     }
-    $scope.$apply();
   }
 }
 
