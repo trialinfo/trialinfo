@@ -1,18 +1,25 @@
-<h1>Import und Export</h1>
+<h1>Synchronisieren, Import, Export</h1>
 <form name="form">
   <table>
     <tbody>
       <tr>
-	<th align="right"><label for="einstellungen.operation">Operation</label></th>
+	<th align="right"><label for="operation">Operation</label></th>
 	<td>
-	  <select ng-model="einstellungen.operation" id="einstellungen.operation" ng-disabled="busy">
-	    <option value="export">Exportieren</option>
-	    <option value="import">Importieren</option>
+	  <select ng-model="einstellungen.operation" id="operation" ng-disabled="busy">
+	    <option value="import">Import</option>
+	    <option value="export">Export</option>
+	  </select>
+	</td>
+      </tr>
+      <tr ng-if="einstellungen.operation != 'import'">
+	<th align="right"><label for="tag">Veranstaltung</label></th>
+	<td>
+	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in veranstaltungen" id="tag">
 	  </select>
 	</td>
       </tr>
       <tr>
-	<th align="right"><label for="einstellungen.format">Format</label></th>
+	<th align="right"><label for="format">Format</label></th>
 	<td>
 	  <select ng-model="einstellungen.format" id="format" ng-disabled="busy">
 	    <option value="trial-auswertung">Trial-Auswertung</option>
@@ -59,9 +66,7 @@
       <tr>
 	<th align="right"></th>
 	<td>
-	  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar">
-	    <a href="/api/veranstaltung/export?id={{veranstaltung.id}}">{{veranstaltung.titel}}</a><br>
-	  </span>
+	  <a href="/api/veranstaltung/export?id={{einstellungen.veranstaltung.id}}&name={{dateiname(einstellungen.veranstaltung)}}.tra">{{dateiname(einstellungen.veranstaltung)}}.tra</a><br>
 	</td>
       </tr>
     </tbody>
@@ -69,11 +74,8 @@
       <tr>
 	<th align="right"></th>
 	<td>
-	  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar">
-	    {{veranstaltung.titel}}:
-	    <a href="/api/trialtool/cfg?id={{veranstaltung.id}}">cfg</a>,
-	    <a href="/api/trialtool/dat?id={{veranstaltung.id}}">dat</a><br>
-	  </span>
+	  <a href="/api/trialtool/cfg?id={{einstellungen.veranstaltung.id}}&name={{dateiname(einstellungen.veranstaltung)}}.cfg">{{dateiname(einstellungen.veranstaltung)}}.cfg</a><br>
+	  <a href="/api/trialtool/dat?id={{einstellungen.veranstaltung.id}}&name={{dateiname(einstellungen.veranstaltung)}}.dat">{{dateiname(einstellungen.veranstaltung)}}.dat</a>
 	</td>
       </tr>
     </tbody>

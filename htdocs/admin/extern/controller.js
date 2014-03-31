@@ -6,16 +6,13 @@ function externController($scope, $http, $location, veranstaltungen) {
     operation: 'export',
     format: 'trial-auswertung'
   };
+  try {
+    $scope.einstellungen.veranstaltung = veranstaltungen[veranstaltungen.length - 1];
+  } catch(_) { }
 
   $scope.veranstaltung_sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
   };
-
-/*
-  $scope.neue_veranstaltung = function() {
-    $location.path('/veranstaltung/neu/einstellungen').replace();
-  };
-*/
 
   $scope.import = function() {
     if ($scope.einstellungen.format == 'trial-auswertung') {
