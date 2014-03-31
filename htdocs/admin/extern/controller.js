@@ -74,6 +74,15 @@ function externController($scope, $http, $location, veranstaltungen) {
       }
     }
   }
+
+  $scope.dateiname = function(veranstaltung) {
+    if (veranstaltung.dateiname != null)
+      return veranstaltung.dateiname;
+    else if (veranstaltung.datum != null)
+      return 'Trial ' + veranstaltung.datum;
+    else
+      return 'Trial';
+  };
 }
 
 externController.resolve = {

@@ -202,27 +202,25 @@ sub export($) {
     return $result;
 }
 
-sub cfg_export($$) {
-    my ($id, $headers) = @_;
+sub cfg_export($$$) {
+    my ($id, $headers, $dateiname) = @_;
     my $cfg = cfg_aus_datenbank($dbh, $id);
 
     $headers->{'Content-Type'} = 'application/octet-stream';
-    my $dateiname = dateiname($dbh, $id, $cfg);
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.cfg\""
-	if $dateiname;
+    $dateiname //= 'Trial.cfg';
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
 
     return cfg_datei_daten($cfg);
 }
 
-sub dat_export($$) {
-    my ($id, $headers) = @_;
+sub dat_export($$$) {
+    my ($id, $headers, $dateiname) = @_;
     my $cfg = cfg_aus_datenbank($dbh, $id);
     my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
 
     $headers->{'Content-Type'} = 'application/octet-stream';
-    my $dateiname = dateiname($dbh, $id, $cfg);
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.dat\""
-	if $dateiname;
+    $dateiname //= 'Trial.dat';
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
 
     return dat_datei_daten($cfg, $fahrer_nach_startnummer);
 }
@@ -424,23 +422,22 @@ if ($op eq 'GET/vareihen') {
     }
     $dbh->begin_work;
     $result = export($id);
-    my $dateiname = dateiname($dbh, $id, $result->{veranstaltung});
+    my $dateiname = $q->url_param('name') // 'Trial.tra';
     $dbh->commit;
     $headers->{'Content-Type'} = 'application/octet-stream';
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.tra\""
-	if $dateiname;
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
     $result = "/* $result->{format} */\n" . $json->canonical->encode($result);
     $result = Encode::encode_utf8($result);
     $result = Compress::Zlib::memGzip($result);
 } elsif ($op eq "GET/trialtool/cfg") {
     my ($id) = parameter($q, qw(id));
     $dbh->begin_work;
-    $result = cfg_export($id, $headers);
+    $result = cfg_export($id, $headers, $q->url_param('name'));
     $dbh->commit;
 } elsif ($op eq "GET/trialtool/dat") {
     my ($id) = parameter($q, qw(id));
     $dbh->begin_work;
-    $result = dat_export($id, $headers);
+    $result = dat_export($id, $headers, $q->url_param('name'));
     $dbh->commit;
 } elsif ($op eq "POST/veranstaltung/import") {
     eval {
