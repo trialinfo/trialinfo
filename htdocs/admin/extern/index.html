@@ -3,25 +3,25 @@
   <table>
     <tbody>
       <tr>
-	<th align="right"><label for="format">Format</label></th>
+	<th align="right"><label for="einstellungen.format">Format</label></th>
 	<td>
-	  <select ng-model="format" id="format" ng-disabled="busy">
+	  <select ng-model="einstellungen.format" id="einstellungen.format" ng-disabled="busy">
 	    <option value="trial-auswertung">Trial-Auswertung</option>
 	    <option value="trialtool">TrialTool</option>
 	  </select>
 	</td>
       </tr>
       <tr>
-	<th align="right"><label for="operation">Operation</label></th>
+	<th align="right"><label for="einstellungen.operation">Operation</label></th>
 	<td>
-	  <select ng-model="operation" id="operation" ng-disabled="busy">
+	  <select ng-model="einstellungen.operation" id="einstellungen.operation" ng-disabled="busy">
 	    <option value="export">Exportieren</option>
 	    <option value="import">Importieren</option>
 	  </select>
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="operation == 'import' && format == 'trial-auswertung'">
+    <tbody ng-if="einstellungen.operation == 'import' && einstellungen.format == 'trial-auswertung'">
       <tr>
 	<th align="right">Datei</th>
 	<td>
@@ -30,7 +30,7 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="operation == 'import' && format == 'trialtool'">
+    <tbody ng-if="einstellungen.operation == 'import' && einstellungen.format == 'trialtool'">
       <tr>
 	<th align="right">cfg-Datei</th>
 	<td>
@@ -46,7 +46,7 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="operation == 'export' && format == 'trial-auswertung'">
+    <tbody ng-if="einstellungen.operation == 'export' && einstellungen.format == 'trial-auswertung'">
       <tr>
 	<th align="right"></th>
 	<td>
@@ -56,7 +56,7 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="operation == 'export' && format == 'trialtool'">
+    <tbody ng-if="einstellungen.operation == 'export' && einstellungen.format == 'trialtool'">
       <tr>
 	<th align="right"></th>
 	<td>

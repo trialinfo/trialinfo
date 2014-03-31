@@ -2,8 +2,10 @@
 
 function externController($scope, $http, $location, veranstaltungen) {
   $scope.veranstaltungen = veranstaltungen;
-  $scope.operation = 'export';
-  $scope.format = 'trial-auswertung';
+  $scope.einstellungen = {
+    operation: 'export',
+    format: 'trial-auswertung'
+  };
 
   $scope.veranstaltung_sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
@@ -16,7 +18,7 @@ function externController($scope, $http, $location, veranstaltungen) {
 */
 
   $scope.import = function() {
-    if ($scope.format == 'trial-auswertung') {
+    if ($scope.einstellungen.format == 'trial-auswertung') {
       var tra_datei = document.getElementById('tra_datei');
       $scope.tra_datei_fehler = undefined;
       if (tra_datei && !tra_datei.value.match(/\.tra/)) {
@@ -43,7 +45,7 @@ function externController($scope, $http, $location, veranstaltungen) {
 	reader.readAsBinaryString(tra_datei.files[0]);
       }
     }
-    if ($scope.format == 'trialtool') {
+    if ($scope.einstellungen.format == 'trialtool') {
       var cfg_datei = document.getElementById('cfg_datei');
       $scope.cfg_datei_fehler = undefined;
       if (cfg_datei && !cfg_datei.value.match(/\.cfg/)) {
