@@ -1,30 +1,22 @@
 'use strict;'
 
-function ieController($scope, $http, $location, veranstaltungen) {
+function externController($scope, $http, $location, veranstaltungen) {
   $scope.veranstaltungen = veranstaltungen;
-  $scope.operation = 'export';
-  $scope.format = 'trial-auswertung';
+  $scope.einstellungen = {
+    operation: 'export',
+    format: 'trial-auswertung'
+  };
+  try {
+    $scope.einstellungen.veranstaltung = veranstaltungen[veranstaltungen.length - 1];
+  } catch(_) { }
 
   $scope.veranstaltung_sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
   };
 
-/*
-  $scope.neue_veranstaltung = function() {
-    $location.path('/veranstaltung/neu/einstellungen').replace();
-  };
-*/
-
   $scope.import = function() {
-    if ($scope.format == 'trial-auswertung') {
+    if ($scope.einstellungen.format == 'trial-auswertung') {
       var tra_datei = document.getElementById('tra_datei');
-      $scope.tra_datei_fehler = undefined;
-      if (tra_datei && !tra_datei.value.match(/\.tra/)) {
-	if (tra_datei.value != '')
-	  $scope.tra_datei_fehler = 'Der Dateiname endet nicht in ".tra".';
-	tra_datei = undefined;
-      }
-
       if (tra_datei && tra_datei.files[0]) {
 	var reader = new FileReader();
 	reader.onloadend = function(e) {
@@ -43,23 +35,9 @@ function ieController($scope, $http, $location, veranstaltungen) {
 	reader.readAsBinaryString(tra_datei.files[0]);
       }
     }
-    if ($scope.format == 'trialtool') {
+    if ($scope.einstellungen.format == 'trialtool') {
       var cfg_datei = document.getElementById('cfg_datei');
-      $scope.cfg_datei_fehler = undefined;
-      if (cfg_datei && !cfg_datei.value.match(/\.cfg/)) {
-	if (cfg_datei.value != '')
-	  $scope.cfg_datei_fehler = 'Der Dateiname endet nicht in ".cfg".';
-	cfg_datei = undefined;
-      }
-
       var dat_datei = document.getElementById('dat_datei');
-      $scope.dat_datei_fehler = undefined;
-      if (dat_datei && !dat_datei.value.match(/\.dat/)) {
-	if (dat_datei.value != '')
-	  $scope.dat_datei_fehler = 'Der Dateiname endet nicht in ".dat".';
-	dat_datei = undefined;
-      }
-
       if (cfg_datei && cfg_datei.files[0] && dat_datei && dat_datei.files[0]) {
 	var cfg_data, dat_data;
 
@@ -92,11 +70,19 @@ function ieController($scope, $http, $location, veranstaltungen) {
 	dat_reader.readAsBinaryString(dat_datei.files[0]);
       }
     }
-    $scope.$apply();
   }
+
+  $scope.dateiname = function(veranstaltung) {
+    if (veranstaltung.dateiname != null)
+      return veranstaltung.dateiname;
+    else if (veranstaltung.datum != null)
+      return 'Trial ' + veranstaltung.datum;
+    else
+      return 'Trial';
+  };
 }
 
-ieController.resolve = {
+externController.resolve = {
   veranstaltungen: function($q, $http) {
     return http_request($q, $http.get('/api/veranstaltungen'));
   },

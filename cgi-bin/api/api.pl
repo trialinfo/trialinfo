@@ -155,11 +155,24 @@ sub veranstaltung_reset($$$) {
 	    WHERE id = ? and feature = 'start_morgen'
 	}, undef, $id);
     }
-    # FIXME: In veranstaltung mtime, cfg_mtime, dat_mtime zurücksetzen
+    # FIXME: In veranstaltung mtime zurücksetzen
 }
 
-sub export($$$) {
-    my ($id, $headers, $json) = @_;
+sub veranstaltung_tag_to_id($$) {
+    my ($dbh, $tag) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT id
+	FROM veranstaltung
+	WHERE tag = ?
+    });
+    $sth->execute($tag);
+    my ($id) = $sth->fetchrow_array;
+    return $id;
+}
+
+sub export($) {
+    my ($id) = @_;
     my $result;
 
     $result = {
@@ -180,65 +193,74 @@ sub export($$$) {
 	fixup_arrayref($sth, \@row);
 	$basis_tag = $row[0];
     }
-    if ($basis_tag) {
-	$result->{veranstaltung}{basis} = $basis_tag;
-    } else {
-	delete $result->{veranstaltung}{basis};
+    foreach my $vareihe (@{$result->{vareihen}}) {
+	delete $vareihe->{version};
     }
+    $result->{veranstaltung}{basis} = $basis_tag;
     delete $result->{veranstaltung}{dateiname};
     delete $result->{veranstaltung}{id};
-
-    $headers->{'Content-Type'} = 'application/octet-stream';
-    my $dateiname = dateiname($dbh, $id, $result->{veranstaltung});
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.tra\""
-	if $dateiname;
-
-    $result = "/* trial-auswertung 1 */\n" . $json->canonical->encode($result);
-    $result = Encode::encode_utf8($result);
-    $result = Compress::Zlib::memGzip($result);
     return $result;
 }
 
-sub cfg_export($$) {
-    my ($id, $headers) = @_;
+sub cfg_export($$$) {
+    my ($id, $headers, $dateiname) = @_;
     my $cfg = cfg_aus_datenbank($dbh, $id);
 
     $headers->{'Content-Type'} = 'application/octet-stream';
-    my $dateiname = dateiname($dbh, $id, $cfg);
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.cfg\""
-	if $dateiname;
+    $dateiname //= 'Trial.cfg';
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
 
     return cfg_datei_daten($cfg);
 }
 
-sub dat_export($$) {
-    my ($id, $headers) = @_;
+sub dat_export($$$) {
+    my ($id, $headers, $dateiname) = @_;
     my $cfg = cfg_aus_datenbank($dbh, $id);
     my $fahrer_nach_startnummer = fahrer_aus_datenbank($dbh, $id);
 
     $headers->{'Content-Type'} = 'application/octet-stream';
-    my $dateiname = dateiname($dbh, $id, $cfg);
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname.dat\""
-	if $dateiname;
+    $dateiname //= 'Trial.dat';
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
 
     return dat_datei_daten($cfg, $fahrer_nach_startnummer);
 }
 
 sub importieren($$$) {
-    my ($veranstaltung, $fahrer, $vareihen) = @_;
+    my ($alt, $neu, $sync) = @_;
+    my $veranstaltung = $neu->{veranstaltung};
+    my $id;
 
-    $dbh->begin_work;
-    my $sth = $dbh->prepare(q{
-	SELECT MAX(id)
-	FROM veranstaltung
-    });
-    $sth->execute;
-    my @row = $sth->fetchrow_array;
-    my $id = ($row[0] // 0) + 1;
-    $veranstaltung->{id} = $id;
-    $veranstaltung->{tag} = random_tag(16);
-    $veranstaltung->{wertungen}[0]{titel} .= ' (importiert)';
+    unless ($sync) {
+	$veranstaltung->{tag} = random_tag(16);
+	$veranstaltung->{wertungen}[0]{titel} .= ' (Kopie)';
+	$veranstaltung->{aktiv} = json_bool(1);
+	$veranstaltung->{version} = 1;
+	#$veranstaltung->{fahrer_version} = 1;
+	foreach my $fahrer (values %{$neu->{fahrer}}) {
+	    $fahrer->{version} = 1;
+	}
+    }
 
+    if ($sync && defined $veranstaltung->{tag}) {
+	$id = veranstaltung_tag_to_id($dbh, $veranstaltung->{tag});
+    }
+    if (defined $id) {
+	if (!$alt) {
+	    $alt = {
+		veranstaltung => cfg_aus_datenbank($dbh, $id, 1),
+		fahrer => fahrer_aus_datenbank($dbh, $id),
+	    };
+	}
+    } else {
+	my $sth = $dbh->prepare(q{
+	    SELECT MAX(id)
+	    FROM veranstaltung
+	});
+	$sth->execute;
+	my @row = $sth->fetchrow_array;
+	$id = ($row[0] // 0) + 1;
+	$veranstaltung->{id} = $id;
+    }
     if ($veranstaltung->{basis}) {
 	my $sth = $dbh->prepare(q{
 	    SELECT id
@@ -255,9 +277,19 @@ sub importieren($$$) {
 	    delete $veranstaltung->{basis};
 	}
     }
-    veranstaltung_aktualisieren $do_sql, $id, undef, $veranstaltung;
-    fahrer_aktualisieren $do_sql, $id, undef, $fahrer, 1;
-    foreach my $data (@$vareihen) {
+    veranstaltung_aktualisieren $do_sql, $id, $alt->{veranstaltung}, $veranstaltung, 0;
+    fahrer_aktualisieren $do_sql, $id, $alt->{fahrer}, $neu->{fahrer}, 0;
+    my $sth = $dbh->prepare(q{
+	SELECT vareihe
+	FROM vareihe_veranstaltung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    my $vareihen = {};
+    for (my @row = $sth->fetchrow_array) {
+	$vareihen->{$row[0]} = 1;
+    }
+    foreach my $data (@{$neu->{vareihen}}) {
 	my $sth = $dbh->prepare(q{
 	    SELECT vareihe
 	    FROM vareihe
@@ -287,10 +319,21 @@ sub importieren($$$) {
 	}
 	$data1->{startnummern}{$id} = $data->{startnummern};
 	push @{$data1->{veranstaltungen}}, $id;
-	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1;
+	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
+	delete $vareihen->{$vareihe};
+    }
+    foreach my $vareihe (keys %$vareihen) {
+	$dbh->do(q{
+	    DELETE FROM vareihe_veranstaltung
+	    WHERE id = ?
+	}, undef, $id);
+	$dbh->do(q{
+	    UPDATE vareihe
+	    SET version = version + 1
+	    WHERE vareihe = ?
+	}, undef, $vareihe);
     }
     wertung_aktualisieren $dbh, $do_sql, $id;
-    $dbh->commit;
     return { id => $id };
 }
 
@@ -321,7 +364,7 @@ if ($op eq 'GET/vareihen') {
     }
 } elsif ($op eq "GET/veranstaltungen") {
     my $sth = $dbh->prepare(q{
-	SELECT id, datum, titel, aktiv
+	SELECT id, tag, datum, dateiname, titel, aktiv
 	FROM veranstaltung
 	LEFT JOIN wertung USING (id)
 	WHERE wertung = 1
@@ -369,14 +412,33 @@ if ($op eq 'GET/vareihen') {
     my ($id) = parameter($q, qw(id));
     $result = cfg_aus_datenbank($dbh, $id, 1);
 } elsif ($op eq "GET/veranstaltung/export") {
-    my ($id, $type) = parameter($q, qw(id));
-    $result = export($id, $headers, $json);
+    my $id;
+    eval {
+	my ($tag) = parameter($q, qw(tag));
+	$id = veranstaltung_tag_to_id($dbh, $tag);
+    };
+    if ($@) {
+	($id) = parameter($q, qw(id));
+    }
+    $dbh->begin_work;
+    $result = export($id);
+    my $dateiname = $q->url_param('name') // 'Trial.tra';
+    $dbh->commit;
+    $headers->{'Content-Type'} = 'application/octet-stream';
+    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
+    $result = "/* $result->{format} */\n" . $json->canonical->encode($result);
+    $result = Encode::encode_utf8($result);
+    $result = Compress::Zlib::memGzip($result);
 } elsif ($op eq "GET/trialtool/cfg") {
     my ($id) = parameter($q, qw(id));
-    $result = cfg_export($id, $headers);
+    $dbh->begin_work;
+    $result = cfg_export($id, $headers, $q->url_param('name'));
+    $dbh->commit;
 } elsif ($op eq "GET/trialtool/dat") {
     my ($id) = parameter($q, qw(id));
-    $result = dat_export($id, $headers);
+    $dbh->begin_work;
+    $result = dat_export($id, $headers, $q->url_param('name'));
+    $dbh->commit;
 } elsif ($op eq "POST/veranstaltung/import") {
     eval {
 	my $data = decode_base64($q->param('POSTDATA'));
@@ -392,7 +454,15 @@ if ($op eq 'GET/vareihen') {
 	    ref($data->{vareihen}) ne "ARRAY") {
 	    die "Datenformat nicht unterstützt\n";
 	}
-	$result = importieren($data->{veranstaltung}, $data->{fahrer}, $data->{vareihen});
+
+	# Wenn der Tag existiert, wird diese Veranstaltung aktualisiert!
+	my $tag = $q->url_param('tag');
+	$data->{veranstaltung}{tag} = $tag
+	    if defined $tag;
+
+	$dbh->begin_work;
+	$result = importieren(undef, $data, defined $tag);
+	$dbh->commit;
     };
     if ($@) {
 	print STDERR $@;
@@ -417,9 +487,10 @@ if ($op eq 'GET/vareihen') {
 
 	my $veranstaltung = cfg_parsen($data->{cfg});
 	my $fahrer = dat_parsen($data->{dat}, $veranstaltung, 0);
-	$veranstaltung->{aktiv} = json_bool(1);
 	# $veranstaltung->{datum}, $veranstaltung->{mtime}
-	$result = importieren($veranstaltung, $fahrer, undef);
+	$dbh->begin_work;
+	$result = importieren(undef, {veranstaltung => $veranstaltung, fahrer => $fahrer, vareihen => []}, 0);
+	$dbh->commit;
     };
     if ($@) {
 	print STDERR $@;
@@ -492,7 +563,7 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $fahrer1 = $json->decode($putdata);
 
-    print STDERR "$putdata\n"
+    print STDERR "Fahrer: $putdata\n"
 	if $cgi_verbose;
 
     die "Ungültige Startnummer\n"
@@ -559,7 +630,7 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $cfg1 = $json->decode($putdata);
 
-    print STDERR "$putdata\n"
+    print STDERR "Veranstaltung: $putdata\n"
 	if $cgi_verbose;
 
     my $cfg0;
@@ -586,6 +657,7 @@ if ($op eq 'GET/vareihen') {
 	}
 	if (!defined $id && defined $cfg1->{basis}{id}) {
 	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}{id}, $id_neu);
+	    $cfg1->{tag} = random_tag(16);
 	    $version = 1;
 	}
 	if (defined $id || defined $cfg1->{basis}{id}) {
@@ -593,7 +665,7 @@ if ($op eq 'GET/vareihen') {
 	    die "Invalid Row Version\n"
 		if $cfg0->{version} != $version;
 	}
-	veranstaltung_aktualisieren $do_sql, $id_neu, $cfg0, $cfg1;
+	veranstaltung_aktualisieren $do_sql, $id_neu, $cfg0, $cfg1, 1;
 	veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
 	    if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	wertung_aktualisieren $dbh, $do_sql, $id_neu;
@@ -622,7 +694,7 @@ if ($op eq 'GET/vareihen') {
     _utf8_on($putdata);
     my $data1 = $json->decode($putdata);
 
-    print STDERR "$putdata\n"
+    print STDERR "Veranstaltungsreihe: $putdata\n"
 	if $cgi_verbose;
 
     my $data0;
@@ -644,7 +716,7 @@ if ($op eq 'GET/vareihen') {
 		or die "Konnte keine freie vareihe-ID finden\n";
 	    $vareihe = ($row[0] // 0) + 1;
 	}
-	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1;
+	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
 	$dbh->commit;
     };
     if ($@) {
@@ -709,7 +781,7 @@ if ($op eq 'GET/vareihen') {
 	foreach my $tabelle (qw(fahrer fahrer_wertung klasse punkte runde
 				sektion veranstaltung_feature kartenfarbe
 				wertung wertungspunkte neue_startnummer
-				vareihe_veranstaltung)) {
+				vareihe_veranstaltung sektion_aus_wertung)) {
 	    my $sth = $dbh->prepare(qq{
 		DELETE FROM $tabelle
 		WHERE id = ?

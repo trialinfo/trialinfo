@@ -29,7 +29,7 @@ require Exporter;
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
 	     vareihe_aus_datenbank vareihen_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
-	     equal fixup_arrayref fixup_hashref dateiname);
+	     equal fixup_arrayref fixup_hashref);
 use strict;
 
 # Vergleicht zwei Werte als Strings, wobei undef == undef.
@@ -626,36 +626,6 @@ sub trace_sql($$$) {
 	    return;
 	},
      };
-}
-
-sub dateiname($$$) {
-    my ($dbh, $id, $veranstaltung) = @_;
-    my $dateiname;
-
-    my $sth = $dbh->prepare(q{
-	SELECT dateiname
-	FROM veranstaltung
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    ($dateiname) = $sth->fetchrow_array;
-
-    unless ($dateiname) {
-	my $dateiname = [];
-	push @$dateiname, $veranstaltung->{datum}
-	    if $veranstaltung->{datum};
-	my $titel = $veranstaltung->{wertungen}[0]{titel};
-	if ($titel) {
-	    $titel =~ s<[/:\\]><->g;
-	    push @$dateiname, $titel;
-	}
-	if (@$dateiname) {
-	    $dateiname = join(' ', @$dateiname);
-	} else {
-	    $dateiname = undef;
-	}
-    }
-    return $dateiname;
 }
 
 1;

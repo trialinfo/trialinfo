@@ -63,43 +63,6 @@ sub sql_ausfuehren($@) {
     return $affected_rows;
 }
 
-sub create_version_trigger($$) {
-    my ($dbh, $table) = @_;
-
-    if ($dbh->{Driver}{Name} ne "mysql") {
-	print STDERR "Tabelle $table: Trigger zur Überprüfung der Version werden nicht erzeugt!\n";
-	return;
-    }
-
-    sql_ausfuehren $dbh, split /\n\n/, qq[
-	DROP TRIGGER IF EXISTS ${table}_insert
-
-	CREATE TRIGGER ${table}_insert BEFORE INSERT ON ${table}
-	  FOR EACH ROW
-	  BEGIN
-	  IF new.version <> 1 THEN
-	    -- The SIGNAL statement is only supported from MySQL 5.5 on; call
-	    -- an undefined procedure instead to be compatible with older versions.
-	    -- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Row Version';
-	    CALL \`Invalid Row Version\`;
-	  END IF;
-	END
-
-	DROP TRIGGER IF EXISTS ${table}_update
-
-	CREATE TRIGGER ${table}_update BEFORE UPDATE ON ${table}
-	  FOR EACH ROW
-	  BEGIN
-	  IF new.version < old.version OR new.version > old.version + 1 THEN
-	    -- The SIGNAL statement is only supported from MySQL 5.5 on; call
-	    -- an undefined procedure instead to be compatible with older versions.
-	    -- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Row Version';
-	    CALL \`Invalid Row Version\`;
-	  END IF;
-	END
-	];
-}
-
 foreach my $sql (split /\s*;\s*/, q{
 	    SET storage_engine=InnoDB;
 
@@ -238,9 +201,6 @@ foreach my $sql (split /\s*;\s*/, q{
     $dbh->do($sql)
 	or die "$sql: $!\n";
 }
-create_version_trigger $dbh, 'veranstaltung';
-create_version_trigger $dbh, 'fahrer';
-create_version_trigger $dbh, 'vareihe';
 
 my $sth;
 

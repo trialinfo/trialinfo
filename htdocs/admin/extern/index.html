@@ -1,0 +1,83 @@
+<h1>Synchronisieren, Import, Export</h1>
+<form name="form">
+  <table>
+    <tbody>
+      <tr>
+	<th align="right"><label for="operation">Operation</label></th>
+	<td>
+	  <select ng-model="einstellungen.operation" id="operation" ng-disabled="busy">
+	    <option value="import">Import</option>
+	    <option value="export">Export</option>
+	  </select>
+	</td>
+      </tr>
+      <tr ng-if="einstellungen.operation != 'import'">
+	<th align="right"><label for="tag">Veranstaltung</label></th>
+	<td>
+	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in veranstaltungen" id="tag">
+	  </select>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="format">Format</label></th>
+	<td>
+	  <select ng-model="einstellungen.format" id="format" ng-disabled="busy">
+	    <option value="trial-auswertung">Trial-Auswertung</option>
+	    <option value="trialtool">TrialTool</option>
+	  </select>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="einstellungen.operation == 'import' && einstellungen.format == 'trial-auswertung'">
+      <tr>
+	<th align="right"><label for="tra_datei">tra-Datei</label></th>
+	<td>
+	  <input type="file" id="tra_datei" ng-disabled="busy" ng-model="einstellungen.tra_datei" required>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <button ng-click="import()" ng-disabled="busy || !form.$valid">Importieren</button>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="einstellungen.operation == 'import' && einstellungen.format == 'trialtool'">
+      <tr>
+	<th align="right"><label for="cfg_datei">cfg-Datei</label></th>
+	<td>
+	  <input type="file" id="cfg_datei" ng-disabled="busy" ng-model="einstellungen.cfg_datei" required>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="dat_datei">dat-Datei</label></th>
+	<td>
+	  <input type="file" id="dat_datei" ng-disabled="busy" ng-model="einstellungen.dat_datei" required>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <button ng-click="import()" ng-disabled="busy || !form.$valid">Importieren</button>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="einstellungen.operation == 'export' && einstellungen.format == 'trial-auswertung'">
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <a href="/api/veranstaltung/export?id={{einstellungen.veranstaltung.id}}&name={{dateiname(einstellungen.veranstaltung)}}.tra">{{dateiname(einstellungen.veranstaltung)}}.tra</a><br>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="einstellungen.operation == 'export' && einstellungen.format == 'trialtool'">
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <a href="/api/trialtool/cfg?id={{einstellungen.veranstaltung.id}}&name={{dateiname(einstellungen.veranstaltung)}}.cfg">{{dateiname(einstellungen.veranstaltung)}}.cfg</a><br>
+	  <a href="/api/trialtool/dat?id={{einstellungen.veranstaltung.id}}&name={{dateiname(einstellungen.veranstaltung)}}.dat">{{dateiname(einstellungen.veranstaltung)}}.dat</a>
+	</td>
+      </tr>
+    </tbody>
+  </table>
+</form>

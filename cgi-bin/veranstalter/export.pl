@@ -38,6 +38,21 @@ if ($type !~ /^(cfg|dat)$/) {
     die "Invalid type specified\n";
 }
 
+sub dateiname($$$) {
+    my ($dbh, $id, $veranstaltung) = @_;
+    my $dateiname;
+
+    my $sth = $dbh->prepare(q{
+	SELECT dateiname, datum, tag
+	FROM veranstaltung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    ($dateiname, $datum, $tag) = $sth->fetchrow_array;
+
+    return $dateiname // (defined $datum ? "Trial $datum" : 'Trial');
+}
+
 my $cfg = cfg_aus_datenbank($dbh, $id);
 $dateiname = dateiname($dbh, $id, $cfg)
     unless $dateiname;
