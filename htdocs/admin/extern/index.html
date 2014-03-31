@@ -1,5 +1,5 @@
 <h1>Import und Export</h1>
-<form>
+<form name="form">
   <table>
     <tbody>
       <tr>
@@ -25,14 +25,13 @@
       <tr>
 	<th align="right"><label for="tra_datei">tra-Datei</label></th>
 	<td>
-	  <input type="file" id="tra_datei" ng-disabled="busy"><br>
-	  <span style="color:red">{{tra_datei_fehler}}</span>
+	  <input type="file" id="tra_datei" ng-disabled="busy" ng-model="einstellungen.tra_datei" required>
 	</td>
       </tr>
       <tr>
 	<th align="right"></th>
 	<td>
-	  <button ng-click="import()" ng-disabled="busy">Importieren</button>
+	  <button ng-click="import()" ng-disabled="busy || !form.$valid">Importieren</button>
 	</td>
       </tr>
     </tbody>
@@ -40,21 +39,19 @@
       <tr>
 	<th align="right"><label for="cfg_datei">cfg-Datei</label></th>
 	<td>
-	  <input type="file" id="cfg_datei" ng-disabled="busy"><br>
-	  <span style="color:red">{{cfg_datei_fehler}}</span>
+	  <input type="file" id="cfg_datei" ng-disabled="busy" ng-model="einstellungen.cfg_datei" required>
 	</td>
       </tr>
       <tr>
 	<th align="right"><label for="dat_datei">dat-Datei</label></th>
 	<td>
-	  <input type="file" id="dat_datei" ng-disabled="busy"><br>
-	  <span style="color:red">{{dat_datei_fehler}}</span>
+	  <input type="file" id="dat_datei" ng-disabled="busy" ng-model="einstellungen.dat_datei" required>
 	</td>
       </tr>
       <tr>
 	<th align="right"></th>
 	<td>
-	  <button ng-click="import()" ng-disabled="busy">Importieren</button>
+	  <button ng-click="import()" ng-disabled="busy || !form.$valid">Importieren</button>
 	</td>
       </tr>
     </tbody>
