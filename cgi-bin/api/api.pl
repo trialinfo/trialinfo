@@ -133,14 +133,15 @@ sub veranstaltung_reset($$$) {
 
     if ($reset eq 'nennbeginn') {
 	$sth = $dbh->prepare(q{
-	    SELECT basis
+	    SELECT basis.id
 	    FROM veranstaltung
-	    JOIN veranstaltung_feature ON veranstaltung.basis = veranstaltung_feature.id
+	    JOIN veranstaltung AS basis ON veranstaltung.basis = basis.tag
+	    JOIN veranstaltung_feature AS basis_feature ON basis.id = basis_feature.id
 	    WHERE veranstaltung.id = ? AND feature = 'start_morgen'
 	});
 	$sth->execute($id);
 	if (my @row = $sth->fetchrow_array) {
-	    my $basis = $row[0];
+	    my $basis_id = $row[0];
 	    # Feld start in aktueller Veranstaltung auf
 	    # start_morgen von vorheriger Veranstaltung setzen
 	    $dbh->do(q{
@@ -148,7 +149,7 @@ sub veranstaltung_reset($$$) {
 		JOIN fahrer AS basis USING (startnummer)
 		SET fahrer.nennungseingang = 1, fahrer.start = 1
 		WHERE fahrer.id = ? AND basis.id = ? AND basis.start_morgen
-	    }, undef, $id, $basis);
+	    }, undef, $id, $basis_id);
 	}
 
 	$dbh->do(q{
@@ -182,22 +183,10 @@ sub export($) {
 	fahrer => fahrer_aus_datenbank($dbh, $id),
 	vareihen => vareihen_aus_datenbank($dbh, $id)
     };
-    my $basis_tag;
-    if ($result->{veranstaltung}{basis}{id}) {
-	my $sth = $dbh->prepare(q{
-	    SELECT tag
-	    FROM veranstaltung
-	    WHERE id = ?
-	});
-	$sth->execute($result->{veranstaltung}{basis}{id});
-	my @row = $sth->fetchrow_array;
-	fixup_arrayref($sth, \@row);
-	$basis_tag = $row[0];
-    }
     foreach my $vareihe (@{$result->{vareihen}}) {
 	delete $vareihe->{version};
     }
-    $result->{veranstaltung}{basis} = $basis_tag;
+    $result->{veranstaltung}{basis} = $result->{veranstaltung}{basis}{tag};
     delete $result->{veranstaltung}{dateiname};
     delete $result->{veranstaltung}{id};
     return $result;
@@ -246,7 +235,10 @@ sub importieren($$$) {
 	$id = veranstaltung_tag_to_id($dbh, $veranstaltung->{tag});
     }
     if (defined $id) {
-	if (!$alt) {
+	if ($alt) {
+	    $alt->{veranstaltung}{basis} = { tag => $alt->{veranstaltung}{basis} }
+		if defined $alt->{veranstaltung}{basis};
+	} else {
 	    $alt = {
 		veranstaltung => cfg_aus_datenbank($dbh, $id, 1),
 		fahrer => fahrer_aus_datenbank($dbh, $id),
@@ -262,22 +254,8 @@ sub importieren($$$) {
 	$id = ($row[0] // 0) + 1;
 	$veranstaltung->{id} = $id;
     }
-    if ($veranstaltung->{basis}) {
-	my $sth = $dbh->prepare(q{
-	    SELECT id
-	    FROM veranstaltung
-	    where tag = ?
-	});
-	$sth->execute($veranstaltung->{basis});
-	my @row = $sth->fetchrow_array;
-	if (defined $row[0]) {
-	    $veranstaltung->{basis} = { id => $row[0] };
-	} else {
-	    print STDERR "Vorherige Veranstaltung mit Tag " .
-		  "$veranstaltung->{basis} nicht gefunden\n";
-	    delete $veranstaltung->{basis};
-	}
-    }
+    $veranstaltung->{basis} = { tag => $veranstaltung->{basis} }
+	if defined $veranstaltung->{basis};
     veranstaltung_aktualisieren $do_sql, $id, $alt->{veranstaltung}, $veranstaltung, 0;
     fahrer_aktualisieren $do_sql, $id, $alt->{fahrer}, $neu->{fahrer}, 0;
     my $sth = $dbh->prepare(q{
@@ -657,8 +635,11 @@ if ($op eq 'GET/vareihen') {
 		or die "Konnte keine freie ID finden\n";
 	    $id_neu = ($row[0] // 0) + 1;
 	}
-	if (!defined $id && defined $cfg1->{basis}{id}) {
-	    veranstaltung_duplizieren($do_sql, $cfg1->{basis}{id}, $id_neu);
+	if (!defined $id && defined $cfg1->{basis}{tag}) {
+	    my $basis_id = veranstaltung_tag_to_id($dbh, $cfg1->{basis}{tag});
+	    die "Basis-Veranstaltung $cfg1->{basis}{tag} nicht gefunden\n"
+		unless defined $basis_id;
+	    veranstaltung_duplizieren($do_sql, $basis_id, $id_neu);
 	    $cfg1->{tag} = random_tag(16);
 	    $version = 1;
 	}

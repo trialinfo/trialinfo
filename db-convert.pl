@@ -76,7 +76,7 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ADD COLUMN version INT NOT NULL DEFAULT 1 FIRST;
 
 	    ALTER TABLE veranstaltung
-	    ADD COLUMN basis INT AFTER id;
+	    ADD COLUMN basis CHAR(16) AFTER id;
 
 	    ALTER TABLE veranstaltung
 	    ADD COLUMN art VARCHAR(20) AFTER dateiname;

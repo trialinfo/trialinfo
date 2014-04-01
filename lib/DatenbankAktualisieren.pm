@@ -622,9 +622,9 @@ sub veranstaltung_aktualisieren($$$$$) {
 	}
 	if (exists $neu->{basis}) {
 	    push @$felder, 'basis';
-	    push @$felder_alt, $alt->{basis}{id}
+	    push @$felder_alt, $alt->{basis}{tag}
 		if $alt;
-	    push @$felder_neu, $neu->{basis}{id};
+	    push @$felder_neu, $neu->{basis}{tag};
 	}
     }
 

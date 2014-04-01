@@ -159,31 +159,31 @@ sub cfg_aus_datenbank($$;$) {
     fixup_hashref($sth, $cfg);
 
     if (defined $cfg->{basis}) {
-	my $basis = $cfg->{basis};
+	my $basis_tag = $cfg->{basis};
 	my $sth = $dbh->prepare(q{
-	    SELECT titel
-	    FROM wertung
-	    WHERE id = ? AND wertung = 1
+	    SELECT tag, id, titel
+	    FROM veranstaltung
+	    JOIN wertung USING(id)
+	    WHERE tag = ? AND wertung = 1
 	});
-	$sth->execute($basis);
-	my ($titel) = $sth->fetchrow_array;
-	$sth = $dbh->prepare(q{
-	    SELECT COUNT(*)
-	    FROM fahrer
-	    JOIN veranstaltung_feature USING (id)
-	    WHERE id = ? AND start_morgen AND feature = 'start_morgen'
-	});
-	$sth->execute($basis);
-	my @row = $sth->fetchrow_array;
-	fixup_arrayref($sth, \@row);
-	my $anzahl_start_morgen = $row[0];
-	$cfg->{basis} = {
-	    id => $basis,
-	    titel => $titel,
-	    anzahl_start_morgen => $anzahl_start_morgen
-	};
+	$sth->execute($basis_tag);
+	my $basis;
+	if ($basis = $sth->fetchrow_hashref) {
+	    fixup_hashref($sth, $basis);
+	    $sth = $dbh->prepare(q{
+		SELECT COUNT(*)
+		FROM fahrer
+		JOIN veranstaltung_feature USING (id)
+		WHERE id = ? AND start_morgen AND feature = 'start_morgen'
+	    });
+	    $sth->execute($basis->{id});
+	    my @row = $sth->fetchrow_array;
+	    fixup_arrayref($sth, \@row);
+	    $basis->{anzahl_start_morgen} = $row[0];
+	}
+	$cfg->{basis} = $basis;
     } else {
-	$cfg->{basis} = { id => undef };
+	$cfg->{basis} = { tag => undef };
     }
 
     $sth = $dbh->prepare(q{
