@@ -19,8 +19,6 @@ AUTH_PREFIX = $(PWD)
 # und stolpert über diese Anweisung.
 #
 SSI_LEGACY_EXPR_PARSER_testing = 1
-SSI_LEGACY_EXPR_PARSER_staging = 0
-SSI_LEGACY_EXPR_PARSER_production = 0
 
 DOWNLOAD_FILES = \
 	htdocs/js/jquery.js \
