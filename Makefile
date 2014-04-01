@@ -34,10 +34,11 @@ COMMON_FILES = \
 	htdocs/ergebnisse.css \
 	lib/Auswertung.pm.txt \
 	lib/Berechnung.pm \
-	lib/DatenbankAktualisieren.pm \
+	lib/Class/Accessor/Lite.pm \
 	lib/Datenbank.pm \
-	lib/Jahreswertung.pm \
+	lib/DatenbankAktualisieren.pm \
 	lib/JSON_bool.pm \
+	lib/Jahreswertung.pm \
 	lib/Parse/Binary/FixedFormat.pm \
 	lib/RenderOutput.pm \
 	lib/Tag.pm \
