@@ -185,6 +185,7 @@ CREATE TABLE veranstaltung (
   rand_links INT,
   rand_oben INT,
   ergebnislistenbreite INT,
+  sync_erlaubt BOOLEAN,
   PRIMARY KEY (id)
 );
 

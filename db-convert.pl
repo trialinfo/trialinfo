@@ -195,6 +195,9 @@ foreach my $sql (split /\s*;\s*/, q{
 	    ALTER TABLE veranstaltung
 	    ADD COLUMN tag CHAR(16) NOT NULL FIRST;
 
+	    ALTER TABLE veranstaltung
+	    ADD COLUMN sync_erlaubt BOOLEAN;
+
 	    ALTER TABLE vareihe
 	    ADD COLUMN tag CHAR(16) NOT NULL FIRST;
         }) {

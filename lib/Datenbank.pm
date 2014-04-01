@@ -144,12 +144,12 @@ sub cfg_aus_datenbank($$;$) {
     my $cfg;
 
     my $nur_trialtool = $ohne_trialtool ? '' :
-	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld, mtime';
+	', rand_links, rand_oben, ergebnislistenbreite, ergebnisliste_feld';
     my $sth = $dbh->prepare(qq{
 	SELECT tag, version, id, basis, dateiname, datum, art, aktiv,
 	       vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
 	       wertungspunkte_234, wertung1_markiert, versicherung, mtime,
-	       punkteteilung$nur_trialtool
+	       punkteteilung, sync_erlaubt$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
     });

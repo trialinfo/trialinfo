@@ -244,6 +244,8 @@ sub importieren($$$) {
 		fahrer => fahrer_aus_datenbank($dbh, $id),
 	    };
 	}
+	die "Synchronisieren in diese Veranstaltung nicht erlaubt\n"
+	    if $sync && !$alt->{veranstaltung}{sync_erlaubt};
     } else {
 	my $sth = $dbh->prepare(q{
 	    SELECT MAX(id)
@@ -256,6 +258,9 @@ sub importieren($$$) {
     }
     $veranstaltung->{basis} = { tag => $veranstaltung->{basis} }
 	if defined $veranstaltung->{basis};
+    if ($sync) {
+	$veranstaltung->{sync_erlaubt} = json_bool(1);
+    }
     veranstaltung_aktualisieren $do_sql, $id, $alt->{veranstaltung}, $veranstaltung, 0;
     fahrer_aktualisieren $do_sql, $id, $alt->{fahrer}, $neu->{fahrer}, 0;
     my $sth = $dbh->prepare(q{
@@ -401,6 +406,7 @@ if ($op eq 'GET/vareihen') {
     }
     $dbh->begin_work;
     $result = export($id);
+    delete $result->{veranstaltung}{sync_erlaubt};
     my $dateiname = $q->url_param('name') // 'Trial.tra';
     $dbh->commit;
     $headers->{'Content-Type'} = 'application/octet-stream';
