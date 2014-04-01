@@ -16,6 +16,7 @@ use Auswertung;
 use Tag;
 use Compress::Zlib;
 use MIME::Base64;
+use JSON::Patch;
 #use Data::Dumper;
 use strict;
 
@@ -439,6 +440,7 @@ if ($op eq 'GET/vareihen') {
     $dbh->begin_work;
     $result = dat_export($id, $headers, $q->url_param('name'));
     $dbh->commit;
+} elsif ($op eq "OPTIONS/veranstaltung/import") {
 } elsif ($op eq "POST/veranstaltung/import") {
     eval {
 	my $data = decode_base64($q->param('POSTDATA'));
@@ -940,6 +942,47 @@ if ($op eq 'GET/vareihen') {
     }
     $dbh->commit;
     $result = [ values %$fahrer ];
+} elsif ($op eq "GET/veranstaltung/dump") {
+    my ($tag) = parameter($q, qw(tag));
+    $dbh->begin_work;
+    my $id = veranstaltung_tag_to_id($dbh, $tag);
+    $result = export($id)
+	if $id;
+    $dbh->commit;
+} elsif ($op eq "OPTIONS/veranstaltung/patch") {
+} elsif ($op eq "POST/veranstaltung/patch") {
+    eval {
+	my ($tag) = parameter($q, qw(tag));
+	$dbh->begin_work;
+	my $id = veranstaltung_tag_to_id($dbh, $tag);
+	if (defined $id) {
+	    my $data0 = export($id);
+	    my $postdata = $q->param('POSTDATA');
+	    _utf8_on($postdata);
+
+	    print STDERR "Patch: $postdata\n"
+		if $cgi_verbose;
+
+	    my $patch = $json->decode($postdata);
+	    my $patcher = JSON::Patch->new(operations => $patch);
+	    my $ctx = $patcher->patch($data0);
+	    if ($ctx->{result}) {
+		my $data1 = $ctx->{document};
+		importieren($data0, $data1, 1);
+	    } else {
+		$status = '409 Conflict';
+		$result->{error} = "Patch fehlgeschlagen";
+	    }
+	} else {
+	    $status = "404 Not Found";
+	    $result->{error} = "Veranstaltung nicht gefunden";
+	}
+	$dbh->commit;
+    };
+    if ($@) {
+	$status = '500 Internal Server Error';
+	$result->{error} = $@;
+    }
 } else {
     $status = "404 Not Found";
     $result->{error} = "Operation '$op' not defined";

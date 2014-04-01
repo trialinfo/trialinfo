@@ -1,6 +1,7 @@
 'use strict;'
 
 function mainController($scope, $http, $location, veranstaltungen, vareihen) {
+  $scope.WITH_SYNC = WITH_SYNC;
   $scope.veranstaltungen = veranstaltungen;
   $scope.vareihen = vareihen;
 
@@ -20,7 +21,7 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
     $location.path('/veranstaltung/neu/einstellungen');
   };
 
-  $scope.import_export = function() {
+  $scope.sync_import_export = function() {
     $location.path('/extern');
   };
 

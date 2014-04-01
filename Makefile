@@ -43,24 +43,46 @@ SSI_LEGACY_EXPR_PARSER_testing = 1
 SSI_LEGACY_EXPR_PARSER_staging = 0
 SSI_LEGACY_EXPR_PARSER_production = 0
 
+# Soll man von dem Server als Quelle zu anderen Servern hin synchronisieren können?
+#
+WITH_SYNC_testing = 1
+WITH_SYNC_staging = 0
+WITH_SYNC_production = 0
+
 DOWNLOAD_FILES = \
-	htdocs/js/jquery.js \
-	htdocs/js/jquery.min.js \
-	htdocs/js/raphael.js \
-	htdocs/js/raphael-min.js \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
 	htdocs/js/angular-route.js \
+	htdocs/js/jquery.js \
+	htdocs/js/jquery.min.js \
+	htdocs/js/json-diff.js \
+	htdocs/js/raphael.js \
+	htdocs/js/raphael-min.js \
 	htdocs/js/validate.js \
 
 COMMON_FILES = \
 	htdocs/ergebnisse.css \
 	lib/Auswertung.pm.txt \
 	lib/Berechnung.pm \
-	lib/DatenbankAktualisieren.pm \
+	lib/Class/Accessor/Lite.pm \
 	lib/Datenbank.pm \
-	lib/Jahreswertung.pm \
+	lib/DatenbankAktualisieren.pm \
+	lib/JSON/Patch.pm \
+	lib/JSON/Patch/Context.pm \
+	lib/JSON/Patch/Exception.pm \
+	lib/JSON/Patch/Operator.pm \
+	lib/JSON/Patch/Operator/Add.pm \
+	lib/JSON/Patch/Operator/Copy.pm \
+	lib/JSON/Patch/Operator/Move.pm \
+	lib/JSON/Patch/Operator/Remove.pm \
+	lib/JSON/Patch/Operator/Replace.pm \
+	lib/JSON/Patch/Operator/Test.pm \
+	lib/JSON/Pointer.pm \
+	lib/JSON/Pointer/Context.pm \
+	lib/JSON/Pointer/Exception.pm \
+	lib/JSON/Pointer/Syntax.pm \
 	lib/JSON_bool.pm \
+	lib/Jahreswertung.pm \
 	lib/Parse/Binary/FixedFormat.pm \
 	lib/RenderOutput.pm \
 	lib/Tag.pm \
@@ -119,6 +141,7 @@ ADMIN_FILES = \
 	htdocs/admin/punkte/index.html \
 	htdocs/admin/sektionen/controller.js \
 	htdocs/admin/sektionen/index.html \
+	htdocs/admin/sync/controller.js \
 	htdocs/admin/vareihe/controller.js \
 	htdocs/admin/vareihe/index.html \
 	htdocs/admin/veranstaltung/auswertung/controller.js \
@@ -186,6 +209,7 @@ generate_web_file = \
 	$(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' \
 	       -e 's:@HOST@:$(HOST):g' \
 	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g' \
+	       -e 's:@WITH_SYNC@:$(WITH_SYNC_$(WHAT)):g' \
 	       $(SSI_LEGACY_EXPR_PARSER)
 
 .PHONY: $(GENERATED_WEB_FILES)
@@ -221,6 +245,35 @@ htdocs/js/validate.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular-ui/ui-utils/raw/master/modules/validate/validate.js
+
+update-perl-json-pointer:
+	@set -xe; \
+	tmpdir=$$(mktemp -td); \
+	trap "rm -rf $$tmpdir" EXIT; \
+	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
+		https://github.com/zigorou/perl-json-pointer/archive/master.zip; \
+	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
+	files=($$(find $$tmpdir/perl-json-pointer-master/lib -type f -printf '%P\n')); \
+	( cd $$tmpdir/perl-json-pointer-master/lib; \
+	  cp --parents "$${files[@]}" $(PWD)/lib ); \
+	git add -v "$${files[@]/#/lib/}"
+
+update-perl-json-patch:
+	@set -xe; \
+	tmpdir=$$(mktemp -td); \
+	trap "rm -rf $$tmpdir" EXIT; \
+	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
+		https://github.com/zigorou/perl-json-patch/archive/master.zip; \
+	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
+	files=($$(find $$tmpdir/perl-json-patch-master/lib -type f -printf '%P\n')); \
+	( cd $$tmpdir/perl-json-patch-master/lib; \
+	  cp --parents "$${files[@]}" $(PWD)/lib ); \
+	git add -v "$${files[@]/#/lib/}"
+
+htdocs/js/json-diff.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js
 
 dist: $(COMMON_FILES) $(LOCAL_FILES)
 	@set -e; \

@@ -1,4 +1,4 @@
-<h1>Synchronisieren, Import, Export</h1>
+<h1><span ng-if="WITH_SYNC">Synchronisieren,</span> Import, Export</h1>
 <form name="form">
   <table>
     <tbody>
@@ -6,6 +6,7 @@
 	<th align="right"><label for="operation">Operation</label></th>
 	<td>
 	  <select ng-model="einstellungen.operation" id="operation" ng-disabled="busy">
+	    <option value="sync" ng-if="WITH_SYNC">Synchronisieren</option>
 	    <option value="import">Import</option>
 	    <option value="export">Export</option>
 	  </select>
@@ -18,13 +19,33 @@
 	  </select>
 	</td>
       </tr>
-      <tr>
+      <tr ng-if="einstellungen.operation != 'sync'">
 	<th align="right"><label for="format">Format</label></th>
 	<td>
 	  <select ng-model="einstellungen.format" id="format" ng-disabled="busy">
 	    <option value="trial-auswertung">Trial-Auswertung</option>
 	    <option value="trialtool">TrialTool</option>
 	  </select>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="einstellungen.operation == 'sync'">
+      <tr>
+	<th align="right"><label for="url">Zieladresse</label></th>
+	<td>
+	  <input type="text" size="30" ng-model="einstellungen.url" id="url" required>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="timeout">Intervall</label></th>
+	<td>
+	  <input type="number" min="1" max="600" size="3" ng-model="einstellungen.timeout" id="timeout" style="text-align:center" required> Sekunden
+	</td>
+      </tr>
+      <tr>
+	<th align="right"></th>
+	<td>
+	  <button ng-click="synchronize()" ng-disabled="!form.$valid">Synchronisieren</button>
 	</td>
       </tr>
     </tbody>

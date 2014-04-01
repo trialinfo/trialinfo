@@ -51,7 +51,10 @@ Systemvoraussetzungen
    werden müssen (für MySQL unter ActivePerl: "ppm install DBD-mysql").
 
  * Die Perl-Module CGI und JSON (auf RPM-basierten Linux-Systemen oft mit "yum
-   install perl-CGI perl-JSON zu installieren).
+   install perl-CGI perl-JSON" zu installieren).
+   + perl-Class-Accessor-Lite
+   + perl-Module-Load
+   + perl-Module-Loaded
 
  * Die HTML-Seiten werden auf dem Web-Server über Server-Side Include - Dateien
    erzeugt (*.shtml).  Das unterstützt z.B. der Apache Web-Server.
