@@ -1,4 +1,4 @@
-<h1>Synchronisieren, Import, Export</h1>
+<h1><span ng-if="WITH_SYNC">Synchronisieren,</span> Import, Export</h1>
 <form name="form">
   <table>
     <tbody>
@@ -6,7 +6,7 @@
 	<th align="right"><label for="operation">Operation</label></th>
 	<td>
 	  <select ng-model="einstellungen.operation" id="operation" ng-disabled="busy">
-	    <option value="sync">Synchronisieren</option>
+	    <option value="sync" ng-if="WITH_SYNC">Synchronisieren</option>
 	    <option value="import">Import</option>
 	    <option value="export">Export</option>
 	  </select>

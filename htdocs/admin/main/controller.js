@@ -1,6 +1,7 @@
 'use strict;'
 
 function mainController($scope, $http, $location, veranstaltungen, vareihen) {
+  $scope.WITH_SYNC = WITH_SYNC;
   $scope.veranstaltungen = veranstaltungen;
   $scope.vareihen = vareihen;
 

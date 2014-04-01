@@ -65,6 +65,11 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       HAVE_WEASYPRINT = true;
 <!--#endif -->
 
+      var WITH_SYNC;
+<!--#if expr="$WITH_SYNC = 1" -->
+      WITH_SYNC = true;
+<!--#endif -->
+
       var application = angular.module('application', ['ngRoute', 'ui.validate']);
 
       application.directive('isoDate', isoDateDirective);
