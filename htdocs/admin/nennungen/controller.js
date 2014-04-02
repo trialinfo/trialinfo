@@ -286,7 +286,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var accesskeys = 'aknvpmsfuäl';
     $scope.wertungen = [];
     angular.forEach($scope.features.wertungen, function(wertung) {
-      var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung;
+      var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung || '';
       var label = bezeichnung, accesskey;
       for (var n = 0; n < bezeichnung.length; n++) {
 	var key = bezeichnung[n].toLowerCase();
