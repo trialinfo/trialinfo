@@ -170,6 +170,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	$rootScope.$on("$routeChangeSuccess", function() {
 	  $rootScope.titel = $route.current.titel || '';
 	});
+
+	$rootScope.join = join;
       });
     </script>
   </head>

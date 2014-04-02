@@ -35,6 +35,10 @@ use strict;
 # Abhängig von den alten und neuen Werten für die einzelnen Felder wird er alte
 # Datensatz gelöscht, aktualisiert, oder ein neuer Datensatz eingefügt.
 #
+# $versionierung ist -1, wenn eine Tabelle keine Version hat, 0, wenn die
+# Version überprüft werden soll, und 1, wenn die Version immer erhöht werden
+# soll.
+#
 sub datensatz_aktualisieren($$$$$$$$$) {
     my ($callback, $tabelle, $changed, $versionierung, $keys, $nonkeys, $kval, $alt, $neu) = @_;
     my ($sql, $args, $davor);
@@ -57,7 +61,7 @@ sub datensatz_aktualisieren($$$$$$$$$) {
 		    push @$modified_new, $neu->[$n];
 		}
 	    }
-	    if ($changed || @$modified_nonkeys) {
+	    if (($changed && $versionierung > 0) || @$modified_nonkeys) {
 		if ($versionierung >= 0) {
 		    push @$keys, 'version';
 		    push @$kval, $alt->[0];
@@ -608,7 +612,7 @@ sub veranstaltung_aktualisieren($$$$$) {
 	    tag dateiname datum art aktiv vierpunktewertung wertungsmodus
 	    punkte_sektion_auslassen wertungspunkte_234 rand_links rand_oben
 	    wertung1_markiert versicherung ergebnislistenbreite
-	    ergebnisliste_feld mtime punkteteilung)) {
+	    ergebnisliste_feld mtime punkteteilung sync_erlaubt)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;
 		push @$felder_alt, $alt->{$feld}
@@ -618,9 +622,9 @@ sub veranstaltung_aktualisieren($$$$$) {
 	}
 	if (exists $neu->{basis}) {
 	    push @$felder, 'basis';
-	    push @$felder_alt, $alt->{basis}{id}
+	    push @$felder_alt, $alt->{basis}{tag}
 		if $alt;
-	    push @$felder_neu, $neu->{basis}{id};
+	    push @$felder_neu, $neu->{basis}{tag};
 	}
     }
 

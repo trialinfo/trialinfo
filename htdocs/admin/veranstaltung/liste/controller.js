@@ -77,7 +77,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     name:
       { name: 'Name',
 	bezeichnung: 'Name',
-	ausdruck: "nachname + ' ' + vorname",
+	ausdruck: "join(' ', nachname, vorname)",
 	style: { 'text-align': 'left' },
 	feature: true },
     geburtsdatum:

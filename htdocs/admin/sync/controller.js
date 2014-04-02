@@ -87,6 +87,7 @@ function syncController($scope, $http, $q, $timeout, $sce, $location) {
   function sync() {
     angular.forEach([$scope.source_dump, $scope.target_dump], function(dump) {
       delete dump.veranstaltung.tag;
+      delete dump.veranstaltung.sync_erlaubt;
     });
     $scope.patch = json_diff($scope.target_dump, $scope.source_dump);
     if ($scope.patch.length) {

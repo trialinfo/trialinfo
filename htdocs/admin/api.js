@@ -212,3 +212,16 @@ var wertungspunkte = (function() {
       return vorzeichen + wertungspunkte;
   };
 })();
+
+function join(separator) {
+  var args = join.arguments, result = '', first = true;
+  for (var n = 1; n < args.length; n++) {
+    if (args[n] != null && args[n] !== '') {
+      if (!first)
+	result = result + separator;
+      result = result + args[n];
+      first = false;
+    }
+  }
+  return result;
+}

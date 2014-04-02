@@ -218,6 +218,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	$http.get('/api/veranstaltung', {'params': {'id': basis}}).
 	  success(function(veranstaltung) {
 	    veranstaltung.basis = {
+	      tag: veranstaltung.tag,
 	      id: veranstaltung.id,
 	      titel: veranstaltung.wertungen[0].titel,
 	      anzahl_start_morgen: veranstaltung.anzahl_start_morgen

@@ -168,7 +168,7 @@ CREATE TABLE veranstaltung (
   tag CHAR(16) NOT NULL,
   version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
-  basis INT, -- veranstaltung
+  basis CHAR(16), -- veranstaltung
   datum DATE,
   mtime TIMESTAMP NULL,
   dateiname VARCHAR(128),
@@ -185,6 +185,7 @@ CREATE TABLE veranstaltung (
   rand_links INT,
   rand_oben INT,
   ergebnislistenbreite INT,
+  sync_erlaubt BOOLEAN,
   PRIMARY KEY (id)
 );
 
