@@ -152,7 +152,7 @@ table.wertung tr td.wichtig {
 	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{wertungspunkte(fahrer)}}</td>
       </tr>
       <tr ng-class-even="'alt'" ng-if="!(fahrer.ausfall || fahrer.ausser_konkurrenz)">
-	<td style="text-align:right">{{(anzeige.alle ? fahrer.rang : fahrer.wertungen[anzeige.wertung - 1].rang) + '.'}}</td>
+	<td style="text-align:right">{{rang(fahrer)}}</td>
 	<td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
 	<td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.einzelpunkte[runde - 1]"></td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].zusatzpunkte">{{zusatzpunkte(fahrer)}}</td>

@@ -261,7 +261,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       { name: 'Name',
 	bezeichnung: 'Name',
 	/* FIXME: <br> nach Bewerber! */
-	ausdruck: "(bewerber ? bewerber + ': ' : '') + nachname + ' ' + vorname",
+	ausdruck: "(bewerber ? bewerber + ': ' : '') + join(' ', nachname, vorname)",
 	style: { 'text-align': 'left', 'padding-right': '1em' } },
     fahrzeug:
       { name: 'Fahrzeug',
@@ -609,6 +609,12 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       wp = fahrer.wertungen[$scope.anzeige.wertung - 1].punkte;
     } catch(_) { }
     return wertungspunkte(wp, veranstaltung.punkteteilung);
+  }
+
+  $scope.rang = function(fahrer) {
+    var rang = $scope.anzeige.alle ? fahrer.rang : fahrer.wertungen[$scope.anzeige.wertung - 1].rang;
+    if (rang != null)
+      return rang + '.';
   }
 
   /* $scope.netzwerkfehler = ...; */
