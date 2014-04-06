@@ -104,10 +104,28 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	ausdruck: "fahrzeug",
 	style: { 'text-align': 'left' },
 	feature: true },
+    land:
+      { name: 'Land',
+	bezeichnung: 'Land',
+	ausdruck: "land",
+	style: { 'text-align': 'left' },
+	feature: true },
+    bundesland:
+      { name: 'Bundesland',
+	bezeichnung: 'Bundesland',
+	ausdruck: "bundesland",
+	style: { 'text-align': 'left' },
+	feature: true },
     lbl:
       { name: 'Land (Bundesland)',
 	bezeichnung: '<span title="Land (Bundesland)">Land</span>',
 	ausdruck: "land_bundesland(fahrer)",
+	style: { 'text-align': 'left' },
+	feature: true },
+    email:
+      { name: 'E-Mail',
+	bezeichnung: 'E-Mail',
+	ausdruck: "email",
 	style: { 'text-align': 'left' },
 	feature: true },
     startzeit:
