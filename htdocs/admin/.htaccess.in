@@ -1,7 +1,8 @@
 DirectoryIndex index.shtml
 Options Includes
 SetEnv HAVE_WEASYPRINT @HAVE_WEASYPRINT@
-SetEnv WITH_SYNC @WITH_SYNC@
+SetEnv SYNC_SOURCE @SYNC_SOURCE@
+SetEnv SYNC_TARGET @SYNC_TARGET@
 @SSI_LEGACY_EXPR_PARSER@
 AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
 AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup

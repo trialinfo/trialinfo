@@ -65,9 +65,14 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       HAVE_WEASYPRINT = true;
 <!--#endif -->
 
-      var WITH_SYNC;
-<!--#if expr="$WITH_SYNC = 1" -->
-      WITH_SYNC = true;
+      var SYNC_SOURCE;
+<!--#if expr="$SYNC_SOURCE = 1" -->
+      SYNC_SOURCE = true;
+<!--#endif -->
+
+      var SYNC_TARGET;
+<!--#if expr="$SYNC_TARGET = 1" -->
+      SYNC_TARGET = true;
 <!--#endif -->
 
       var application = angular.module('application', ['ngRoute', 'ui.validate']);

@@ -1,10 +1,10 @@
 'use strict;'
 
 function externController($scope, $http, $location, veranstaltungen) {
-  $scope.WITH_SYNC = WITH_SYNC;
+  $scope.SYNC_SOURCE = SYNC_SOURCE;
   $scope.veranstaltungen = veranstaltungen;
   $scope.einstellungen = {
-    operation: $scope.WITH_SYNC ? 'sync' : 'export',
+    operation: $scope.SYNC_SOURCE ? 'sync' : 'export',
     format: 'trial-auswertung',
     timeout: 30,
   };

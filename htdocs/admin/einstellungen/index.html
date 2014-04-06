@@ -46,10 +46,10 @@
 	  <input type="checkbox" ng-model="veranstaltung.aktiv" id="aktiv"><label for="aktiv">Veranstaltung anzeigen und in Wertungen berücksichtigen</label>
 	</td>
       </tr>
-      <tr>
+      <tr ng-if="SYNC_TARGET">
 	<th align="right">Aktualisierung</th>
 	<td>
-	  <input type="checkbox" ng-model="veranstaltung.sync_erlaubt" id="sync_erlaubt"><label for="sync_erlaubt">Synchronisieren in diese Veranstaltung erlauben</label>
+	  <input type="checkbox" ng-model="veranstaltung.sync_erlaubt" id="sync_erlaubt"><label for="sync_erlaubt">Synchronisieren erlauben</label>
 	</td>
       </tr>
     </table>
