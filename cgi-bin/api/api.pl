@@ -17,6 +17,7 @@ use Tag;
 use Compress::Zlib;
 use MIME::Base64;
 use JSON::Patch;
+use HTTPError;
 #use Data::Dumper;
 use strict;
 
@@ -324,6 +325,7 @@ sub importieren($$$) {
 my $result;
 my $headers = {
     'Content-Type' => 'application/json',
+    'status' => '200 OK',
 };
 if (exists $ENV{'HTTP_ORIGIN'}) {
     $headers->{'Access-Control-Allow-Origin'} = $ENV{'HTTP_ORIGIN'};
@@ -332,101 +334,100 @@ if (exists $ENV{'HTTP_ORIGIN'}) {
     $headers->{'Access-Control-Allow-Headers'} = 'Content-Type';  # ', Accept'
     $headers->{'Access-Control-Max-Age'} = 3600;
 }
-my $status = '200 OK';
 my $json = JSON->new;
-if ($op eq 'GET/vareihen') {
-    my $sth = $dbh->prepare(q{
-	SELECT vareihe, bezeichnung, kuerzel, verborgen
-	FROM vareihe
-	ORDER BY vareihe
-    });
-    $sth->execute();
-    $result = [];
-    while (my $vareihe = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $vareihe);
-	push @$result, $vareihe;
-    }
-} elsif ($op eq "GET/veranstaltungen") {
-    my $sth = $dbh->prepare(q{
-	SELECT id, tag, datum, dateiname, titel, aktiv
-	FROM veranstaltung
-	LEFT JOIN wertung USING (id)
-	WHERE wertung = 1
-	ORDER BY datum, titel, id
-    });
-    $sth->execute();
-    $result = [];
-    my $veranstaltungen;
-    while (my $veranstaltung = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $veranstaltung);
-        my $id = $veranstaltung->{id};
-	$veranstaltung->{vareihen} = [];
-	$veranstaltung->{verborgen} = json_bool(0);
-	$veranstaltungen->{$id} = $veranstaltung;
-	push @$result, $veranstaltung;
-    }
-
-    $sth = $dbh->prepare(q{
-	SELECT id, vareihe, kuerzel, verborgen
-	FROM vareihe_veranstaltung
-	JOIN vareihe USING (vareihe)
-	ORDER BY id, vareihe
-    });
-    $sth->execute();
-    while (my @row = $sth->fetchrow_array) {
-	fixup_arrayref($sth, \@row);
-	my $veranstaltung = $veranstaltungen->{$row[0]};
-	if ($veranstaltung) {
-	    push @{$veranstaltung->{vareihen}},
-		{ vareihe => $row[1], kuerzel => $row[2] }
-		if defined $row[2] && $row[2] ne "";
-	    $veranstaltung->{verborgen} = $row[3]
-		if $row[3];
+eval {
+    if ($op eq 'GET/vareihen') {
+	my $sth = $dbh->prepare(q{
+	    SELECT vareihe, bezeichnung, kuerzel, verborgen
+	    FROM vareihe
+	    ORDER BY vareihe
+	});
+	$sth->execute();
+	$result = [];
+	while (my $vareihe = $sth->fetchrow_hashref) {
+	    fixup_hashref($sth, $vareihe);
+	    push @$result, $vareihe;
 	}
-    }
-} elsif ($op =~ q<^GET/(|vorheriger/|naechster/)fahrer$>) {
-	my ($id, $startnummer) = parameter($q, qw(id startnummer));
-	$result = get_fahrer($dbh, $id, $startnummer,
-	    $1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef);
-} elsif ($op =~ q<^GET/(vorheriger/|naechster/)starter$>) {
-	my ($id, $startnummer) = parameter($q, qw(id startnummer));
-	$result = get_fahrer($dbh, $id, $startnummer,
-	    $1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef, 1);
-} elsif ($op eq "GET/veranstaltung") {
-    my ($id) = parameter($q, qw(id));
-    $result = cfg_aus_datenbank($dbh, $id, 1);
-} elsif ($op eq "GET/veranstaltung/export") {
-    my $id;
-    eval {
-	my ($tag) = parameter($q, qw(tag));
-	$id = veranstaltung_tag_to_id($dbh, $tag);
-    };
-    if ($@) {
-	($id) = parameter($q, qw(id));
-    }
-    $dbh->begin_work;
-    $result = export($id);
-    delete $result->{veranstaltung}{sync_erlaubt};
-    my $dateiname = $q->url_param('name') // 'Trial.tra';
-    $dbh->commit;
-    $headers->{'Content-Type'} = 'application/octet-stream';
-    $headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
-    $result = "/* $result->{format} */\n" . $json->canonical->encode($result);
-    $result = Encode::encode_utf8($result);
-    $result = Compress::Zlib::memGzip($result);
-} elsif ($op eq "GET/trialtool/cfg") {
-    my ($id) = parameter($q, qw(id));
-    $dbh->begin_work;
-    $result = cfg_export($id, $headers, $q->url_param('name'));
-    $dbh->commit;
-} elsif ($op eq "GET/trialtool/dat") {
-    my ($id) = parameter($q, qw(id));
-    $dbh->begin_work;
-    $result = dat_export($id, $headers, $q->url_param('name'));
-    $dbh->commit;
-} elsif ($op eq "OPTIONS/veranstaltung/import") {
-} elsif ($op eq "POST/veranstaltung/import") {
-    eval {
+    } elsif ($op eq "GET/veranstaltungen") {
+	my $sth = $dbh->prepare(q{
+	    SELECT id, tag, datum, dateiname, titel, aktiv
+	    FROM veranstaltung
+	    LEFT JOIN wertung USING (id)
+	    WHERE wertung = 1
+	    ORDER BY datum, titel, id
+	});
+	$sth->execute();
+	$result = [];
+	my $veranstaltungen;
+	while (my $veranstaltung = $sth->fetchrow_hashref) {
+	    fixup_hashref($sth, $veranstaltung);
+	    my $id = $veranstaltung->{id};
+	    $veranstaltung->{vareihen} = [];
+	    $veranstaltung->{verborgen} = json_bool(0);
+	    $veranstaltungen->{$id} = $veranstaltung;
+	    push @$result, $veranstaltung;
+	}
+
+	$sth = $dbh->prepare(q{
+	    SELECT id, vareihe, kuerzel, verborgen
+	    FROM vareihe_veranstaltung
+	    JOIN vareihe USING (vareihe)
+	    ORDER BY id, vareihe
+	});
+	$sth->execute();
+	while (my @row = $sth->fetchrow_array) {
+	    fixup_arrayref($sth, \@row);
+	    my $veranstaltung = $veranstaltungen->{$row[0]};
+	    if ($veranstaltung) {
+		push @{$veranstaltung->{vareihen}},
+		    { vareihe => $row[1], kuerzel => $row[2] }
+		    if defined $row[2] && $row[2] ne "";
+		$veranstaltung->{verborgen} = $row[3]
+		    if $row[3];
+	    }
+	}
+    } elsif ($op =~ q<^GET/(|vorheriger/|naechster/)fahrer$>) {
+	    my ($id, $startnummer) = parameter($q, qw(id startnummer));
+	    $result = get_fahrer($dbh, $id, $startnummer,
+		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef);
+    } elsif ($op =~ q<^GET/(vorheriger/|naechster/)starter$>) {
+	    my ($id, $startnummer) = parameter($q, qw(id startnummer));
+	    $result = get_fahrer($dbh, $id, $startnummer,
+		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef, 1);
+    } elsif ($op eq "GET/veranstaltung") {
+	my ($id) = parameter($q, qw(id));
+	$result = cfg_aus_datenbank($dbh, $id, 1);
+    } elsif ($op eq "GET/veranstaltung/export") {
+	my $id;
+	eval {
+	    my ($tag) = parameter($q, qw(tag));
+	    $id = veranstaltung_tag_to_id($dbh, $tag);
+	};
+	if ($@) {
+	    ($id) = parameter($q, qw(id));
+	}
+	$dbh->begin_work;
+	$result = export($id);
+	delete $result->{veranstaltung}{sync_erlaubt};
+	my $dateiname = $q->url_param('name') // 'Trial.tra';
+	$dbh->commit;
+	$headers->{'Content-Type'} = 'application/octet-stream';
+	$headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
+	$result = "/* $result->{format} */\n" . $json->canonical->encode($result);
+	$result = Encode::encode_utf8($result);
+	$result = Compress::Zlib::memGzip($result);
+    } elsif ($op eq "GET/trialtool/cfg") {
+	my ($id) = parameter($q, qw(id));
+	$dbh->begin_work;
+	$result = cfg_export($id, $headers, $q->url_param('name'));
+	$dbh->commit;
+    } elsif ($op eq "GET/trialtool/dat") {
+	my ($id) = parameter($q, qw(id));
+	$dbh->begin_work;
+	$result = dat_export($id, $headers, $q->url_param('name'));
+	$dbh->commit;
+    } elsif ($op eq "OPTIONS/veranstaltung/import") {
+    } elsif ($op eq "POST/veranstaltung/import") {
 	my $data = decode_base64($q->param('POSTDATA'));
 	$data = Compress::Zlib::memGunzip($data)
 	    or die "Daten konnten nicht dekomprimiert werden\n";
@@ -449,17 +450,8 @@ if ($op eq 'GET/vareihen') {
 	$dbh->begin_work;
 	$result = importieren(undef, $data, defined $tag);
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	$status = '500 Internal Server Error';
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = '200 Modified';
-    }
-} elsif ($op eq "POST/trialtool/import") {
-    eval {
+	$headers->{status} = '200 Modified';
+    } elsif ($op eq "POST/trialtool/import") {
 	my $data = $json->decode($q->param('POSTDATA'))
 	    or die "Daten konnten nicht decodiert werden\n";
 	if (ref($data) ne "HASH" ||
@@ -477,93 +469,84 @@ if ($op eq 'GET/vareihen') {
 	$dbh->begin_work;
 	$result = importieren(undef, {veranstaltung => $veranstaltung, fahrer => $fahrer, vareihen => []}, 0);
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	$status = '500 Internal Server Error';
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = '200 Modified';
-    }
-} elsif ($op eq "GET/veranstaltung/vorschlaege") {
-    my @params = parameter($q, qw(id));
-    foreach my $feld (qw(bundesland land fahrzeug club)) {
-	my $sth = $dbh->prepare(qq{
-	    SELECT $feld
-	    FROM (
+	$headers->{status} = '200 Modified';
+    } elsif ($op eq "GET/veranstaltung/vorschlaege") {
+	my @params = parameter($q, qw(id));
+	foreach my $feld (qw(bundesland land fahrzeug club)) {
+	    my $sth = $dbh->prepare(qq{
 		SELECT $feld
-		FROM fahrer
-		WHERE id = ? AND $feld IS NOT NULL AND $feld <> ''
-		GROUP BY $feld
-		ORDER BY COUNT($feld) DESC
-		LIMIT 100 ) as _
-	    ORDER by $feld
-	});
-	$sth->execute(@params);
-	my $felder = [];
-	while (my @row = $sth->fetchrow_array) {
-	    fixup_arrayref($sth, \@row);
-	    push @$felder, $row[0];
+		FROM (
+		    SELECT $feld
+		    FROM fahrer
+		    WHERE id = ? AND $feld IS NOT NULL AND $feld <> ''
+		    GROUP BY $feld
+		    ORDER BY COUNT($feld) DESC
+		    LIMIT 100 ) as _
+		ORDER by $feld
+	    });
+	    $sth->execute(@params);
+	    my $felder = [];
+	    while (my @row = $sth->fetchrow_array) {
+		fixup_arrayref($sth, \@row);
+		push @$felder, $row[0];
+	    }
+	    $result->{$feld} = $felder;
 	}
-	$result->{$feld} = $felder;
-    }
-} elsif ($op eq "GET/startnummer") {
-    my ($id, $startnummer) = parameter($q, qw(id startnummer));
-    my $sth = $dbh->prepare(qq{
-	SELECT startnummer, klasse, nachname, vorname, geburtsdatum
-	FROM fahrer
-	WHERE id = ? AND startnummer = ?
-    });
-    $sth->execute($id, $startnummer);
-    if (my $row = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $row);
-	$result = $row;
-
+    } elsif ($op eq "GET/startnummer") {
+	my ($id, $startnummer) = parameter($q, qw(id startnummer));
 	my $sth = $dbh->prepare(qq{
-	    SELECT f1.startnummer + 1
-	    FROM
-		( SELECT startnummer
-		FROM fahrer
-		WHERE id = ?
-		AND startnummer >= ? ) AS f1
-	    LEFT JOIN
-		( SELECT startnummer
-		FROM fahrer
-		WHERE id = ?
-		AND startnummer >= ? ) AS f2
-	    ON f1.startnummer + 1 = f2.startnummer
-	    WHERE f2.startnummer IS NULL
-	    ORDER BY f1.startnummer
-	    LIMIT 1
+	    SELECT startnummer, klasse, nachname, vorname, geburtsdatum
+	    FROM fahrer
+	    WHERE id = ? AND startnummer = ?
 	});
-	$sth->execute($id, $startnummer, $id, $startnummer);
-	my @row = $sth->fetchrow_array;
-	fixup_arrayref($sth, \@row);
-	$result->{naechste_startnummer} = $row[0];
-    }
-} elsif ($op eq "PUT/fahrer") {
-    my ($id, $version) = parameter($q, qw(id version));
-    my $startnummer = $q->url_param('startnummer');  # Alte Startnummer
-    my $putdata = $q->param('PUTDATA');
-    _utf8_on($putdata);
-    my $fahrer1 = $json->decode($putdata);
+	$sth->execute($id, $startnummer);
+	if (my $row = $sth->fetchrow_hashref) {
+	    fixup_hashref($sth, $row);
+	    $result = $row;
 
-    print STDERR "Fahrer: $putdata\n"
-	if $cgi_verbose;
+	    my $sth = $dbh->prepare(qq{
+		SELECT f1.startnummer + 1
+		FROM
+		    ( SELECT startnummer
+		    FROM fahrer
+		    WHERE id = ?
+		    AND startnummer >= ? ) AS f1
+		LEFT JOIN
+		    ( SELECT startnummer
+		    FROM fahrer
+		    WHERE id = ?
+		    AND startnummer >= ? ) AS f2
+		ON f1.startnummer + 1 = f2.startnummer
+		WHERE f2.startnummer IS NULL
+		ORDER BY f1.startnummer
+		LIMIT 1
+	    });
+	    $sth->execute($id, $startnummer, $id, $startnummer);
+	    my @row = $sth->fetchrow_array;
+	    fixup_arrayref($sth, \@row);
+	    $result->{naechste_startnummer} = $row[0];
+	}
+    } elsif ($op eq "PUT/fahrer") {
+	my ($id, $version) = parameter($q, qw(id version));
+	my $startnummer = $q->url_param('startnummer');  # Alte Startnummer
+	my $putdata = $q->param('PUTDATA');
+	_utf8_on($putdata);
+	my $fahrer1 = $json->decode($putdata);
 
-    die "Ungültige Startnummer\n"
-	if defined $fahrer1->{startnummer} &&
-	   $fahrer1->{startnummer} !~ /^-?\d+$/;
+	print STDERR "Fahrer: $putdata\n"
+	    if $cgi_verbose;
 
-    my $fahrer0;
-    eval {
+	die "Ungültige Startnummer\n"
+	    if defined $fahrer1->{startnummer} &&
+	       $fahrer1->{startnummer} !~ /^-?\d+$/;
+
+	my $fahrer0;
 	$dbh->begin_work;
 	if (defined $startnummer) {
 	    my $fahrer_nach_startnummer =
 		fahrer_aus_datenbank($dbh, $id, $startnummer);
 	    $fahrer0 = $fahrer_nach_startnummer->{$startnummer};
-	    die "Invalid Row Version\n"
+	    die HTTPError->new('409 Conflict', 'Invalid Row Version')
 		if $fahrer0->{version} != $version;
 	}
 	unless (defined $fahrer1->{startnummer}) {
@@ -592,42 +575,28 @@ if ($op eq 'GET/vareihen') {
 	    }, undef, $mtime, $id);
 	}
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} elsif ($@ =~ /Duplicate entry .* for key 'PRIMARY'/) {
-	    $status = '403 Duplicate Row';
-	} else {
-	    $status = '500 Internal Server Error';
-	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = $fahrer0 ? '200 Modified' : '201 Created';
+
+	$headers->{status} = $fahrer0 ? '200 Modified' : '201 Created';
 	$startnummer = $fahrer1->{startnummer};
 	$result = get_fahrer($dbh, $id, $startnummer);
-    }
-} elsif ($op eq "PUT/veranstaltung") {
-    my ($version) = parameter($q, qw(version));
-    my $id = $q->url_param('id');  # Alte ID
-    my $putdata = $q->param('PUTDATA');
-    _utf8_on($putdata);
-    my $cfg1 = $json->decode($putdata);
+    } elsif ($op eq "PUT/veranstaltung") {
+	my ($version) = parameter($q, qw(version));
+	my $id = $q->url_param('id');  # Alte ID
+	my $putdata = $q->param('PUTDATA');
+	_utf8_on($putdata);
+	my $cfg1 = $json->decode($putdata);
 
-    print STDERR "Veranstaltung: $putdata\n"
-	if $cgi_verbose;
+	print STDERR "Veranstaltung: $putdata\n"
+	    if $cgi_verbose;
 
-    my $cfg0;
-    my $id_neu;
+	my $cfg0;
+	my $id_neu;
 
-    my $mtime = $q->url_param('mtime');
-    if ($mtime) {
-	$cfg1->{mtime} = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
-    }
+	my $mtime = $q->url_param('mtime');
+	if ($mtime) {
+	    $cfg1->{mtime} = strftime("%Y-%m-%d %H:%M:%S", @{localtime($mtime)});
+	}
 
-    eval {
 	$dbh->begin_work;
 	if (defined $id) {
 	    $id_neu = $id;
@@ -651,7 +620,7 @@ if ($op eq 'GET/vareihen') {
 	}
 	if (defined $id || defined $cfg1->{basis}{id}) {
 	    $cfg0 = cfg_aus_datenbank($dbh, $id_neu, 1);
-	    die "Invalid Row Version\n"
+	    die HTTPError->new('409 Conflict', 'Invalid Row Version')
 		if $cfg0->{version} != $version;
 	}
 	veranstaltung_aktualisieren $do_sql, $id_neu, $cfg0, $cfg1, 1;
@@ -660,39 +629,25 @@ if ($op eq 'GET/vareihen') {
 	wertung_aktualisieren $dbh, $do_sql, $id_neu;
 	$dbh->commit;
 	$id = $id_neu;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} elsif ($@ =~ /Duplicate entry .* for key 'PRIMARY'/) {
-	    $status = '403 Duplicate Row';
-	} else {
-	    $status = '500 Internal Server Error';
-	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = $cfg0 ? '200 Modified' : '201 Created';
+
+	$headers->{status} = $cfg0 ? '200 Modified' : '201 Created';
 	$result = cfg_aus_datenbank($dbh, $id, 1);
-    }
-} elsif ($op eq "PUT/vareihe") {
-    my ($version) = parameter($q, qw(version));
-    my $vareihe = $q->url_param('vareihe');  # Alte vareihe-ID
-    my $putdata = $q->param('PUTDATA');
-    _utf8_on($putdata);
-    my $data1 = $json->decode($putdata);
+    } elsif ($op eq "PUT/vareihe") {
+	my ($version) = parameter($q, qw(version));
+	my $vareihe = $q->url_param('vareihe');  # Alte vareihe-ID
+	my $putdata = $q->param('PUTDATA');
+	_utf8_on($putdata);
+	my $data1 = $json->decode($putdata);
 
-    print STDERR "Veranstaltungsreihe: $putdata\n"
-	if $cgi_verbose;
+	print STDERR "Veranstaltungsreihe: $putdata\n"
+	    if $cgi_verbose;
 
-    my $data0;
-    eval {
+	my $data0;
 	$dbh->begin_work;
 
 	if (defined $vareihe) {
 	    $data0 = vareihe_aus_datenbank($dbh, $vareihe);
-	    die "Invalid Row Version\n"
+	    die HTTPError->new('409 Conflict', 'Invalid Row Version')
 		if $data0->{version} != $version;
 	}
 	unless (defined $vareihe) {
@@ -707,33 +662,19 @@ if ($op eq 'GET/vareihen') {
 	}
 	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} elsif ($@ =~ /Duplicate entry .* for key 'PRIMARY'/) {
-	    $status = '403 Duplicate Row';
-	} else {
-	    $status = '500 Internal Server Error';
-	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = $data0 ? '200 Modified' : '201 Created';
+
+	$headers->{status} = $data0 ? '200 Modified' : '201 Created';
 	$result = vareihe_aus_datenbank($dbh, $vareihe);
-    }
-} elsif ($op eq "DELETE/fahrer") {
-    my ($id, $version, $startnummer) = parameter($q, qw(id version startnummer));
-    eval {
+    } elsif ($op eq "DELETE/fahrer") {
+	my ($id, $version, $startnummer) = parameter($q, qw(id version startnummer));
+
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
 	    DELETE FROM fahrer
 	    WHERE id = ? AND startnummer = ? AND version = ?
 	});
-	if ($sth->execute($id, $startnummer, $version) != 1) {
-	    die "Invalid Row Version\n";
-	}
+	die HTTPError->new('409 Conflict', 'Invalid Row Version')
+	    if $sth->execute($id, $startnummer, $version) != 1;
 	foreach my $tabelle (qw(fahrer_wertung punkte runde neue_startnummer)) {
 	    my $sth = $dbh->prepare(qq{
 		DELETE FROM $tabelle
@@ -743,30 +684,18 @@ if ($op eq 'GET/vareihen') {
 	}
 	wertung_aktualisieren $dbh, $do_sql, $id;
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} else {
-	    $status = '500 Internal Server Error';
-	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = '200 Deleted';
-    }
-} elsif ($op eq "DELETE/veranstaltung") {
-    my ($id, $version) = parameter($q, qw(id version));
-    eval {
+
+	$headers->{status} = '200 Deleted';
+    } elsif ($op eq "DELETE/veranstaltung") {
+	my ($id, $version) = parameter($q, qw(id version));
+
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
 	    DELETE FROM veranstaltung
 	    WHERE id = ? AND version = ?
 	});
-	if ($sth->execute($id, $version) != 1) {
-	    die "Invalid Row Version\n";
-	}
+	die HTTPError->new('409 Conflict', 'Invalid Row Version')
+	    if $sth->execute($id, $version) != 1;
 	foreach my $tabelle (qw(fahrer fahrer_wertung klasse punkte runde
 				sektion veranstaltung_feature kartenfarbe
 				wertung wertungspunkte neue_startnummer
@@ -778,30 +707,18 @@ if ($op eq 'GET/vareihen') {
 	    $sth->execute($id);
 	}
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} else {
-	    $status = '500 Internal Server Error';
-	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = '200 Deleted';
-    }
-} elsif ($op eq "DELETE/vareihe") {
-    my ($vareihe, $version) = parameter($q, qw(vareihe version));
-    eval {
+
+	$headers->{status} = '200 Deleted';
+    } elsif ($op eq "DELETE/vareihe") {
+	my ($vareihe, $version) = parameter($q, qw(vareihe version));
+
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
 	    DELETE FROM vareihe
 	    WHERE vareihe = ? AND version = ?
 	});
-	if ($sth->execute($vareihe, $version) != 1) {
-	    die "Invalid Row Version\n";
-	}
+	die HTTPError->new('409 Conflict', 'Invalid Row Version')
+	    if $sth->execute($vareihe, $version) != 1;
 	foreach my $tabelle (qw(vareihe_veranstaltung vareihe_klasse)) {
 	    my $sth = $dbh->prepare(qq{
 		DELETE FROM $tabelle
@@ -810,23 +727,11 @@ if ($op eq 'GET/vareihen') {
 	    $sth->execute($vareihe);
 	}
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} else {
-	    $status = '500 Internal Server Error';
-	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = '200 Deleted';
-    }
-} elsif ($op eq "POST/veranstaltung/reset") {
-    my ($id, $version, $reset) = parameter($q, qw(id version reset));
 
-    eval {
+	$headers->{status} = '200 Deleted';
+    } elsif ($op eq "POST/veranstaltung/reset") {
+	my ($id, $version, $reset) = parameter($q, qw(id version reset));
+
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(q{
 	    SELECT version FROM veranstaltung
@@ -835,111 +740,99 @@ if ($op eq 'GET/vareihen') {
 	$sth->execute($id);
 	my ($version0) = $sth->fetchrow_array
 	    or die "Veranstaltung nicht gefunden\n";
-	die "Invalid Row Version\n"
+	die HTTPError->new('409 Conflict', 'Invalid Row Version')
 	    if $version0 != $version;
 	veranstaltung_reset($dbh, $id, $reset);
 	$dbh->commit;
-    };
-    if ($@) {
-	print STDERR $@;
-	if ($@ =~ /Invalid Row Version/) {
-	    $status = '409 Conflict';
-	} else {
-	    $status = '500 Internal Server Error';
+
+	$headers->{status} = '200 Modified';
+    } elsif ($op eq "GET/fahrer/suchen") {
+	my ($id, $suchbegriff) = parameter($q, qw(id suchbegriff));
+	my $select_fahrer = q{
+	    SELECT startnummer, nachname, vorname, geburtsdatum, klasse
+	    FROM fahrer
+	};
+	$result = [];
+	if ($suchbegriff =~ /^-?\d+$/) {
+	    my $sth = $dbh->prepare($select_fahrer . q{
+		WHERE id = ? AND startnummer = ?
+	    });
+	    $sth->execute($id, $suchbegriff);
+	    while (my $row = $sth->fetchrow_hashref) {
+		fixup_hashref($sth, $row);
+		push @$result, $row;
+	    }
 	}
-	$result->{error} = $@;
-	$dbh->disconnect;
-    } else {
-	$status = '200 Modified';
-    }
-} elsif ($op eq "GET/fahrer/suchen") {
-    my ($id, $suchbegriff) = parameter($q, qw(id suchbegriff));
-    my $select_fahrer = q{
-	SELECT startnummer, nachname, vorname, geburtsdatum, klasse
-	FROM fahrer
-    };
-    $result = [];
-    if ($suchbegriff =~ /^-?\d+$/) {
-	my $sth = $dbh->prepare($select_fahrer . q{
-	    WHERE id = ? AND startnummer = ?
+	unless (@$result) {
+	    $suchbegriff =~ s/^\s+//;
+	    $suchbegriff =~ s/\s+$//;
+	    $suchbegriff =~ s/\s+/.* /g;
+	    $suchbegriff = "^$suchbegriff";
+
+	    my $sth = $dbh->prepare($select_fahrer . q{
+		WHERE id = ? AND
+		      (CONCAT(COALESCE(vorname, ''), ' ', COALESCE(nachname, '')) REGEXP ? OR
+		       CONCAT(COALESCE(nachname, ''), ' ', COALESCE(vorname, '')) REGEXP ?)
+		ORDER BY nachname, vorname
+		LIMIT 20
+	    });
+	    $sth->execute($id, $suchbegriff, $suchbegriff);
+	    while (my $row = $sth->fetchrow_hashref) {
+		fixup_hashref($sth, $row);
+		push @$result, $row;
+	    }
+	}
+    } elsif ($op eq "GET/vareihe") {
+	my ($vareihe) = parameter($q, qw(vareihe));
+	$result = vareihe_aus_datenbank($dbh, $vareihe);
+	unless ($result) {
+	    die HTTPError->new('404 Not Found', "Veranstaltungsreihe $vareihe nicht gefunden");
+	}
+    } elsif ($op eq "GET/veranstaltung/liste") {
+	my ($id) = parameter($q, qw(id));
+	$dbh->begin_work;
+	my $sth = $dbh->prepare(qq{
+	    SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
+		   nennungseingang, start, start_morgen, geburtsdatum,
+		   wohnort, club, fahrzeug, versicherung, land, bundesland,
+		   lizenznummer, runden, ausfall
+	    FROM fahrer
+	    WHERE id = ?
 	});
-	$sth->execute($id, $suchbegriff);
+	$sth->execute($id);
+	my $fahrer = {};
 	while (my $row = $sth->fetchrow_hashref) {
 	    fixup_hashref($sth, $row);
-	    push @$result, $row;
+	    $row->{wertungen} = [];
+	    my $startnummer = $row->{startnummer};
+	    $fahrer->{$startnummer} = $row;
 	}
-    }
-    unless (@$result) {
-	$suchbegriff =~ s/^\s+//;
-	$suchbegriff =~ s/\s+$//;
-	$suchbegriff =~ s/\s+/.* /g;
-	$suchbegriff = "^$suchbegriff";
 
-	my $sth = $dbh->prepare($select_fahrer . q{
-	    WHERE id = ? AND
-		  (CONCAT(COALESCE(vorname, ''), ' ', COALESCE(nachname, '')) REGEXP ? OR
-		   CONCAT(COALESCE(nachname, ''), ' ', COALESCE(vorname, '')) REGEXP ?)
-	    ORDER BY nachname, vorname
-	    LIMIT 20
+	$sth = $dbh->prepare(qq{
+	    SELECT startnummer, wertung
+	    FROM fahrer_wertung
+	    WHERE id = ?
+	    ORDER BY startnummer, wertung
 	});
-	$sth->execute($id, $suchbegriff, $suchbegriff);
-	while (my $row = $sth->fetchrow_hashref) {
-	    fixup_hashref($sth, $row);
-	    push @$result, $row;
+	$sth->execute($id);
+	while (my @row = $sth->fetchrow_array) {
+	    fixup_arrayref($sth, \@row);
+	    push @{$fahrer->{$row[0]}{wertungen}}, $row[1]
+		if exists $fahrer->{$row[0]};
 	}
-    }
-} elsif ($op eq "GET/vareihe") {
-    my ($vareihe) = parameter($q, qw(vareihe));
-    $result = vareihe_aus_datenbank($dbh, $vareihe);
-    unless ($result) {
-	$status = "404 Not Found";
-	$result = { error => "Veranstaltungsreihe $vareihe nicht gefunden" };
-    }
-} elsif ($op eq "GET/veranstaltung/liste") {
-    my ($id) = parameter($q, qw(id));
-    $dbh->begin_work;
-    my $sth = $dbh->prepare(qq{
-	SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
-	       nennungseingang, start, start_morgen, geburtsdatum,
-	       wohnort, club, fahrzeug, versicherung, land, bundesland,
-	       lizenznummer, runden, ausfall
-	FROM fahrer
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    my $fahrer = {};
-    while (my $row = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $row);
-	$row->{wertungen} = [];
-	my $startnummer = $row->{startnummer};
-	$fahrer->{$startnummer} = $row;
-    }
-
-    $sth = $dbh->prepare(qq{
-	SELECT startnummer, wertung
-	FROM fahrer_wertung
-	WHERE id = ?
-	ORDER BY startnummer, wertung
-    });
-    $sth->execute($id);
-    while (my @row = $sth->fetchrow_array) {
-	fixup_arrayref($sth, \@row);
-	push @{$fahrer->{$row[0]}{wertungen}}, $row[1]
-	    if exists $fahrer->{$row[0]};
-    }
-    $dbh->commit;
-    $result = [ values %$fahrer ];
-} elsif ($op eq "GET/veranstaltung/dump") {
-    my ($tag) = parameter($q, qw(tag));
-    $dbh->begin_work;
-    my $id = veranstaltung_tag_to_id($dbh, $tag);
-    $result = export($id)
-	if $id;
-    $dbh->commit;
-} elsif ($op eq "OPTIONS/veranstaltung/patch") {
-} elsif ($op eq "POST/veranstaltung/patch") {
-    eval {
+	$dbh->commit;
+	$result = [ values %$fahrer ];
+    } elsif ($op eq "GET/veranstaltung/dump") {
 	my ($tag) = parameter($q, qw(tag));
+	$dbh->begin_work;
+	my $id = veranstaltung_tag_to_id($dbh, $tag);
+	$result = export($id)
+	    if $id;
+	$dbh->commit;
+    } elsif ($op eq "OPTIONS/veranstaltung/patch") {
+    } elsif ($op eq "POST/veranstaltung/patch") {
+	my ($tag) = parameter($q, qw(tag));
+
 	$dbh->begin_work;
 	my $id = veranstaltung_tag_to_id($dbh, $tag);
 	if (defined $id) {
@@ -957,22 +850,36 @@ if ($op eq 'GET/vareihen') {
 		my $data1 = $ctx->{document};
 		importieren($data0, $data1, 1);
 	    } else {
-		$status = '409 Conflict';
-		$result->{error} = "Patch fehlgeschlagen";
+		die HTTPError->new('409 Conflict', 'Patch fehlgeschlagen');
 	    }
 	} else {
-	    $status = "404 Not Found";
-	    $result->{error} = "Veranstaltung nicht gefunden";
+	    die HTTPError('404 Not Found', 'Veranstaltung nicht gefunden');
 	}
 	$dbh->commit;
-    };
-    if ($@) {
-	$status = '500 Internal Server Error';
-	$result->{error} = $@;
+    } else {
+	die HTTPError->new('404 Not Found', "Operation '$op' not defined");
     }
-} else {
-    $status = "404 Not Found";
-    $result->{error} = "Operation '$op' not defined";
+};
+if ($@) {
+    if ($@->isa('HTTPError')) {
+	$headers->{status} = $@->{status};
+	if ($headers->{'Content-Type'} eq 'application/json') {
+	    $result = { error => $@->{error} };
+	} else {
+	    #$headers->{'Content-Type'} = 'text/plain';
+	    $result = $@->{error};
+	}
+    } else {
+	if ($@ =~ /Duplicate entry .* for key 'PRIMARY'/) {
+	    $headers->{status} = '403 Duplicate Row';
+	    $result = { error => $@ };
+	} else {
+	    print STDERR "$@\n";
+	    $headers->{status} = '500 Internal Server Error';
+	    $result = { error => $@ };
+	}
+    }
+    $dbh->disconnect;
 }
 
 if ($headers->{'Content-Type'} eq 'application/json') {
@@ -991,7 +898,6 @@ if ($headers->{'Content-Type'} eq 'application/json') {
 # stattdessen Fehlercode liefern? (Die POST-Requests "akzeptieren" momentan
 # application/json nicht.)
 
-$headers->{status} = $status;
 $headers->{'Content-Length'} = length($result);
 
 print header($headers);

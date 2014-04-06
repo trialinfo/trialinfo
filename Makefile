@@ -42,6 +42,7 @@ COMMON_FILES = \
 	lib/Class/Accessor/Lite.pm \
 	lib/Datenbank.pm \
 	lib/DatenbankAktualisieren.pm \
+	lib/HTTPError.pm \
 	lib/JSON/Patch.pm \
 	lib/JSON/Patch/Context.pm \
 	lib/JSON/Patch/Exception.pm \
