@@ -1,6 +1,7 @@
 'use strict;'
 
 function einstellungenController($scope, $http, $timeout, $location, veranstaltung, veranstaltungen) {
+  $scope.SYNC_TARGET = SYNC_TARGET;
   $scope.$root.kontext(veranstaltung ? veranstaltung.wertungen[0].titel : 'Neue Veranstaltung');
 
   veranstaltung_zuweisen(veranstaltung);

@@ -43,11 +43,17 @@ SSI_LEGACY_EXPR_PARSER_testing = 1
 SSI_LEGACY_EXPR_PARSER_staging = 0
 SSI_LEGACY_EXPR_PARSER_production = 0
 
-# Soll man von dem Server als Quelle zu anderen Servern hin synchronisieren können?
+# Ist auf andere Server synchronisieren erlaubt?
 #
-WITH_SYNC_testing = 1
-WITH_SYNC_staging = 0
-WITH_SYNC_production = 0
+SYNC_SOURCE_testing = 1
+SYNC_SOURCE_staging = 0
+SYNC_SOURCE_production = 0
+
+# Ist auf diesen Server snchronisieren erlaubt?
+#
+SYNC_TARGET_testing = 0
+SYNC_TARGET_staging = 1
+SYNC_TARGET_production = 1
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
@@ -67,6 +73,7 @@ COMMON_FILES = \
 	lib/Class/Accessor/Lite.pm \
 	lib/Datenbank.pm \
 	lib/DatenbankAktualisieren.pm \
+	lib/HTTPError.pm \
 	lib/JSON/Patch.pm \
 	lib/JSON/Patch/Context.pm \
 	lib/JSON/Patch/Exception.pm \
@@ -209,7 +216,8 @@ generate_web_file = \
 	$(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' \
 	       -e 's:@HOST@:$(HOST):g' \
 	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT_$(WHAT)):g' \
-	       -e 's:@WITH_SYNC@:$(WITH_SYNC_$(WHAT)):g' \
+	       -e 's:@SYNC_SOURCE@:$(SYNC_SOURCE_$(WHAT)):g' \
+	       -e 's:@SYNC_TARGET@:$(SYNC_TARGET_$(WHAT)):g' \
 	       $(SSI_LEGACY_EXPR_PARSER)
 
 .PHONY: $(GENERATED_WEB_FILES)

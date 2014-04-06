@@ -380,7 +380,7 @@ sub punkteverteilung_umwandeln($) {
 
 sub fahrer_aus_datenbank($$;$$$) {
     my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
-    my $fahrer_nach_startnummer;
+    my $fahrer_nach_startnummer = {};
 
     my $sql = q{
 	SELECT version, startnummer, klasse, helfer, nenngeld, bewerber, nachname,
