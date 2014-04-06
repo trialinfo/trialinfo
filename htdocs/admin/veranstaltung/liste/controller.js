@@ -541,8 +541,16 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       $scope.anzeige.unterwegs = false;
   });
   $scope.$watch('anzeige.unterwegs', function() {
-    if ($scope.anzeige.unterwegs)
+    if ($scope.anzeige.unterwegs) {
       $scope.anzeige.start = true;
+      var aktuelle_runde;
+      angular.forEach($scope.anzeige.felder, function(feld) {
+	if (feld === 'aktuelle_runde')
+	  aktuelle_runde = true;
+      });
+      if (!aktuelle_runde)
+	$scope.anzeige.felder.push('aktuelle_runde');
+    }
   });
   $scope.$watch('anzeige', aktualisieren, true);
   $scope.$watch('anzeige.felder', function() {
