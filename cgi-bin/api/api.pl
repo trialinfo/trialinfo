@@ -216,12 +216,12 @@ sub dat_export($$$) {
     return dat_datei_daten($cfg, $fahrer_nach_startnummer);
 }
 
-sub importieren($$$) {
-    my ($alt, $neu, $sync) = @_;
+sub importieren($$$$) {
+    my ($alt, $neu, $tag, $create) = @_;
     my $veranstaltung = $neu->{veranstaltung};
     my $id;
 
-    unless ($sync) {
+    unless ($tag) {
 	$veranstaltung->{tag} = random_tag(16);
 	$veranstaltung->{wertungen}[0]{titel} .= ' (Kopie)';
 	$veranstaltung->{aktiv} = json_bool(1);
@@ -232,8 +232,10 @@ sub importieren($$$) {
 	}
     }
 
-    if ($sync && defined $veranstaltung->{tag}) {
+    if ($tag && defined $veranstaltung->{tag}) {
 	$id = veranstaltung_tag_to_id($dbh, $veranstaltung->{tag});
+	die HTTPError->new('403 Duplicate Event', 'Veranstaltung existiert bereits')
+	    if $create && defined $id;
     }
     if (defined $id) {
 	if ($alt) {
@@ -246,7 +248,7 @@ sub importieren($$$) {
 	    };
 	}
 	die "Synchronisieren in diese Veranstaltung nicht erlaubt\n"
-	    if $sync && !$alt->{veranstaltung}{sync_erlaubt};
+	    if $tag && !$alt->{veranstaltung}{sync_erlaubt};
     } else {
 	my $sth = $dbh->prepare(q{
 	    SELECT MAX(id)
@@ -259,7 +261,7 @@ sub importieren($$$) {
     }
     $veranstaltung->{basis} = { tag => $veranstaltung->{basis} }
 	if defined $veranstaltung->{basis};
-    if ($sync) {
+    if ($tag) {
 	$veranstaltung->{sync_erlaubt} = json_bool(1);
     }
     veranstaltung_aktualisieren $do_sql, $id, $alt->{veranstaltung}, $veranstaltung, 0;
@@ -446,9 +448,10 @@ eval {
 	my $tag = $q->url_param('tag');
 	$data->{veranstaltung}{tag} = $tag
 	    if defined $tag;
+	my $create = $q->url_param('create');
 
 	$dbh->begin_work;
-	$result = importieren(undef, $data, defined $tag);
+	$result = importieren(undef, $data, defined $tag, defined $create);
 	$dbh->commit;
 	$headers->{status} = '200 Modified';
     } elsif ($op eq "POST/trialtool/import") {
@@ -467,7 +470,7 @@ eval {
 	my $fahrer = dat_parsen($data->{dat}, $veranstaltung, 0);
 	# $veranstaltung->{datum}, $veranstaltung->{mtime}
 	$dbh->begin_work;
-	$result = importieren(undef, {veranstaltung => $veranstaltung, fahrer => $fahrer, vareihen => []}, 0);
+	$result = importieren(undef, {veranstaltung => $veranstaltung, fahrer => $fahrer, vareihen => []}, 0, 0);
 	$dbh->commit;
 	$headers->{status} = '200 Modified';
     } elsif ($op eq "GET/veranstaltung/vorschlaege") {
@@ -848,7 +851,7 @@ eval {
 	    my $ctx = $patcher->patch($data0);
 	    if ($ctx->{result}) {
 		my $data1 = $ctx->{document};
-		importieren($data0, $data1, 1);
+		importieren($data0, $data1, 1, 0);
 	    } else {
 		die HTTPError->new('409 Conflict', 'Patch fehlgeschlagen');
 	    }

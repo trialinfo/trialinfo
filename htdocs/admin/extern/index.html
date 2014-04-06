@@ -6,26 +6,49 @@
 	<th align="right"><label for="operation">Operation</label></th>
 	<td>
 	  <select ng-model="einstellungen.operation" id="operation" ng-disabled="busy">
+	    <option value="import-remote" ng-if="SYNC_SOURCE">Server-Import</option>
 	    <option value="sync" ng-if="SYNC_SOURCE">Synchronisieren</option>
-	    <option value="import">Import</option>
-	    <option value="export">Export</option>
+	    <option value="import-file">Datei-Import</option>
+	    <option value="export-file">Datei-Export</option>
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="einstellungen.operation != 'import'">
+      <tr ng-if="einstellungen.operation != 'import-remote' && einstellungen.operation != 'import-file'">
 	<th align="right"><label for="tag">Veranstaltung</label></th>
 	<td>
 	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in veranstaltungen" id="tag">
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="einstellungen.operation != 'sync'">
+      <tr ng-if="einstellungen.operation == 'export-file' || einstellungen.operation == 'import-file'">
 	<th align="right"><label for="format">Format</label></th>
 	<td>
 	  <select ng-model="einstellungen.format" id="format" ng-disabled="busy">
 	    <option value="trial-auswertung">Trial-Auswertung</option>
 	    <option value="trialtool">TrialTool</option>
 	  </select>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="einstellungen.operation == 'import-remote'">
+      <tr>
+	<th align="right"><label for="url">Quelladresse</label></th>
+	<td>
+	  <input type="text" size="30" ng-model="einstellungen.url" id="url" required ng-disabled="busy"> <button ng-click="get_veranstaltungen()" ng-disabled="busy">Liste abrufen</button>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="tag">Veranstaltung</label></th>
+	<td>
+	  <select ng-model="remote.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in remote.veranstaltungen" ng-disabled="busy || !liste_abgerufen" id="tag">
+	  </select>
+	  <span ng-if="remote.exists" style="color:red"><br>Diese Veranstaltung existiert bereits, es kann nur eine Kopie importiert werden.</span>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="url"></label></th>
+	<td>
+	  <button ng-click="import_remote()" ng-disabled="!(liste_abgerufen && remote.veranstaltung) || busy">Importieren</button>
 	</td>
       </tr>
     </tbody>
@@ -49,7 +72,7 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'import' && einstellungen.format == 'trial-auswertung'">
+    <tbody ng-if="einstellungen.operation == 'import-file' && einstellungen.format == 'trial-auswertung'">
       <tr>
 	<th align="right"><label for="tra_datei">tra-Datei</label></th>
 	<td>
@@ -59,11 +82,11 @@
       <tr>
 	<th align="right"></th>
 	<td>
-	  <button ng-click="import()" ng-disabled="busy || !form.$valid">Importieren</button>
+	  <button ng-click="import_file()" ng-disabled="busy || !form.$valid">Importieren</button>
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'import' && einstellungen.format == 'trialtool'">
+    <tbody ng-if="einstellungen.operation == 'import-file' && einstellungen.format == 'trialtool'">
       <tr>
 	<th align="right"><label for="cfg_datei">cfg-Datei</label></th>
 	<td>
@@ -79,11 +102,11 @@
       <tr>
 	<th align="right"></th>
 	<td>
-	  <button ng-click="import()" ng-disabled="busy || !form.$valid">Importieren</button>
+	  <button ng-click="import_file()" ng-disabled="busy || !form.$valid">Importieren</button>
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'export' && einstellungen.format == 'trial-auswertung'">
+    <tbody ng-if="einstellungen.operation == 'export-file' && einstellungen.format == 'trial-auswertung'">
       <tr>
 	<th align="right"></th>
 	<td>
@@ -91,7 +114,7 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'export' && einstellungen.format == 'trialtool'">
+    <tbody ng-if="einstellungen.operation == 'export-file' && einstellungen.format == 'trialtool'">
       <tr>
 	<th align="right"></th>
 	<td>

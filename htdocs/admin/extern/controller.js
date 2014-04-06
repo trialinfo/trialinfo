@@ -1,22 +1,23 @@
 'use strict;'
 
-function externController($scope, $http, $location, veranstaltungen) {
+function externController($scope, $http, $location, $q, veranstaltungen) {
   $scope.SYNC_SOURCE = SYNC_SOURCE;
   $scope.veranstaltungen = veranstaltungen;
   $scope.einstellungen = {
-    operation: $scope.SYNC_SOURCE ? 'sync' : 'export',
+    operation: $scope.SYNC_SOURCE ? 'sync' : 'export-file',
     format: 'trial-auswertung',
     timeout: 30,
   };
   try {
     $scope.einstellungen.veranstaltung = veranstaltungen[veranstaltungen.length - 1];
   } catch(_) { }
+  $scope.remote = {};
 
   $scope.veranstaltung_sichtbar = function(veranstaltung) {
     return !veranstaltung.verborgen;
   };
 
-  $scope.import = function() {
+  $scope.import_file = function() {
     if ($scope.einstellungen.format == 'trial-auswertung') {
       var tra_datei = document.getElementById('tra_datei');
       if (tra_datei && tra_datei.files[0]) {
@@ -92,6 +93,80 @@ function externController($scope, $http, $location, veranstaltungen) {
     };
     $scope.$root.$broadcast('sync', args);
   }
+
+  var cancel_remote;
+  $scope.get_veranstaltungen = function() {
+    $scope.busy = true;
+    cancel_remote = $q.defer();
+    $http.get($scope.einstellungen.url + '/api/veranstaltungen',
+	      {timeout: cancel_remote.promise, withCredentials: true}).
+      success(function(veranstaltungen) {
+	$scope.remote.veranstaltungen = veranstaltungen;
+	$scope.remote.veranstaltung =
+	  veranstaltungen.length ? veranstaltungen[veranstaltungen.length - 1] : null;
+	$scope.liste_abgerufen = true;
+      }).
+      error(netzwerkfehler).
+      finally(function() {
+	$scope.busy = false;
+	cancel_remote = undefined;
+      });
+  };
+
+  $scope.$watch('remote.veranstaltung', function() {
+    var exists = false;
+    if ($scope.remote.veranstaltung) {
+      angular.forEach(veranstaltungen, function(veranstaltung) {
+	if (veranstaltung.tag == $scope.remote.veranstaltung.tag)
+	  exists = true;
+      });
+    }
+    $scope.remote.exists = exists;
+  });
+
+  $scope.import_remote = function() {
+    $scope.busy = true;
+    var tag = $scope.remote.veranstaltung.tag;
+    if (cancel_remote)
+      cancel_remote.resolve();
+    cancel_remote = $q.defer();
+    $http.get($scope.einstellungen.url + '/api/veranstaltung/export',
+	      {params: {tag: tag}, timeout: cancel_remote.promise, withCredentials: true, responseType: 'arraybuffer'}).
+      success(function(data) {
+	var params;
+	if (!$scope.remote.exists) {
+	  params = {
+	    tag: tag,
+	    create: true,  // Veranstaltung darf noch nicht existieren
+	  };
+	}
+	var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	cancel_remote = $q.defer();
+	$http.post('/api/veranstaltung/import', enc,
+		   {params: params, timeout: cancel_remote.promise}).
+	  success(function(result) {
+	    $location.path('/veranstaltung/' + result.id).replace();
+	  }).
+	  finally(function() {
+	    $scope.busy = false;
+	    cancel_remote = undefined;
+	  });
+      }).
+      error(function() {
+	$scope.busy = false;
+	cancel_remote = undefined;
+	netzwerkfehler();
+      });
+  };
+
+  $scope.$watch('einstellungen.url', function() {
+    $scope.liste_abgerufen = false;
+  });
+
+  $scope.$on('$destroy', function() {
+    if (cancel_remote)
+      cancel_remote.resolve();
+  });
 }
 
 externController.resolve = {
