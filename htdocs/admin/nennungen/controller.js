@@ -324,6 +324,8 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var fahrer = $scope.fahrer;
     $scope.keine_wertung1 = fahrer && fahrer.klasse &&
       veranstaltung.klassen[fahrer.klasse - 1].keine_wertung1;
+    $scope.ausser_konkurrenz = fahrer && fahrer.klasse &&
+      veranstaltung.klassen[fahrer.klasse - 1].ausser_konkurrenz;
   });
 
   $scope.$on('$routeUpdate', function() {

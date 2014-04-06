@@ -181,7 +181,7 @@
 		    <label for="start_morgen" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
 		</span>
 		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.ausser_konkurrenz" id="ausser_konkurrenz">
-		  <label for="ausser_konkurrenz" accesskey="a"><span class="accesskey">A</span>ußer Konkurrenz</label>
+		  <label for="ausser_konkurrenz" accesskey="a" ng-style="ausser_konkurrenz ? {'text-decoration': 'line-through'} : {}"><span class="accesskey">A</span>ußer Konkurrenz</label>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.helfer">
