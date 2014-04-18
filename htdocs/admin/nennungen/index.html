@@ -225,7 +225,7 @@
 	    <span ng-if="fahrer.start && !veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1]" style="color: red">
 	      Klasse {{fahrer.klasse}} startet bei dieser Veranstaltung nicht.
 	    </span>
-	    <span ng-if="fahrer.geburtsdatum && (veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014'" style="color: red">
+	    <span ng-if="fahrer.geburtsdatum && (veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014')" style="color: red">
 	      <span ng-if="(fahrer.klasse == 3 || fahrer.klasse == 4) && jahrgang_alter >= 45">
 		Fahrer war zu Jahresanfang über 44 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse + 3}} starten.
 	      </span>
