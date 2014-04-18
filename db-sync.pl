@@ -120,6 +120,7 @@ CREATE TABLE klasse (
   fahrzeit TIME,
   wertungsklasse INT NOT NULL,
   keine_wertung1 BOOLEAN,
+  ausser_konkurrenz BOOLEAN,
   PRIMARY KEY (id, klasse)
 );
 

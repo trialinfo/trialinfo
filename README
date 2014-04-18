@@ -52,6 +52,8 @@ Systemvoraussetzungen
 
  * Die Perl-Module CGI und JSON (auf RPM-basierten Linux-Systemen oft mit "yum
    install perl-CGI perl-JSON" zu installieren).
+   + perl-Clone
+   + perl-URI-Escape oder perl-Any-URI-Escape + perl-URI-Escape-XS
    + perl-Class-Accessor-Lite
    + perl-Module-Load
    + perl-Module-Loaded
