@@ -85,7 +85,7 @@ sub veranstaltung_reset($$$) {
     my $startnummer_max;
     if ($reset eq 'stammdaten') {
 	$sth = $dbh->prepare(q{
-	    SELECT MIN(startnummer), MAX(startnummer)
+	    SELECT MAX(startnummer)
 	    FROM fahrer
 	    WHERE id = ?
 	});
