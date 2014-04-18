@@ -7,7 +7,7 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
     operation: $scope.SYNC_SOURCE ? 'sync' : 'export-file',
     format: 'trial-auswertung',
     timeout: 30,
-    url: 'http://www4.otsv.at'
+    url: 'http://www2.otsv.at'
   };
   try {
     $scope.einstellungen.veranstaltung = veranstaltungen[veranstaltungen.length - 1];
