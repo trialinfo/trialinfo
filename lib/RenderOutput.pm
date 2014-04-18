@@ -76,14 +76,6 @@ sub html_column_format($) {
 			 " align=\"center\"";
 }
 
-sub html_col_format($) {
-    my ($format) = @_;
-
-    $format =~ /^(l|c|r)?(\d*)$/
-	or die "Format specifier $format not understood\n";
-    return $2 ? sprintf " style=\"width:%.1fem\"", $2 * 0.9 * (0.4 + 0.6 * exp(-$2 / 40)) : "";
-}
-
 sub html_cell_format(@) {
     my ($text, $format, $attrs) = @_;
 
@@ -103,11 +95,6 @@ sub render_html_table(@) {
     my $r;
 
     print "<table class=\"wertung\">\n";
-    print "<colgroup>\n";
-    for (my $n = 0; $n < @{$args{format}}; $n++) {
-	print "<col" . html_col_format($args{format}[$n]) . ">\n";
-    }
-    print "</colgroup>\n";
     if ($args{header}) {
 	print "<thead>\n";
 	print "<tr>";

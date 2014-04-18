@@ -273,7 +273,7 @@ sub tageswertung(@) {
 		push @$row, "";
 	    }
 	    push @$row, $fahrer->{startnummer};
-	    push @$row, $fahrer->{nachname} . " " . $fahrer->{vorname};
+	    push @$row, [ $fahrer->{nachname} . " " . $fahrer->{vorname}, 'l', 'style="padding-right:1em"' ];
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
 	    }
