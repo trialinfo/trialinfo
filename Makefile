@@ -179,6 +179,7 @@ WEB_FILES = \
 	htdocs/ergebnisse/0.png \
 	htdocs/ergebnisse/1.png \
 	htdocs/ergebnisse/2012.shtml \
+	htdocs/ergebnisse/2013.shtml \
 	htdocs/ergebnisse/2.png \
 	htdocs/ergebnisse/3.png \
 	htdocs/ergebnisse/4.png \
