@@ -43,7 +43,7 @@
       <tr>
 	<th align="right"><label for="art">Art</label></th>
 	<td>
-	  <select ng-model="veranstaltung.art" id="art" ng-blur="art_blur()" nullable>
+	  <select ng-model="veranstaltung.art" id="art" ng-click="art_blur()" ng-blur="art_blur()" nullable>
 	    <option value=""></option>
 	    <option value="otsv2014">ÖTSV 2014</option>
 	    <option value="otsv+osk2014">ÖTSV + ÖM 2014</option>
