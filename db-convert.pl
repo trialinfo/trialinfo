@@ -154,7 +154,8 @@ foreach my $sql (split /\s*;\s*/, q{
 		FROM vareihe_veranstaltung
 		JOIN neue_startnummer USING (id)
 		JOIN fahrer USING (id, startnummer)
-		JOIN vareihe_klasse USING (vareihe, klasse);
+		JOIN klasse USING (id, klasse)
+		JOIN vareihe_klasse USING (vareihe, wertungsklasse);
 
 	    DROP TABLE neue_startnummer;
 	    RENAME TABLE ns to neue_startnummer;

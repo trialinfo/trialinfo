@@ -13,12 +13,13 @@ table.wertung {
 }
 table.wertung td, table.wertung th {
   border:1px solid #98bf21;
-  padding:2px 5px 2px 5px;
+}
+table.wertung td {
+  padding: 0.1em 0.2em 0.1em 0.2em;
 }
 table.wertung th {
+  padding: 0.2em 0.3em 0.2em 0.3em;
   font-weight:bolder;
-  padding-top:3px;
-  padding-bottom:3px;
   background-color:#A7C942;
   color:#ffffff;
 }
