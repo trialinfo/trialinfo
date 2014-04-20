@@ -105,8 +105,6 @@ LOCAL_FILES = \
 	IO/Tee.pm \
 	jahreswertung.pl \
 	Makefile \
-	otsv-check.pl \
-	otsv-init.pl \
 	tageswertung.pl \
 	Windows/jahreswertung-osk.bat \
 	Windows/jahreswertung-otsv1.bat \
