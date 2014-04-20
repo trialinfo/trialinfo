@@ -1,131 +1,86 @@
-Erweiterungen zum Trialtool
-===========================
+Trial-Auswertung
+================
 
-Diese Erweiterungen zum Programm Trialtool von Ortwin Sann [1] bieten folgenden
-Möglichkeiten:
+Dieses Auswertungssystem für Motorrad- und Fahrrad-Trial-Wettbewerbe
+unterstützt alle wesentlichen Schritte zur Verwaltung von Veranstaltungen
+(Nennung, Punktevergabe, Erstellung von Listen, Auswertungen) und zur
+Erstellung von Gesamtwertungen über mehrere Veranstaltungen.
 
- * Erstellung einer Tageswertung einer Veranstaltung aus den Trialtool-Dateien.
-   Die Ausgabe erfolgt als Text oder HTML.
+Folgende Funktionen werden unterstützt:
 
- * Erstellung einer Jahreswertung über mehrere Veranstaltungen aus den
-   Trialtool-Dateien.  Die Ausgabe erfolgt als Text oder HTML.
+ * Anlegen, Ändern und Löschen von Veranstaltungen.  Konfigurieren von
+   Veranstaltungen (Wertungen, Klassen, befahrene Sektionen, usw.).
 
- * Import der Trialtool-Daten in eine Datenbank (z.B. ODBC, MySQL, PostgreSQL),
-   entweder einmalig oder fortlaufend.  Bei fortlaufendem Import werden immer
-   nur die Änderungen in die Datenbank geschrieben.
+ * Anlegen und Ändern von Fahrern, Zuweisen von Startnummern, Auswahl der
+   Starter einer Veranstaltung.
 
- * Anzeige der Daten aus der Datenbank über CGI-Scripts und einen Web-Server
-   als Tageswertung, Jahreswertung, oder als Punktestatistik.  Die dabei
-   generierten Seiten sind recht leicht und flexibel anpassbar.
+ * Erfassung der Ergebnisse der Starter (Punkte, Ausfall, Stechen, Start- und
+   Zielzeit).
 
- * Administration der Datenbank über Web-Formulare (ahnlich den Formularen im
-   Trialtool).
+ * Definition von Veranstaltungsreihen (enthaltene Veranstaltungen und Klassen,
+   Anzahl der Läufe und Streichresultate, Startnummernänderungen zwischen
+   Veranstaltungen).
 
- * Export von Trialtool-Dateien aus der Datenbank.
+ * Import von und Export auf Dateien. Import vom und Export in das TrialTool.
 
- * Konsistenzprüfung der Daten für den ÖTSV.
+ * Import direkt von einem Server. Laufende Synchronisierung auf einen Server.
 
-Diese Erweiterungen sind unabhängig vom Trialtool selbst; das Trialtool selbst
-ist für die Benützung nicht erforderlich.
+ * Präsentationsmodus (für einen externen Bildschirm).
 
-Die wesentlichen Einschränkungen, die das Trialtool mit sich bringt (Begrenzung
-auf höchstens 4 Wertungen, 5 Runden, 15 Sektionen, 15 Klassen) wurden bisher
-nicht aufgehoben.  Außerdem fehlen viele Listen und Ergebnisformate, die oft
-hilfreich wären.  Eine Verwaltung von Helfern existiert bisher ebenfalls
-nicht.
+Das System ist komplett über einen Web-Browser bedienbar.  Es kann auch von
+mehreren Geräten aus gleichzeitig verwendet werden. Wird dabei versucht, die
+selben Daten mehrfach zu verändern, dann werden diese Konflikte erkannt, und es
+kommt zu Fehlermeldungen
 
-Die Scripts wurden unter Linux entwickelt und unter Linux und Windows Vista
-getestet.  Serverseitig war bisher der HTTP-Server Apache und die Datenbank
-MySQL im Einsatz.  Andere Umgebungen können mehr oder weniger umfangreiche
-Anpassungsarbeiten erfordern.
+Die Entwicklung und der Test erfolgten unter Linux. Serverseitig wird der
+HTTP-Server Apache und die Datenbank MySQL oder MariaDB verwendet.  Die
+Bedienung ist von jedem Betriebssystem aus möglich.
+
+Es gibt die Möglichkeit, Daten vom TrialTool von Ortwin Sann [1] zu importieren
+bzw. in dieses Format zu exportieren.
 
 
 Systemvoraussetzungen
 ---------------------
 
- * Die Scriptsprache Perl.  Eine kostenlose Version für Windows mit dem Namen
-   ActivePerl gibt es von der Firma ActiveState [2].
+ * Ein einigermaßen aktuelles Linux-System.  (Dieses System kann auch
+   innerhalb einer virtuellen Maschine laufen.)
 
-   Für den Datenbank-Import braucht es je nach verwendeter Datenbank
-   unterschiedliche Datenbanktreiber, die möglicherweise zusätzlich installiert
-   werden müssen (für MySQL unter ActivePerl: "ppm install DBD-mysql").
+ * Die Scriptsprache Perl. Zusätzlich folgende Pakete oder Perl-Module:
+   perl-DBD-MySQL, perl-CGI, perl-JSON, perl-Clone, perl-URI-Escape oder
+   perl-Any-URI-Escape + perl-URI-Escape-XS, perl-Class-Accessor-Lite,
+   perl-Module-Load, perl-Module-Loaded.
 
- * Die Perl-Module CGI und JSON (auf RPM-basierten Linux-Systemen oft mit "yum
-   install perl-CGI perl-JSON" zu installieren).
-   + perl-Clone
-   + perl-URI-Escape oder perl-Any-URI-Escape + perl-URI-Escape-XS
-   + perl-Class-Accessor-Lite
-   + perl-Module-Load
-   + perl-Module-Loaded
+ * Die Datenbank MySQL (bzw. MariaDB).
 
- * Die HTML-Seiten werden auf dem Web-Server über Server-Side Include - Dateien
-   erzeugt (*.shtml).  Das unterstützt z.B. der Apache Web-Server.
-
-
-Installation
-------------
-
-Einige der Scripts sind direkt von der Kommandozeile verwendbar. Diese Scripts
-erfordern keine besondere Konfiguration oder Installation; die notwendigen
-Parameter können auf der Kommandozeile übergeben werden.
-
-Wenn eine Datenbank verwendet werden soll, sind die nötigen Schritte unter dem
-Punkt Datenbank-Konfiguration beschrieben.
-
-Wenn die CGI-Scripts werwendet werden sollen, sind die nötigen Schritte unter
-dem Punkt Web Server-Konfiguration beschrieben.
+ * Den Apache Web-Server.
 
 
 Konfiguration
 -------------
 
 Die Scripts lassen sich über die Datei lib/Auswertung.pm konfigurieren.  Die
-Einstellungen dort betreffen Dinge wir den Datenbankzugang (nur benötigt, wenn
-eine Datenbank eingesetzt wird) und die Spurfarben der einzelnen Klassen.
-Viele dieser Einstellungen können auch auf der Kommandozeile vorgenommen oder
-überschrieben werden.
+Einstellungen dort betreffen Dinge wir den Datenbankzugang.  Bei den Scripts,
+die direkt aufgerufen werden können, können viele dieser Einstellungen auch auf
+der Kommandozeile vorgenommen oder überschrieben werden.
 
-Achtung: Diese Datei muss per Hand erzeugt werden, teilweise BEVOR DIE SCRIPTS
-VERWENDET WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in der Datei
-lib/Auswertung.pm.txt.
+Achtung: Diese Datei lib/Auswertung.pm muss per Hand erzeugt werden, teilweise
+BEVOR DIE SCRIPTS VERWENDET WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in
+der Datei lib/Auswertung.pm.txt.
 
 
 Administration
 --------------
 
-Über die Administrations-Formulare im Pfad admin/ relativ zur URL, über die
-Veranstaltungsübersicht erreichbar ist, lassen sich folgende Dinge
-konfigurieren:
-
- * Anlegen, Ändern und Löschen von Veranstaltungen.  Konfigurieren von
-   Veranstaltungen (Wertungen, Klassen, befahrene Sektionen, Felder im
-   Nennformular usw.).
-
- * Anlegen und Ändern von Fahrern, Zuweisen von Startnummern, Auswahl der
-   Starter einer Veranstaltung.
-
- * Erfassung oder Änderung der Ergebnisse einer Veranstaltung (Punkte, Ausfall,
-   Stechen, Start- und Zielzeit).
-
- * Definition von Veranstaltungsserien (enthaltene Veranstaltungen und Klassen,
-   Startnummernänderungen zwischen Veranstaltungen).
+Über die Veranstaltungsverwaltung im Pfad /admin/ werden die Veranstaltungen
+und Veranstaltungsreihen definiert und verwaltet.
 
 
 Datenbank - Konfiguration
 -------------------------
 
-Die verwendete Datenbankschnittstelle ist Perl's DBI, das viele Datenbanken
-unterstützt.  In den Scripts wird recht einfacher SQL-Code verwendet, sodass
-hoffentlich einige Datenbanken damit umgehen können.  Momentan ist aber nur
-MySQL gestestet.
-
-Es ist zu beachten, dass die Synchronisation in die Datenbank (db-sync.pl)
-Datenbank-Transaktionen voraussetzt.  Das können fast alle Datenbanken.
-
-Bei MySQL ist wichtig, dass eine transaktionsfähige Datenbank-Engine verwendet
-wird (z.B. InnoDB, nicht aber MyISAM).  Ist das nicht der Fall, kann es bei
-Ereignissen wie Verbindungsabbruch bei der Datenübertragung zu Inkonsistenzen
-kommen.
+In MySQL ist wichtig, dass eine transaktionsfähige Datenbank-Engine verwendet
+wird (InnoDB, nicht MyISAM).
 
 
   Beispiel
@@ -143,22 +98,9 @@ kommen.
   > GRANT ALL PRIVILEGES ON trials.* TO 'admin'@'%';
 
 
-Datenmodell
------------
-
 Die anfängliche Datenbankstruktur lässt sich mit "db-sync --create-tables"
-erzeugen.  Danach müssen die entsprechenden Veranstaltungsreihen definiert
-werden:
+erzeugen.
 
-  Eine Veranstaltungsreihe fasst einzelne Veranstaltungen zusammen, entweder um
-  sie auflisten zu können (z.B. alle Fahrrad- und Motorrad-Veranstaltungen im
-  Jahr 2012), oder um eine Gesamtwertung zu definieren.  Für eine Gesamtwertung
-  definiert die Tabelle vareihe_klasse die in der Gesamtwertung enthaltenen
-  Klassen und die Anzahl der Läufe und Streichresultate.
-
-Das geht am einfachsten über die Administrations-Formulare.
-
-Das verwendete Datenmodell kann man dem Script db-sync.pl entnehmen.
 
   Beispiel
   --------
@@ -218,8 +160,8 @@ Datenbank die CGI-Scripts mit welchem Benutzernamen und Kennwort zugreifen
 sollen (siehe auch Punkt Konfiguration weiter oben).
 
 
-Beispiele zur Verwendung
-------------------------
+Kommandozeilen-Scripts
+----------------------
 
  Tageswertung für eine Veranstaltung als Text auf den Bildschirm, und als
  HTML in eine Datei:
@@ -283,43 +225,8 @@ Beispiele zur Verwendung
     db-sync.pl --delete-id 4711
 
 
-Bundesland
-----------
-
-In der Datenbank gibt es zusätzlich für Fahrer ein Feld für das Bundesland.  Da
-das Trialtool dieses Feld nicht unterstützt, steht stattdessen im
-Bemerkung-Feld der Code *BL:xxx* mit dem entsprechenden Bundesland anstelle von
-xxx.
-
-
-Jahreswertung und Startnummern-Änderungen, Wertungspunkte ignorieren
---------------------------------------------------------------------
-
-Es kommt manchmal vor, dass sich die Startnummer eines Fahrers zwischen
-Wettbewerben ändert.  Das ist für die Jahreswerung ein Problem, die die
-Startnummer als Schlüssel verwendet.  Es wäre möglich, die Startnummern in den
-einzelnen Veranstaltungen nachträglich anzupassen, das würde aber auch die
-Ergebislisten der einzelnen Veranstaltungen verändern.  Stattdessen gibt es die
-Möglichkeit, Startnummern nur für die Jahreswertung umzuschreiben:
-
-Soll die Jahreswertung direkt aus den TrialTool-Dateien erstellt werden,
-schreibt man in das Bemerkung-Feld der Fahrerstammdaten den Code *JW:987*
-(wobei 987 durch die Startnummer in der Jahreswertung ersetzt wird).
-
-Soll die Jahreswertung nur aus der Datenbank erstellt werden, definiert man die
-Startnummernänderungen in der Tabelle neue_startnummer.  Wenn die
-TrialTool-Dateien bereits die *JW:987* - Codes enthalten, werden diese beim
-Import und Export berücksichtigt, und die Tabelle wird automatisch befüllt.
-
-Wenn der Code *JW:* verwendet wird (also ohne Startnummer) oder das Feld
-neue_startnummer in der Datenbank auf NULL gestezt ist, wird das
-Veranstaltungsergebnis des Fahrers in der Jahreswertung nicht berücksichtigt.
-Das kann sinnvoll sein, wenn ein Fahrer durch Klassenwechsel seine bisherigen
-Wertungspunkte verlieren soll.
-
-
-Reihung der Jahreswertung
--------------------------
+Reihung in der Jahreswertung
+----------------------------
 
 Fahrer werden zunächst anhand ihrer Gesamtpunkteanzahl gereiht, wobei die
 Punkte aus Streichresultaten abgezogen sind.
@@ -357,4 +264,3 @@ Referenzen
 ----------
 
 [1] http://www.ortwinsann.de/trialtool/
-[2] http://www.activestate.com/activeperl
