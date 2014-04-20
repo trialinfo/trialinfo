@@ -51,11 +51,11 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
 	    $http.post('/api/trialtool/import', data).
 	      success(function(result) {
 		$location.path('/veranstaltung/' + result.id).replace();
-	    }).
-	    error(netzwerkfehler).
-	    finally(function() {
-	      $scope.busy = false;
-	    });
+	      }).
+	      error(netzwerkfehler).
+	      finally(function() {
+		$scope.busy = false;
+	      });
 	  }
 	}
 
@@ -148,6 +148,7 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
 	  success(function(result) {
 	    $location.path('/veranstaltung/' + result.id).replace();
 	  }).
+	  error(netzwerkfehler).
 	  finally(function() {
 	    $scope.busy = false;
 	    cancel_remote = undefined;
