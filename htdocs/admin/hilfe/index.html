@@ -10,23 +10,15 @@
 </head>
 <body>
 <h1>Trial-Auswertung</h1>
-<p>Willkommen zum Auswertungssystem für Fahrrad- und
-Motorrad-Trial-Wettbewerbe.  Sie können hier alle wesentlichen Schritte zur
-Verwaltung einer Veranstaltung (Nennung, Punktevergabe, Erstellung von
-Listen, Auswertung) und zur Erstellung einer Gesamtwertung über mehrere
-Veranstaltungen durchführen.</p>
+<p>Dieses Auswertungssystem für Motorrad- und Fahrrad-Trial-Wettbewerbe
+unterstützt alle wesentlichen Schritte zur Verwaltung von Veranstaltungen
+(Nennung, Punktevergabe, Erstellung von Listen, Auswertungen) und zur
+Erstellung von Gesamtwertungen über mehrere Veranstaltungen hinweg.</p>
 
-<p>Das Auswertunggsystem ist eine datenbankbasierte Web-Applikation, das heißt,
-die Bedienung erfolgt über einen Web-Browser, der mit dem entsprechenden Server
-kommuniziert. Auf dem Server werden die Veranstaltungs- und Gesamtwertungen
-berechnet und die Daten in einer Datenbank abgelegt. <!--Dieser Server kann
-über das Internet erreichbar sein, es besteht aber auch die Möglichkeit, die
-Software auf einem nicht ständig mit dem Internet verbundenen Gerät wie einem
-Notebook zu installieren.--></p>
-
-<p>Der Zugriff auf den Server kann auch von mehreren Geräten aus gleichzeitig
-erfolgen. Wird dabei versucht, die selben Daten mehrfach zu verändern, dann
-werden diese Konflikte erkannt, und es kommt zu Fehlermeldungen.</p>
+<p>Das System ist komplett über einen Web-Browser bedienbar. Es kann auch von
+mehreren Geräten aus gleichzeitig verwendet werden. Wird dabei versucht, die
+selben Daten mehrfach zu verändern, dann werden diese Konflikte erkannt, und es
+kommt zu Fehlermeldungen.</p>
 
 <h2>Formulare und Navigation</h2>
 <p>Die Formulare und die ganze Web-Applikation sind so gestaltet, dass alle
@@ -34,103 +26,110 @@ häufig wiederholten Tätigkeiten effizient über die Tastatur ausgeführt werde
 können.  Wichtige Felder in den Formularen können über die Tastatur
 angesprungen, und wichtige Aktionen über die Tastatur ausgelöst werden:
 <ul>
-<li> Die Taste ⏎ (Eingabetaste) speichert ein Formular.
+<li> Die Eingabetaste (⏎) speichert ein Formular.
 <li> Die Escape-Taste (⎋) verwirft die Änderungen in einem Formular.
 <li> Unterstrichene Buchstaben in Formularen kennzeichnen, dass eine
 browserabhängige Tastenkombination plus der unterstrichene Buchstabe das Feld
-anspringt oder die Aktion auslöst.  Auf PCs ist diese Tastenkombination oft ⎇ ⇧
-(Alt + Umschalttaste), auf MacOS ^⌥ (Ctrl + Option). Es gibt dazu auch eine
+anspringt oder die Aktion auslöst.  Auf PCs ist diese Tastenkombination oft Alt + Umschalttaste (⎇ ⇧),
+auf MacOS Ctrl + Option (^⌥). Es gibt dazu auch eine
 Übersicht auf <a href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.
 </ul>
 </p>
 
 <p>Formulare werden nicht automatisch gespeichert, sondern erst, wenn die
-Änderungen mit der Taste ⏎ (Eingabetaste) bestätigt werden. Der Web-Browser
+Änderungen mit der Eingabetaste (⏎) bestätigt werden. Der Web-Browser
 warnt, wenn versucht wird, ein Formular mit nicht gespeicherten Änderungen zu
 verlassen.</p>
 
 <p>Die Navigation in der Web-Applikation erfolgt über die Verknüpfungen und
 über die Zurück-Taste, um auf die vorige Seite zu springen. Auf Tastaturen, auf
 denen es keine Zurück-Taste gibt, ist die entsprechende Tastaturkombination
-meist ⎇ ← (Alt + Links) oder ⌘← (Command + Links).</p>
+meist Alt + Links (⎇ ←) oder Command + Links (⌘←).</p>
 
 <p>Die Schriftgröße lässt sich ebenfalls über den Web-Browser verändern; über
-die Tastatur üblicherweise mit ^+ und ^− (Ctrl + Plus und Ctrl + Minus)
-beziehungsweise ⌘+ und ⌘− (Command + Plus und Command + Minus).</p>
+die Tastatur üblicherweise mit Ctrl + Plus (^+) und Ctrl + Minus (^−)
+beziehungsweise Command + Plus (⌘+) und Command + Minus (⌘−).</p>
 
 <p>Außerdem können bei Bedarf Seiten der Applikation in mehreren Tabs oder
 Fenstern geöffnet werden, zwischen denen gewechselt werden kann.</p>
 
-<h2>Übersicht über die Web-Applikation</h2>
+<h2>Übersicht über die Trial-Auswertung</h2>
 <p>Nach der Eingabe von Benutzername und Kennwort kommt man auf die
 Übersichtsseite, auf der alle vorhandenen Veranstaltungen und
-Veranstaltungsreihen aufgelistet sind.  Hier kann man eine der Veranstaltungen
-oder Veranstaltungsreihen auswählen, oder eine neue Veranstaltung oder
+Veranstaltungsreihen aufgelistet sind.  Hier kann man zu einer der Veranstaltungen
+oder Veranstaltungsreihen wechseln, oder eine neue Veranstaltung oder
 Veranstaltungsreihe anlegen.</p>
 
 <p>Veranstaltungen, die in ihren Einstellungen als verborgen markiert sind, erscheinen
 in der Übersicht durchgestrichen (siehe <a
 href="#veranstaltung_verborgen">Veranstaltung anzeigen und in Wertungen
 berücksichtigen</a>). Veranstaltungsreihen, deren enthaltene Veranstaltungen in
-der Übersicht verborgen werden, erscheinen ebenfalls durchgestrichen (siehe <a
+der Übersicht verborgen sind, erscheinen ebenfalls durchgestrichen (siehe <a
 href="#veranstaltungen_verbergen">Veranstaltungen in Übersicht
 verbergen</a>).</p>
 
-<p>Bei der Auswahl einer Veranstaltung erscheint eine Veranstaltungsübersicht.
+<p>Bei Auswahl einer Veranstaltung erscheint die Veranstaltungsübersicht.
 Dort kann man zur Auswertung dieser Veranstaltung springen, Fahrerlisten
-erstellen, die Nennungen verwalten, die Ergebnisse der einzelnen Runden
-eingeben, Einstellungen vornehmen, Sektionen aus der Wertung nehmen, die Daten
-der Veranstaltung zurücksetzen, oder die Veranstaltung löschen.</p>
+erstellen, die Nennungen verwalten, Ergebnisse eingeben, Einstellungen
+vornehmen, Sektionen aus der Wertung nehmen, die Daten
+der Veranstaltung zurücksetzen, und die Veranstaltung löschen.</p>
 
 <p>Bei der Auswahl einer Veranstaltungsreihe kann man zur Gesamtwertung der
 Veranstaltungsreihe springen, Eigenschaften der Veranstaltungsreihe
 verändern, die enthaltenen Veranstaltungen und Klassen zuordnen, und
-Startnummernänderungen definieren.</p>
+Startnummernänderungen vornehmen.</p>
 
-<h2>Auswertungen</h2>
-<p>In der Veranstaltungsübersicht erscheint ein Link für die
-Tageswertung, in der alle Starter dieses Tages aufscheinen.</p>
+<h2>Auswertung</h2>
+<p>Von der Veranstaltungsübersicht kann man zur Auswertung dieser Veranstaltung
+springen. Die Auswertung erscheint dabei zunächst in einer Standard-Ansicht.
+Durch Auswahl der Überschrift, die eine versteckte Verknüpfung ist, können
+verschiedene Einstellungen zur Auswertung angezeigt werden. Hier kann je nach
+den Einstellungen der Veranstaltung auswählen, welche Wertung, welche Klassen,
+und welche Informationen zu den Fahrern angezeigt werden sollen.</p>
 
-<p>Falls Wertung&nbsp;1 in den Einstellungen aktiviert ist, wird diese als Teil
-der Tageswertung angezeigt (Spalte Wertungspunkte).</p>
+<p>Wird der Präsentations-Modus aktiviert, dann werden die Ergebnisse
+seitenweise dargestellt, und es erfolgt je nach eingestellter Geschwindigkeit
+ein automatischer Seitenwechsel. Diese Darstellungsart ist dazu gedacht, um
+Zuschauern die laufenden Ergebnisse anzeigen zu können, üblicherweise über
+einen zusätzlichen Bildschirm. Es ist dazu sinnvoll, die Auswertung in einem
+neuen Fenster zu öffnen (über das Kontextmenü, das über die rechte Maustaste
+erreichbar ist). Dort kann dann der Präsentations-Modus aktiviert werden, das
+Fenster auf den zusätzlichen Bildschirm verschoben werden, und zusätzlich kann
+der Fensterrahmen verborgen werden (üblicherweise über die Taste F11).</p>
 
-<p>Für jede weitere aktivierte Wertung in den Einstellungen erscheint in der
-Veranstaltungsübersicht ein weiterer Link; hier werden jeweils nur die Fahrer
-in dieser Wertung angezeigt.</p>
+<p>Wenn das Auswertungssystem entsprechend konfiguriert ist, kann man in den
+Anzeigeeinstellungen auch verschiedene Druckeinstellungen vornehmen und die
+Auswertung in eine PDF-Datei umwandeln, die ausgedruckt werden kann.  Das
+liefert bessere Ergebnisse aus ein direktes Ausdrucken der Auswertungsseite.
+Die Druckeinstellungen stehen nur zur Verfügung, wenn der Server die
+PDF-Erzeugung unterstützt.</p>
 
-<p>Die Auswertungen über Veranstaltungsreihen sind in den jeweiligen
-Veranstaltungsreihen zu finden.</p>
-
-<h2>Fahrerliste</h2>
-<p>
-Beim Aufruf der Fahrerliste erscheint zunächst eine Liste der Fahrer, gruppiert
-nach Klassen und sortiert nach Startnummern. Diese Liste kann verändert werden,
-indem man auf die Überschrift klickt (die Überschrift ist ein versteckter
-Link). Es erscheinen darufhin verschiedene Einstellungsmöglichkeiten; bei einem
-weiteren Klick auf die Überschrift verschwinden diese wieder.</p>
-
-<p>Hier kann man auswählen, dass nur Starter oder nur Fahrer mit einer
-zugeordneten Startnummer angezeigt werden, welche Daten angezeigt werden,
-usw.</p>
+<h2>Fahrerliste und Fahrer auf der Strecke</h2>
+<p>Beim Aufruf der Fahrerliste erscheint zunächst eine Liste der Fahrer,
+gruppiert nach Klassen und sortiert nach Startnummern. Durch Auswahl der
+Überschrift lässt sich die Anzeige der Fahrerliste ähnlich wie in der
+Auswertung einstellen.</p>
 
 <p>Die Einstellungsmöglichkeiten in der Fahrerliste verändern sich passend zu
 den Einstellungen der Veranstaltung, sodass unsinnige Optionen nicht angeboten
-werden. Wenn eine bestimmte Liste also nicht erstellt werden kann, kann es auch
-an den Veranstaltungseinstellungen liegen.</p>
+werden. Wenn eine bestimmte Liste also nicht erstellt werden kann, kann das an
+den Veranstaltungseinstellungen liegen.</p>
 
-<p>Unter den Anzeigeeinstellungen befinden sich die Druckeinstellungen. Hier
-kann man hauptsächlich das Seitenformat und die Basis-Schriftgröße einstellen.
-Falls es der Server unterstützt, kann dort direkt eine PDF-Datei erstellt
-werden; anderenfalls bleibt nur die Möglichkeit, die Fahrerliste direkt über
-den Web-Browser zu drucken. Wie weit die Web-Browser die Druckeinstellungen
-respektieren, unterscheidet sich leider stark zwischen Web-Browsern; zurzeit
-liefert leider kein einziger Browser wirklich zufriedenstellende
-Ergebnisse.</p>
+<p>Wenn das Auswertungssystem entsprechend konfiguriert ist, kann man in den
+Anzeigeeinstellungen auch verschiedene Druckeinstellungen vornehmen und die
+Fahrerliste in eine PDF-Datei umwandeln, die ausgedruckt werden kann. Die
+Druckeinstellungen stehen nur zur Verfügung, wenn der Server die PDF-Erzeugung
+unterstützt.</p>
+
+<p>Die Ansicht "Fahrer auf der Strecke" zeigt alle Fahrer an, die den
+Wettbewerb noch nicht abgeschlossen haben, und die nicht ausgefallen sind. Das
+dient dazu, um einen Überblick über den Verlauf der Veranstaltung zu
+bekommen.</p>
 
 <h2>Nennungen</h2>
 <p>Die eine zentrale Stelle im Auswertungssystem sind die Nennungen. Hier kann
 zunächst im Bereich Navigation nach vorhandenen Fahrern gesucht und zwischen
-Fahrern gewechselt werden. Weiters können hier neue Fahrer angelegt, und
+Fahrern gewechselt werden. Weiters können hier neue Fahrer angelegt und
 bestehende Fahrer gelöscht werden.</p>
 
 <p>Sobald einem Fahrer eine Startnummer zugeordnet wurde, ist das Feld
@@ -139,10 +138,11 @@ Die Sperre kann über die Schaltfläche <em>Startnummer ändern</em> aufgehoben 
 
 <p>Eine Änderung der Startnummer hat auf die Punkte des Fahrers keine
 Auswirkung. Beachten Sie aber, dass die Veranstaltungsreihen die Ergebnisse
-aufgrund der Startnummern zuordnen. Es gibt außer der Möglichkeit, Startnummern
-direkt in den Veranstaltungen zu ändern, auch die Möglichkeit, Startnummern nur
-innerhalb einer Veranstaltungsreihe zu ändern (siehe <a
-href="#vareihe_startnummern">Startnummernänderungen</a>).</p>
+aufgrund der Startnummern zuordnen. Innerhalb der Veranstaltungsreihen gibt es
+ebenfalls die Möglichkeit, Startnummern zu ändern (siehe <a
+href="#vareihe_startnummern">Startnummernänderungen</a>); das ist oft
+sinnvoller, als nachträglich die Startnummern in den Veranstaltungen selbst zu
+ändern.</p>
 
 <p>Bei Fahrern, denen keine Startnummer zugeordnet ist, ist das Feld
 Startnummer leer. Dem entsprechend kann die Startnummer eines Fahrers auch
@@ -194,6 +194,12 @@ bedürfen aber einer Erklärung.</p>
 Veranstaltungsreihen zu ignorieren. Im Auswertungssystem bleibt die
 Veranstaltung sichtbar.</p>
 
+<h3>Synchronisieren erlauben</h3>
+Diese Einstellung gibt an, ob die Veranstaltung durch Synchronisierung
+aktualisiert werden darf. (Die Quelle der Aktualisierung ist eine andere
+Installation des Auswertungssystems.)  Die Einstellung wird nur angeboten, wenn
+das Auswertungssystem grundsätzlich als Synchronisierungs-Ziel fungieren kann.
+
 <h3>Wertungspunkte / Punkteteilung bei gleicher Platzierung</h3>
 <p>Wenn es ex aequo-Platzierungen gibt, bekommen normalerweise allen Fahrer die
 maximalen Wertungspunkte: zwei Erste bekommen beide die Wertungspunkte für den
@@ -212,12 +218,17 @@ von den Einstellungen in der Nennung an Wertung&nbsp;1 nicht teilnehmen, und ihn
 daher auch keine Wertungspunkte vergeben werden. Das Äquivalent wäre,
 Wertung&nbsp;1 aller betroffenen Fahrer in der Nennung zu deaktivieren.</p>
 
+<p>Das Feld <em>Außer Konkurrenz</em> gibt an, dass Fahrer in dieser Klasse
+unabhängig von den Einstellungen in der Nennung nur außer Konkurrenz starten
+kann.</p>
+
 <h3>Nennformular / Sichtbare Felder / Start morgen</h3>
 <p>Wenn diese Einstellung aktiviert ist, kann im Nennformular angewählt werden,
 dass ein Fahrer auch morgen (beziehungsweise bei der folgenden Veranstaltung)
 startet. So kann an Wochenenden am Samstag erfasst werden, welche Fahrer auch
-schon für Sonntag genannt haben.  Wenn die Folgeveranstaltung für Sonntag dann
-angelegt wird, werden diese Fahrer automatisch als Starter markiert.</p>
+schon für Sonntag genannt haben.  Wenn die Folgeveranstaltung dann basierend
+auf dieser Veranstaltung angelegt wird, werden diese Fahrer automatisch als
+Starter markiert.</p>
 
 <h2>Sektionen aus der Wertung</h2>
 <p>Hier wird definiert, welche Sektionen für welche Klassen in welchen Runden
@@ -226,8 +237,7 @@ dafür eingetragen wurden. Wird eine Sektion aus der Wertung
 genommen, so erscheint sie auch nicht mehr in der Punktevergabe.</p>
 
 <p>Die vergebenen Punkte werden dabei nicht gelöscht sondern nur in der
-Wertungsberechnung ignoriert, sodass Fehler leicht wieder rückgängig
-gemacht werden können.</p>
+Wertungsberechnung ignoriert.</p>
 
 <h2 id="reset">Zurücksetzen</h2>
 <p>Hier kann eine Veranstaltung auf einen definierten Punkt zurückgesetzt
@@ -251,7 +261,7 @@ gelöschten Daten sind danach wirklich weg!</p>
 Hier kann man nach einer Rückfrage die Veranstaltung löschen.  Achtung, die
 Daten sind danach wirklich weg!
 
-<h2>Neue Veranstaltung anlegen</h2>
+<h2>Neue Veranstaltung</h2>
 <p>Beim Anlegen einer neuen Veranstaltung kann man eine der existierenden
 Veranstaltungen als Basis angeben. Alle Daten der Basisveranstaltung
 werden dann in die neue Veranstaltung kopiert und können dort unabhängig von
@@ -295,28 +305,85 @@ muss das Feld <em>Nach</em> leer gelassen werden. Das kann dann sinnvoll sein, w
 ein Fahrer die Klasse wechselt, und die Wertungspunkte in seiner alten Klasse
 nicht mehr in der Gesamtwertung aufscheinen sollen.</p>
 
+<h2>Synchronisieren, Import und Export</h2>
+<p>Über diese Schaltfläche können folgende Aktionen durchgeführt werden: Import
+einer Veranstaltung von einem anderen Server, laufendes Synchronisieren einer
+Veranstaltung auf einen anderen Server, Import und Export von Veranstaltungen
+von Dateien bzw. auf Dateien.</p>
+
+<h3>Server-Import</h3>
+<p>Über diese Aktion importiert man eine Veranstaltung von einem andern Server.
+Nach der Auswahl der Quelladresse kann die Liste der Veranstaltungen von diesem
+Server abgerufen werden. Danach wählt man aus der Liste der Veranstaltungen
+diejenige aus, die importiert werden soll und startet den Import. Nach einigen
+Sekunden wechselt das Auswertungsystem daraufhin auf die importierte
+Veranstaltung.</p>
+
+<h3>Synchronisieren</h3>
+<p>Diese Aktion startet die laufende Synchronisation einer Veranstaltung auf
+einen anderen Server. Nach der Auswahl der Veranstaltung, der Zieladresse, und
+des Intervalls zwsichen den Aktualisierungen startet man die Synchronisierung.
+Daraufhin erscheint im rechten oberen Eck des Fensters ein Rechteck mit dem
+Namen der Veranstaltung, dem Status (Grün für erfolgreich, Orange für nicht
+synchron, und Rot für Fehler). Dort kann man die Synchronisierung abbrechen und
+nach Fehlern neu starten.</p>
+
+<p>Die Statusanzeige bleibt sichtbar, wenn man zwischen den verschiedenen
+Seiten der Veranstaltungsverwaltung wechselt.</p>
+
+<h3>Datei-Import</h3>
+<p>Hier kann man Veranstaltungen von der Trial-Auswertung oder vom TrialTool
+importieren. Dazu wählt man das Format und die Datei (*.tra für das
+Trial-Auswertungs-Format) oder die Dateien (*.cfg und *.dat für das
+TrialTool-Format) aus und startet den Import.</p>
+
+<h3>Datei-Export</h3>
+<p>Hier kann man die Daten von Veranstaltungen auf Dateien exportieren. Neben
+einem eigenen Format für die Trial-Auswertung selbst (*.tra) wird auch das
+TrialTool-Format unterstützt (*.cfg und *.dat). Nach der Auswahl der
+Veranstaltung und des Formats wird die Datei oder werden die Dateien als
+Verknüpfungen angezeigt; die Verknüpfungen offnet und speichert man dann.</p>
+
+<p>Im TrialTool-Format werden beide Dateien (*.cfg und *.dat) benötigt.
+Außerdem ist zu beachten, dass das TrialTool-Format nicht alle Möglichkeiten
+der Trial-Auswertung vollständig unterstützt. Beim Export in dieses Format wird
+deswegen versucht, die Informationen so gut wie möglich zu abzubilden.</p>
+
 <h2>Unterschiede zum TrialTool</h2>
 <ul>
-  <li>Formulare werden <em>nicht</em> automatisch gespeichert.
+  <li>Formulare werden nicht automatisch, sondern über die Eingabetaste oder
+die Schaltfläche Speichern gespeichert.
 
-  <li>Das Feld Papierabnahme, um einen Fahrer in der Nennung als Starter zu
-markieren, wurde auf Start umbenannt.
+  <li>Das Feld Start in der Trial-Auswertung, das einen Fahrer in der Nennung
+als Starter markiert, entspricht dem Feld Papierabnahme im TrialTool.
 
-  <li>Ein Fahrer kann jetzt in der Nennung als außer Konkurrenz markiert
-werden. Dadurch fällt die Mehrdeutigkeit weg, dass Fahrer sowohl <em>aus der
-Wertung</em> markiert sind wenn sie außer Konkurrenz fahren, als auch wenn sie
-disqualifiziert wurden. Die Einstellung <em>aus der Wertung</em> wurde außerdem auf
-<em>nicht gewertet</em> umbenannt.
+  <li>Ein Fahrer kann in der Nennung als außer Konkurrenz markiert werden.  Im
+TrialTool gibt es diese Möglichkeit nicht, und man kann dort Fahrer nur als aus
+der Wertung markieren, was ebenfalls verwendet wird, um Fahrer als nicht
+gewertet zu markieren (z.B. aufgrund einer Disqualifizierung).  Die Einstellung
+<em>aus der Wertung</em> im TrialTool wurde außerdem auf <em>nicht
+gewertet</em> umbenannt.
 
-  <li>Ein weiteres Feld <em>E-Mail</em> wurde eingeführt, um nicht die Bemerkungen
-dafür missbrauchen zu müssen.
-
-  <li>Ein weiteres Feld <em>Bundesland</em> wurde eingeführt.
+  <li>Die weiteren Felder <em>E-Mail</em> und <em>Bundesland</em> wurden eingeführt.
 
   <li>Sektionen aus der Wertung werden eindeutig als solche markiert, statt die
-Punkte aller Fahrer dieser Sektionen zu löschen. Sektionen aus der Wertung
-werden in der Punktevergabe nicht mehr angeboten, und im Ergebnis nicht
+Punkte der Fahrer in diesen Sektionen zu löschen. Sektionen aus der Wertung
+werden in der Punktevergabe nicht angezeigt und im Ergebnis nicht
 berücksichtigt.
+
+  <li>Das TrialTool kann maximal 999 Fahrer mit zugeordneter Startnummer und
+400 Fahrer ohne zugeordneter Startnummer verwalten. In der Trial-Auswertung
+gibt es diese Einschränkung nicht. (Die Länge von Startnummern ist lediglich im
+Nennformular auf fünf Stellen begrenzt.)
+
+  <li>Die Spurfarben der einzelnen Klassen sind konfigurierbar.
+
+  <li>Klassen können gemeinsam gewertet werden. Außerdem kann eingestellt
+werden, dass eine Klasse an der Gesamtwertung nicht teilnimmt, oder dass eine
+Klasse außer Konkurrenz startet.
+
+  <li>Die Verwaltung von Helfern (Mindern) ist derzeit nicht implementiert.
+
 </ul>
 </body>
 </html>
