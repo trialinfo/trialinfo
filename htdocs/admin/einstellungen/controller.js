@@ -253,6 +253,10 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	  (art === 'otsv2014' && (index == 0 || (index >= 10 && index <= 12)));
 	klasse.ausser_konkurrenz =
 	  (art === 'otsv+osk2014' && index == 0);
+	$scope.features.startzeit = $scope.features.zielzeit =
+	  art === 'otsv+osk2014';
+	$scope.features.start_morgen =
+	  art === 'otsv2014';
       });
     }
   };
