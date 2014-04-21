@@ -106,14 +106,6 @@ LOCAL_FILES = \
 	jahreswertung.pl \
 	Makefile \
 	tageswertung.pl \
-	Windows/jahreswertung-osk.bat \
-	Windows/jahreswertung-otsv1.bat \
-	Windows/jahreswertung-otsv2.bat \
-	Windows/loeschen.bat \
-	Windows/sync-jetzt.bat \
-	Windows/sync-laufend.bat \
-	Windows/sync-laufend-fahrrad.bat \
-	Windows/tageswertung.bat \
 
 GENERATED_WEB_FILES = \
 	cgi-bin/api/.htaccess \

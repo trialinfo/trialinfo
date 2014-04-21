@@ -1,3 +1,0 @@
-#! /bin/sh
-
-./db-sync.pl --vareihe=5,6 --alle-fahrer "$@"
