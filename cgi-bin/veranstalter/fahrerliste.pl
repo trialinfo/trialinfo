@@ -33,14 +33,28 @@ my $id = $q->param('id'); # veranstaltung
 my $gestartet = $q->param('gestartet') || 0;
 
 unless (defined $id) {
-    my $sth = $dbh->prepare(q{
-	SELECT id, titel
-	FROM veranstaltung
-	JOIN wertung USING (id)
-	WHERE wertung = 1
-	ORDER BY datum
-    });
-    $sth->execute;
+    my $vareihe = $q->param('vareihe');
+    my $sth;
+    if ($vareihe) {
+	$sth = $dbh->prepare(q{
+	    SELECT id, titel
+	    FROM veranstaltung
+	    JOIN vareihe_veranstaltung USING (id)
+	    JOIN wertung USING (id)
+	    WHERE vareihe = ? AND wertung = 1
+	    ORDER BY datum
+	});
+	$sth->execute($vareihe);
+    } else {
+	$sth = $dbh->prepare(q{
+	    SELECT id, titel
+	    FROM veranstaltung
+	    JOIN wertung USING (id)
+	    WHERE wertung = 1
+	    ORDER BY datum
+	});
+	$sth->execute;
+    }
     print $q->header(-type=>'text/html', -charset=>'utf-8');
     print "<h1>Fahrerliste</h1>\n";
     print "<p>Format CSV, Zeichensatz UTF-8</p>";
