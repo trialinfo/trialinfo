@@ -40,14 +40,27 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 unless (defined $id) {
-    $sth = $dbh->prepare(q{
-	SELECT id, titel
-	FROM veranstaltung
-	JOIN wertung USING (id)
-	WHERE wertung = ?
-	ORDER BY datum
-    });
-    $sth->execute($wertung);
+    my $vareihe = $q->param('vareihe');
+    if ($vareihe) {
+	$sth = $dbh->prepare(q{
+	    SELECT id, titel
+	    FROM veranstaltung
+	    JOIN wertung USING (id)
+	    JOIN vareihe_veranstaltung USING (id)
+	    WHERE vareihe = ? AND wertung = ?
+	    ORDER BY datum
+	});
+	$sth->execute($vareihe, $wertung);
+    } else {
+	$sth = $dbh->prepare(q{
+	    SELECT id, titel
+	    FROM veranstaltung
+	    JOIN wertung USING (id)
+	    WHERE wertung = ?
+	    ORDER BY datum
+	});
+	$sth->execute($wertung);
+    }
     print "<p>\n";
     while (my @row = $sth->fetchrow_array) {
 	my ($id, $titel) = @row;
@@ -80,15 +93,10 @@ $sth = $dbh->prepare(q{
 		ELSE klasse END AS klasse,
 	   CONCAT(nachname, ' ', vorname) AS name,
 	   YEAR(geburtsdatum) AS geburtsjahr,
-	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 15
-		ELSE 25 END AS 'Nenngeld',
+	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 20
+		ELSE 30 END AS 'Nenngeld',
 	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN NULL
 		ELSE 5 END AS 'ÖTSV',
-	   CASE WHEN klasse NOT IN (11, 12, 13) OR
-		     lizenznummer = "" OR lizenznummer IS NULL THEN
-		CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN NULL
-		     ELSE 5 END
-	   END AS 'ÖTSV<BR>Vers.',
 	   GROUP_CONCAT(wertung.bezeichnung ORDER BY wertung SEPARATOR ", ") AS "Wertungen"
     FROM fahrer
     LEFT JOIN fahrer_wertung USING (id, startnummer)
@@ -111,32 +119,26 @@ while (my @row = $sth->fetchrow_array) {
 	$row[4] eq 15;
 }
 
-my ($nenngeld, $otsv, $otsv_vers);
+my ($nenngeld, $otsv);
 foreach my $row (@$body) {
     $nenngeld += $row->[4];
     $otsv += $row->[5]
 	if defined $row->[5];
-    $otsv_vers += $row->[6]
-	if defined $row->[6];
 }
 foreach my $row (@$body) {
     $row->[4] = "€$row->[4]"
 	if defined $row->[4];
     $row->[5] = "€$row->[5]"
 	if defined $row->[5];
-    $row->[6] = "€$row->[6]"
-	if defined $row->[6];
 }
 $nenngeld = "€$nenngeld"
     if defined $nenngeld;
 $otsv = "€$otsv"
     if defined $otsv;
-$otsv_vers = "€$otsv_vers"
-    if defined $otsv_vers;
-my $footer = [ [ "Summen:", "r4" ], $nenngeld, $otsv, $otsv_vers ]
-    if defined $nenngeld || defined $otsv || defined $otsv_vers;
+my $footer = [ [ "Summen:", "r4" ], $nenngeld, $otsv ]
+    if defined $nenngeld || defined $otsv;
 
 doc_h2 "$titel";
 doc_table header => $header, body => $body, footer => $footer, format => $format;
 printf "<p>%s Starter, davon %s über 18 Jahre und %s unter 18 Jahre</p>\n",
-       $starter, $ueber_18, $starter - $ueber_18;
+       $starter // 0, $ueber_18 // 0, ($starter - $ueber_18) // 0;
