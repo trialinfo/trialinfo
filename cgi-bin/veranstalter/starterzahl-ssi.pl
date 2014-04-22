@@ -64,15 +64,23 @@ doc_h1 "$vareihe_bezeichnung";
 
 my $veranstaltungstitel;
 $sth = $dbh->prepare(q{
-    SELECT id, titel
+    SELECT id, titel, GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
     FROM veranstaltung
     JOIN wertung USING (id)
     JOIN vareihe_veranstaltung USING (id)
+    LEFT JOIN (
+	SELECT DISTINCT id, vareihe.kuerzel
+	FROM vareihe_veranstaltung
+	JOIN vareihe USING (vareihe)
+	WHERE vareihe != ?) AS _ USING (id)
     WHERE aktiv AND wertung = 1 AND vareihe = ?
+    GROUP BY id
 });
-$sth->execute($vareihe);
+$sth->execute($vareihe, $vareihe);
 while (my @row = $sth->fetchrow_array) {
     $veranstaltungstitel->{$row[0]} = $row[1];
+    $veranstaltungstitel->{$row[0]} .= " ($row[2])"
+	if defined $row[2];
 }
 my $titel_breite = 0;
 foreach my $veranstaltungstitel (values %$veranstaltungstitel) {
