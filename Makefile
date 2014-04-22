@@ -133,9 +133,10 @@ WEB_FILES = \
 	cgi-bin/ergebnisse/vareihe-bezeichnung.pl \
 	cgi-bin/ergebnisse/vareihe-ssi.pl \
 	cgi-bin/pdf.pl \
-	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/export-ssi.pl \
+	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
+	cgi-bin/veranstalter/runden-ssi.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/ergebnisse/0.png \
 	htdocs/ergebnisse/1.png \
@@ -145,6 +146,10 @@ WEB_FILES = \
 	htdocs/ergebnisse/5.png \
 	htdocs/js/jquery.polartimer.js \
 	htdocs/robots.txt \
+	htdocs/veranstalter/export.shtml \
+	htdocs/veranstalter/index.shtml \
+	htdocs/veranstalter/runden.shtml \
+	htdocs/veranstalter/starterzahl.shtml \
 
 all: testing
 
