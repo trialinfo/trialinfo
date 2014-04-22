@@ -9,6 +9,7 @@
 <h1>Veranstalterseite</h1>
 <p>
 <a href="starterzahl.shtml">Starterzahlen</a><br>
+<a href="runden.shtml">Gefahrene Runden</a><br>
 <a href="../../cgi-bin/veranstalter/fahrerliste.pl">Fahrerlisten (CSV, Zeichensatz UTF-8)</a>
 </p>
 </body>
