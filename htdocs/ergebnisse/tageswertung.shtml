@@ -11,18 +11,6 @@
   Aufbereitung über Trial-Auswertung, https://github.com/andreas-gruenbacher/trial-auswertung.
 -->
 
-<!--#if expr="$QUERY_STRING=/animiert/" -->
-<!--#if expr="$QUERY_STRING=/debug/" -->
-<script type="text/javascript" src="../js/jquery.js"></script>
-<script type="text/javascript" src="../js/raphael.js"></script>
-<!--#else -->
-<script type="text/javascript" src="../js/jquery.min.js"></script>
-<script type="text/javascript" src="../js/raphael-min.js"></script>
-<!--#endif -->
-<script type="text/javascript" src="../js/jquery.polartimer.js"></script>
-<script type="text/javascript" src="tageswertung.js"></script>
-<!--#endif -->
-
 </head>
 <body>
 <!--#set var="which" value="$QUERY_STRING" -->

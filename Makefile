@@ -59,11 +59,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
 	htdocs/js/angular-route.js \
-	htdocs/js/jquery.js \
-	htdocs/js/jquery.min.js \
 	htdocs/js/json-diff.js \
-	htdocs/js/raphael.js \
-	htdocs/js/raphael-min.js \
 	htdocs/js/validate.js \
 
 COMMON_FILES = \
@@ -178,11 +174,9 @@ WEB_FILES = \
 	htdocs/ergebnisse/index.shtml \
 	htdocs/ergebnisse/jahreswertung.shtml \
 	htdocs/ergebnisse/statistik.shtml \
-	htdocs/ergebnisse/tageswertung.js \
 	htdocs/ergebnisse/tageswertung.shtml \
 	htdocs/ergebnisse/vareihe.shtml \
 	htdocs/favicon.ico \
-	htdocs/js/jquery.polartimer.js \
 	htdocs/robots.txt \
 	htdocs/veranstalter/export.shtml \
 	htdocs/veranstalter/index.shtml \
@@ -223,15 +217,6 @@ $(GENERATED_WEB_FILES): %: %.in
 	else \
 	  rm -f $@.tmp; \
 	fi
-
-htdocs/js/jquery.js htdocs/js/jquery.min.js:
-	@mkdir -p $(dir $@)
-	$(CURL) -o $@ --fail --silent --location http://code.jquery.com/$(notdir $@)
-
-htdocs/js/raphael.js htdocs/js/raphael-min.js:
-	@mkdir -p $(dir $@)
-	$(CURL) -o $@ --fail --silent --location \
-		http://github.com/DmitryBaranovskiy/raphael/raw/master/$(notdir $@)
 
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
