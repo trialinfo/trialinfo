@@ -68,7 +68,7 @@ function fahrer_speichern($http, id, startnummer, version, fahrer) {
   var params = {
     id: id,
     version: version,
-    mtime: Math.trunc(new Date().getTime() / 1000)
+    mtime: Math.floor(new Date().getTime() / 1000)
   };
   if (startnummer !== undefined)
     params.startnummer = startnummer;
@@ -79,7 +79,7 @@ function veranstaltung_speichern($http, id, veranstaltung) {
   var params = {
     id: id,
     version: veranstaltung.version,
-    mtime: Math.trunc(new Date().getTime() / 1000)
+    mtime: Math.floor(new Date().getTime() / 1000)
   };
   return $http.put('/api/veranstaltung', veranstaltung, {params: params});
 }
