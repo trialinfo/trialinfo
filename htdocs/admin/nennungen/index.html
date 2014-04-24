@@ -19,6 +19,9 @@
 		<select ng-disabled="!enabled.fahrer" ng-model="fahrer.klasse" ng-options="klasse.klasse as klasse.klasse + ': ' + klasse.bezeichnung for klasse in definierte_klassen" tabindex="-1">
 		  <option value=""></option>
 		</select>
+		<span ng-if="fahrer.klasse != null && fahrer.klasse != veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse">
+		  (Wertung in Klasse {{veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse}})</br>
+		</span>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.nachname">
