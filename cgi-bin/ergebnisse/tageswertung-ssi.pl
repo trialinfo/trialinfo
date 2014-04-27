@@ -131,6 +131,8 @@ if (defined $vareihe) {
 while (my $row = $sth->fetchrow_hashref) {
     my $klasse = $row->{klasse};
     delete $row->{klasse};
+    $klassenfarben->{$klasse} = $row->{farbe}
+	if defined $row->{farbe};
     $cfg->{klassen}[$klasse - 1] = $row;
 }
 
