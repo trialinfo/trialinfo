@@ -100,9 +100,9 @@ if (my @row = $sth->fetchrow_array) {
     $wertung = $row[2];
     $cfg->{wertungen}[$wertung - 1] = { titel => $row[3] };
     $zeit = $row[4];
-    $cfg->{wertungsmodus} = $row[6];
-    $cfg->{vierpunktewertung} = $row[7];
-    $cfg->{punkteteilung} = $row[8];
+    $cfg->{wertungsmodus} = $row[5];
+    $cfg->{vierpunktewertung} = $row[6];
+    $cfg->{punkteteilung} = $row[7];
 }
 
 unless (defined $cfg) {
