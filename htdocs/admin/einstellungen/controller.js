@@ -249,7 +249,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	  (art === 'otsv2014' && index >= 10 && index <= 12) ? index - 9 :
 	  (art === 'otsv+osk2014' && index == 0) ? 11 : index + 1;
 	klasse.keine_wertung1 =
-	  ((art === 'otsv2014' || art === 'otsv+osk2014') && index == 4) ||
+	  ((art === 'otsv2014' || art === 'otsv+osk2014') && index == 6) ||
 	  (art === 'otsv2014' && (index == 0 || (index >= 10 && index <= 12)));
 	klasse.ausser_konkurrenz =
 	  (art === 'otsv+osk2014' && index == 0);
