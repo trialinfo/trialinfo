@@ -24,16 +24,16 @@
 		</span>
 	      </td>
 	    </tr>
-	    <tr ng-if="features.nachname">
-	      <th align="right"><label for="nachname" accesskey="n"><span class="accesskey">N</span>achname</label></th>
-	      <td>
-		<input ng-disabled="!enabled.fahrer" type="text" size="30" maxlength="30" ng-model="fahrer.nachname" id="nachname">
-	      </td>
-	    </tr>
 	    <tr ng-if="features.vorname">
 	      <th align="right"><label for="vorname" accesskey="v"><span class="accesskey">V</span>orname</label></th>
 	      <td>
 		<input ng-disabled="!enabled.fahrer" type="text" size="30" maxlength="30" ng-model="fahrer.vorname" id="vorname">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.nachname">
+	      <th align="right"><label for="nachname" accesskey="n"><span class="accesskey">N</span>achname</label></th>
+	      <td>
+		<input ng-disabled="!enabled.fahrer" type="text" size="30" maxlength="30" ng-model="fahrer.nachname" id="nachname">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.strasse">
