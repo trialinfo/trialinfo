@@ -1,6 +1,7 @@
 'use strict;'
 
 function externController($scope, $http, $location, $q, veranstaltungen) {
+  $scope.$root.kontext((SYNC_SOURCE ? 'Synchronisieren, ' : '') + 'Import und Export');
   $scope.SYNC_SOURCE = SYNC_SOURCE;
   $scope.veranstaltungen = veranstaltungen;
   $scope.einstellungen = {
