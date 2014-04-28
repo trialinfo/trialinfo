@@ -173,7 +173,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     aktuelle_runde:
       { name: 'Aktuelle Runde',
 	bezeichnung: '<span title="Aktuelle Runde">In Runde</span>',
-	ausdruck: "(!start || ausfall || runden >= veranstaltung.klassen[klasse - 1]['runden']) ? null : runden + 1",
+	ausdruck: "(!start || ausfall || runden >= veranstaltung.klassen[veranstaltung.klassen[klasse - 1].wertungsklasse - 1]['runden']) ? null : runden + 1",
 	style: { 'text-align': 'center' } },
   };
   angular.forEach([1, 2, 3, 4], function(wertung) {
@@ -252,7 +252,8 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       return false;
     if (anzeige.unterwegs) {
       try {
-	var klasse = veranstaltung.klassen[fahrer.klasse - 1];
+	var klasse = veranstaltung.klassen[
+	  veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1];
 	if (!fahrer.start || fahrer.ausfall || fahrer.runden >= klasse.runden)
 	  return false;
       } catch(_) { }
