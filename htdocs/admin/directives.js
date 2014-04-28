@@ -299,10 +299,18 @@ function tabTo() {
 	   erschweren. */
 	return;
       }
+      function good_key(event) {
+	return !(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) &&
+	       event.which > 46 && event.which <= 222 &&
+	       (event.which < 112 /* F1 */ || event.which > 123 /* F12 */);
+      }
+      element.bind('keydown', function(event) {
+	if (good_key(event))
+	  scope.key_down = true;
+      });
       element.bind('keyup', function(event) {
-	if (!(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) &&
-	    event.which > 46 && event.which <= 222 &&
-	    (event.which < 112 /* F1 */ || event.which > 123 /* F12 */)) {
+	if (good_key(event) && scope.key_down) {
+	  delete scope.key_down;
 	  if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
 	    var selector = scope.$eval(attr.tabTo);
 	    if (selector !== undefined) {
