@@ -61,7 +61,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
       var punkte_pro_sektion = fahrer.punkte_pro_sektion;
       var runden = veranstaltung.klassen[wertungsklasse - 1].runden;
       for (var n = 0; n < runden; n++) {
-	if (punkte_pro_sektion[n] === undefined)
+	if (punkte_pro_sektion[n] == null)
 	  punkte_pro_sektion[n] = [];
 	angular.forEach(veranstaltung.sektionen[wertungsklasse - 1],
 	  function(sektion) {

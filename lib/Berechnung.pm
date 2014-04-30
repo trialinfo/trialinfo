@@ -246,6 +246,11 @@ sub punkte_berechnen($$) {
 	    }
 	}
 
+	unless ($gefahrene_sektionen) {
+	    $gesamtpunkte = undef;
+	    $punkteverteilung = [(undef) x 6];
+	}
+
 	$fahrer->{runden} = $letzte_begonnene_runde;
 	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;

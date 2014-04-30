@@ -61,7 +61,7 @@ if ($op eq "GET/veranstaltung/auswertung") {
 	    WHERE id = ?
 	) AS _ ON wertungsklasse = _.klasse
 	WHERE start AND id = ?
-	ORDER BY rang
+	ORDER BY rang, startnummer
     });
     $sth->execute($id, $id);
     my $fahrer = {};
