@@ -155,6 +155,7 @@ table.liste td, table.liste th {
 }
 </style>
 
+<p>{{gesamt}} Fahrer.</p>
 <div ng-repeat="gruppe in ergebnisliste" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung != '-'">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">

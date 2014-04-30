@@ -478,6 +478,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       if (filter(fahrer))
 	ergebnisliste.push(fahrer);
     });
+    $scope.gesamt = ergebnisliste.length;
     var gruppieren = gruppieren_funktionen[$scope.anzeige.gruppierung];
     var sortieren = sortieren_funktionen[$scope.anzeige.reihenfolge];
     comparators = [];
