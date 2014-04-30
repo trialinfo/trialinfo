@@ -73,8 +73,8 @@ print $q->header(-type=>'text/comma-separated-values', -charset=>'utf-8',
 
 my $sth = $dbh->prepare(q{
     SELECT startnummer, klasse, vorname, nachname, strasse, plz AS PLZ,
-	   wohnort AS ort, land, club, geburtsdatum, telefon, lizenznummer,
-	   fahrzeug, hubraum, bemerkung AS 'E-Mail'
+	   wohnort AS ort, bundesland, land, club, geburtsdatum, telefon,
+	   lizenznummer, fahrzeug, hubraum, email AS 'E-Mail', bemerkung
     FROM fahrer
     WHERE id = ? AND startnummer > 0
 	  } . ($gestartet ? "AND start" : "") . q{
