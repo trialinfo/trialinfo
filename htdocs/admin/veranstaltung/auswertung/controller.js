@@ -435,8 +435,8 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       'page-size': 'A4',
       'font-size': 8,
       'margin-left': '1cm',
-      'margin-top': '4.5cm',
-      'margin-right': '4.5cm',
+      'margin-top': '4cm',
+      'margin-right': '1cm',
       'margin-bottom': '1cm',
     }, function(value, key) {
       if (search[key] === undefined)

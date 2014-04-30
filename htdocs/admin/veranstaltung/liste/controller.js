@@ -580,11 +580,11 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       andere_klassen: 'yes',
       feld: ['startnummer', 'name'],
       'page-size': 'A4',
-      'font-size': 10,
-      'margin-left': '2cm',
-      'margin-top': '2cm',
-      'margin-right': '2cm',
-      'margin-bottom': '2cm',
+      'font-size': 8,
+      'margin-left': '1cm',
+      'margin-top': '4cm',
+      'margin-right': '1cm',
+      'margin-bottom': '1cm',
     }, function(value, key) {
       if (search[key] === undefined)
 	search[key] = value;
