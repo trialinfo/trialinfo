@@ -37,7 +37,6 @@ trace_sql $dbh, 2, \*STDERR
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $vareihe = $q->param('vareihe');
-my $animiert = defined $q->param('animiert');
 my $wertung = $q->param('wertung') || 1;
 my @klassen = $q->param('klasse');
 
@@ -81,8 +80,6 @@ if (defined $vareihe) {
     });
     $sth->execute($id, $wertung);
 } else {
-    # FIXME: Stattdessen eine Liste der Veranstaltungen; Parameter
-    # durchschleifen. Veranstalter-Link zu animiertem Ergebnis?
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, mtime,
 	       wertungsmodus, vierpunktewertung, punkteteilung
@@ -231,17 +228,9 @@ if ($alle_punkte) {
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
-unless ($animiert) {
-    doc_h1 "$bezeichnung"
-	if defined $bezeichnung;
-    doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
-} else {
-    if (defined $bezeichnung) {
-	doc_h2 "$bezeichnung – $cfg->{wertungen}[$wertung - 1]{titel}";
-    } else {
-	doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
-    }
-}
+doc_h1 "$bezeichnung"
+    if defined $bezeichnung;
+doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
 
 tageswertung cfg => $cfg,
 	     fahrer_nach_startnummer => $fahrer_nach_startnummer,
@@ -251,8 +240,7 @@ tageswertung cfg => $cfg,
 	     alle_punkte => $alle_punkte,
 	     nach_relevanz => $nach_relevanz,
 	     @klassen ? (klassen => \@klassen) : (),
-	     statistik_gesamt => !$animiert,
-	     statistik_pro_klasse => $animiert;
+	     statistik_gesamt => 1,
+	     statistik_pro_klasse => 0;
 
-print "<p>Letzte Änderung: $zeit</p>\n"
-    unless $animiert;
+print "<p>Letzte Änderung: $zeit</p>\n";
