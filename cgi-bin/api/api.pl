@@ -775,13 +775,14 @@ eval {
 	unless (@$result) {
 	    $suchbegriff =~ s/^\s+//;
 	    $suchbegriff =~ s/\s+$//;
-	    $suchbegriff =~ s/\s+/.* /g;
-	    $suchbegriff = "^$suchbegriff";
+	    $suchbegriff =~ s/\s+/% /g;
+	    $suchbegriff =~ s/\*/%/g;
+	    $suchbegriff = "$suchbegriff%";
 
 	    my $sth = $dbh->prepare($select_fahrer . q{
 		WHERE id = ? AND
-		      (CONCAT(COALESCE(vorname, ''), ' ', COALESCE(nachname, '')) REGEXP ? OR
-		       CONCAT(COALESCE(nachname, ''), ' ', COALESCE(vorname, '')) REGEXP ?)
+		      (CONCAT(COALESCE(vorname, ''), ' ', COALESCE(nachname, '')) LIKE ? OR
+		       CONCAT(COALESCE(nachname, ''), ' ', COALESCE(vorname, '')) LIKE ?)
 		ORDER BY nachname, vorname
 		LIMIT 20
 	    });

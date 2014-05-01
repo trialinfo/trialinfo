@@ -59,7 +59,7 @@ function fahrer_laden($http, id, startnummer, richtung, fahrer) {
 function fahrer_suchen($http, id, suchbegriff) {
   var params = {
     'id': id,
-    'suchbegriff': suchbegriff.replace(/\*/g, '.*').replace(/\?/g, '.')
+    'suchbegriff': suchbegriff
   };
   return $http.get('/api/fahrer/suchen', {'params': params});
 }
