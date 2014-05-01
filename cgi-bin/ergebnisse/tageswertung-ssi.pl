@@ -62,7 +62,8 @@ print "Content-type: text/html; charset=utf-8\n\n";
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
 	SELECT id, vareihe.bezeichnung, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
+	       wertungsmodus, vierpunktewertung, punkteteilung,
+	       abgeschlossen
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
 	JOIN vareihe USING (vareihe, wertung)
@@ -73,7 +74,8 @@ if (defined $vareihe) {
 } elsif (defined $id) {
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
+	       wertungsmodus, vierpunktewertung, punkteteilung,
+	       abgeschlossen
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE id = ? AND wertung = ?
@@ -82,7 +84,8 @@ if (defined $vareihe) {
 } else {
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
+	       wertungsmodus, vierpunktewertung, punkteteilung,
+	       abgeschlossen
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE wertung = ?
@@ -100,6 +103,7 @@ if (my @row = $sth->fetchrow_array) {
     $cfg->{wertungsmodus} = $row[5];
     $cfg->{vierpunktewertung} = $row[6];
     $cfg->{punkteteilung} = $row[7];
+    $cfg->{abgeschlossen} = $row[8];
 }
 
 unless (defined $cfg) {
@@ -243,4 +247,5 @@ tageswertung cfg => $cfg,
 	     statistik_gesamt => 1,
 	     statistik_pro_klasse => 0;
 
-print "<p>Letzte Änderung: $zeit</p>\n";
+print "<p>Letzte Änderung: $zeit</p>\n"
+    unless $cfg->{abgeschlossen};

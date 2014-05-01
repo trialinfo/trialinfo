@@ -53,6 +53,7 @@ my $laeufe;
 my $streichresultate;
 my $wertung;
 my $zeit;
+my $alle_abgeschlossen = 1;
 my $fahrer_nach_startnummer;
 my $klassenfarben;
 my $sth;
@@ -75,7 +76,8 @@ if (my @row =  $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT id, datum, wertung, titel, subtitel, mtime, punkteteilung
+    SELECT id, datum, wertung, titel, subtitel, mtime, punkteteilung,
+	   abgeschlossen
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN vareihe USING (vareihe, wertung)
@@ -102,6 +104,8 @@ while (my @row = $sth->fetchrow_array) {
     $veranstaltungen->{$id}{cfg} = $cfg;
     $zeit = max_timestamp($zeit, $row[5]);
     $cfg->{punkteteilung} = $row[6];
+    $alle_abgeschlossen = 0
+	unless $row[7];
     push @$veranstaltungen_reihenfolge, $row[0];
 }
 
@@ -216,4 +220,5 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      nach_relevanz => 1,
 	      @klassen ? (klassen => \@klassen ) : ();
 
-print "<p>Letzte Änderung: $zeit</p>\n";
+print "<p>Letzte Änderung: $zeit</p>\n"
+    unless $alle_abgeschlossen;

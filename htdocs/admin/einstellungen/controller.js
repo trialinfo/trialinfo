@@ -156,7 +156,9 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     veranstaltung.features = features_zu_liste($scope.features);
     wertungspunkte_kolabieren(veranstaltung.wertungspunkte);
     $scope.busy = true;
-    veranstaltung_speichern($http, veranstaltung.id, veranstaltung).
+    var abgeschlossen =
+      $scope.veranstaltung_alt.abgeschlossen || veranstaltung.abgeschlossen;
+    veranstaltung_speichern($http, veranstaltung.id, veranstaltung, abgeschlossen).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
 	var path = '/veranstaltung/' + veranstaltung.id + '/einstellungen';

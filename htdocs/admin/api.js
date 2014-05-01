@@ -64,23 +64,25 @@ function fahrer_suchen($http, id, suchbegriff) {
   return $http.get('/api/fahrer/suchen', {'params': params});
 }
 
-function fahrer_speichern($http, id, startnummer, version, fahrer) {
+function fahrer_speichern($http, id, startnummer, version, fahrer, abgeschlossen) {
   var params = {
     id: id,
     version: version,
-    mtime: Math.floor(new Date().getTime() / 1000)
   };
   if (startnummer !== undefined)
     params.startnummer = startnummer;
+  if (!abgeschlossen)
+    params.mtime = Math.floor(new Date().getTime() / 1000);
   return $http.put('/api/fahrer', fahrer, {params: params});
 }
 
-function veranstaltung_speichern($http, id, veranstaltung) {
+function veranstaltung_speichern($http, id, veranstaltung, abgeschlossen) {
   var params = {
     id: id,
     version: veranstaltung.version,
-    mtime: Math.floor(new Date().getTime() / 1000)
   };
+  if (!abgeschlossen)
+    params.mtime = Math.floor(new Date().getTime() / 1000);
   return $http.put('/api/veranstaltung', veranstaltung, {params: params});
 }
 

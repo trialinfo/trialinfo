@@ -260,7 +260,8 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
       version = $scope.fahrer_alt.version;
     }
     $scope.busy = true;
-    fahrer_speichern($http, veranstaltung.id, startnummer, version, $scope.fahrer).
+    fahrer_speichern($http, veranstaltung.id, startnummer, version, $scope.fahrer,
+		     veranstaltung.abgeschlossen).
       success(function(fahrer) {
 	fahrer_zuweisen(fahrer);
 	set_focus('#suchbegriff', $timeout);
