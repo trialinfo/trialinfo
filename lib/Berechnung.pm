@@ -68,8 +68,8 @@ sub rang_vergleich($$$) {
 	if $a->{gefahrene_sektionen} != $b->{gefahrene_sektionen};
 
     # Aufsteigend nach Punkten
-    return $a->{punkte} <=> $b->{punkte}
-	if $a->{punkte} != $b->{punkte};
+    return ($a->{punkte} // 0) <=> ($b->{punkte} // 0)
+	if ($a->{punkte} // 0) != ($b->{punkte} // 0);
 
     # Aufsteigend nach Ergebnis im Stechen
     return $a->{stechen} <=> $b->{stechen}
@@ -77,8 +77,8 @@ sub rang_vergleich($$$) {
 
     # Abfallend nach 0ern, 1ern, 2ern, 3ern, 4ern
     for (my $n = 0; $n < 5; $n++) {
-	return $b->{punkteverteilung}[$n] <=> $a->{punkteverteilung}[$n]
-	    if $a->{punkteverteilung}[$n] != $b->{punkteverteilung}[$n];
+	return ($b->{punkteverteilung}[$n] // 0) <=> ($a->{punkteverteilung}[$n] // 0)
+	    if ($a->{punkteverteilung}[$n] // 0) != ($b->{punkteverteilung}[$n] // 0);
     }
 
     # Aufsteigend nach der besten Runde?
