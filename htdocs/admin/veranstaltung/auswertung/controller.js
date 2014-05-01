@@ -616,8 +616,6 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     if (rang != null)
       return rang + '.';
   }
-
-  /* $scope.netzwerkfehler = ...; */
 }
 
 veranstaltungAuswertungController.resolve = {

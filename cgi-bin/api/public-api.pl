@@ -130,7 +130,8 @@ if ($op eq "GET/veranstaltung/auswertung") {
     }
 
     $sth = $dbh->prepare(q{
-	SELECT mtime, vierpunktewertung, wertungsmodus, punkteteilung
+	SELECT mtime, vierpunktewertung, wertungsmodus, punkteteilung,
+	       abgeschlossen
 	FROM veranstaltung
 	WHERE id = ?
     });

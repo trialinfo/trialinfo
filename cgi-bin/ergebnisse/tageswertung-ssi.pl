@@ -37,7 +37,6 @@ trace_sql $dbh, 2, \*STDERR
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $vareihe = $q->param('vareihe');
-my $animiert = defined $q->param('animiert');
 my $wertung = $q->param('wertung') || 1;
 my @klassen = $q->param('klasse');
 
@@ -63,7 +62,8 @@ print "Content-type: text/html; charset=utf-8\n\n";
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
 	SELECT id, vareihe.bezeichnung, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
+	       wertungsmodus, vierpunktewertung, punkteteilung,
+	       abgeschlossen
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
 	JOIN vareihe USING (vareihe, wertung)
@@ -74,18 +74,18 @@ if (defined $vareihe) {
 } elsif (defined $id) {
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
+	       wertungsmodus, vierpunktewertung, punkteteilung,
+	       abgeschlossen
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE id = ? AND wertung = ?
     });
     $sth->execute($id, $wertung);
 } else {
-    # FIXME: Stattdessen eine Liste der Veranstaltungen; Parameter
-    # durchschleifen. Veranstalter-Link zu animiertem Ergebnis?
     $sth = $dbh->prepare(q{
 	SELECT id, NULL, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
+	       wertungsmodus, vierpunktewertung, punkteteilung,
+	       abgeschlossen
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE wertung = ?
@@ -103,6 +103,7 @@ if (my @row = $sth->fetchrow_array) {
     $cfg->{wertungsmodus} = $row[5];
     $cfg->{vierpunktewertung} = $row[6];
     $cfg->{punkteteilung} = $row[7];
+    $cfg->{abgeschlossen} = $row[8];
 }
 
 unless (defined $cfg) {
@@ -231,17 +232,9 @@ if ($alle_punkte) {
 #use Data::Dumper;
 #print Dumper($cfg, $fahrer_nach_startnummer);
 
-unless ($animiert) {
-    doc_h1 "$bezeichnung"
-	if defined $bezeichnung;
-    doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
-} else {
-    if (defined $bezeichnung) {
-	doc_h2 "$bezeichnung – $cfg->{wertungen}[$wertung - 1]{titel}";
-    } else {
-	doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
-    }
-}
+doc_h1 "$bezeichnung"
+    if defined $bezeichnung;
+doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
 
 tageswertung cfg => $cfg,
 	     fahrer_nach_startnummer => $fahrer_nach_startnummer,
@@ -251,8 +244,8 @@ tageswertung cfg => $cfg,
 	     alle_punkte => $alle_punkte,
 	     nach_relevanz => $nach_relevanz,
 	     @klassen ? (klassen => \@klassen) : (),
-	     statistik_gesamt => !$animiert,
-	     statistik_pro_klasse => $animiert;
+	     statistik_gesamt => 1,
+	     statistik_pro_klasse => 0;
 
 print "<p>Letzte Änderung: $zeit</p>\n"
-    unless $animiert;
+    unless $cfg->{abgeschlossen};

@@ -38,7 +38,10 @@
       </tr>
       <tr ng-if="veranstaltung.id">
 	<th align="right"><label for="mtime">Letzte<br>Änderung</label></th>
-	<td><input type="text" size="19" maxlength="19" ng-model="veranstaltung.mtime" iso-timestamp id="mtime" disabled="disabled"></span></td>
+	<td>
+	  <input type="text" size="19" maxlength="19" ng-model="veranstaltung.mtime" iso-timestamp id="mtime" disabled="disabled">
+	  <input type="checkbox" ng-model="veranstaltung.abgeschlossen" id="abgeschlossen"><label for="abgeschlossen">abgeschlossen</label>
+	</td>
       </tr>
       <tr>
 	<th align="right"><label for="art">Art</label></th>

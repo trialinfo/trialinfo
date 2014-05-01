@@ -158,6 +158,12 @@ sub veranstaltung_reset($$$) {
 	    WHERE id = ? and feature = 'start_morgen'
 	}, undef, $id);
     }
+
+    $dbh->do(q{
+	INSERT IGNORE INTO veranstaltung_feature (id, feature)
+	VALUES (?, ?)
+    }, undef, $id, 'sektionen_aus_wertung');
+
     # FIXME: In veranstaltung mtime zurücksetzen
 }
 
