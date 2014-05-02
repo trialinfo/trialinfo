@@ -40,14 +40,6 @@ my $vareihe = $q->param('vareihe');
 my $wertung = $q->param('wertung') || 1;
 my @klassen = $q->param('klasse');
 
-my @spalten =  $q->param('spalte');
-map {
-    /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
-	or die "Invalid column name\n";
-} @spalten;
-
-my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
-
 my $bezeichnung;
 my $zeit;
 my $cfg;
@@ -110,6 +102,30 @@ unless (defined $cfg) {
     doc_h2 "Veranstaltung nicht gefunden.";
     exit;
 }
+
+my $features;
+$sth = $dbh->prepare(q{
+    SELECT feature
+    FROM veranstaltung_feature
+    WHERE id = ?
+});
+$sth->execute($id);
+while (my @row = $sth->fetchrow_array) {
+    $features->{$row[0]} = 1;
+}
+
+my @spalten;
+foreach my $spalte ($q->param('spalte')) {
+    $spalte =~ /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
+	or die "Invalid column name\n";
+    if ($spalte eq 'lbl') {
+	next unless $features->{land} || $features->{bundesland};
+    } else {
+	next unless $features->{$spalte};
+    }
+    push @spalten, $spalte;
+}
+my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
