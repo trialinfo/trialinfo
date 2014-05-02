@@ -39,15 +39,6 @@ my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
 my @klassen = $q->param('klasse');
 
-my @spalten = $q->param('spalte');
-
-map {
-    /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
-	or die "Invalid column name\n";
-} @spalten;
-
-my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
-
 my $bezeichnung;
 my $laeufe;
 my $streichresultate;
@@ -88,6 +79,7 @@ $sth = $dbh->prepare(q{
 $sth->execute($vareihe);
 my $veranstaltungen;
 my $n = 1;
+my $letzte_id;
 while (my @row = $sth->fetchrow_array) {
     my $cfg;
     my $id = $row[0];
@@ -107,6 +99,35 @@ while (my @row = $sth->fetchrow_array) {
     $alle_abgeschlossen = 0
 	unless $row[7];
     push @$veranstaltungen_reihenfolge, $row[0];
+    $letzte_id = $row[0];
+}
+
+my @spalten;
+my @db_spalten;
+if ($letzte_id) {
+    my $features;
+    $sth = $dbh->prepare(q{
+	SELECT feature
+	FROM veranstaltung_feature
+	WHERE id = ?
+    });
+    $sth->execute($letzte_id);
+    while (my @row = $sth->fetchrow_array) {
+	$features->{$row[0]} = 1;
+    }
+
+    foreach my $spalte ($q->param('spalte')) {
+	$spalte =~ /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
+	   or die "Invalid column name\n";
+	if ($spalte eq 'lbl') {
+	   next unless $features->{land} || $features->{bundesland};
+	} else {
+	   next unless $features->{$spalte};
+	}
+	push @spalten, $spalte;
+    }
+
+    @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 }
 
 $sth = $dbh->prepare(q{
