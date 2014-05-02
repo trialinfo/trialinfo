@@ -4,12 +4,13 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.anzeige = { felder: [], klassen: [] };
 
-  var auswertung_alt, veranstaltung;
+  var auswertung_alt, veranstaltung, features;
 
   function auswertung_zuweisen(a) {
     auswertung_alt = angular.copy(a);
     auswertung = a;
     veranstaltung = auswertung.veranstaltung;
+    features = features_aus_liste(veranstaltung);
     $scope.veranstaltung = veranstaltung;
     $scope.$root.kontext(veranstaltung.wertungen[($scope.anzeige.wertung || 1) - 1].titel);
     $scope.klassen = (function() {
@@ -429,16 +430,21 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 
   $scope.$on('$routeUpdate', function() {
     var search = $location.search();
-    angular.forEach({
+    var defaults = {
       wertung: veranstaltung.wertungen.length ? 1 : null,
-      feld: ['startnummer', 'name', 'lbl', 'fahrzeug'],
+      feld: ['startnummer', 'name'],
       'page-size': 'A4',
       'font-size': 8,
       'margin-left': '1cm',
       'margin-top': '4cm',
       'margin-right': '1cm',
       'margin-bottom': '1cm',
-    }, function(value, key) {
+    };
+    if (features.land || features.bundesland)
+      defaults.feld.push('lbl');
+    if (features.fahrzeug)
+      defaults.feld.push('fahrzeug');
+    angular.forEach(defaults, function(value, key) {
       if (search[key] === undefined)
 	search[key] = value;
     });

@@ -209,6 +209,17 @@ if ($op eq "GET/veranstaltung/auswertung") {
 	push @{$veranstaltung->{sektionen_aus_wertung}[$klasse - 1][$row[1] - 1]}, $row[2];
     }
 
+    $sth = $dbh->prepare(q{
+	SELECT feature
+	FROM veranstaltung_feature
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    $veranstaltung->{features} = [];
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	push @{$veranstaltung->{features}}, $row[0];
+    }
     $result = { veranstaltung => $veranstaltung,
 		fahrer_in_klassen => $fahrer_in_klassen };
 } else {

@@ -94,6 +94,19 @@ sub veranstaltung_reset($$$) {
 	    or die "Konnte die minimale und maximale Startnummer nicht ermitteln\n";
 	$reset = 'nennbeginn'
 	    if $startnummer_max <= 0;
+	for my $table (qw(fahrer fahrer_wertung)) {  # neue_startnummer punkte runde
+	    $dbh->do(qq{
+		UPDATE $table
+		SET startnummer = CASE WHEN startnummer < 0
+				       THEN startnummer - ?
+				       ELSE -startnummer END
+		WHERE id = ?
+	    }, undef, $startnummer_max, $id);
+	}
+	$dbh->do(q{
+	    DELETE FROM neue_startnummer
+	    WHERE id = ?
+	}, undef, $id);
     }
     $dbh->do(q{
 	DELETE FROM punkte
@@ -118,15 +131,9 @@ sub veranstaltung_reset($$$) {
 		q{
 		    , nennungseingang = 0, start = 0, start_morgen = 0
 		    , nenngeld = NULL
-		} . ($reset eq 'nennbeginn' ? '' : q{
-		    , startnummer = CASE WHEN startnummer < 0 THEN
-					 startnummer - ? ELSE
-					 -startnummer END
-		    , lizenznummer = NULL
-		}))) . q{
+		})) . q{
 	WHERE id = ?
-    }, undef, ($reset eq 'stammdaten' ? $startnummer_max : ()), $id);
-
+    }, undef, $id);
     $sth = $dbh->do(q{
 	DELETE FROM sektion_aus_wertung
 	WHERE id = ?
