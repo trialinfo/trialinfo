@@ -181,7 +181,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     </script>
   </head>
   <body>
-    <div style="position:fixed; top:0px; right:1em" ng-controller="syncController">
+    <div style="position:fixed; top:0px; right:1em" ng-controller="syncController" class="no-print">
       <p style="font-weight:bold; text-align:right; background-color:#FFFFE0; padding:0.5em; padding-left:1em; padding-right:1em; border:solid 1px" ng-if="visible">
 	{{titel}} <span ng-bind-html="zustand()"></span>
 	<button ng-click="close()" tabindex="-1" ng-if="running">Beenden</button>

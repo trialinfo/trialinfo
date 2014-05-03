@@ -173,7 +173,7 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   $scope.loeschen = function() {
     if ($scope.busy)
       return;
-    if (confirm('Veranstaltungsreihe wirklich löschen?\n\nDie Veranstaltungsreihe kann später nicht wiederhergestellt werden.'))
+    if (confirm('Veranstaltungsreihe wirklich löschen?\n\nDie Veranstaltungsreihe kann später nicht wiederhergestellt werden.')) {
       $scope.busy = true;
       vareihe_loeschen($http, $scope.vareihe.vareihe, $scope.vareihe.version).
 	success(function() {
@@ -183,6 +183,7 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 	finally(function() {
 	  delete $scope.busy;
 	});
+    }
   };
 
   $scope.keydown = function(event) {

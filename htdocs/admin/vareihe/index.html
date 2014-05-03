@@ -62,23 +62,23 @@
   </fieldset><br>
   <fieldset style="display:inline">
     <legend>Startnummernänderungen</legend>
-    <span ng-repeat="veranstaltung in veranstaltungen | filter:in_vareihe" ng-init="aenderungen = vareihe.startnummern[veranstaltung.id]">
+    <span ng-repeat="veranstaltung in veranstaltungen | filter:in_vareihe">
       <fieldset style="display:inline">
 	<legend>{{veranstaltung.titel}}</legend>
 	<table>
 	  <tr>
 	    <th align="right"></th>
-	    <th ng-repeat="aenderung in aenderungen track by $index" align="center"></th>
+	    <th ng-repeat="aenderung in vareihe.startnummern[veranstaltung.id] track by $index" align="center"></th>
 	  </tr>
 	  <tr>
 	    <th align="right">Von</th>
-	    <td ng-repeat="aenderung in aenderungen track by $index" align="center">
+	    <td ng-repeat="aenderung in vareihe.startnummern[veranstaltung.id] track by $index" align="center">
 	      <input type="number" size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.alt" style="text-align:center">
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right">Nach</th>
-	    <td align="center" ng-repeat="aenderung in aenderungen track by $index" align="center">
+	    <td align="center" ng-repeat="aenderung in vareihe.startnummern[veranstaltung.id] track by $index" align="center">
 	      <input type="number" size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.neu" style="text-align:center">
 	    </td>
 	  </tr>
