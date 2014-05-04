@@ -1,5 +1,10 @@
 <h1>Veranstaltungen</h1>
 <p>
+  <form ng-if="abgeschlossene_veranstaltungen">
+    <input type="checkbox" ng-model="anzeige.abgeschlossene_veranstaltungen" id="abgeschlossene_veranstaltungen_anzeigen" style="display:none"><label for="abgeschlossene_veranstaltungen_anzeigen" style="color:grey"><span ng-if="!anzeige.abgeschlossene_veranstaltungen">Abgeschlossene Veranstaltungen anzeigen</span><span ng-if="anzeige.abgeschlossene_veranstaltungen">Abgeschlossene Veranstaltungen verbergen</span></label>
+  </form>
+</p>
+<p>
   <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar"><a href="#/veranstaltung/{{veranstaltung.id}}" ng-style="veranstaltung.aktiv ? undefined : {'text-decoration': 'line-through'}">{{veranstaltung.titel}}{{veranstaltung_kuerzel(veranstaltung.vareihen)}}</a><br></span>
 </p>
 <p>
@@ -8,7 +13,12 @@
 
 <h1>Veranstaltungsreihen</h1>
 <p>
-  <span ng-repeat="vareihe in vareihen" ng-style="vareihe.verborgen ? {'text-decoration': 'line-through'} : undefined"><a href="#/vareihe/{{vareihe.vareihe}}">{{vareihe.bezeichnung}}</a><br></span>
+  <form ng-if="abgeschlossene_vareihen">
+    <input type="checkbox" ng-model="anzeige.abgeschlossene_vareihen" id="abgeschlossene_vareihen_anzeigen" style="display:none"><label for="abgeschlossene_vareihen_anzeigen" style="color:grey"><span ng-if="!anzeige.abgeschlossene_vareihen">Abgeschlossene Veranstaltungsreihen anzeigen</span><span ng-if="anzeige.abgeschlossene_vareihen">Abgeschlossene Veranstaltungsreihen verbergen</span></label>
+  </form>
+</p>
+<p>
+  <span ng-repeat="vareihe in vareihen | filter:vareihe_sichtbar"><a href="#/vareihe/{{vareihe.vareihe}}">{{vareihe.bezeichnung}}</a><br></span>
 </p>
 <p>
   <button ng-click="neue_vareihe()">Neue Veranstaltungsreihe</button>

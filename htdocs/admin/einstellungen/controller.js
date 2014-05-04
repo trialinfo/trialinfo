@@ -241,10 +241,6 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     });
   }
 
-  $scope.sichtbar = function(veranstaltung) {
-    return !veranstaltung.verborgen;
-  };
-
   $scope.wertungsklasse_blur = function(klasse, event) {
     if (event.target.value === klasse + '')
       event.target.value = '';

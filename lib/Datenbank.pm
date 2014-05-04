@@ -467,7 +467,7 @@ sub vareihe_aus_datenbank($$) {
     my $result;
 
     my $sth = $dbh->prepare(q{
-	SELECT tag, version, vareihe, bezeichnung, kuerzel, wertung, verborgen
+	SELECT tag, version, vareihe, bezeichnung, kuerzel, wertung, abgeschlossen
 	FROM vareihe
 	WHERE vareihe = ?
     });
@@ -524,7 +524,7 @@ sub vareihen_aus_datenbank($$) {
     my $vareihen = {};
 
     my $sth = $dbh->prepare(q{
-	SELECT tag, vareihe, version, bezeichnung, kuerzel, wertung, verborgen
+	SELECT tag, vareihe, version, bezeichnung, kuerzel, wertung, abgeschlossen
 	FROM vareihe
 	JOIN vareihe_veranstaltung USING (vareihe)
 	WHERE id = ?

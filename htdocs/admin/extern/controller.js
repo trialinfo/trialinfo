@@ -14,10 +14,6 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
   } catch(_) { }
   $scope.remote = {};
 
-  $scope.veranstaltung_sichtbar = function(veranstaltung) {
-    return !veranstaltung.verborgen;
-  };
-
   $scope.import_file = function() {
     if ($scope.einstellungen.format == 'trial-auswertung') {
       var tra_datei = document.getElementById('tra_datei');

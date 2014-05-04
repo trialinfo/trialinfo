@@ -729,7 +729,7 @@ sub vareihe_aktualisieren($$$$$) {
     my $felder_alt = $alt ? [] : undef;
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
-	foreach my $feld (qw(tag wertung bezeichnung kuerzel verborgen)) {
+	foreach my $feld (qw(tag wertung bezeichnung kuerzel abgeschlossen)) {
 	    if (exists $neu->{$feld}) {
 		push @$felder, $feld;
 		push @$felder_alt, $alt->{$feld}

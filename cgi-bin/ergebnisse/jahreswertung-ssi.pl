@@ -44,7 +44,7 @@ my $laeufe;
 my $streichresultate;
 my $wertung;
 my $zeit;
-my $alle_abgeschlossen = 1;
+my $abgeschlossen;
 my $fahrer_nach_startnummer;
 my $klassenfarben;
 my $sth;
@@ -52,13 +52,13 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT bezeichnung
+    SELECT bezeichnung, abgeschlossen
     FROM vareihe
     WHERE vareihe = ?
 });
 $sth->execute($vareihe);
-if (my @row =  $sth->fetchrow_array) {
-    ($bezeichnung) = @row;
+if (my @row = $sth->fetchrow_array) {
+    ($bezeichnung, $abgeschlossen) = @row;
 } else {
     doc_h2 "Veranstaltungsreihe nicht gefunden.\n";
     exit;
@@ -67,8 +67,7 @@ if (my @row =  $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT id, datum, wertung, titel, subtitel, mtime, punkteteilung,
-	   abgeschlossen
+    SELECT id, datum, wertung, titel, subtitel, mtime, punkteteilung
     FROM wertung
     JOIN vareihe_veranstaltung USING (id)
     JOIN vareihe USING (vareihe, wertung)
@@ -96,8 +95,6 @@ while (my @row = $sth->fetchrow_array) {
     $veranstaltungen->{$id}{cfg} = $cfg;
     $zeit = max_timestamp($zeit, $row[5]);
     $cfg->{punkteteilung} = $row[6];
-    $alle_abgeschlossen = 0
-	unless $row[7];
     push @$veranstaltungen_reihenfolge, $row[0];
     $letzte_id = $row[0];
 }
@@ -242,4 +239,4 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      @klassen ? (klassen => \@klassen ) : ();
 
 print "<p>Letzte Änderung: $zeit</p>\n"
-    unless $alle_abgeschlossen;
+    unless $abgeschlossen;
