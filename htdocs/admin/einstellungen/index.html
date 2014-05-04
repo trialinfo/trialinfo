@@ -181,12 +181,12 @@
     <table>
       <tr>
 	<th>Klasse</th>
-	<!-- <th colspan="{{befahrene_sektionen().length}}">Befahrene Sektionen</th> -->
-	<th ng-repeat="sektion in befahrene_sektionen() track by $index"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
+	<!-- <th colspan="{{sektionsliste.length}}">Befahrene Sektionen</th> -->
+	<th ng-repeat="sektion in sektionsliste track by $index"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
       </tr>
       <tr ng-repeat="klasse in veranstaltung.klassen track by $index" ng-init="k = $index + 1">
 	<th>{{k}}</th>
-	<td align="center" ng-repeat="sektion in befahrene_sektionen() track by $index" style="padding: 0.35em">
+	<td align="center" ng-repeat="sektion in sektionsliste track by $index" style="padding: 0.35em">
 	  <input type="checkbox" ng-model="sektionen[klasse.wertungsklasse - 1][$index]" title="Sektion {{sektion}}" ng-disabled="!klasse_gewertet[k]">
 	</td>
       </tr>

@@ -3,6 +3,7 @@
 function einstellungenController($scope, $http, $timeout, $location, veranstaltung, veranstaltungen) {
   $scope.SYNC_TARGET = SYNC_TARGET;
   $scope.$root.kontext(veranstaltung ? veranstaltung.wertungen[0].titel : 'Neue Veranstaltung');
+  min_sektionen = 8;
 
   veranstaltung_zuweisen(veranstaltung);
   veranstaltung = undefined;
@@ -42,14 +43,15 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     // Alle Werte auffüllen, sonst funktioniert der spätere Vergleich zwischen
     // veranstaltung_alt und veranstaltung nicht immer.
     var klassen = $scope.veranstaltung.klassen.length;
-    var sektionen = 15;
-    for (var klasse = 1; klasse <= klassen; klasse++)
+    var sektionen = $scope.sektionsliste.length;
+    for (var klasse = 1; klasse <= klassen; klasse++) {
+      if (!sektionen_bool[klasse - 1])
+	sektionen_bool[klasse - 1] = [];
       for (var sektion = 1; sektion <= sektionen; sektion++) {
-	if (!sektionen_bool[klasse - 1])
-	  sektionen_bool[klasse - 1] = [];
 	if (sektionen_bool[klasse - 1][sektion - 1] !== true)
 	  sektionen_bool[klasse - 1][sektion - 1] = false;
       }
+    }
     return sektionen_bool;
   }
 
@@ -67,27 +69,22 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   }
   $scope.sektionen_von_bool = sektionen_von_bool;
 
-  $scope.befahrene_sektionen = function() {
-    var max_sektion = 15;
-    /*
-    max_sektion = 0;
-    if ('veranstaltung' in $scope) {
-      angular.forEach($scope.veranstaltung.sektionen, function(sektionen) {
-	if (sektionen) {
-	  var sektion = sektionen.length;
-	  while (sektion > 0 && !sektionen[sektion - 1])
-	    sektion--;
+  function sektionsliste(veranstaltung) {
+    var max_sektion = min_sektionen;
+    angular.forEach(veranstaltung.sektionen, function(sektionen) {
+      if (sektionen) {
+	angular.forEach(sektionen, function(sektion) {
 	  if (max_sektion < sektion)
 	    max_sektion = sektion;
-	}
-      });
-    }
-    */
-    var befahrene_sektionen = [];
+	});
+      }
+    });
+    max_sektion++;
+    var sektionsliste = [];
     for (var sektion = 1; sektion <= max_sektion; sektion++)
-      befahrene_sektionen.push(sektion);
-    return befahrene_sektionen;
-  }
+      sektionsliste.push(sektion);
+    return sektionsliste;
+  };
 
   $scope.geaendert = function() {
     try {
@@ -124,6 +121,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       };
     }
 
+    $scope.sektionsliste = sektionsliste(veranstaltung);
     for (var klasse = 1; klasse <= 15; klasse++) {
       if (!veranstaltung.klassen[klasse - 1])
 	veranstaltung.klassen[klasse - 1] = {wertungsklasse: klasse};
@@ -252,6 +250,33 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       klasse_gewertet[klasse.wertungsklasse] = true;
     });
     $scope.klasse_gewertet = klasse_gewertet;
+  }, true);
+
+  function sektion_befahren(sektion) {
+    for (var klasse = 1; klasse <= $scope.sektionen.length; klasse++)
+      if ($scope.sektionen[klasse - 1][sektion - 1])
+	return true;
+    return false;
+  }
+
+  $scope.$watch('sektionen', function() {
+    var sektionen = $scope.sektionen;
+    var max_sektion = sektionen[0].length;
+    if (sektion_befahren(max_sektion)) {
+      $scope.sektionsliste.push(max_sektion + 1);
+      angular.forEach(sektionen, function(sektionen) {
+	sektionen.push(false);
+      });
+    } else {
+      while (max_sektion > min_sektionen &&
+	     !sektion_befahren(max_sektion - 1)) {
+	$scope.sektionsliste.pop();
+	angular.forEach(sektionen, function(sektionen) {
+	  sektionen.pop();
+	});
+	max_sektion--;
+      }
+    }
   }, true);
 }
 
