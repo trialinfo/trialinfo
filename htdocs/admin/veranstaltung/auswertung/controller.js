@@ -592,7 +592,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 				   {params: $route.current.params,
 				    timeout: cancel_http_request.promise});
 
-	  var dauer = (position[2] * 1000 + position[3] * 400) * Math.pow(2, $scope.anzeige.dauer / 2);
+	  var dauer = (position[2] * 1500 + position[3] * 600) * Math.pow(2, $scope.anzeige.dauer / 2);
 	  timeout_promise = $timeout(animieren, dauer);
         }
       })();
