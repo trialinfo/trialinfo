@@ -18,6 +18,7 @@
 use utf8;
 use CGI;
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
+use POSIX qw(strftime);
 use DBI;
 use RenderOutput;
 use Datenbank;
@@ -109,6 +110,7 @@ $sth = $dbh->prepare(q{
 $sth->execute($id);
 my ($header, $body);
 my $format = [ qw(r r l r r r r) ];
+my $year = strftime("%Y\n", localtime);
 my ($starter, $ueber_18);
 while (my @row = $sth->fetchrow_array) {
     push @$header, map { ucfirst } force_utf8_on @{$sth->{NAME}}
@@ -116,7 +118,7 @@ while (my @row = $sth->fetchrow_array) {
     push @$body, [ @row ];
     $starter++;
     $ueber_18++ unless
-	$row[4] eq 15;
+	$year - $row[3] < 18;
 }
 
 my ($nenngeld, $otsv);
