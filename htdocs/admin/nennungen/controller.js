@@ -252,6 +252,32 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     return checker.promise;
   };
 
+  function naechste_startnummer() {
+    if (canceler)
+      canceler.resolve();
+    canceler = $q.defer();
+    var fahrer = $scope.fahrer;
+    if (fahrer && fahrer.startnummer == null && fahrer.klasse != null) {
+      var params = {
+	'id': veranstaltung.id,
+	'klasse': fahrer.klasse
+      };
+      $http.get('/api/startnummer', {'params': params,
+				     'timeout': canceler.promise}).
+	success(function(data, status, headers, config) {
+	  if (data.naechste_startnummer)
+	    $scope.startnummer_belegt = data;
+	  else
+	    $scope.startnummer_belegt = undefined;
+	}).
+	error(function() {
+	  $scope.startnummer_belegt = undefined;
+	});
+    }
+  }
+  $scope.$watch('fahrer.startnummer', naechste_startnummer);
+  $scope.$watch('fahrer.klasse', naechste_startnummer);
+
   $scope.klasse_gueltig = function(klasse) {
     /* ui-validate calls the validator function too early for numeric form
      * fields which convert input fields to numbers or undefined; maybe this can be

@@ -506,17 +506,35 @@ eval {
 	    $result->{$feld} = $felder;
 	}
     } elsif ($op eq "GET/startnummer") {
-	my ($id, $startnummer) = parameter($q, qw(id startnummer));
-	my $sth = $dbh->prepare(qq{
-	    SELECT startnummer, klasse, nachname, vorname, geburtsdatum
-	    FROM fahrer
-	    WHERE id = ? AND startnummer = ?
-	});
-	$sth->execute($id, $startnummer);
-	if (my $row = $sth->fetchrow_hashref) {
-	    fixup_hashref($sth, $row);
-	    $result = $row;
-
+	my ($id) = parameter($q, qw(id));
+	my $startnummer;
+	eval {
+	    my ($gesuchte_startnummer) = parameter($q, qw(startnummer));
+	    my $sth = $dbh->prepare(qq{
+		SELECT startnummer, klasse, nachname, vorname, geburtsdatum
+		FROM fahrer
+		WHERE id = ? AND startnummer = ?
+	    });
+	    $sth->execute($id, $gesuchte_startnummer);
+	    if ($result = $sth->fetchrow_hashref) {
+		fixup_hashref($sth, $result);
+		$startnummer = $result->{startnummer};
+	    }
+	};
+	if ($@) {
+	    my ($klasse) = parameter($q, qw(klasse));
+	    my $sth = $dbh->prepare(q{
+		SELECT MAX(startnummer)
+		FROM fahrer
+		WHERE id = ? AND klasse = ? AND startnummer >= 0
+	    });
+	    $sth->execute($id, $klasse);
+	    if (my @row = $sth->fetchrow_array) {
+		fixup_arrayref($sth, \@row);
+		$startnummer = $row[0] // 0;
+	    }
+	}
+	if (defined $startnummer) {
 	    my $sth = $dbh->prepare(qq{
 		SELECT f1.startnummer + 1
 		FROM
