@@ -42,7 +42,12 @@
 	<td>
 	  <select ng-model="remote.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in remote.veranstaltungen" ng-disabled="busy || !liste_abgerufen" id="tag">
 	  </select>
-	  <span ng-if="remote.exists" style="color:red"><br>Diese Veranstaltung existiert bereits, es kann nur eine Kopie importiert werden.</span>
+	</td>
+      </tr>
+      <tr ng-if="remote.exists">
+	<th align="right"></th>
+	<td>
+	  <input type="checkbox" ng-model="remote.replace" id="replace"><label for="replace">Vorhandene Veranstaltung ersetzen</label>
 	</td>
       </tr>
       <tr>

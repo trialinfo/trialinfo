@@ -136,6 +136,10 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
 	    tag: tag,
 	    create: true,  // Veranstaltung darf noch nicht existieren
 	  };
+	} else if ($scope.remote.replace) {
+	  params = {
+	    tag: tag,
+	  };
 	}
 	var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
 	cancel_remote = $q.defer();
