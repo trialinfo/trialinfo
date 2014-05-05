@@ -6,12 +6,6 @@
 	<fieldset>
 	  <legend>Nennungen</legend>
 	  <table>
-	    <tr ng-if="features.startnummer">
-	      <th align="right"><label for="startnummer">Startnummer</label></th>
-	      <td>
-		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="number" size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
-	      </td>
-	    </tr>
 	    <tr ng-if="features.klasse">
 	      <th align="right"><label for="klasse" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
 	      <td>
@@ -22,6 +16,12 @@
 		<span ng-if="fahrer.klasse != null && fahrer.klasse != veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse">
 		  (Wertung in Klasse {{veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse}})</br>
 		</span>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.startnummer">
+	      <th align="right"><label for="startnummer">Startnummer</label></th>
+	      <td>
+		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="number" size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.vorname">

@@ -22,10 +22,12 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var fahrer = $scope.fahrer;
     if (fahrer) {
       var enabled = $scope.enabled;
-      if (enabled.startnummer && fahrer.startnummer === null)
+      if (enabled.fahrer && $scope.features.klasse && fahrer.klasse === null)
+	set_focus('#klasse', $timeout);
+      else if (enabled.startnummer && fahrer.startnummer === null)
 	set_focus('#startnummer', $timeout);
       else if (enabled.fahrer) {
-	var felder = ['klasse', 'nachname', 'vorname', 'geburtsdatum'];
+	var felder = ['nachname', 'vorname', 'geburtsdatum'];
 	for (var n = 0; n < felder.length; n++) {
 	  var feld = felder[n];
 	  if ($scope.features[feld] &&
@@ -181,6 +183,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
      * geändert, obwohl alles gleich ist.  Wir könnten hier alle Properties
      * setzen, aber das dupliziert nur den HTML-Code und ist fehleranfällig. */
     var fahrer = {
+      'klasse': null,
       'startnummer': null,
       'wertungen': [ { aktiv: veranstaltung.wertung1_markiert } ],
       'versicherung': veranstaltung.versicherung
