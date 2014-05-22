@@ -310,7 +310,8 @@ sub cfg_datei_daten($) {
     for (my $n = 0; $n < 15; $n++) {
 	my $s = 'N' x 15;
 	foreach my $sektion (@{$sektionen->[$n]}) {
-	    substr($s, $sektion - 1, 1) = 'J';
+	    substr($s, $sektion - 1, 1) = 'J'
+		if $sektion <= 15;
 	}
 	push @{$cfg->{sektionen}}, $s;
     }

@@ -22,10 +22,12 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var fahrer = $scope.fahrer;
     if (fahrer) {
       var enabled = $scope.enabled;
-      if (enabled.startnummer && fahrer.startnummer === null)
+      if (enabled.fahrer && $scope.features.klasse && fahrer.klasse === null)
+	set_focus('#klasse', $timeout);
+      else if (enabled.startnummer && fahrer.startnummer === null)
 	set_focus('#startnummer', $timeout);
       else if (enabled.fahrer) {
-	var felder = ['klasse', 'nachname', 'vorname', 'geburtsdatum'];
+	var felder = ['nachname', 'vorname', 'geburtsdatum'];
 	for (var n = 0; n < felder.length; n++) {
 	  var feld = felder[n];
 	  if ($scope.features[feld] &&
@@ -208,6 +210,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
      * geändert, obwohl alles gleich ist.  Wir könnten hier alle Properties
      * setzen, aber das dupliziert nur den HTML-Code und ist fehleranfällig. */
     var fahrer = {
+      'klasse': null,
       'startnummer': null,
       'wertungen': [ { aktiv: veranstaltung.wertung1_markiert } ],
       'versicherung': veranstaltung.versicherung
@@ -278,6 +281,32 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       });
     return checker.promise;
   };
+
+  function naechste_startnummer() {
+    if (canceler)
+      canceler.resolve();
+    canceler = $q.defer();
+    var fahrer = $scope.fahrer;
+    if (fahrer && fahrer.startnummer == null && fahrer.klasse != null) {
+      var params = {
+	'id': veranstaltung.id,
+	'klasse': fahrer.klasse
+      };
+      $http.get('/api/startnummer', {'params': params,
+				     'timeout': canceler.promise}).
+	success(function(data, status, headers, config) {
+	  if (data.naechste_startnummer)
+	    $scope.startnummer_belegt = data;
+	  else
+	    $scope.startnummer_belegt = undefined;
+	}).
+	error(function() {
+	  $scope.startnummer_belegt = undefined;
+	});
+    }
+  }
+  $scope.$watch('fahrer.startnummer', naechste_startnummer);
+  $scope.$watch('fahrer.klasse', naechste_startnummer);
 
   $scope.klasse_gueltig = function(klasse) {
     /* ui-validate calls the validator function too early for numeric form

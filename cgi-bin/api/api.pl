@@ -353,7 +353,7 @@ my $json = JSON->new;
 eval {
     if ($op eq 'GET/vareihen') {
 	my $sth = $dbh->prepare(q{
-	    SELECT vareihe, bezeichnung, kuerzel, verborgen
+	    SELECT vareihe, bezeichnung, kuerzel, abgeschlossen
 	    FROM vareihe
 	    ORDER BY vareihe
 	});
@@ -365,7 +365,7 @@ eval {
 	}
     } elsif ($op eq "GET/veranstaltungen") {
 	my $sth = $dbh->prepare(q{
-	    SELECT id, tag, datum, dateiname, titel, aktiv
+	    SELECT id, tag, datum, dateiname, titel, aktiv, abgeschlossen
 	    FROM veranstaltung
 	    LEFT JOIN wertung USING (id)
 	    WHERE wertung = 1
@@ -378,13 +378,12 @@ eval {
 	    fixup_hashref($sth, $veranstaltung);
 	    my $id = $veranstaltung->{id};
 	    $veranstaltung->{vareihen} = [];
-	    $veranstaltung->{verborgen} = json_bool(0);
 	    $veranstaltungen->{$id} = $veranstaltung;
 	    push @$result, $veranstaltung;
 	}
 
 	$sth = $dbh->prepare(q{
-	    SELECT id, vareihe, kuerzel, verborgen
+	    SELECT id, vareihe, kuerzel
 	    FROM vareihe_veranstaltung
 	    JOIN vareihe USING (vareihe)
 	    ORDER BY id, vareihe
@@ -397,8 +396,6 @@ eval {
 		push @{$veranstaltung->{vareihen}},
 		    { vareihe => $row[1], kuerzel => $row[2] }
 		    if defined $row[2] && $row[2] ne "";
-		$veranstaltung->{verborgen} = $row[3]
-		    if $row[3];
 	    }
 	}
     } elsif ($op =~ q<^GET/(|vorheriger/|naechster/)fahrer$>) {
@@ -509,17 +506,35 @@ eval {
 	    $result->{$feld} = $felder;
 	}
     } elsif ($op eq "GET/startnummer") {
-	my ($id, $startnummer) = parameter($q, qw(id startnummer));
-	my $sth = $dbh->prepare(qq{
-	    SELECT startnummer, klasse, nachname, vorname, geburtsdatum
-	    FROM fahrer
-	    WHERE id = ? AND startnummer = ?
-	});
-	$sth->execute($id, $startnummer);
-	if (my $row = $sth->fetchrow_hashref) {
-	    fixup_hashref($sth, $row);
-	    $result = $row;
-
+	my ($id) = parameter($q, qw(id));
+	my $startnummer;
+	eval {
+	    my ($gesuchte_startnummer) = parameter($q, qw(startnummer));
+	    my $sth = $dbh->prepare(qq{
+		SELECT startnummer, klasse, nachname, vorname, geburtsdatum
+		FROM fahrer
+		WHERE id = ? AND startnummer = ?
+	    });
+	    $sth->execute($id, $gesuchte_startnummer);
+	    if ($result = $sth->fetchrow_hashref) {
+		fixup_hashref($sth, $result);
+		$startnummer = $result->{startnummer};
+	    }
+	};
+	if ($@) {
+	    my ($klasse) = parameter($q, qw(klasse));
+	    my $sth = $dbh->prepare(q{
+		SELECT MAX(startnummer)
+		FROM fahrer
+		WHERE id = ? AND klasse = ? AND startnummer >= 0
+	    });
+	    $sth->execute($id, $klasse);
+	    if (my @row = $sth->fetchrow_array) {
+		fixup_arrayref($sth, \@row);
+		$startnummer = $row[0] // 0;
+	    }
+	}
+	if (defined $startnummer) {
 	    my $sth = $dbh->prepare(qq{
 		SELECT f1.startnummer + 1
 		FROM

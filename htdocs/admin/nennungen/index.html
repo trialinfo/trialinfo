@@ -6,12 +6,6 @@
 	<fieldset>
 	  <legend>Nennungen</legend>
 	  <table>
-	    <tr ng-if="features.startnummer">
-	      <th align="right"><label for="startnummer">Startnummer</label></th>
-	      <td>
-		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="number" size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
-	      </td>
-	    </tr>
 	    <tr ng-if="features.klasse">
 	      <th align="right"><label for="klasse" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
 	      <td>
@@ -22,6 +16,12 @@
 		<span ng-if="fahrer.klasse != null && fahrer.klasse != veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse">
 		  (Wertung in Klasse {{veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse}})</br>
 		</span>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.startnummer">
+	      <th align="right"><label for="startnummer">Startnummer</label></th>
+	      <td>
+		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="number" size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.vorname">
@@ -218,11 +218,14 @@
 	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine Fahrer gefunden.</span>
 	  </p>
 	  <p>
-	    <span style="color: red">{{fehler}}</span>
+	    <span style="color: red" ng-if="fahler">{{fehler}}<br></span>
 	    <!-- if (!(fahrer && fahrer.start && startende_klassen[fahrer.klasse - 1])) ... -->
-	    <span ng-if="startnummer_belegt" style="color: red">
+	    <span ng-if="startnummer_belegt.startnummer" style="color:red">
 	      Startnummer belegt:<br>
 	      {{startnummer_belegt.nachname}} {{startnummer_belegt.vorname}} ({{startnummer_belegt.startnummer}})<br>
+	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}
+	    </span>
+	    <span ng-if="!startnummer_belegt.startnummer && startnummer_belegt.naechste_startnummer">
 	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}
 	    </span>
 	    <span ng-if="fahrer.start && !veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1]" style="color: red">

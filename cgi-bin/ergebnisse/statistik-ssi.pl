@@ -170,7 +170,9 @@ $sth = $dbh->prepare(q{
     FROM punkte
     JOIN fahrer USING (id, startnummer)
     JOIN klasse USING (id, klasse)
-    WHERE id = ? AND punkte.punkte <= 5
+    JOIN (SELECT id, klasse AS wertungsklasse, sektion FROM sektion) AS sektion USING (id, wertungsklasse, sektion)
+    LEFT JOIN sektion_aus_wertung USING (id, runde, klasse, sektion)
+    WHERE id = ? AND punkte.punkte <= 5 AND sektion_aus_wertung.sektion IS NULL
 });
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
@@ -215,7 +217,7 @@ if ($nach_klassen) {
 	    push @$row, $sektion, x($punkte);
 	    push @$body, $row;
 	}
-	my $footer = [ "", x($alle_punkte) ];
+	my $footer = @$body > 1 ? [ "", x($alle_punkte) ] : undef;
 	doc_table header => $header, body => $body, footer => $footer,
 		  format => $format;
     }
@@ -255,7 +257,7 @@ if ($nach_klassen) {
 	    push @$row, $klasse, x($punkte);
 	    push @$body, $row;
 	}
-	my $footer = [ "", x($alle_punkte) ];
+	my $footer = @$body > 1 ? [ "", x($alle_punkte) ] : undef;
 	doc_table header => $header, body => $body, footer => $footer,
 		  format => $format;
     }

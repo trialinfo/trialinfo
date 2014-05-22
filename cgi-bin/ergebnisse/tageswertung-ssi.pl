@@ -55,7 +55,7 @@ if (defined $vareihe) {
     $sth = $dbh->prepare(q{
 	SELECT id, vareihe.bezeichnung, wertung, titel, mtime,
 	       wertungsmodus, vierpunktewertung, punkteteilung,
-	       abgeschlossen
+	       veranstaltung.abgeschlossen
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
 	JOIN vareihe USING (vareihe, wertung)

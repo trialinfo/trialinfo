@@ -15,10 +15,6 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
   } catch(_) { }
   $scope.remote = {};
 
-  $scope.veranstaltung_sichtbar = function(veranstaltung) {
-    return !veranstaltung.verborgen;
-  };
-
   $scope.import_file = function() {
     if ($scope.einstellungen.format == 'trial-auswertung') {
       var tra_datei = document.getElementById('tra_datei');
@@ -140,6 +136,10 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
 	  params = {
 	    tag: tag,
 	    create: true,  // Veranstaltung darf noch nicht existieren
+	  };
+	} else if ($scope.remote.replace) {
+	  params = {
+	    tag: tag,
 	  };
 	}
 	var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));

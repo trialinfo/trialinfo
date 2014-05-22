@@ -4,9 +4,26 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
   $scope.SYNC_SOURCE = SYNC_SOURCE;
   $scope.veranstaltungen = veranstaltungen;
   $scope.vareihen = vareihen;
+  $scope.anzeige = {};
+
+  angular.forEach(veranstaltungen, function(veranstaltung) {
+    if (veranstaltung.abgeschlossen)
+      $scope.abgeschlossene_veranstaltungen = true;
+  });
+
+  angular.forEach(vareihen, function(vareihe) {
+    if (vareihe.abgeschlossen)
+      $scope.abgeschlossene_vareihen = true;
+  });
 
   $scope.veranstaltung_sichtbar = function(veranstaltung) {
-    return !veranstaltung.verborgen;
+    return $scope.anzeige.abgeschlossene_veranstaltungen ||
+	   !veranstaltung.abgeschlossen;
+  };
+
+  $scope.vareihe_sichtbar = function(vareihe) {
+    return $scope.anzeige.abgeschlossene_vareihen ||
+	    !vareihe.abgeschlossen;
   };
 
   $scope.veranstaltung_kuerzel = function(vareihen) {
