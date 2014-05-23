@@ -292,7 +292,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	sektionen.push(false);
       });
     } else {
-      while (max_sektion > min_sektionen &&
+      while (max_sektion > min_sektionen + 1 &&
 	     !sektion_befahren(max_sektion - 1)) {
 	$scope.sektionsliste.pop();
 	angular.forEach(sektionen, function(sektionen) {
