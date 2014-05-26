@@ -144,7 +144,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
     var jahrgang_alter = new Date();
     jahrgang_alter.setTime(jetzt - geburtsjahr);
-    $scope.jahrgang_alter = jahrgang_alter.getUTCFullYear() - 1970 - 1;
+    $scope.jahrgang_alter = jahrgang_alter.getUTCFullYear() - 1970;
   });
 
   $scope.speichern = function() {
