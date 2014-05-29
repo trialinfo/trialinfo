@@ -97,7 +97,7 @@ $sth = $dbh->prepare(q{
 	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN 20
 		ELSE 30 END AS 'Nenngeld',
 	   CASE WHEN YEAR(datum) - YEAR(geburtsdatum) < 18 THEN NULL
-		ELSE 5 END AS 'ÖTSV',
+		ELSE 6 END AS 'ÖTSV',
 	   GROUP_CONCAT(wertung.bezeichnung ORDER BY wertung SEPARATOR ", ") AS "Wertungen"
     FROM fahrer
     LEFT JOIN fahrer_wertung USING (id, startnummer)
