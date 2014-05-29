@@ -292,6 +292,9 @@ function autofocusDirective() {
 function tabTo() {
   return {
     restrict: 'A',
+    controller: function($scope, $timeout) {
+      $scope.timeout = $timeout;
+    },
     link: function (scope, element, attr) {
       if (navigator.userAgent.match(/iPad|iPhone/)) {
 	/* Auf iPhone und iPad verschwindet die Bildschirmtatstatur, sobald
@@ -305,26 +308,23 @@ function tabTo() {
 	       (event.which < 112 /* F1 */ || event.which > 123 /* F12 */);
       }
       element.bind('keydown', function(event) {
-	if (good_key(event))
-	  scope.key_down = true;
-      });
-      element.bind('keyup', function(event) {
-	if (good_key(event) && scope.key_down) {
-	  delete scope.key_down;
-	  if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
-	    var selector = scope.$eval(attr.tabTo);
-	    if (selector !== undefined) {
-	      if (selector === null)
-		element[0].blur();
-	      else {
-		var next = document.getElementById(selector);
-		if (next) {
-		  next.focus();
-		  next.select();
+	if (good_key(event)) {
+	  scope.timeout(function() {
+	    if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
+	      var selector = scope.$eval(attr.tabTo);
+	      if (selector !== undefined) {
+		if (selector === null)
+		  element[0].blur();
+		else {
+		  var next = document.getElementById(selector);
+		  if (next) {
+		    next.focus();
+		    next.select();
+		  }
 		}
 	      }
 	    }
-	  }
+	  }, 0);
 	}
       });
     }
