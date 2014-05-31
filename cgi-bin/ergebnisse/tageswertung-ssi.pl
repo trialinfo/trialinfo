@@ -129,7 +129,7 @@ my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
-	SELECT klasse, runden, bezeichnung, farbe, wertungsklasse
+	SELECT klasse, runden, bezeichnung, farbe, wertungsklasse, ausser_konkurrenz
 	FROM klasse
 	JOIN vareihe_klasse USING (wertungsklasse)
 	WHERE id = ? AND vareihe = ?
@@ -138,7 +138,7 @@ if (defined $vareihe) {
     $sth->execute($id, $vareihe);
 } else {
     $sth = $dbh->prepare(q{
-	SELECT klasse, runden, bezeichnung, farbe, wertungsklasse
+	SELECT klasse, runden, bezeichnung, farbe, wertungsklasse, ausser_konkurrenz
 	FROM klasse
 	WHERE id = ?
 	ORDER BY klasse
