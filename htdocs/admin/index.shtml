@@ -23,6 +23,11 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       .punktespalte { width:2em; }
       /*.adw { font-style:italic; }*/
 
+      /* FireFox 29 */
+      input[type=number] {
+	-moz-appearance: textfield;
+      }
+      /* Webkit */
       input[type=number]::-webkit-inner-spin-button,
       input[type=number]::-webkit-outer-spin-button {
 	-webkit-appearance: none;

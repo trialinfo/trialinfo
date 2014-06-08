@@ -218,7 +218,7 @@
 	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine Fahrer gefunden.</span>
 	  </p>
 	  <p>
-	    <span style="color: red" ng-if="fahler">{{fehler}}<br></span>
+	    <span style="color: red" ng-if="fehler">{{fehler}}<br></span>
 	    <!-- if (!(fahrer && fahrer.start && startende_klassen[fahrer.klasse - 1])) ... -->
 	    <span ng-if="startnummer_belegt.startnummer" style="color:red">
 	      Startnummer belegt:<br>
@@ -226,7 +226,7 @@
 	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}<br>
 	    </span>
 	    <span ng-if="!startnummer_belegt.startnummer && startnummer_belegt.naechste_startnummer">
-	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}<br>
+	      Nächste freie Startnummer in Klasse: {{startnummer_belegt.naechste_startnummer}}<br>
 	    </span>
 	    <span ng-if="fahrer.start && !veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1]" style="color: red">
 	      Klasse {{fahrer.klasse}} startet bei dieser Veranstaltung nicht.
