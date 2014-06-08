@@ -278,7 +278,6 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 	});
     }
   }
-  $scope.$watch('fahrer.startnummer', naechste_startnummer);
   $scope.$watch('fahrer.klasse', naechste_startnummer);
 
   $scope.klasse_gueltig = function(klasse) {
