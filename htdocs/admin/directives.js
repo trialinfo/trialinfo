@@ -142,14 +142,16 @@ function numericDirective() {
   return {
     restrict: 'A',
     require: 'ngModel',
-    link: function(scope, element, attr, ctrl) {
+    link: function(scope, element, attrs, ctrl) {
       ctrl.$parsers.push(function(text) {
 	var match;
 	if (typeof text == 'string') {
 	  if (text == '') {
 	    ctrl.$setValidity('numeric', true);
 	    return null;
-	  } else if (match = text.match(/^[0-9]*$/)) {
+	  } else if (match = text.match(/^-?[0-9]*$/) &&
+		     (!('min' in attrs) || +text >= +attrs.min) &&
+		     (!('max' in attrs) || +text <= +attrs.max)) {
 	    ctrl.$setValidity('numeric', true);
 	    return +text;
 	  } else

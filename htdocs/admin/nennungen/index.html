@@ -9,7 +9,7 @@
 	    <tr ng-if="features.klasse">
 	      <th align="right"><label for="klasse" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
 	      <td>
-		<input ng-disabled="!enabled.fahrer" type="number" size="2" maxlength="2" min="1" max="99" ng-model="fahrer.klasse" id="klasse" ui-validate="'klasse_gueltig($value)'">
+		<input ng-disabled="!enabled.fahrer" type="text" numeric size="2" maxlength="2" min="1" max="15" ng-model="fahrer.klasse" id="klasse" ui-validate="'klasse_gueltig($value)'">
 		<select ng-disabled="!enabled.fahrer" ng-model="fahrer.klasse" ng-options="klasse.klasse as klasse.klasse + ': ' + klasse.bezeichnung for klasse in definierte_klassen" tabindex="-1">
 		  <option value=""></option>
 		</select>
@@ -19,9 +19,9 @@
 	      </td>
 	    </tr>
 	    <tr ng-if="features.startnummer">
-	      <th align="right"><label for="startnummer">Startnummer</label></th>
+	      <th align="right"><label for="startnummer" accesskey="t">S<span class="accesskey">t</span>artnummer</label></th>
 	      <td>
-		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="number" size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
+		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.vorname">
@@ -190,7 +190,7 @@
 	    <tr ng-if="features.helfer">
 	      <th align="right"><label for="helfer">Helfer</label></th>
 	      <td>
-		<input ng-disabled="!enabled.fahrer" type="number" size="3" maxlength="3" min="1" max="999" ng-model="fahrer.helfer" id="helfer">
+		<input ng-disabled="!enabled.fahrer" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.helfer" id="helfer">
 	      </td>
 	    </tr>
 	  </table>
