@@ -27,7 +27,7 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="sektion in veranstaltung.sektionen[wertungsklasse - 1]" align="center">
-		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
+		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" style="text-align:center" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
 		    <span ng-if="fahrer.start" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
@@ -44,13 +44,13 @@
 	      <tr>
 		<th align="right"><label for="zusatzpunkte" accesskey="p">Zusatz<span class="accesskey">p</span>unkte</label></th>
 		<td>
-		  <input ng-disabled="!fahrer_startet()" type="number" size="3" min="-999" max="999" ng-model="fahrer.zusatzpunkte" id="zusatzpunkte">
+		  <input ng-disabled="!fahrer_startet()" type="text" numeric size="3" min="-999" max="999" ng-model="fahrer.zusatzpunkte" id="zusatzpunkte">
 		</td>
 	      </tr>
 	      <tr>
 		<th align="right">Gesamtpunkte</th>
 		<td>
-		  <input type="number" size="3" min="-999" max="999" ng-model="fahrer.punkte" disabled="disabled">
+		  <input type="text" size="3" ng-model="fahrer.punkte" disabled="disabled">
 		    <span ng-if="fahrer.start" style="font-weight:bold">
 		      &nbsp; (<span ng-repeat="h in fahrer.punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
