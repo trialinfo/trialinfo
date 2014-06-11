@@ -27,7 +27,7 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="sektion in veranstaltung.sektionen[wertungsklasse - 1]" align="center">
-		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" class="einzelpunkte" tab-to="punkte_tab_to(runde, $index)">
+		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" style="text-align:center" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
 		    <span ng-if="fahrer.start" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>

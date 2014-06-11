@@ -19,9 +19,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       }
 
       span.accesskey { text-decoration:underline; }
-      .einzelpunkte { text-align:center; }
       .punktespalte { width:2em; }
-      /*.adw { font-style:italic; }*/
 
       input, textarea, select, button { font-family:inherit; font-size:inherit; }
 
