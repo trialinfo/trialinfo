@@ -159,11 +159,6 @@ sub veranstaltung_reset($$$) {
 		WHERE fahrer.id = ? AND basis.id = ? AND basis.start_morgen
 	    }, undef, $id, $basis_id);
 	}
-
-	$dbh->do(q{
-	    DELETE FROM veranstaltung_feature
-	    WHERE id = ? and feature = 'start_morgen'
-	}, undef, $id);
     }
 
     $dbh->do(q{
