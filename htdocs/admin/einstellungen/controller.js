@@ -122,6 +122,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	basis: { id: null }
       };
     }
+    $scope.art_alt = veranstaltung.art;
 
     $scope.sektionsliste = sektionsliste(veranstaltung);
     for (var klasse = 1; klasse <= 15; klasse++) {
@@ -248,6 +249,9 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   $scope.art_blur = function() {
     var veranstaltung = $scope.veranstaltung;
     var art = $scope.veranstaltung.art;
+    if (art === $scope.art_alt)
+      return;
+    $scope.art_alt = art;
     if (art) {
       angular.forEach(veranstaltung.klassen, function(klasse, index) {
 	klasse.wertungsklasse =
@@ -258,11 +262,11 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	  (art === 'otsv2014' && (index == 0 || (index >= 10 && index <= 12)));
 	klasse.ausser_konkurrenz =
 	  (art === 'otsv+osk2014' && index == 0);
-	$scope.features.startzeit = $scope.features.zielzeit =
-	  art === 'otsv+osk2014';
-	$scope.features.start_morgen =
-	  art === 'otsv2014';
       });
+      $scope.features.startzeit = $scope.features.zielzeit =
+	art === 'otsv+osk2014';
+      $scope.features.start_morgen =
+	art === 'otsv2014';
     }
   };
 
