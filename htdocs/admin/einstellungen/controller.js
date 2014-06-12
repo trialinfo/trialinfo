@@ -157,10 +157,13 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     $scope.busy = true;
     var abgeschlossen =
       $scope.veranstaltung_alt.abgeschlossen || veranstaltung.abgeschlossen;
+    var veranstaltung_ist_neu = !veranstaltung.id;
     veranstaltung_speichern($http, veranstaltung.id, veranstaltung, abgeschlossen).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
-	var path = '/veranstaltung/' + veranstaltung.id + '/einstellungen';
+	var path = '/veranstaltung/' + veranstaltung.id;
+	if (!veranstaltung_ist_neu)
+	  path = path + '/einstellungen';
 	if (path != $location.path()) {
 	  $location.path(path).replace();
 	  /* FIXME: Wie Reload verhindern? */
