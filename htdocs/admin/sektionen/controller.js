@@ -4,12 +4,13 @@ function sektionenController($scope, $http, $timeout, veranstaltung) {
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
   $scope.startende_klassen = function() {
-    var startende_klassen = [];
+    var startende_klassen = {};
     for (var klasse = 1; klasse <= veranstaltung.klassen.length; klasse++) {
-      if (veranstaltung.sektionen[klasse - 1])
-	startende_klassen.push(klasse);
+      var wertungsklasse = veranstaltung.klassen[klasse - 1].wertungsklasse;
+      if (veranstaltung.sektionen[wertungsklasse - 1])
+	startende_klassen[wertungsklasse] = true;
     }
-    return startende_klassen;
+    return Object.keys(startende_klassen).sort(function(a, b) { return a - b; });
   }();
   veranstaltung_zuweisen(veranstaltung);
 

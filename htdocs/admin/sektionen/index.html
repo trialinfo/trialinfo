@@ -2,7 +2,7 @@
 <form name="form" ng-keydown="keydown($event)">
   <div ng-repeat="klasse in startende_klassen">
     <fieldset style="display:inline">
-      <legend><span title="Klasse {{klasse}}">{{veranstaltung.klassen[klasse - 1].bezeichnung}}</span></legend>
+      <legend>{{klasse}}: {{veranstaltung.klassen[klasse - 1].bezeichnung}}</legend>
       <table>
 	<tr>
 	  <th class="punktespalte"></th>
