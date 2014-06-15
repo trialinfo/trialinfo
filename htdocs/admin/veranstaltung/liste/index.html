@@ -68,9 +68,9 @@
 	    </td>
 	  </tr>
 	  <tr>
-	    <th align="right">Klasse</th>
+	    <th align="right">Klasse (in Wertung)</th>
 	    <td>
-	      <span ng-repeat="sektionen in veranstaltung.sektionen track by $index" ng-if="sektionen && sektionen.length"><input type="checkbox" ng-model="anzeige.klassen[$index + 1]" id="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}"><label for="{{'klasse' + ($index + 1)}}" title="{{veranstaltung.klassen[$index].bezeichnung}}">{{$index + 1}}</label> </span>
+	      <span ng-repeat="klasse in anzeige.startende_klassen"><input type="checkbox" ng-model="anzeige.klassen[klasse]" id="{{'klasse' + klasse}}" title="{{veranstaltung.klassen[klasse - 1].bezeichnung}}"><label for="{{'klasse' + klasse}}" title="{{veranstaltung.klassen[klasse - 1].bezeichnung}}">{{klasse}}</label> </span>
 	      <input type="checkbox" ng-model="anzeige.andere_klassen" id="andere_klassen"><label for="andere_klassen">Andere</label>
 	    </td>
 	  </tr>

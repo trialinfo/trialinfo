@@ -62,14 +62,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   };
 
   var definierte_felder = {
-    startnummer: 
+    startnummer:
       { name: 'Startnummer',
 	bezeichnung: '<span title="Startnummer">Nr.</span>',
 	ausdruck: "startnummer < 0 ? null : startnummer",
 	style: { 'text-align': 'center' },
 	feature: true },
     klasse:
-      { name: 'Klasse',
+      { name: 'Klasse (in Nennung)',
 	bezeichnung: '<span title="Klasse (in Nennung)">Kl.</span>',
 	ausdruck: "klasse",
 	style: { 'text-align': 'center' },
@@ -384,9 +384,11 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 
   function startende_klassen() {
     var klassen = {};
-    angular.forEach(veranstaltung.sektionen, function(sektionen, index) {
+    angular.forEach(veranstaltung.klassen, function(klasse) {
+      var wertungsklasse = klasse.wertungsklasse;
+      var sektionen = veranstaltung.sektionen[wertungsklasse - 1];
       if (sektionen && sektionen.length)
-	klassen[index + 1] = true;
+	klassen[wertungsklasse] = true;
     });
     return klassen;
   }
@@ -409,11 +411,18 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
         anzeige[option] = +anzeige[option];
     });
     var klassen = startende_klassen();
+    anzeige.startende_klassen = [];
+    angular.forEach(klassen, function(_, klasse) {
+      anzeige.startende_klassen.push(+klasse);
+    });
+    anzeige.startende_klassen =
+      anzeige.startende_klassen.sort(function(a, b) { return a - b; });
     angular.forEach(anzeige.klasse, function(klasse) {
       if (klassen[klasse] !== undefined)
 	klassen[klasse] = false;
     });
     anzeige.klassen = klassen;
+
     delete anzeige.klasse;
     anzeige.andere_klassen = anzeige.andere_klassen == 'yes';
 
