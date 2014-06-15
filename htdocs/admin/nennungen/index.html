@@ -231,30 +231,40 @@
 	    <span ng-if="fahrer.start && !veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1]" style="color: red">
 	      Klasse {{fahrer.klasse}} startet bei dieser Veranstaltung nicht.
 	    </span>
-	    <span ng-if="fahrer.geburtsdatum && (veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014')" style="color: red">
-	      <span ng-if="(fahrer.klasse == 3 || fahrer.klasse == 5) && jahrgang_alter > 45">
-		Fahrer war zu Jahresanfang über 44 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse + 1}} starten.
-	      </span>
-	      <span ng-if="(fahrer.klasse == 4 || fahrer.klasse == 6) && jahrgang_alter <= 45">
-		Fahrer war zu Jahresanfang unter 45 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse - 1}} starten.
-	      </span>
-	      <span ng-if="fahrer.klasse == 11 && alter < 14">
-		Fahrer ist unter 14 Jahre alt<br>und darf in Klasse 11 noch nicht starten.
-	      </span>
-	      <span ng-if="fahrer.klasse == 12">
-		<span ng-if="alter < 12">
-		  Fahrer ist unter 12 Jahre alt<br>und darf in Klasse 12 noch nicht starten.
+	    <span ng-if="veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014'" style="color: red">
+	      <span ng-if="fahrer.geburtsdatum">
+		<span ng-if="(fahrer.klasse == 3 || fahrer.klasse == 5) && jahrgang_alter > 45">
+		  Fahrer war zu Jahresanfang über 44 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse + 1}} starten.
 		</span>
-		<span ng-if="jahrgang_alter > 18">
-		  Fahrer war zu Jahresanfang über 18 Jahre alt<br>und darf in Klasse 12 nicht mehr starten.
+		<span ng-if="(fahrer.klasse == 4 || fahrer.klasse == 6) && jahrgang_alter <= 45">
+		  Fahrer war zu Jahresanfang unter 45 Jahre alt<br>und muss stattdessen in Klasse {{fahrer.klasse - 1}} starten.
+		</span>
+		<span ng-if="fahrer.klasse == 11 && alter < 14">
+		  Fahrer ist unter 14 Jahre alt<br>und darf in Klasse 11 noch nicht starten.
+		</span>
+		<span ng-if="fahrer.klasse == 12">
+		  <span ng-if="alter < 12">
+		    Fahrer ist unter 12 Jahre alt<br>und darf in Klasse 12 noch nicht starten.
+		  </span>
+		  <span ng-if="jahrgang_alter > 18">
+		    Fahrer war zu Jahresanfang über 18 Jahre alt<br>und darf in Klasse 12 nicht mehr starten.
+		  </span>
+		</span>
+		<span ng-if="fahrer.klasse == 13">
+		  <span ng-if="alter < 10">
+		    Fahrer ist unter 10 Jahre alt<br>und darf in Klasse 13 noch nicht starten.
+		  </span>
+		  <span ng-if="jahrgang_alter > 16">
+		    Fahrer war zu Jahresanfang über 16 Jahre alt<br>und darf in Klasse 13 nicht mehr starten.
+		  </span>
 		</span>
 	      </span>
-	      <span ng-if="fahrer.klasse == 13">
-		<span ng-if="alter < 10">
-		  Fahrer ist unter 10 Jahre alt<br>und darf in Klasse 13 noch nicht starten.
+	      <span ng-if="fahrer.klasse >= 11 && fahrer.klasse <= 13">
+		<span ng-if="!fahrer.lizenznummer">
+		  Bitte die Lizenznummer eintragen.
 		</span>
-		<span ng-if="jahrgang_alter > 16">
-		  Fahrer war zu Jahresanfang über 16 Jahre alt<br>und darf in Klasse 13 nicht mehr starten.
+		<span ng-if="fahrer.lizenznummer && !osk_lizenz(fahrer) && fahrer_in_wertung1(fahrer)">
+		  Fahrer hat keine OSK-Lizenznummer (JM / JMJ)<br>und darf an der Jahreswertung nicht teilnehmen.
 		</span>
 	      </span>
 	    </span>

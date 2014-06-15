@@ -321,6 +321,19 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     return klasse && klasse.bezeichnung != null && klasse.bezeichnung != '';
   };
 
+  $scope.osk_lizenz = function(fahrer) {
+    return fahrer.lizenznummer.match(/^(JM|JMJ) ?[0-9]+$/);
+  };
+
+  $scope.fahrer_in_wertung1 = function(fahrer) {
+    if (!fahrer.wertungen[0].aktiv || fahrer.ausser_konkurrenz)
+      return false;
+    if (fahrer.klasse != null) {
+      var klasse = veranstaltung.klassen[fahrer.klasse - 1];
+      return !(klasse.keine_wertung1 || klasse.ausser_konkurrenz);
+    }
+  };
+
   $scope.loeschen = function() {
     if (confirm('Fahrer ' + fahrer_name($scope.fahrer, $scope) + ' wirklich löschen?')) {
       var fahrer_alt = $scope.fahrer_alt;
