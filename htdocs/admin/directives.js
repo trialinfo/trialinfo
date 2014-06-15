@@ -52,7 +52,7 @@ function parse_iso_time($scope, text) {
     var match;
     if (text == '')
       return null;
-    else if (match = text.match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/)) {
+    else if (match = text.match(/^(\d{1,2})[:.](\d{1,2})(?:[:.](\d{1,2}))?$/)) {
       var time = new Date(0, 0, 0, match[1], match[2], match[3] || 0);
       if (time.getHours() == match[1] &&
 	  time.getMinutes() == match[2])
