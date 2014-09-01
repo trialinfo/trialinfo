@@ -142,11 +142,11 @@
       <tr ng-repeat="klasse in veranstaltung.klassen track by $index">
 	<th>{{$index + 1}}</th>
 	<td align="center">
-	  <input type="text" size="30" maxlengh="60" ng-model="klasse.bezeichnung" ng-disabled="!klasse_gewertet[$index + 1]">
+	  <input type="text" size="30" maxlengh="60" ng-model="klasse.bezeichnung">
 	</td>
 	<td align="center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <select ng-model="klasse.farbe" id="klasse{{$index + 1}}_farbe" ng-disabled="!klasse_gewertet[$index + 1]">
+	  <select ng-model="veranstaltung.klassen[klasse.wertungsklasse - 1].farbe" id="klasse{{$index + 1}}_farbe" ng-disabled="!klasse_gewertet[$index + 1]">
 	    <option value=""></option>
 	    <option value="#0000ff">Blau</option>
 	    <option value="#ff0000">Rot</option>
@@ -158,11 +158,11 @@
 	  </select>
 	</td>
 	<td align="center">
-	  <input type="text" numeric size="1" maxlength="1" min="1" max="5" ng-model="klasse.runden" style="text-align: center" ng-disabled="!klasse_gewertet[$index + 1]">
+	  <input type="text" numeric size="1" maxlength="1" min="1" max="5" ng-model="veranstaltung.klassen[klasse.wertungsklasse - 1].runden" style="text-align: center" ng-disabled="!klasse_gewertet[$index + 1]">
 	</td>
 	<td align="center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <input type="text" size="5" maxlength="5" ng-model="klasse.fahrzeit" iso-time style="text-align: center" ng-disabled="!klasse_gewertet[$index + 1]">
+	  <input type="text" size="5" maxlength="5" ng-model="veranstaltung.klassen[klasse.wertungsklasse - 1].fahrzeit" iso-time style="text-align: center" ng-disabled="!klasse_gewertet[$index + 1]">
 	</td>
 	<td align="center">
 	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" wertungsklasse="{{$index + 1}}" ng-model="klasse.wertungsklasse" ng-blur="wertungsklasse_blur($index + 1, $event)" style="text-align: center">
