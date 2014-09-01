@@ -69,7 +69,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   }
   $scope.sektionen_von_bool = sektionen_von_bool;
 
-  function sektionsliste(veranstaltung) {
+  function max_sektion(veranstaltung) {
     var max_sektion = min_sektionen;
     angular.forEach(veranstaltung.sektionen, function(sektionen) {
       if (sektionen) {
@@ -80,9 +80,14 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       }
     });
     max_sektion++;
+    return max_sektion;
+  }
+
+  function sektionsliste(max_sektion) {
     var sektionsliste = [];
-    for (var sektion = 1; sektion <= max_sektion; sektion++)
+    for (var sektion = 1; sektion < max_sektion; sektion++)
       sektionsliste.push(sektion);
+    sektionsliste.push('…');
     return sektionsliste;
   };
 
@@ -122,7 +127,7 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
       };
     }
 
-    $scope.sektionsliste = sektionsliste(veranstaltung);
+    $scope.sektionsliste = sektionsliste(max_sektion(veranstaltung));
     for (var klasse = 1; klasse <= 15; klasse++) {
       if (!veranstaltung.klassen[klasse - 1])
 	veranstaltung.klassen[klasse - 1] = {wertungsklasse: klasse};
@@ -267,21 +272,23 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   $scope.$watch('sektionen', function() {
     var sektionen = $scope.sektionen;
     var max_sektion = sektionen[0].length;
+    var max_sektion_alt = max_sektion;
     if (sektion_befahren(max_sektion)) {
-      $scope.sektionsliste.push(max_sektion + 1);
       angular.forEach(sektionen, function(sektionen) {
 	sektionen.push(false);
       });
+      max_sektion++;
     } else {
       while (max_sektion > min_sektionen + 1 &&
 	     !sektion_befahren(max_sektion - 1)) {
-	$scope.sektionsliste.pop();
 	angular.forEach(sektionen, function(sektionen) {
 	  sektionen.pop();
 	});
 	max_sektion--;
       }
     }
+    if (max_sektion_alt != max_sektion)
+      $scope.sektionsliste = sektionsliste(max_sektion);
   }, true);
 }
 
