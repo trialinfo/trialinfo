@@ -333,10 +333,12 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 	if (fahrzeit < 0)
 	  fahrzeit += 24 * 60 * 60;
 	fahrzeit -= gesamt;
-	if (fahrzeit > 0)
-	  return '+' +
-	    ('0' + Math.floor(fahrzeit / (60 * 60))).slice(-2) + ':' +
-	    ('0' + Math.floor((fahrzeit / 60) % 60)).slice(-2);
+	if (fahrzeit > 0) {
+	  var isotime = ('0' + Math.floor(fahrzeit / (60 * 60))).slice(-2) + ':' +
+			('0' + Math.floor((fahrzeit / 60) % 60)).slice(-2) + ':' +
+			('0' + (fahrzeit % 60)).slice(-2);
+	  return '+' + format_iso_time($scope, isotime, 'H:mm', 'H:mm:ss');
+	}
       }
     } catch (_) {}
   };
