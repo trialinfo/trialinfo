@@ -80,6 +80,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
       var search = {};
       if (startnummer)
 	search.startnummer = startnummer;
+      $scope.ignoreRouteUpdate = true;
       $location.search(search).replace();
     }
   }
@@ -360,6 +361,10 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   beim_verlassen_warnen($scope, $scope.geaendert);
 
   $scope.$on('$routeUpdate', function() {
+    if ($scope.ignoreRouteUpdate) {
+      delete $scope.ignoreRouteUpdate;
+      return;
+    }
     var startnummer = $location.search().startnummer;
     var aktuelle_startnummer;
     if ($scope.fahrer)
