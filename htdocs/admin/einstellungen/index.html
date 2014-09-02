@@ -162,7 +162,7 @@
 	</td>
 	<td align="center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <input type="text" size="5" maxlength="5" ng-model="veranstaltung.klassen[klasse_gewertet[$index + 1] ? $index : klasse.wertungsklasse - 1].fahrzeit" iso-time style="text-align: center" ng-disabled="!klasse_gewertet[$index + 1]">
+	  <input type="text" size="5" maxlength="8" ng-model="veranstaltung.klassen[klasse_gewertet[$index + 1] ? $index : klasse.wertungsklasse - 1].fahrzeit" iso-time style="text-align: center" ng-disabled="!klasse_gewertet[$index + 1]">
 	</td>
 	<td align="center">
 	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" wertungsklasse="{{$index + 1}}" ng-model="klasse.wertungsklasse" ng-blur="wertungsklasse_blur($index + 1, $event)" style="text-align: center">
