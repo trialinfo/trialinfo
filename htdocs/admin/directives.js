@@ -5,7 +5,8 @@ function parse_iso_date($scope, text) {
     var match;
     if (text == '')
       return null;
-    else if (match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/)) {
+    else if ((match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/)) ||
+	     (match = text.match(/^(\d{1,2})(\d{2})(\d{2}|\d{4})$/))) {
       if (match[3] <= 99)
 	match[3] = +match[3] + 100 * (19 + (match[3] <= (new Date()).getYear() % 100));
       var date = new Date(match[3], match[2] - 1, match[1]);
@@ -52,7 +53,8 @@ function parse_iso_time($scope, text) {
     var match;
     if (text == '')
       return null;
-    else if (match = text.match(/^(\d{1,2})[:.](\d{1,2})(?:[:.](\d{1,2}))?$/)) {
+    else if ((match = text.match(/^(\d{1,2})[:.](\d{1,2})(?:[:.](\d{1,2}))?$/)) ||
+	     (match = text.match(/^(\d{1,2})(\d{2})(?:(\d{2}))?$/))) {
       var time = new Date(0, 0, 0, match[1], match[2], match[3] || 0);
       if (time.getHours() == match[1] &&
 	  time.getMinutes() == match[2])
