@@ -477,8 +477,10 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 
   function url_aktualisieren() {
     var url = $location.search();
-    if (!url.length || !angular.equals($scope.anzeige, von_url(url)))
+    if (!url.length || !angular.equals($scope.anzeige, von_url(url))) {
+      $scope.ignoreRouteUpdate = true;
       $location.search(nach_url($scope.anzeige)).replace();
+    }
   }
 
   function aktualisieren() {
@@ -581,6 +583,10 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   }, true);
 
   $scope.$on('$routeUpdate', function() {
+    if ($scope.ignoreRouteUpdate) {
+      delete $scope.ignoreRouteUpdate;
+      return;
+    }
     var search = $location.search();
     angular.forEach({
       start: 'yes',

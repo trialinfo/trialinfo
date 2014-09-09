@@ -5,7 +5,8 @@ function parse_iso_date($scope, text) {
     var match;
     if (text == '')
       return null;
-    else if (match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/)) {
+    else if ((match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/)) ||
+	     (match = text.match(/^(\d{1,2})(\d{2})(\d{2}|\d{4})$/))) {
       if (match[3] <= 99)
 	match[3] = +match[3] + 100 * (19 + (match[3] <= (new Date()).getYear() % 100));
       var date = new Date(match[3], match[2] - 1, match[1]);
@@ -52,7 +53,8 @@ function parse_iso_time($scope, text) {
     var match;
     if (text == '')
       return null;
-    else if (match = text.match(/^(\d{1,2})[:.](\d{1,2})(?:[:.](\d{1,2}))?$/)) {
+    else if ((match = text.match(/^(\d{1,2})[:.](\d{1,2})(?:[:.](\d{1,2}))?$/)) ||
+	     (match = text.match(/^(\d{1,2})(\d{2})(?:(\d{2}))?$/))) {
       var time = new Date(0, 0, 0, match[1], match[2], match[3] || 0);
       if (time.getHours() == match[1] &&
 	  time.getMinutes() == match[2])
@@ -61,12 +63,12 @@ function parse_iso_time($scope, text) {
   }
 }
 
-function format_iso_time($scope, value, format) {
+function format_iso_time($scope, value, format1, format2) {
   if (value == null)
     return '';
   if (typeof value == 'string' &&
       (match = value.match(/^(\d{2}):(\d{2}):(\d{2})$/)))
-    return $scope.$eval('time | date:"' + format + '"',
+    return $scope.$eval('time | date:"' + (match[3] == 0 ? format1 : format2) + '"',
 		        {time: new Date(0, 0, 0, match[1], match[2], match[3])});
   else
     return value;
@@ -84,7 +86,7 @@ function isoTimeDirective() {
 	return value;
       });
       ctrl.$formatters.push(function(value) {
-	return format_iso_time(scope, value, 'H:mm');
+	return format_iso_time(scope, value, 'H:mm', 'H:mm:ss');
       });
     }
   };
@@ -97,7 +99,7 @@ function format_iso_timestamp($scope, value) {
     var split = value.split(/ /);
     if (split.length == 2) {
       split[0] = format_iso_date($scope, split[0], 'd.M.yyyy');
-      split[1] = format_iso_time($scope, split[1], 'H:mm:ss');
+      split[1] = format_iso_time($scope, split[1], 'H:mm:ss', 'H:mm:ss');
       if (split[0] !== undefined && split[1] !== undefined)
 	return split[0] + ' ' + split[1];
     }

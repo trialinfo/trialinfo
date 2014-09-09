@@ -118,8 +118,10 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 
   function url_aktualisieren() {
     var url = $location.search();
-    if (!url.length || !angular.equals($scope.anzeige, von_url(url)))
+    if (!url.length || !angular.equals($scope.anzeige, von_url(url))) {
+      $scope.ignoreRouteUpdate = true;
       $location.search(nach_url($scope.anzeige)).replace();
+    }
   }
 
   function fahrer_vergleichen(fahrer_in_klasse) {
@@ -429,6 +431,10 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   };
 
   $scope.$on('$routeUpdate', function() {
+    if ($scope.ignoreRouteUpdate) {
+      delete $scope.ignoreRouteUpdate;
+      return;
+    }
     var search = $location.search();
     var defaults = {
       wertung: veranstaltung.wertungen.length ? 1 : null,

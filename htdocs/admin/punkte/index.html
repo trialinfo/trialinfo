@@ -59,8 +59,8 @@
 	      <tr ng-if="features.startzeit || features.zielzeit">
 		<th align="right"><label for="startzeit">Fahr<span class="accesskey">z</span>eit</label></th>
 		<td>
-		  <input ng-if="features.startzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.startzeit" name="startzeit" iso-time accesskey="z" title="Startzeit"> −
-		  <input ng-if="features.zielzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="5" ng-model="fahrer.zielzeit" name="zielzeit" iso-time title="Zielzeit">
+		  <input ng-if="features.startzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="8" ng-model="fahrer.startzeit" name="startzeit" iso-time accesskey="z" title="Startzeit"> −
+		  <input ng-if="features.zielzeit" ng-disabled="!fahrer" type="text" size="5" maxlength="8" ng-model="fahrer.zielzeit" name="zielzeit" iso-time title="Zielzeit">
 		  &nbsp; <span style="font-weight: bold; color: red">{{ueberzeit()}}</span>
 		</td>
 	      </tr>

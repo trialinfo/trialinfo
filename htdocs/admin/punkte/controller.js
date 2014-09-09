@@ -80,6 +80,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
       var search = {};
       if (startnummer)
 	search.startnummer = startnummer;
+      $scope.ignoreRouteUpdate = true;
       $location.search(search).replace();
     }
   }
@@ -333,10 +334,12 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 	if (fahrzeit < 0)
 	  fahrzeit += 24 * 60 * 60;
 	fahrzeit -= gesamt;
-	if (fahrzeit > 0)
-	  return '+' +
-	    ('0' + Math.floor(fahrzeit / (60 * 60))).slice(-2) + ':' +
-	    ('0' + Math.floor((fahrzeit / 60) % 60)).slice(-2);
+	if (fahrzeit > 0) {
+	  var isotime = ('0' + Math.floor(fahrzeit / (60 * 60))).slice(-2) + ':' +
+			('0' + Math.floor((fahrzeit / 60) % 60)).slice(-2) + ':' +
+			('0' + (fahrzeit % 60)).slice(-2);
+	  return '+' + format_iso_time($scope, isotime, 'H:mm', 'H:mm:ss');
+	}
       }
     } catch (_) {}
   };
@@ -358,6 +361,10 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   beim_verlassen_warnen($scope, $scope.geaendert);
 
   $scope.$on('$routeUpdate', function() {
+    if ($scope.ignoreRouteUpdate) {
+      delete $scope.ignoreRouteUpdate;
+      return;
+    }
     var startnummer = $location.search().startnummer;
     var aktuelle_startnummer;
     if ($scope.fahrer)

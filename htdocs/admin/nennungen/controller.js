@@ -57,6 +57,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       var search = {};
       if (startnummer)
 	search.startnummer = startnummer;
+      $scope.ignoreRouteUpdate = true;
       $location.search(search).replace();
     }
   }
@@ -398,6 +399,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   });
 
   $scope.$on('$routeUpdate', function() {
+    if ($scope.ignoreRouteUpdate) {
+      delete $scope.ignoreRouteUpdate;
+      return;
+    }
     var intern = startnummer_intern();
     if (intern == null)
       intern = undefined;
