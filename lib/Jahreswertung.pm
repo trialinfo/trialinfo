@@ -50,12 +50,23 @@ sub wertungsrang_cmp($$) {
     return $a <=> $b;
 }
 
-sub jahreswertung_cmp($$) {
-    my ($aa, $bb) = @_;
+sub jahreswertung_cmp($$;$) {
+    my ($aa, $bb, $rang_zuweisen) = @_;
 
     # Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
     return $bb->{gesamtpunkte} <=> $aa->{gesamtpunkte}
 	if $aa->{gesamtpunkte} != $bb->{gesamtpunkte};
+
+    # Laut Telefonat am 22.10.2014 mit Martin Suchy (OSK): Wenn Fahrer
+    # punktegleich sind, werden sie in der Ergebnisliste anhand der besseren
+    # Platzierungen gereiht.  Der Rang wird allerdings nur dann "aufgelöst",
+    # wenn es den ersten Platz betrifft; sonst gibt es Ex Aequo-Platzierungen.
+    #
+    # (Diese Funktion wird für die Reihung in der Reihung in der Ergebnisliste
+    # ohne dem Parameter $rang_zuweisen aufgerufen, und zur Bestimmung der
+    # Ränge mit diesem Parameter.)
+    return 0
+	if $rang_zuweisen && $aa->{gesamtrang} > 1;
 
     # Fahrer mit mehr guten Platzierungen (ohne Beachtung von Streichresultaten) gewinnt
     my $ra = [ sort wertungsrang_cmp @{$aa->{wertungsrang}} ];
@@ -65,8 +76,10 @@ sub jahreswertung_cmp($$) {
 	my $cmp = wertungsrang_cmp($ra->[$n], $rb->[$n]);
 	if ($cmp) {
 	    my $rang = ($cmp < 0) ? $ra->[$n] : $rb->[$n];
-	    $aa->{rang_wichtig}{$rang}++;
-	    $bb->{rang_wichtig}{$rang}++;
+	    if ($rang_zuweisen) {
+		$aa->{rang_wichtig}{$rang}++;
+		$bb->{rang_wichtig}{$rang}++;
+	    }
 	    return $cmp;
 	}
     }
@@ -83,8 +96,10 @@ sub jahreswertung_cmp($$) {
     # Fahrer mit höheren Streichpunkten gewinnt
     my $cmp = ($bb->{streichpunkte} // 0) <=> ($aa->{streichpunkte} // 0);
     if ($cmp) {
-	$aa->{streichpunkte_wichtig}++;
-	$bb->{streichpunkte_wichtig}++;
+	if ($rang_zuweisen) {
+	    $aa->{streichpunkte_wichtig}++;
+	    $bb->{streichpunkte_wichtig}++;
+	}
 	return $cmp;
     }
 
@@ -138,10 +153,10 @@ sub jahreswertung_berechnen($$$) {
 	# Gesamtrang berechnen
 	my $gesamtrang = 1;
 	my $vorheriger_fahrer;
-	foreach my $fahrer (sort jahreswertung_cmp @$fahrer_in_klasse) {
+	foreach my $fahrer (sort { jahreswertung_cmp($a, $b) } @$fahrer_in_klasse) {
 	    $fahrer->{gesamtrang} =
 		$vorheriger_fahrer &&
-		jahreswertung_cmp($vorheriger_fahrer, $fahrer) == 0 ?
+		jahreswertung_cmp($vorheriger_fahrer, $fahrer, 1) == 0 ?
 		    $vorheriger_fahrer->{gesamtrang} : $gesamtrang;
 	    $gesamtrang++;
 	    $vorheriger_fahrer = $fahrer;
