@@ -97,6 +97,11 @@ CREATE TABLE fahrer (
   PRIMARY KEY (id, startnummer)
 );
 
+-- Mysql does not have "DROP INDEX IF EXISTS", so recreating an existing
+-- database would fail.  Don't create an index for now.
+-- DROP INDEX IF EXISTS fahrer_idx1 ON fahrer;
+-- CREATE INDEX fahrer_idx1 ON fahrer (id, startnummer);
+
 -- In fahrer.version berücksichtigt
 DROP TABLE IF EXISTS fahrer_wertung;
 CREATE TABLE fahrer_wertung (

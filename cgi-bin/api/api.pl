@@ -530,27 +530,54 @@ eval {
 	    }
 	}
 	if (defined $startnummer) {
+	    # Nächste freie Startnummer in allen Veranstaltungen aller
+	    # Veranstaltungsreihen suchen, in denen diese Veranstaltung ist;
+	    # zumindest aber in der Veranstaltung selbst.  (Wir ignorieren
+	    # hier "Sammel-Veranstaltungsreihen", für die keine Klassen
+	    # definiert sind.)
+
+	    # FIXME: Wir können momentan keine Temporäre Tabelle "belegt"
+	    # verwenden, weil eine Temporäre Tabelle in MySQL momentan nicht
+	    # mehrfach im selben SQL-Sattement verwendet werden kann
+	    # (Fehlermeldung "Can't reopen table").
+	    $dbh->do(qq{
+		DROP TABLE IF EXISTS belegt
+	    });
+
+	    # Zunächst Tabelle aller belegten Startnummern ab der verwendeten
+	    # Startnummer erzeugen.
+	    $dbh->do(qq{
+		CREATE TABLE belegt AS (
+		    SELECT DISTINCT startnummer
+		    FROM fahrer
+		    JOIN (
+			SELECT ? AS id
+			UNION
+			SELECT id
+			FROM vareihe_veranstaltung
+			WHERE vareihe IN (
+			    SELECT vareihe
+			    FROM vareihe_veranstaltung
+			    JOIN vareihe_klasse USING (vareihe)
+			    WHERE id = ?)) AS _ USING (id)
+		    WHERE startnummer >= ?)
+	    }, undef, $id, $id, $startnummer);
+	    # Nächste freie Startnummer in Tabelle belegt suchen.
 	    my $sth = $dbh->prepare(qq{
-		SELECT f1.startnummer + 1
-		FROM
-		    ( SELECT startnummer
-		    FROM fahrer
-		    WHERE id = ?
-		    AND startnummer >= ? ) AS f1
-		LEFT JOIN
-		    ( SELECT startnummer
-		    FROM fahrer
-		    WHERE id = ?
-		    AND startnummer >= ? ) AS f2
-		ON f1.startnummer + 1 = f2.startnummer
-		WHERE f2.startnummer IS NULL
-		ORDER BY f1.startnummer
+		SELECT belegt1.startnummer + 1 FROM belegt AS belegt1
+		LEFT JOIN belegt as belegt2
+		ON belegt1.startnummer + 1 = belegt2.startnummer
+		WHERE belegt2.startnummer IS NULL
+		ORDER BY belegt1.startnummer
 		LIMIT 1
 	    });
-	    $sth->execute($id, $startnummer, $id, $startnummer);
+	    $sth->execute();
 	    my @row = $sth->fetchrow_array;
 	    fixup_arrayref($sth, \@row);
 	    $result->{naechste_startnummer} = $row[0];
+	    $dbh->do(qq{
+		DROP TABLE belegt
+	    });
 	}
     } elsif ($op eq "PUT/fahrer") {
 	my ($id, $version) = parameter($q, qw(id version));
