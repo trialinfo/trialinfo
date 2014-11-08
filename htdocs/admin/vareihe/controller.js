@@ -4,8 +4,6 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   $scope.$root.kontext(vareihe ? vareihe.bezeichnung : 'Neue Veranstaltungsreihe');
 
   var veranstaltungsdatum = {};
-  vareihe_zuweisen(vareihe);
-
   if (veranstaltungen) {
     //veranstaltungen.reverse();
     $scope.veranstaltungen = veranstaltungen;
@@ -13,6 +11,7 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
       veranstaltungsdatum[veranstaltung.id] = veranstaltung.datum;
     });
   }
+  vareihe_zuweisen(vareihe);
 
   function sort_uniq(array, cmp) {
     array = array.sort(cmp);
@@ -122,7 +121,8 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 	  bezeichnung: 'Neue Veranstaltungsreihe',
 	  klassen: [],
 	  veranstaltungen: [],
-	  startnummern: {}
+	  startnummern: {},
+	  wertung: 1
 	};
       }
       klassen_normalisieren(vareihe);

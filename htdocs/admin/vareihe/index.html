@@ -1,5 +1,5 @@
 <h1>{{vareihe.bezeichnung}}</h1>
-<p>
+<p ng-if="vareihe.wertung && vareihe.klassen.length > 1">
   <a href="../ergebnisse/jahreswertung.shtml?vareihe={{vareihe.vareihe}}" target="jahreswertung:{{vareihe.vareihe}}">Auswertung</a>
 </p>
 <form name="form" ng-keydown="keydown($event)">
@@ -18,8 +18,10 @@
 	<th align="right"><label for="wertung">Wertung</label></th>
 	<td>
 	  <select ng-model="vareihe.wertung" ng-options="wertung for wertung in [1,2,3,4]">
+	    <option value=""></option>
 	  </select>
 	</td>
+      </tr>
       <tr>
 	<th align="right"></th>
 	<td><input type="checkbox" ng-model="vareihe.abgeschlossen" id="abgeschlossen"> <label for="abgeschlossen">abgeschlossen</label>
