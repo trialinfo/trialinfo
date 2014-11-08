@@ -559,7 +559,8 @@ eval {
 			    SELECT vareihe
 			    FROM vareihe_veranstaltung
 			    JOIN vareihe_klasse USING (vareihe)
-			    WHERE id = ?)) AS _ USING (id)
+			    JOIN vareihe USING (vareihe)
+			    WHERE id = ? AND wertung IS NOT NULL)) AS _ USING (id)
 		    WHERE startnummer >= ?)
 	    }, undef, $id, $id, $startnummer);
 	    # Nächste freie Startnummer in Tabelle belegt suchen.
