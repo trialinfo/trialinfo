@@ -503,56 +503,85 @@ eval {
     } elsif ($op eq "GET/startnummer") {
 	my ($id) = parameter($q, qw(id));
 	my $startnummer;
+	my $klasse;
 	eval {
-	    my ($gesuchte_startnummer) = parameter($q, qw(startnummer));
+	    ($startnummer) = parameter($q, qw(startnummer));
+	};
+	if (defined $startnummer) {
 	    my $sth = $dbh->prepare(qq{
 		SELECT startnummer, klasse, nachname, vorname, geburtsdatum
 		FROM fahrer
 		WHERE id = ? AND startnummer = ?
 	    });
-	    $sth->execute($id, $gesuchte_startnummer);
+	    $sth->execute($id, $startnummer);
 	    if ($result = $sth->fetchrow_hashref) {
 		fixup_hashref($sth, $result);
-		$startnummer = $result->{startnummer};
 	    }
-	};
-	if ($@) {
-	    my ($klasse) = parameter($q, qw(klasse));
+	} else {
+	    ($klasse) = parameter($q, qw(klasse));
 	    my $sth = $dbh->prepare(q{
 		SELECT MAX(startnummer)
 		FROM fahrer
 		WHERE id = ? AND klasse = ? AND startnummer >= 0
 	    });
 	    $sth->execute($id, $klasse);
-	    if (my @row = $sth->fetchrow_array) {
-		fixup_arrayref($sth, \@row);
-		$startnummer = $row[0] // 0;
-	    }
+	    my @row = $sth->fetchrow_array;
+	    fixup_arrayref($sth, \@row);
+	    $startnummer = $row[0] // 0;
 	}
-	if (defined $startnummer) {
-	    # Nächste freie Startnummer in allen Veranstaltungen aller
-	    # Veranstaltungsreihen suchen, in denen diese Veranstaltung ist;
-	    # zumindest aber in der Veranstaltung selbst.  (Wir ignorieren
-	    # hier "Sammel-Veranstaltungsreihen", für die keine Klassen
-	    # definiert sind.)
 
-	    # FIXME: Wir können momentan keine Temporäre Tabelle "belegt"
-	    # verwenden, weil eine Temporäre Tabelle in MySQL momentan nicht
-	    # mehrfach im selben SQL-Sattement verwendet werden kann
-	    # (Fehlermeldung "Can't reopen table").
-	    $dbh->do(qq{
-		DROP TABLE IF EXISTS belegt
+	# Belegte Startnummern in allen Veranstaltungen aller
+	# Veranstaltungsreihen suchen, in denen diese Veranstaltung ist;
+	# zumindest aber in der Veranstaltung selbst.  (Wir ignorieren hier
+	# "Sammel-Veranstaltungsreihen", für die keine Klassen definiert sind.)
+
+	# FIXME: Wir können momentan Temporäre Tabelle "belegt" verwenden,
+	# weil eine Temporäre Tabelle in MySQL momentan nicht mehrfach im
+	# selben SQL-Sattement verwendet werden kann (Fehlermeldung "Can't
+	# reopen table").
+	$dbh->do(qq{
+	    DROP TABLE IF EXISTS belegt
+	});
+
+	# Tabelle aller belegten Startnummern ab der verwendeten Startnummer
+	# erzeugen.
+	$dbh->do(qq{
+	    CREATE TABLE belegt AS (
+		SELECT DISTINCT startnummer
+		FROM fahrer
+		JOIN (
+		    SELECT ? AS id
+
+		    UNION
+
+		    SELECT id
+		    FROM vareihe_veranstaltung
+		    WHERE vareihe IN (
+			SELECT vareihe
+			FROM vareihe_veranstaltung
+			JOIN vareihe_klasse USING (vareihe)
+			JOIN vareihe USING (vareihe)
+			WHERE id = ? AND wertung IS NOT NULL)) AS _ USING (id)
+		WHERE startnummer >= ?)
+	}, undef, $id, $id, $startnummer);
+
+	unless (defined $klasse || exists $result->{startnummer}) {
+	    my $sth = $dbh->prepare(q{
+		SELECT startnummer
+		FROM belegt
+		WHERE startnummer = ?
 	    });
-
-	    # Zunächst Tabelle aller belegten Startnummern ab der verwendeten
-	    # Startnummer erzeugen.
-	    $dbh->do(qq{
-		CREATE TABLE belegt AS (
-		    SELECT DISTINCT startnummer
+	    $sth->execute($startnummer);
+	    if ($sth->fetchrow_array) {
+		my $sth = $dbh->prepare(q{
+		    SELECT startnummer, klasse, nachname, vorname, geburtsdatum,
+			   id, titel
 		    FROM fahrer
 		    JOIN (
 			SELECT ? AS id
+
 			UNION
+
 			SELECT id
 			FROM vareihe_veranstaltung
 			WHERE vareihe IN (
@@ -561,8 +590,22 @@ eval {
 			    JOIN vareihe_klasse USING (vareihe)
 			    JOIN vareihe USING (vareihe)
 			    WHERE id = ? AND wertung IS NOT NULL)) AS _ USING (id)
-		    WHERE startnummer >= ?)
-	    }, undef, $id, $id, $startnummer);
+		    JOIN veranstaltung USING (id)
+		    JOIN wertung USING (id)
+		    WHERE startnummer = ? AND wertung = 1
+		    ORDER BY datum DESC
+		    LIMIT 1
+		});
+		$sth->execute($id, $id, $startnummer);
+		if ($result = $sth->fetchrow_hashref) {
+		    fixup_hashref($sth, $result);
+		}
+	    } else {
+		$startnummer = undef;
+	    }
+	}
+
+	if (defined $startnummer) {
 	    # Nächste freie Startnummer in Tabelle belegt suchen.
 	    my $sth = $dbh->prepare(qq{
 		SELECT belegt1.startnummer + 1 FROM belegt AS belegt1
@@ -573,13 +616,15 @@ eval {
 		LIMIT 1
 	    });
 	    $sth->execute();
-	    my @row = $sth->fetchrow_array;
-	    fixup_arrayref($sth, \@row);
-	    $result->{naechste_startnummer} = $row[0];
-	    $dbh->do(qq{
-		DROP TABLE belegt
-	    });
+	    if (my @row = $sth->fetchrow_array) {
+		fixup_arrayref($sth, \@row);
+		$result->{naechste_startnummer} = $row[0];
+	    }
 	}
+
+	$dbh->do(qq{
+	    DROP TABLE belegt
+	});
     } elsif ($op eq "PUT/fahrer") {
 	my ($id, $version) = parameter($q, qw(id version));
 	my $startnummer = $q->url_param('startnummer');  # Alte Startnummer
