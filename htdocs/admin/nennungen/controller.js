@@ -267,7 +267,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       success(function(data, status, headers, config) {
 	if (data.startnummer) {
 	  $scope.startnummer_belegt = data;
-	  checker.reject();
+	  if (!('id' in data) || data.id == veranstaltung.id)
+	    checker.reject();
+	  else
+	    checker.resolve();
 	} else {
 	  $scope.startnummer_belegt = undefined;
 	  checker.resolve();

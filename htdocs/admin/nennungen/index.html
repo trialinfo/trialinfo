@@ -222,7 +222,8 @@
 	    <!-- if (!(fahrer && fahrer.start && startende_klassen[fahrer.klasse - 1])) ... -->
 	    <span ng-if="startnummer_belegt.startnummer" style="color:red">
 	      Startnummer belegt:<br>
-	      {{startnummer_belegt.nachname}} {{startnummer_belegt.vorname}} ({{startnummer_belegt.startnummer}})<br>
+	      {{startnummer_belegt.nachname}} {{startnummer_belegt.vorname}}<br>
+	      <span ng-if="startnummer_belegt.id">{{startnummer_belegt.titel}}<br></span>
 	      Nächste freie Startnummer: {{startnummer_belegt.naechste_startnummer}}<br>
 	    </span>
 	    <span ng-if="!startnummer_belegt.startnummer && startnummer_belegt.naechste_startnummer">
