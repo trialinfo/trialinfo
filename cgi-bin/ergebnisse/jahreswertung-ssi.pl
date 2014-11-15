@@ -193,8 +193,9 @@ unless (%$veranstaltungen) {
     exit;
 }
 
-$veranstaltungen = [ map { [ $veranstaltungen->{$_}{cfg},
-			     $veranstaltungen->{$_}{fahrer} ] }
+$veranstaltungen = [ map { exists $veranstaltungen->{$_} ?
+			   [ $veranstaltungen->{$_}{cfg},
+			     $veranstaltungen->{$_}{fahrer} ] : () }
 			 @$veranstaltungen_reihenfolge ];
 
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
