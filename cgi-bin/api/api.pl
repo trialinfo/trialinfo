@@ -360,7 +360,25 @@ eval {
 	}
     } elsif ($op eq "GET/veranstaltungen") {
 	my $sth = $dbh->prepare(q{
-	    SELECT id, tag, datum, dateiname, titel, aktiv, abgeschlossen
+	    SELECT DISTINCT id
+	    FROM veranstaltung
+	    WHERE id NOT IN (
+		SELECT id
+		FROM vareihe_veranstaltung)
+
+	    UNION
+
+	    SELECT id
+	    FROM vareihe_veranstaltung
+	    JOIN vareihe USING (vareihe) WHERE NOT abgeschlossen
+	});
+	$sth->execute();
+	my $aktiv = {};
+	while (my @row = $sth->fetchrow_array) {
+	    $aktiv->{$row[0]} = 1;
+	}
+	my $sth = $dbh->prepare(q{
+	    SELECT id, tag, datum, dateiname, titel, aktiv
 	    FROM veranstaltung
 	    LEFT JOIN wertung USING (id)
 	    WHERE wertung = 1
@@ -373,6 +391,7 @@ eval {
 	    fixup_hashref($sth, $veranstaltung);
 	    my $id = $veranstaltung->{id};
 	    $veranstaltung->{vareihen} = [];
+	    $veranstaltung->{abgeschlossen} = json_bool(!exists $aktiv->{$id});
 	    $veranstaltungen->{$id} = $veranstaltung;
 	    push @$result, $veranstaltung;
 	}
