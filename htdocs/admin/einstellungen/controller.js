@@ -122,7 +122,6 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	wertungsmodus: 0,
 	versicherung: 0,
 	reset: 'nennbeginn',
-	abgeschlossen: false,
 	basis: { id: null }
       };
     }
@@ -160,10 +159,8 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     veranstaltung.features = features_zu_liste($scope.features);
     wertungspunkte_kolabieren(veranstaltung.wertungspunkte);
     $scope.busy = true;
-    var abgeschlossen =
-      $scope.veranstaltung_alt.abgeschlossen || veranstaltung.abgeschlossen;
     var veranstaltung_ist_neu = !veranstaltung.id;
-    veranstaltung_speichern($http, veranstaltung.id, veranstaltung, abgeschlossen).
+    veranstaltung_speichern($http, veranstaltung.id, veranstaltung).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
 	var path = '/veranstaltung/' + veranstaltung.id;
@@ -240,7 +237,6 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	    delete veranstaltung.datum;
 	    veranstaltung.dateiname = null;
 	    veranstaltung.reset = 'nennbeginn';
-	    veranstaltung.abgeschlossen = false;
 	    veranstaltung_zuweisen(veranstaltung, true);
 	  }).
 	  error(netzwerkfehler);

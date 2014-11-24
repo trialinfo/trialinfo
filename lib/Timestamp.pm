@@ -2,7 +2,7 @@ package Timestamp;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(mtime_timestamp timestamp_mtime max_timestamp);
+@EXPORT = qw(mtime_timestamp timestamp_mtime max_timestamp same_day);
 
 use POSIX qw(strftime mktime);
 use File::stat;
@@ -40,4 +40,14 @@ sub max_timestamp($$) {
     $tb = timelocal($6, $5, $4, $3, $2 - 1, $1 - 1900)
 	if $b =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/;
     return $ta < $tb ? $b : $a;
+}
+
+sub same_day($) {
+    my ($date) = @_;
+
+    return 0
+	unless defined $date;
+
+    $date = timestamp_mtime("$date 00:00:00");
+    return time >= $date && time < $date + 24 * 60 * 60;
 }

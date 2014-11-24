@@ -103,8 +103,7 @@ function sektionenController($scope, $http, $timeout, veranstaltung) {
     features.sektionen_aus_wertung = true;
     veranstaltung.features = features_zu_liste(features);
     $scope.busy = true;
-    veranstaltung_speichern($http, veranstaltung.id, veranstaltung,
-			    veranstaltung.abgeschlossen).
+    veranstaltung_speichern($http, veranstaltung.id, veranstaltung).
       success(function(veranstaltung) {
 	veranstaltung_zuweisen(veranstaltung);
       }).

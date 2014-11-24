@@ -43,7 +43,7 @@ my $bezeichnung;
 my $laeufe;
 my $streichresultate;
 my $wertung;
-my $zeit;
+my $mtime;
 my $abgeschlossen;
 my $fahrer_nach_startnummer;
 my $klassenfarben;
@@ -93,7 +93,8 @@ while (my @row = $sth->fetchrow_array) {
     $n++;
     $cfg->{wertungen}[$wertung - 1] = { titel => $row[3], subtitel => $row[4] };
     $veranstaltungen->{$id}{cfg} = $cfg;
-    $zeit = max_timestamp($zeit, $row[5]);
+    $mtime = max_timestamp($mtime, $row[5])
+	unless defined $row[1] && !same_day($row[1]);
     $cfg->{punkteteilung} = $row[6];
     push @$veranstaltungen_reihenfolge, $row[0];
     $letzte_id = $row[0];
@@ -239,5 +240,5 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      nach_relevanz => 1,
 	      @klassen ? (klassen => \@klassen ) : ();
 
-print "<p>Letzte Änderung: $zeit</p>\n"
-    unless $abgeschlossen;
+print "<p>Letzte Änderung: $mtime</p>\n"
+    if $mtime;

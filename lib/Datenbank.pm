@@ -149,7 +149,7 @@ sub cfg_aus_datenbank($$;$) {
 	SELECT tag, version, id, basis, dateiname, datum, art, aktiv,
 	       vierpunktewertung, wertungsmodus, punkte_sektion_auslassen,
 	       wertungspunkte_234, wertung1_markiert, versicherung, mtime,
-	       punkteteilung, sync_erlaubt, abgeschlossen$nur_trialtool
+	       punkteteilung, sync_erlaubt$nur_trialtool
 	FROM veranstaltung
 	WHERE id = ?
     });

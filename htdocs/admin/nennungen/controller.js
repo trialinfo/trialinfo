@@ -145,8 +145,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       delete fahrer.startnummer_intern;
     }
     $scope.busy = true;
-    fahrer_speichern($http, veranstaltung.id, startnummer, version, fahrer,
-		     veranstaltung.abgeschlossen).
+    fahrer_speichern($http, veranstaltung.id, startnummer, version, fahrer).
       success(function(fahrer) {
 	fahrer_zuweisen(fahrer);
 	set_focus('#suchbegriff', $timeout);
