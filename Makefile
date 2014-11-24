@@ -180,7 +180,7 @@ $(GENERATED_WEB_FILES): %: %.in
 
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
-ANGULAR_VERSION=1.2.7
+ANGULAR_VERSION=1.2.27
 htdocs/js/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
