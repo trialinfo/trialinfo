@@ -49,7 +49,7 @@ Systemvoraussetzungen
  * Die Scriptsprache Perl. Zusätzlich folgende Pakete oder Perl-Module:
    perl-DBD-MySQL, perl-CGI, perl-JSON, perl-Clone, perl-URI-Escape oder
    perl-Any-URI-Escape + perl-URI-Escape-XS, perl-Class-Accessor-Lite,
-   perl-Module-Load, perl-Module-Loaded, perl-Encode-Locale.
+   perl-Module-Load, perl-Module-Loaded, perl-Encode-Locale, perl-IO-Zlib.
 
  * Die Datenbank MySQL (bzw. MariaDB).
 
@@ -122,38 +122,31 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 
   Beispielkonfiguration für Apache:
 
-    ScriptAlias /cgi-bin/ergebnisse /home/agruen/trial-auswertung/cgi-bin
-    Alias /ergebnisse /home/agruen/trial-auswertung/htdocs
+    <VirtualHost *:80>
+	DocumentRoot /home/agruen/nuller-info/htdocs
+	ServerName trials.home
 
-    <Directory "/home/agruen/trial-auswertung/htdocs">
-	AllowOverride All
-	Order allow,deny
-	Allow from all
-    </Directory>
+	ScriptAlias /cgi-bin/ "/home/agruen/nuller-info/cgi-bin/"
 
-    <Directory "/home/agruen/trial-auswertung/cgi-bin">
-	SetHandler cgi-script
-	Options ExecCGI
-    </Directory>
+	<Directory "/home/agruen/nuller-info/htdocs">
+	    Options Indexes
+	    AllowOverride All
+	    Require all granted
+	</Directory>
 
-  Im Verzeichnis "htdocs" befindet sich eine passende ".htaccess" - Datei mit:
+	<Directory "/home/agruen/nuller-info/cgi-bin">
+	    Options None
+	    AllowOverride All
+	    Require all granted
+	</Directory>
+    </VirtualHost>
 
-    DirectoryIndex index.shtml
-    Options +Includes
-
-  Achtung: der Alias "/ergebnisse" muss in der Konfiguration vor dem Alias "/"
-  stehen.
-
-Die Verzeichnisse htdocs/veranstalter/ und cgi-bin/veranstalter/ geben Zugriff
-auf Funktionen, die üblicherweise nicht öffentlich zugänglich sein sollen.
-Standardmäßig ist der Zugriff auf authorisierte Benutzer eingeschränkt.  Um
-Benutzer zu definieren, muss noch zusätzlich eine .htpasswd - Datei erzeugt
-werden und der Pfad zu dieser Datei in die .htaccess - Dateien eingetragen
-werden.
-
-Die Verzeichnisse htdocs/admin/ und cgi-bin/api/ geben Zugriff auf die
-Datenbank-Administration.  Standardmäßig hat hier nur der Benutzer "admin"
-Zugriff; dieser Benutzer muss zuerst in der Datei .htpasswd angelegt werden.
+Die Verzeichnisse htdocs/veranstalter/, cgi-bin/veranstalter/, admin/, api/
+geben auch Zugriff auf Funktionen, die üblicherweise nicht öffentlich
+zugänglich sein sollen.  Standardmäßig ist der Zugriff auf bestimmte Gruppen
+eingeschränkt.  Um Benutzer zu definieren, muss eine .htpasswd
+- Datei erzeugt werden (Utility "hdpasswd"). Diesen Benutzern müssen dann in
+  der Datei .htgroup die entsprechenden Gruppen zugewiesen werden.
 
 Außerdem muss in der Datei lib/Auswertung.pm definiert werden, auf welche
 Datenbank die CGI-Scripts mit welchem Benutzernamen und Kennwort zugreifen
