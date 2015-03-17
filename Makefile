@@ -287,7 +287,8 @@ dist: $(COMMON_FILES) $(LOCAL_FILES)
 
 mount:
 	@if [ "$$(stat -c%m $(MOUNTPOINT))" != $(MOUNTPOINT) ]; then \
-	    sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT); \
+	    #sshfs -o workaround=rename admin@otsv.at@www02.easyserver.at:/ $(MOUNTPOINT); \
+	    curlftpfs -o tlsv1 www02.easyserver.at /mnt/easyserver/; \
 	fi
 
 upload: download
