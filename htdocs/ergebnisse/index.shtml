@@ -2,31 +2,31 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>ÖTSV Veranstaltungsergebnisse 2014</title>
+<title>ÖTSV Veranstaltungsergebnisse 2015</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 </head>
 <body>
-<h1>ÖTSV Veranstaltungsergebnisse 2014</h1>
+<h1>ÖTSV Veranstaltungsergebnisse 2015</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=10&spalte=lbl&spalte=fahrzeug&kuerzel" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=16&spalte=lbl&spalte=fahrzeug&kuerzel" -->
 
 <p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
 
 <h2>Jahreswertungen</h2>
 <p>
-<a href="jahreswertung.shtml?vareihe=11&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2014</a><br>
-<a href="jahreswertung.shtml?vareihe=13">ÖTSV Bike Trial Cup 2014</a><br>
-<br>
-<a href="jahreswertung.shtml?vareihe=12&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2014</a><br>
-<a href="jahreswertung.shtml?vareihe=14&spalte=lbl&spalte=fahrzeug">Bike Trial ÖM 2014</a>
+<a href="jahreswertung.shtml?vareihe=17&spalte=lbl&spalte=fahrzeug">ÖTSV Cup</a><br>
+<a href="jahreswertung.shtml?vareihe=18&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft</a><br>
+<a href="jahreswertung.shtml?vareihe=19">ÖTSV Bike Trial Cup</a><br>
+<a href="jahreswertung.shtml?vareihe=20&spalte=lbl">ÖTSV Kids e-Cup</a>
 </p>
 <p>
 
 <h2>Sonstiges</h2>
 <p>
-<a href="statistik.shtml?vareihe=10&kuerzel">Punktestatistiken</a><br>
+<a href="statistik.shtml?vareihe=16&kuerzel">Punktestatistiken</a><br>
+<a href="2014.shtml">Ergebnisse 2014</a><br>
 <a href="2013.shtml">Ergebnisse 2013</a><br>
 <a href="2012.shtml">Ergebnisse 2012</a>
 </p>
