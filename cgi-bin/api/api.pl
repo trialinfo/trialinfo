@@ -370,7 +370,8 @@ eval {
 
 	    SELECT id
 	    FROM vareihe_veranstaltung
-	    JOIN vareihe USING (vareihe) WHERE NOT abgeschlossen
+	    JOIN vareihe USING (vareihe) WHERE
+		NOT abgeschlossen OR abgeschlossen IS NULL
 	});
 	$sth->execute();
 	my $aktiv = {};

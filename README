@@ -49,7 +49,7 @@ Systemvoraussetzungen
  * Die Scriptsprache Perl. Zusätzlich folgende Pakete oder Perl-Module:
    perl-DBD-MySQL, perl-CGI, perl-JSON, perl-Clone, perl-URI-Escape oder
    perl-Any-URI-Escape + perl-URI-Escape-XS, perl-Class-Accessor-Lite,
-   perl-Module-Load, perl-Module-Loaded.
+   perl-Module-Load, perl-Module-Loaded, perl-Encode-Locale.
 
  * Die Datenbank MySQL (bzw. MariaDB).
 

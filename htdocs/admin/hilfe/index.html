@@ -89,6 +89,9 @@ verschiedene Einstellungen zur Auswertung angezeigt werden. Hier kann je nach
 den Einstellungen der Veranstaltung auswählen, welche Wertung, welche Klassen,
 und welche Informationen zu den Fahrern angezeigt werden sollen.</p>
 
+<p>Am Tag der Veranstaltung wird in der Auswertung der Zeitpunkt der letzten
+Änderung angezeigt um erkennen zu können, wie aktuell die Daten sind.</p>
+
 <p>Wird der Präsentations-Modus aktiviert, dann werden die Ergebnisse
 seitenweise dargestellt, und es erfolgt je nach eingestellter Geschwindigkeit
 ein automatischer Seitenwechsel. Diese Darstellungsart ist dazu gedacht, um
@@ -188,11 +191,6 @@ der Punktevergabe nachträglich als Starter markiert werden.</p>
 <p>Hier werden alle konfigurierbaren Aspekte einer Veranstaltung definiert. Die
 meisten Einstellungen sollten recht offensichtlich sein, die folgenden
 bedürfen aber einer Erklärung.</p>
-
-<h3 id="veranstaltung_abgeschlossen">Allgemein / Veranstaltung abgeschlossen</h3>
-<p>Wenn eine Veranstaltung als abgeschlossen markiert ist, ändert sich das
-Datum der letzten Änderung nicht mehr, und es wird nicht mehr in den
-Ergebnislisten ausgegeben.</p>
 
 <h3 id="veranstaltung_verborgen">Allgemein / Veranstaltung anzeigen und in Wertungen berücksichtigen</h3>
 <p>Hier kann man eine Veranstaltung auf den Ergebnisseiten verbergen und sie in
@@ -354,44 +352,5 @@ Außerdem ist zu beachten, dass das TrialTool-Format nicht alle Möglichkeiten
 der Trial-Auswertung vollständig unterstützt. Beim Export in dieses Format wird
 deswegen versucht, die Informationen so gut wie möglich zu abzubilden.</p>
 
-<h2>Unterschiede zum TrialTool</h2>
-<ul>
-  <li>Formulare werden nicht automatisch, sondern über die Eingabetaste oder
-die Schaltfläche Speichern gespeichert.
-
-  <li>Das Feld Start in der Trial-Auswertung, das einen Fahrer in der Nennung
-als Starter markiert, entspricht dem Feld Papierabnahme im TrialTool.
-
-  <li>Ein Fahrer kann in der Nennung als außer Konkurrenz markiert werden.  Im
-TrialTool gibt es diese Möglichkeit nicht, und man kann dort Fahrer nur als aus
-der Wertung markieren, was ebenfalls verwendet wird, um Fahrer als nicht
-gewertet zu markieren (z.B. aufgrund einer Disqualifizierung).  Die Einstellung
-<em>aus der Wertung</em> im TrialTool wurde außerdem auf <em>nicht
-gewertet</em> umbenannt.
-
-  <li>Die weiteren Felder <em>E-Mail</em> und <em>Bundesland</em> wurden eingeführt.
-
-  <li>Das TrialTool unterstützt maximal 15 Sektionen. In der Trial-Auswertung
-gibt es diese Einschränkung nicht.
-
-  <li>Sektionen aus der Wertung werden eindeutig als solche markiert, statt die
-Punkte der Fahrer in diesen Sektionen zu löschen. Sektionen aus der Wertung
-werden in der Punktevergabe nicht angezeigt und im Ergebnis nicht
-berücksichtigt.
-
-  <li>Das TrialTool kann maximal 999 Fahrer mit zugeordneter Startnummer und
-400 Fahrer ohne zugeordneter Startnummer verwalten. In der Trial-Auswertung
-gibt es diese Einschränkung nicht. (Die Länge von Startnummern ist lediglich im
-Nennformular auf fünf Stellen begrenzt.)
-
-  <li>Die Spurfarben der einzelnen Klassen sind konfigurierbar.
-
-  <li>Klassen können gemeinsam gewertet werden. Außerdem kann eingestellt
-werden, dass eine Klasse an der Gesamtwertung nicht teilnimmt, oder dass eine
-Klasse außer Konkurrenz startet.
-
-  <li>Die Verwaltung von Helfern (Mindern) ist derzeit nicht implementiert.
-
-</ul>
 </body>
 </html>

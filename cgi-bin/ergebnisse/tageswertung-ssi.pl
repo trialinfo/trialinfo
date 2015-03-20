@@ -23,6 +23,7 @@ use RenderOutput;
 use Tageswertung;
 use Datenbank;
 use Auswertung;
+use Timestamp;
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';
@@ -41,7 +42,7 @@ my $wertung = $q->param('wertung') || 1;
 my @klassen = $q->param('klasse');
 
 my $bezeichnung;
-my $zeit;
+my $mtime;
 my $cfg;
 my $fahrer_nach_startnummer;
 my $sth;
@@ -53,9 +54,8 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 if (defined $vareihe) {
     $sth = $dbh->prepare(q{
-	SELECT id, vareihe.bezeichnung, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung,
-	       veranstaltung.abgeschlossen
+	SELECT id, vareihe.bezeichnung, wertung, titel, datum, mtime,
+	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN vareihe_veranstaltung USING (id)
 	JOIN vareihe USING (vareihe, wertung)
@@ -65,9 +65,8 @@ if (defined $vareihe) {
     $sth->execute($id, $vareihe);
 } elsif (defined $id) {
     $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung,
-	       abgeschlossen
+	SELECT id, NULL, wertung, titel, datum, mtime,
+	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE id = ? AND wertung = ?
@@ -75,9 +74,8 @@ if (defined $vareihe) {
     $sth->execute($id, $wertung);
 } else {
     $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung,
-	       abgeschlossen
+	SELECT id, NULL, wertung, titel, datum, mtime,
+	       wertungsmodus, vierpunktewertung, punkteteilung
 	FROM wertung
 	JOIN veranstaltung USING (id)
 	WHERE wertung = ?
@@ -91,11 +89,11 @@ if (my @row = $sth->fetchrow_array) {
     $bezeichnung = $row[1];
     $wertung = $row[2];
     $cfg->{wertungen}[$wertung - 1] = { titel => $row[3] };
-    $zeit = $row[4];
-    $cfg->{wertungsmodus} = $row[5];
-    $cfg->{vierpunktewertung} = $row[6];
-    $cfg->{punkteteilung} = $row[7];
-    $cfg->{abgeschlossen} = $row[8];
+    $mtime = $row[5]
+	if !defined($row[4]) || same_day($row[4]);
+    $cfg->{wertungsmodus} = $row[6];
+    $cfg->{vierpunktewertung} = $row[7];
+    $cfg->{punkteteilung} = $row[8];
 }
 
 unless (defined $cfg) {
@@ -263,5 +261,5 @@ tageswertung cfg => $cfg,
 	     statistik_gesamt => 1,
 	     statistik_pro_klasse => 0;
 
-print "<p>Letzte Änderung: $zeit</p>\n"
-    unless $cfg->{abgeschlossen};
+print "<p>Letzte Änderung: $mtime</p>\n"
+    if defined $mtime;

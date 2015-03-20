@@ -628,6 +628,8 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     if (rang != null)
       return rang + '.';
   }
+
+  $scope.selber_tag = same_day;
 }
 
 veranstaltungAuswertungController.resolve = {

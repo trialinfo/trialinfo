@@ -169,4 +169,4 @@ table.wertung tr td.wichtig {
     </tbody>
   </table>
 </div>
-<p ng-if="veranstaltung.mtime && !veranstaltung.abgeschlossen">Letzte Änderung: {{veranstaltung.mtime}}</p>  <!-- Nur am selben Tag anzeigen -->
+<p ng-if="veranstaltung.mtime && selber_tag(veranstaltung.datum)">Letzte Änderung: {{veranstaltung.mtime}}</p>

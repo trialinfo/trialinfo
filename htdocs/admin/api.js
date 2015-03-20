@@ -64,25 +64,23 @@ function fahrer_suchen($http, id, suchbegriff) {
   return $http.get('/api/fahrer/suchen', {'params': params});
 }
 
-function fahrer_speichern($http, id, startnummer, version, fahrer, abgeschlossen) {
+function fahrer_speichern($http, id, startnummer, version, fahrer) {
   var params = {
     id: id,
     version: version,
   };
   if (startnummer !== undefined)
     params.startnummer = startnummer;
-  if (!abgeschlossen)
-    params.mtime = Math.floor(new Date().getTime() / 1000);
+  params.mtime = Math.floor(new Date().getTime() / 1000);
   return $http.put('/api/fahrer', fahrer, {params: params});
 }
 
-function veranstaltung_speichern($http, id, veranstaltung, abgeschlossen) {
+function veranstaltung_speichern($http, id, veranstaltung) {
   var params = {
     id: id,
     version: veranstaltung.version,
   };
-  if (!abgeschlossen)
-    params.mtime = Math.floor(new Date().getTime() / 1000);
+  params.mtime = Math.floor(new Date().getTime() / 1000);
   return $http.put('/api/veranstaltung', veranstaltung, {params: params});
 }
 
@@ -226,4 +224,13 @@ function join(separator) {
     }
   }
   return result;
+}
+
+function same_day(date_str) {
+  var match;
+  if (match = date_str.match(/^(\d{4})-(\d{2})-(\d{2})$/)) {
+    var date = new Date(match[1], match[2] - 1, match[3]).getTime();
+    var now = new Date().getTime()
+    return now >= date && now < date + 24 * 60 * 60 * 1000;
+  }
 }
