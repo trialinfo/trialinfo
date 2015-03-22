@@ -166,7 +166,7 @@
 	      <td>
 		<span ng-repeat="wertung in features.wertungen">
 		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.wertungen[wertung - 1].aktiv" id="wertung{{wertung}}" accesskey="{{wertungen[wertung - 1].accesskey}}">
-		    <label for="wertung{{wertung}}" ng-bind-html="wertungen[wertung - 1].label" ng-style="wertung == 1 && keine_wertung1 ? {'text-decoration': 'line-through'} : {}" title="{{wertung == 1 && keine_wertung1 ? 'Klasse ' + fahrer.klasse + ' nimmt an ' + veranstaltung.wertungen[0].bezeichnung + ' nicht teil.': ''}}"></label>
+		    <label for="wertung{{wertung}}" ng-bind-html="wertungen[wertung - 1].label" ng-style="wertung == 1 && keine_wertung1 ? {'text-decoration': 'line-through'} : {}" title="{{wertung == 1 && keine_wertung1 ? 'Klasse ' + fahrer.klasse + ' nimmt an dieser Wertung nicht teil.': ''}}"></label>
 		</span>
 	      </td>
 	    </tr>
@@ -178,13 +178,13 @@
 		    <label for="nennungseingang" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
 		</span>
 		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.start" id="start">
-		  <label for="start" accesskey="s"><span class="accesskey">S</span>tart</label>
+		  <label for="start" accesskey="s" ng-style="!klasse_startet() ? {'text-decoration': 'line-through'} : {}" title="{{!klasse_startet() ? (fahrer.klasse == null ? 'Fahrer ist keiner Klasse zugewiesen.' : 'Klasse ' + fahrer.klasse + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
 		<span ng-if="features.start_morgen">
 		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.start_morgen" id="start_morgen">
 		    <label for="start_morgen" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
 		</span>
 		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.ausser_konkurrenz" id="ausser_konkurrenz">
-		  <label for="ausser_konkurrenz" accesskey="a" ng-style="ausser_konkurrenz ? {'text-decoration': 'line-through'} : {}"><span class="accesskey">A</span>ußer Konkurrenz</label>
+		  <label for="ausser_konkurrenz" accesskey="a" ng-style="ausser_konkurrenz ? {'text-decoration': 'line-through'} : {}" title="{{ausser_konkurrenz ? 'Klasse ' + fahrer.klasse + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.helfer">
@@ -229,8 +229,14 @@
 	    <span ng-if="!startnummer_belegt.startnummer && startnummer_belegt.naechste_startnummer">
 	      Nächste freie Startnummer in Klasse: {{startnummer_belegt.naechste_startnummer}}<br>
 	    </span>
-	    <span ng-if="fahrer.start && !veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1]" style="color: red">
-	      Klasse {{fahrer.klasse}} startet bei dieser Veranstaltung nicht.
+	    <span ng-if="fahrer.start && !klasse_startet()" style="color: red">
+	      <span ng-if="fahrer.klasse != null">
+		Für Klasse {{fahrer.klasse}} sind keine zu befahrenen Sektionen<br>
+		ausgewählt, die Klasse startet daher nicht.
+	      </span>
+	      <span ng-if="fahrer.klasse == null">
+		Fahrer ist keiner Klasse zugewiesen,<br>und kann daher nicht starten.
+	      </span>
 	    </span>
 	    <span ng-if="veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014'" style="color: red">
 	      <span ng-if="fahrer.geburtsdatum">

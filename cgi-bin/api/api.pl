@@ -378,7 +378,7 @@ eval {
 	while (my @row = $sth->fetchrow_array) {
 	    $aktiv->{$row[0]} = 1;
 	}
-	my $sth = $dbh->prepare(q{
+	$sth = $dbh->prepare(q{
 	    SELECT id, tag, datum, dateiname, titel, aktiv
 	    FROM veranstaltung
 	    LEFT JOIN wertung USING (id)

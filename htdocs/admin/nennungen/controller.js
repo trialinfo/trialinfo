@@ -324,6 +324,13 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     return klasse && klasse.bezeichnung != null && klasse.bezeichnung != '';
   };
 
+  $scope.klasse_startet = function() {
+    var fahrer = $scope.fahrer;
+    if (fahrer)
+      return fahrer.klasse != null &&
+	veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1];
+  };
+
   $scope.osk_lizenz = function(fahrer) {
     return fahrer.lizenznummer.match(/^(JM|JMJ) ?[0-9]+$/);
   };

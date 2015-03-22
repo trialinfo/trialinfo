@@ -175,7 +175,8 @@ while (my @row = $sth->fetchrow_array) {
 $sth = $dbh->prepare(q{
     SELECT id, klasse, wertungsklasse
     FROM klasse
-    JOIN vareihe_klasse USING (wertungsklasse)
+    JOIN vareihe_veranstaltung USING (id)
+    JOIN vareihe_klasse USING (wertungsklasse, vareihe)
     WHERE vareihe = ?
 });
 $sth->execute($vareihe);
