@@ -34,8 +34,9 @@
 		  </td>
 		</tr>
 	      </table>
-	      <p ng-if="fahrer && !startende_klassen[wertungsklasse - 1]">
-		Für Klasse {{wertungsklasse}} sind keine zu befahrenen Sektionen ausgewählt.
+	      <p ng-if="fahrer && !startende_klassen[wertungsklasse - 1]" style="color: red">
+		Für Klasse {{wertungsklasse}} sind keine zu befahrenen Sektionen<br>
+		ausgewählt, die Klasse startet daher nicht.
 	      </p>
 	    </fieldset>
 	  </p>
