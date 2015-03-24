@@ -156,7 +156,7 @@ table.liste td, table.liste th {
 </style>
 
 <p>{{gesamt}} Fahrer.</p>
-<div ng-repeat="gruppe in ergebnisliste" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
+<div ng-repeat="gruppe in ergebnisliste" ng-init="gruppe_index = $index" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung != '-'">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
     <thead>
@@ -167,5 +167,10 @@ table.liste td, table.liste th {
     <tr ng-repeat="fahrer in gruppe">
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
     </tr>
+    <tbody ng-if="aggregat[gruppe_index]">
+      <tr>
+	<th ng-repeat="feld in felder track by $index" ng-style="feld.style">{{aggregat[gruppe_index][$index]}}</th>
+      </tr>
+    </tbody>
   </table>
 </div>

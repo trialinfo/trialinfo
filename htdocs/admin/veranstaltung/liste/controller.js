@@ -181,6 +181,13 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	bezeichnung: '<span title="Aktuelle Runde">In Runde</span>',
 	ausdruck: "(!start || ausfall || runden >= veranstaltung.klassen[veranstaltung.klassen[klasse - 1].wertungsklasse - 1]['runden']) ? null : runden + 1",
 	style: { 'text-align': 'center' } },
+    nenngeld:
+      { name: 'Nenngeld',
+	bezeichnung: 'Nenngeld',
+	ausdruck: 'nenngeld',
+	style: { 'text-align': 'right' },
+	feature: true,
+	aggregieren: function(a, b) { if (a != null || b != null) return Number(a) + Number(b); } },
   };
   angular.forEach([1, 2, 3, 4], function(wertung) {
     if ($scope.features['wertung' + wertung]) {
@@ -509,6 +516,29 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     $scope.ergebnisliste = gruppieren ?
       group_by(ergebnisliste, gruppieren.compare) :
       [ergebnisliste];
+
+    var aggregat_berechnen = false;
+    angular.forEach($scope.felder, function(feld) {
+      if (feld.aggregieren)
+	aggregat_berechnen = true;
+    });
+
+    $scope.aggregat = [];
+    if (aggregat_berechnen) {
+      angular.forEach($scope.ergebnisliste, function(gruppe) {
+	var liste = [];
+	angular.forEach($scope.felder, function(feld) {
+	  var agg = null;
+	  if (feld.aggregieren)
+	    angular.forEach(gruppe, function(fahrer) {
+	      agg = feld.aggregieren(agg, $scope.$eval(feld.ausdruck, fahrer));
+	    });
+	  liste.push(agg);
+	});
+	$scope.aggregat.push(liste);
+      });
+    }
+
     url_aktualisieren();
   };
 
@@ -588,6 +618,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       if (feld)
 	$scope.felder.push(feld);
     }
+    aktualisieren();
   }, true);
 
   $scope.$on('$routeUpdate', function() {
