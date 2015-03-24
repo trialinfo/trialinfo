@@ -86,6 +86,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	ausdruck: "geburtsdatum | date:'d.M.yyyy'",
 	style: { 'text-align': 'center' },
 	feature: true },
+    jahrgang:
+      { name: 'Jahrgang',
+	bezeichnung: 'Jahrgang',
+	ausdruck: "geburtsdatum | date:'yyyy'",
+	style: { 'text-align': 'center' },
+	feature: true },
     wohnort:
       { name: 'Wohnort',
 	bezeichnung: 'Wohnort',
@@ -199,6 +205,8 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     });
     if ($scope.features.land || $scope.features.bundesland)
       felder.push('lbl');
+    if ($scope.features.geburtsdatum)
+      felder.push('jahrgang');
     var feldliste = [];
     angular.forEach(felder, function(feld) {
       feldliste.push({ key: feld, name: definierte_felder[feld].name });
