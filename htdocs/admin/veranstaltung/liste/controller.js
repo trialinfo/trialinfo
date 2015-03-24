@@ -259,11 +259,11 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	  anzeige['wertung' + wertung])
 	return false;
     }
-    if (anzeige.min !== null &&
-	fahrer.startnummer < anzeige.min)
+    if (anzeige.startnummer_min !== null &&
+	fahrer.startnummer < anzeige.startnummer_min)
       return false;
-    if (anzeige.max !== null &&
-	fahrer.startnummer > anzeige.max)
+    if (anzeige.startnummer_max !== null &&
+	fahrer.startnummer > anzeige.startnummer_max)
       return false;
     if (anzeige.unterwegs) {
       try {
