@@ -63,8 +63,15 @@
 	  <tr>
 	    <th align="right">Startnummernbereich</th>
 	    <td>
-	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.startnummer_min title="Von"> −
-	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.startnummer_max title="Bis">
+	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="anzeige.startnummer_min" title="Von"> −
+	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="anzeige.startnummer_max" title="Bis">
+	    </td>
+	  </tr>
+	  <tr ng-if="features.geburtsdatum">
+	    <th align="right">Jahrgangsbereich</th>
+	    <td>
+	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="anzeige.jahr_min" title="Von"> −
+	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="anzeige.jahr_max" title="Bis (Fehlendes Geburtsdatum zählt als „älter“.)">
 	    </td>
 	  </tr>
 	  <tr>

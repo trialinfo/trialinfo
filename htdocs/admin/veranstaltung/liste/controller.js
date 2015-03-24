@@ -259,12 +259,21 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	  anzeige['wertung' + wertung])
 	return false;
     }
-    if (anzeige.startnummer_min !== null &&
+    if (anzeige.startnummer_min != null &&
 	fahrer.startnummer < anzeige.startnummer_min)
       return false;
-    if (anzeige.startnummer_max !== null &&
+    if (anzeige.startnummer_max != null &&
 	fahrer.startnummer > anzeige.startnummer_max)
       return false;
+    if (anzeige.jahr_min != null &&
+	(fahrer.geburtsdatum == null ||
+	 fahrer.geburtsdatum.getYear() + 1900 < anzeige.jahr_min))
+      return false;
+    if (anzeige.jahr_max != null &&
+	fahrer.geburtsdatum != null &&
+	fahrer.geburtsdatum.getYear() + 1900 > anzeige.jahr_max)
+      return false;
+
     if (anzeige.unterwegs) {
       try {
 	var klasse = veranstaltung.klassen[
