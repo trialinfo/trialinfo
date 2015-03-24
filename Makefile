@@ -159,7 +159,6 @@ WEB_FILES = \
 	cgi-bin/veranstalter/export-ssi.pl \
 	cgi-bin/veranstalter/export.pl \
 	cgi-bin/veranstalter/fahrerliste.pl \
-	cgi-bin/veranstalter/nenngeld-ssi.pl \
 	cgi-bin/veranstalter/runden-ssi.pl \
 	cgi-bin/veranstalter/starterzahl-ssi.pl \
 	htdocs/apple-touch-icon.png \
@@ -180,7 +179,6 @@ WEB_FILES = \
 	htdocs/robots.txt \
 	htdocs/veranstalter/export.shtml \
 	htdocs/veranstalter/index.shtml \
-	htdocs/veranstalter/nenngeld.shtml \
 	htdocs/veranstalter/runden.shtml \
 	htdocs/veranstalter/starterzahl.shtml \
 
