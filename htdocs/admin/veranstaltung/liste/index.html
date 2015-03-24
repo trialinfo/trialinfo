@@ -63,8 +63,15 @@
 	  <tr>
 	    <th align="right">Startnummernbereich</th>
 	    <td>
-	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.min title="Von"> −
-	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model=anzeige.max title="Bis">
+	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="anzeige.startnummer_min" title="Von"> −
+	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="anzeige.startnummer_max" title="Bis">
+	    </td>
+	  </tr>
+	  <tr ng-if="features.geburtsdatum">
+	    <th align="right">Jahrgangsbereich</th>
+	    <td>
+	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="anzeige.jahr_min" title="Von"> −
+	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="anzeige.jahr_max" title="Bis (Fehlendes Geburtsdatum zählt als „älter“.)">
 	    </td>
 	  </tr>
 	  <tr>
@@ -156,7 +163,7 @@ table.liste td, table.liste th {
 </style>
 
 <p>{{gesamt}} Fahrer.</p>
-<div ng-repeat="gruppe in ergebnisliste" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
+<div ng-repeat="gruppe in ergebnisliste" ng-init="gruppe_index = $index" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2 ng-if="anzeige.gruppierung != '-'">{{gruppe_ueberschrift(gruppe)}}</h2>
   <table class="liste">
     <thead>
@@ -167,5 +174,10 @@ table.liste td, table.liste th {
     <tr ng-repeat="fahrer in gruppe">
       <td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
     </tr>
+    <tbody ng-if="aggregat[gruppe_index]">
+      <tr>
+	<th ng-repeat="feld in felder track by $index" ng-style="feld.style">{{aggregat[gruppe_index][$index]}}</th>
+      </tr>
+    </tbody>
   </table>
 </div>
