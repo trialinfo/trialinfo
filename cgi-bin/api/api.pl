@@ -127,11 +127,15 @@ sub veranstaltung_reset($$$) {
 	    s2 = NULL, s3 = NULL, s4 = NULL, s5 = NULL,
 	    zusatzpunkte = 0, punkte = NULL, ausfall = 0, stechen = 0,
 	    rang = NULL, startzeit = NULL, zielzeit = NULL
-	    } . ($reset eq 'start' ? '' : (
+	    } . ($reset eq 'start' ? '' :
 		q{
 		    , nennungseingang = 0, start = 0, start_morgen = 0
 		    , nenngeld = NULL
-		})) . q{
+		})
+	      . ($reset ne 'stammdaten' ? '' :
+		q{
+		    , lizenznummer = NULL
+		}) . q{
 	WHERE id = ?
     }, undef, $id);
     $sth = $dbh->do(q{
