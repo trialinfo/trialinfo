@@ -332,7 +332,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.osk_lizenz = function(fahrer) {
-    return fahrer.lizenznummer.match(/^(JM|JMJ) ?[0-9]+$/);
+    return fahrer.lizenznummer.match(/^(IJM|JM|JMJ) ?[0-9]+$/);
   };
 
   $scope.fahrer_in_wertung1 = function(fahrer) {
