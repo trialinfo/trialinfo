@@ -264,10 +264,12 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
 	klasse.ausser_konkurrenz =
 	  (art === 'otsv+osk2014' && index == 0);
       });
-      $scope.features.startzeit = $scope.features.zielzeit =
-	art === 'otsv+osk2014';
-      $scope.features.start_morgen =
-	art === 'otsv2014';
+      if (art === 'otsv2014' || art === 'otsv+osk2014') {
+	$scope.features.startzeit = $scope.features.zielzeit =
+	  art === 'otsv+osk2014';
+	$scope.features.start_morgen =
+	  art === 'otsv2014';
+      }
     }
   };
 
