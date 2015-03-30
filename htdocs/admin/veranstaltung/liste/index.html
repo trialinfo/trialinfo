@@ -85,10 +85,11 @@
 	    <td>
 	      <select ng-model="anzeige.gruppierung">
 		<option value="-"></option>
+		<option value="abgabe" ng-if="features.abgabe">ÖTSV-Beitrag</option>
 		<option value="club" ng-if="features.club">Club</option>
 		<option value="fahrzeug" ng-if="features.fahrzeug">Fahrzeug</option>
-		<option value="lbl" ng-if="features.land || features.bundesland">Land (Bundesland)</option>
 		<option value="wertungsklasse">Klasse (in Wertung)</option>
+		<option value="lbl" ng-if="features.land || features.bundesland">Land (Bundesland)</option>
 		<option value="versicherung" ng-if="features.versicherung">Versicherung</option>
 		<option value="wohnort" ng-if="features.wohnort">Wohnort</option>
 	      </select>

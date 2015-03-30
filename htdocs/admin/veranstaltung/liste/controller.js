@@ -16,11 +16,47 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     4: 'Tagesversicherung'
   };
 
+  function otsv_beitrag(veranstaltung) {
+    if (veranstaltung.art === 'otsv2014' || veranstaltung.art === 'otsv+osk2014') {
+      var jetzt;
+      if (veranstaltung.datum &&
+	  (match = veranstaltung.datum.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
+	jetzt = new Date(match[1], match[2] - 1, match[3]);
+      else
+	jetzt = new Date();
+
+      return function(fahrer) {
+	geburtsdatum = fahrer.geburtsdatum;
+	var jahrgang_alter;
+	if (geburtsdatum !== null &&
+	    (match = geburtsdatum.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+	  var geburtsjahr = new Date(match[1], 0, 1);
+	  jahrgang_alter = new Date();
+	  jahrgang_alter.setTime(jetzt - geburtsjahr);
+	  jahrgang_alter = jahrgang_alter.getFullYear() - 1970 - 1;
+	}
+	return jahrgang_alter != null && jahrgang_alter < 18 ?
+	  2 : 6;
+      };
+    } else if (veranstaltung.art === 'otsv-bike2015')
+      return function(fahrer) { return 2; };
+    else if (veranstaltung.art === 'otsv-ecup2015')
+      return function(fahrer) { return 1.5; };
+  };
+
+  var abgabe = otsv_beitrag(veranstaltung);
+  if (abgabe) {
+    $scope.features.abgabe = true;
+    angular.forEach(fahrerliste, function(fahrer) {
+      fahrer.abgabe = abgabe(fahrer);
+    });
+  }
+
   angular.forEach(fahrerliste, function(fahrer) {
     var match;
     if (fahrer.geburtsdatum !== null &&
 	(match = fahrer.geburtsdatum.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
-      fahrer.geburtsdatum = new Date(match[1], match[2], match[3]);
+      fahrer.geburtsdatum = new Date(match[1], match[2] - 1, match[3]);
     if (fahrer.startzeit !== null &&
 	(match = fahrer.startzeit.match(/^(\d{2}):(\d{2}):(\d{2})$/)))
       fahrer.startzeit = new Date(0, 0, 0, match[1], match[2], match[3]);
@@ -185,6 +221,13 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       { name: 'Nenngeld',
 	bezeichnung: 'Nenngeld',
 	ausdruck: 'nenngeld',
+	style: { 'text-align': 'right' },
+	feature: true,
+	aggregieren: function(a, b) { if (a != null || b != null) return Number(a) + Number(b); } },
+    abgabe:
+      { name: 'ÖTSV-Beitrag',
+	bezeichnung: 'ÖTSV-Beitrag',
+	ausdruck: 'abgabe',
 	style: { 'text-align': 'right' },
 	feature: true,
 	aggregieren: function(a, b) { if (a != null || b != null) return Number(a) + Number(b); } },
@@ -370,6 +413,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       compare: function(f1, f2) {
 	return generic_compare(f1.land, f2.land) ||
 	       generic_compare(f1.bundesland, f2.bundesland);
+      }
+    },
+    abgabe: {
+      heading: function(f) {
+	return f.abgabe ? 'ÖTSV-Beitrag €' + f.abgabe : 'Keine Abgabe';
+      },
+      compare: function(f1, f2) {
+	return generic_compare(f1.abgabe, f2.abgabe);
       }
     }
   };

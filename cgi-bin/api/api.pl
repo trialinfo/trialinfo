@@ -440,22 +440,31 @@ eval {
 	$dbh->begin_work;
 	$result = export($id);
 	delete $result->{veranstaltung}{sync_erlaubt};
-	my $dateiname = $q->url_param('name') // 'Trial.tra';
+	my $dateiname = $q->url_param('name');
+	_utf8_on($dateiname)
+	    if $dateiname;
 	$dbh->commit;
 	$headers->{'Content-Type'} = 'application/octet-stream';
-	$headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\"";
+	$headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\""
+	    if $dateiname;
 	$result = "/* $result->{format} */\n" . $json->canonical->encode($result);
 	$result = Encode::encode_utf8($result);
 	$result = Compress::Zlib::memGzip($result);
     } elsif ($op eq "GET/trialtool/cfg") {
 	my ($id) = parameter($q, qw(id));
 	$dbh->begin_work;
-	$result = cfg_export($id, $headers, $q->url_param('name'));
+	my $dateiname = $q->url_param('name');
+	_utf8_on($dateiname)
+	    if $dateiname;
+	$result = cfg_export($id, $headers, $dateiname);
 	$dbh->commit;
     } elsif ($op eq "GET/trialtool/dat") {
 	my ($id) = parameter($q, qw(id));
 	$dbh->begin_work;
-	$result = dat_export($id, $headers, $q->url_param('name'));
+	my $dateiname = $q->url_param('name');
+	_utf8_on($dateiname)
+	    if $dateiname;
+	$result = dat_export($id, $headers, $dateiname);
 	$dbh->commit;
     } elsif ($op eq "OPTIONS/veranstaltung/import") {
     } elsif ($op eq "POST/veranstaltung/import") {
