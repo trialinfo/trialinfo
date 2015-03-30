@@ -141,11 +141,11 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 
     var alter = new Date();
     alter.setTime(jetzt - geburtsdatum);
-    $scope.alter = alter.getUTCFullYear() - 1970;
+    $scope.alter = alter.getFullYear() - 1970;
 
     var jahrgang_alter = new Date();
     jahrgang_alter.setTime(jetzt - geburtsjahr);
-    $scope.jahrgang_alter = jahrgang_alter.getUTCFullYear() - 1970;
+    $scope.jahrgang_alter = jahrgang_alter.getFullYear() - 1970 - 1;
   });
 
   $scope.speichern = function() {
