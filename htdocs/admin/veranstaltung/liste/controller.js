@@ -414,6 +414,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	return generic_compare(f1.land, f2.land) ||
 	       generic_compare(f1.bundesland, f2.bundesland);
       }
+    },
+    abgabe: {
+      heading: function(f) {
+	return f.abgabe ? 'ÖTSV-Beitrag €' + f.abgabe : 'Keine Abgabe';
+      },
+      compare: function(f1, f2) {
+	return generic_compare(f1.abgabe, f2.abgabe);
+      }
     }
   };
 
