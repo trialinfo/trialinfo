@@ -20,7 +20,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     var match;
     if (fahrer.geburtsdatum !== null &&
 	(match = fahrer.geburtsdatum.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
-      fahrer.geburtsdatum = new Date(match[1], match[2], match[3]);
+      fahrer.geburtsdatum = new Date(match[1], match[2] - 1, match[3]);
     if (fahrer.startzeit !== null &&
 	(match = fahrer.startzeit.match(/^(\d{2}):(\d{2}):(\d{2})$/)))
       fahrer.startzeit = new Date(0, 0, 0, match[1], match[2], match[3]);
