@@ -97,11 +97,6 @@ CREATE TABLE fahrer (
   PRIMARY KEY (id, startnummer)
 );
 
--- Mysql does not have "DROP INDEX IF EXISTS", so recreating an existing
--- database would fail.  Don't create an index for now.
--- DROP INDEX IF EXISTS fahrer_idx1 ON fahrer;
--- CREATE INDEX fahrer_idx1 ON fahrer (id, startnummer);
-
 -- In fahrer.version berücksichtigt
 DROP TABLE IF EXISTS fahrer_wertung;
 CREATE TABLE fahrer_wertung (
@@ -278,6 +273,105 @@ CREATE TABLE vareihe_klasse (
   streichresultate INT,
   PRIMARY KEY (vareihe, wertungsklasse)
 );
+
+-- Berechtigungen
+DROP TABLE IS EXISTS benutzer;
+CREATE TABLE benutzer (
+  benutzer INT,
+  name VARCHAR(30) NOT NULL,
+  admin BOOL,
+  PRIMARY KEY (benutzer)
+);
+
+-- Nicht notwendig, da Tabelle gelöscht wurde:
+-- DROP INDEX IF EXISTS benutzer_name ON benutzer;
+CREATE UNIQUE INDEX benutzer_name
+ON benutzer (name);
+
+DROP TABLE IS EXISTS gruppe;
+CREATE TABLE gruppe (
+  gruppe INT,
+  name VARCHAR(30) NOT NULL,
+  PRIMARY KEY (gruppe)
+);
+
+-- Nicht notwendig, da Tabelle gelöscht wurde:
+-- DROP INDEX IF EXISTS gruppe_name ON gruppe;
+CREATE UNIQUE INDEX gruppe_name
+ON gruppe (name);
+
+DROP TABLE IF EXISTS veranstaltung_benutzer;
+CREATE TABLE veranstaltung_benutzer (
+  id INT,
+  benutzer INT,
+  nur_lesen BOOL,
+  vererben BOOL,
+  PRIMARY KEY (id, benutzer, nur_lesen)
+);
+
+DROP TABLE IF EXISTS veranstaltung_gruppe;
+CREATE TABLE veranstaltung_gruppe (
+  id INT,
+  gruppe INT,
+  nur_lesen BOOL,
+  vererben BOOL,
+  PRIMARY KEY (id, gruppe)
+);
+
+DROP TABLE IF EXISTS vareihe_benutzer;
+CREATE TABLE vareihe_benutzer (
+  vareihe INT,
+  benutzer INT,
+  nur_lesen BOOL,
+  PRIMARY KEY (vareihe, benutzer)
+);
+
+DROP TABLE IF EXISTS vareihe_gruppe;
+CREATE TABLE vareihe_gruppe (
+  vareihe INT,
+  gruppe INT,
+  nur_lesen BOOL,
+  PRIMARY KEY (vareihe, gruppe)
+);
+
+DROP TABLE IF EXISTS benutzer_gruppe;
+CREATE TABLE benutzer_gruppe (
+  benutzer INT,
+  gruppe INT,
+  PRIMARY KEY (benutzer, gruppe)
+);
+
+-- DROP VIEW IF EXISTS veranstaltung_alle_benutzer;
+CREATE VIEW veranstaltung_alle_benutzer AS
+  SELECT DISTINCT id, name, 0 AS nur_lesen
+  FROM veranstaltung, benutzer
+  WHERE benutzer.admin
+UNION
+  SELECT id, name, nur_lesen
+  FROM veranstaltung_benutzer
+  JOIN benutzer USING (benutzer)
+UNION
+  SELECT id, benutzer.name AS name, nur_lesen
+  FROM veranstaltung_gruppe
+  JOIN gruppe USING (gruppe)
+  JOIN benutzer_gruppe USING (gruppe)
+  JOIN benutzer USING (benutzer);
+
+-- DROP VIEW IF EXISTS vareihe_alle_benutzer;
+CREATE VIEW vareihe_alle_benutzer AS
+  SELECT DISTINCT vareihe, name, 0 AS nur_lesen
+  FROM vareihe, benutzer
+  WHERE benutzer.admin
+UNION
+  SELECT vareihe, name, nur_lesen
+  FROM vareihe_benutzer
+  JOIN benutzer USING (benutzer)
+UNION
+  SELECT vareihe, benutzer.name AS name, nur_lesen
+  FROM vareihe_gruppe
+  JOIN gruppe USING (gruppe)
+  JOIN benutzer_gruppe USING (gruppe)
+  JOIN benutzer USING (benutzer);
 };
 
 sub sql_ausfuehren($@) {
