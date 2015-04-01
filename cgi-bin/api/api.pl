@@ -303,7 +303,7 @@ sub importieren($$$$) {
 	    $data1->{veranstaltungen} = [ @{$data1->{veranstaltungen}} ];
 	    $data1->{startnummern} = { %{$data1->{startnummern}} };
 	} else {
-	    print STDERR "Veranstaltungsreihe mit Tag $data1->{tag} " .
+	    print STDERR "Veranstaltungsreihe mit Tag $data->{tag} " .
 		  "nicht gefunden\n";
 	    my $sth = $dbh->prepare(q{
 		SELECT MAX(vareihe)
