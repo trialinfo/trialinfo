@@ -4,9 +4,3 @@ SetEnv HAVE_WEASYPRINT @HAVE_WEASYPRINT@
 SetEnv SYNC_SOURCE @SYNC_SOURCE@
 SetEnv SYNC_TARGET @SYNC_TARGET@
 @SSI_LEGACY_EXPR_PARSER@
-AuthUserFile @AUTH_PREFIX@/htdocs/.htpasswd
-AuthGroupFile @AUTH_PREFIX@/htdocs/.htgroup
-AuthName "Protected"
-AuthType Basic
-AuthBasicProvider file
-Require group admin

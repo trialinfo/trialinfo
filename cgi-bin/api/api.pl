@@ -36,7 +36,7 @@ trace_sql $dbh, $trace_sql, \*STDERR
     if $trace_sql;
 
 my $q = CGI->new;
-my $op = ($q->request_method() // 'GET') . '/' . $q->url_param('op')
+my $op = ($q->request_method() // 'GET') . '/' . ($q->url_param('op') // '')
     or die "Keine Operation angegeben.\n";
 
 my $do_sql = sub () {
@@ -364,8 +364,10 @@ if (exists $ENV{'HTTP_ORIGIN'}) {
     $headers->{'Access-Control-Max-Age'} = 3600;
 }
 my $json = JSON->new;
+
 eval {
-    if ($op eq 'GET/vareihen') {
+    if ($op eq 'GET/null') {
+    } elsif ($op eq 'GET/vareihen') {
 	my $sth = $dbh->prepare(q{
 	    SELECT vareihe, bezeichnung, kuerzel, abgeschlossen
 	    FROM vareihe
@@ -399,7 +401,7 @@ eval {
 	    $aktiv->{$row[0]} = 1;
 	}
 	$sth = $dbh->prepare(q{
-	    SELECT id, tag, datum, dateiname, titel, aktiv
+	    SELECT DISTINCT id, tag, datum, dateiname, titel, aktiv
 	    FROM veranstaltung
 	    LEFT JOIN wertung USING (id)
 	    WHERE wertung = 1

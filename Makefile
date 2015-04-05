@@ -59,6 +59,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
 	htdocs/js/angular-route.js \
+	htdocs/js/angular-cookies.js \
 	htdocs/js/json-diff.js \
 	htdocs/js/validate.js \
 
@@ -126,6 +127,8 @@ ADMIN_FILES = \
 	htdocs/admin/extern/controller.js \
 	htdocs/admin/extern/index.html \
 	htdocs/admin/index.shtml \
+	htdocs/admin/login/controller.js \
+	htdocs/admin/login/index.html \
 	htdocs/admin/main/controller.js \
 	htdocs/admin/main/index.html \
 	htdocs/admin/nennungen/controller.js \

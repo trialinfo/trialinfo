@@ -1,6 +1,6 @@
 'use strict;'
 
-function mainController($scope, $http, $location, veranstaltungen, vareihen) {
+function mainController($scope, $http, $location, AuthService, veranstaltungen, vareihen) {
   $scope.SYNC_SOURCE = SYNC_SOURCE;
   $scope.veranstaltungen = veranstaltungen;
   $scope.vareihen = vareihen;
@@ -38,6 +38,11 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
 
   $scope.neue_vareihe = function() {
     $location.path('/vareihe/neu');
+  };
+
+  $scope.logout = function() {
+    AuthService.logout();
+    $location.path('/login').replace();
   };
 }
 
