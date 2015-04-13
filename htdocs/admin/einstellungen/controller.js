@@ -105,6 +105,8 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     }
   }
 
+  $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
+
   function veranstaltung_zuweisen(veranstaltung, als_aenderung) {
     if (veranstaltung === undefined)
       veranstaltung = $scope.veranstaltung_alt;

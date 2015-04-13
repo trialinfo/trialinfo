@@ -26,13 +26,7 @@ function mainController($scope, $http, $location, veranstaltungen, vareihen) {
 	    !vareihe.abgeschlossen;
   };
 
-  $scope.veranstaltung_kuerzel = function(vareihen) {
-    var kuerzel = [];
-    angular.forEach(vareihen, function(vareihe) {
-      kuerzel.push(vareihe.kuerzel);
-    });
-    return kuerzel.length ? ' (' + kuerzel.sort().join(', ') + ')' : undefined;
-  };
+  $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
 
   $scope.neue_veranstaltung = function() {
     $location.path('/veranstaltung/neu/einstellungen');

@@ -1,4 +1,4 @@
-<h1>{{veranstaltung.wertungen[0].titel}} - Einstellungen</h1>
+<h1>{{veranstaltung.wertungen[0].titel}} – Einstellungen</h1>
 <form name="form" ng-keydown="keydown($event)">
   <fieldset style="display:inline">
     <legend>Allgemein</legend>
@@ -6,7 +6,7 @@
       <tr ng-if="!veranstaltung.id && veranstaltungen.length">
 	<th align="right"><label for="titel">Basierend auf</label></th>
 	<td>
-	  <select ng-model="veranstaltung.basis.id" ng-options="veranstaltung.id as veranstaltung.titel for veranstaltung in veranstaltungen">
+	  <select ng-model="veranstaltung.basis.id" ng-options="veranstaltung.id as veranstaltung_bezeichnung(veranstaltung) for veranstaltung in veranstaltungen">
 	    <option value=""></option>
 	  </select>
 	</td>

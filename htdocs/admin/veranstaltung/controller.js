@@ -20,7 +20,7 @@ function veranstaltungController($scope, $location, $http, veranstaltung) {
     if (confirm('Veranstaltung wirklich löschen?\n\nDie Veranstaltung kann später nicht wiederhergestellt werden.')) {
       veranstaltung_loeschen($http, veranstaltung.id, veranstaltung.version).
 	success(function() {
-	  $location.path('/veranstaltungen');
+	  $location.path('/');
 	}).
 	error(netzwerkfehler);
     }
