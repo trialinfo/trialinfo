@@ -234,3 +234,13 @@ function same_day(date_str) {
     return now >= date && now < date + 24 * 60 * 60 * 1000;
   }
 }
+
+function veranstaltung_bezeichnung(veranstaltung) {
+  var kuerzel = [];
+  angular.forEach(veranstaltung.vareihen, function(vareihe) {
+    if (vareihe.kuerzel != null)
+      kuerzel.push(vareihe.kuerzel);
+  });
+  return veranstaltung.titel +
+	 (kuerzel.length ? ' (' + kuerzel.sort().join(', ') + ')' : '');
+}
