@@ -76,7 +76,7 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
   $scope.dateiname = function(veranstaltung) {
     if (veranstaltung.dateiname != null)
       return veranstaltung.dateiname;
-    var titel = $scope.veranstaltung.wertungen[0].titel;
+    var titel = veranstaltung.titel;
     if (titel) {
       titel = titel.replace(/[:\/\\]/g, '')
       if (titel)
