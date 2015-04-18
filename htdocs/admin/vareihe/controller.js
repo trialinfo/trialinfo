@@ -5,6 +5,14 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
 
   var veranstaltungsdatum = {};
   if (veranstaltungen) {
+    if (vareihe && vareihe.vareihe !== undefined) {
+      angular.forEach(veranstaltungen, function(veranstaltung) {
+	veranstaltung.vareihen = veranstaltung.vareihen.filter(function(v) {
+	  return v.vareihe !== vareihe.vareihe;
+	});
+      });
+    }
+
     //veranstaltungen.reverse();
     $scope.veranstaltungen = veranstaltungen;
     angular.forEach(veranstaltungen, function (veranstaltung) {
@@ -12,6 +20,8 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
     });
   }
   vareihe_zuweisen(vareihe);
+
+  $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
 
   function sort_uniq(array, cmp) {
     array = array.sort(cmp);
