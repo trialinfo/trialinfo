@@ -22,6 +22,10 @@ function vareiheController($scope, $http, $timeout, $location, $window, vareihe,
   vareihe_zuweisen(vareihe);
 
   $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
+  $scope.veranstaltung_sichtbar = function(veranstaltung) {
+    return $scope.vareihe.abgeschlossen ||
+	   !(veranstaltung.abgeschlossen || false);
+  };
 
   function sort_uniq(array, cmp) {
     array = array.sort(cmp);

@@ -33,7 +33,7 @@
     <table>
       <tr ng-repeat="_ in vareihe.veranstaltungen track by $index">
 	<td>
-	  <select ng-model="vareihe.veranstaltungen[$index]" ng-options="veranstaltung.id as veranstaltung_bezeichnung(veranstaltung) for veranstaltung in veranstaltungen">
+	  <select ng-model="vareihe.veranstaltungen[$index]" ng-options="veranstaltung.id as veranstaltung_bezeichnung(veranstaltung) for veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar">
 	    <option value=""></option>
 	  </select>
 	</td>
