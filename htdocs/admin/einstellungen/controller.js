@@ -106,6 +106,9 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
   }
 
   $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
+  $scope.veranstaltung_sichtbar = function(veranstaltung) {
+    return !veranstaltung.abgeschlossen;
+  };
 
   function veranstaltung_zuweisen(veranstaltung, als_aenderung) {
     if (veranstaltung === undefined)
