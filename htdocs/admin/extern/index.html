@@ -40,7 +40,7 @@
       <tr>
 	<th align="right"><label for="tag">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="remote.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in remote.veranstaltungen" ng-disabled="busy || !liste_abgerufen" id="tag">
+	  <select ng-model="remote.veranstaltung" ng-options="veranstaltung as veranstaltung_bezeichnung(veranstaltung) for veranstaltung in remote.veranstaltungen" ng-disabled="busy || !liste_abgerufen" id="tag">
 	  </select>
 	</td>
       </tr>

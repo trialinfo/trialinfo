@@ -117,6 +117,8 @@ function externController($scope, $http, $location, $q, veranstaltungen) {
       });
   };
 
+  $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
+
   $scope.$watch('remote.veranstaltung', function() {
     var exists = false;
     if ($scope.remote.veranstaltung) {
