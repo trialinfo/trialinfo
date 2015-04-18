@@ -342,10 +342,25 @@ my $headers = {
     'status' => '200 OK',
 };
 if (exists $ENV{'HTTP_ORIGIN'}) {
+    my $allow_headers = ['Content-Type']; # , 'Accept'
+    foreach my $header (split(/[\s,]+/, $ENV{'HTTP_ACCESS_CONTROL_REQUEST_HEADERS'} // '')) {
+	# Wenn Firefox nicht selbst den Authorization-Header erzeugt sondern
+	# die Applikation das tut, fragt er den Server, ob dieser Header
+	# zulässig ist, auch für GET-Requests:
+	#   Access-Control-Request-Headers: Authorization
+	#
+	# Der Server muss das so beantworten, sonst verweigert der Browser der
+	# Applikation den Zugriff:
+	#   Access-Control-Allow-Headers: Authorization
+	#
+	push @$allow_headers, 'Authorization'
+	    if $header =~ /authorization/i;
+    }
+
     $headers->{'Access-Control-Allow-Origin'} = $ENV{'HTTP_ORIGIN'};
     $headers->{'Access-Control-Allow-Credentials'} = 'true';
     $headers->{'Access-Control-Allow-Methods'} = 'GET, POST, PUT, DELETE';
-    $headers->{'Access-Control-Allow-Headers'} = 'Content-Type';  # ', Accept'
+    $headers->{'Access-Control-Allow-Headers'} = join(', ', @$allow_headers);
     $headers->{'Access-Control-Max-Age'} = 3600;
 }
 my $json = JSON->new;
@@ -362,6 +377,7 @@ eval {
 	    fixup_hashref($sth, $vareihe);
 	    push @$result, $vareihe;
 	}
+    } elsif ($op eq "OPTIONS/veranstaltungen") {
     } elsif ($op eq "GET/veranstaltungen") {
 	my $sth = $dbh->prepare(q{
 	    SELECT DISTINCT id
@@ -428,6 +444,7 @@ eval {
     } elsif ($op eq "GET/veranstaltung") {
 	my ($id) = parameter($q, qw(id));
 	$result = cfg_aus_datenbank($dbh, $id, 1);
+    } elsif ($op eq "OPTIONS/veranstaltung/export") {
     } elsif ($op eq "GET/veranstaltung/export") {
 	my $id;
 	eval {
