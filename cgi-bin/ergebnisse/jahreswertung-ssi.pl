@@ -137,7 +137,7 @@ $sth = $dbh->prepare(q{
     JOIN fahrer USING (id, startnummer)
     JOIN klasse USING (id, klasse)
     JOIN vareihe_veranstaltung USING (id)
-    /* JOIN vareihe USING (vareihe) */
+    JOIN vareihe USING (vareihe, wertung)
     JOIN vareihe_klasse USING (vareihe, wertungsklasse)
     JOIN veranstaltung USING (id)
     WHERE aktiv AND vareihe_veranstaltung.vareihe = ?
