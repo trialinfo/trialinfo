@@ -797,12 +797,12 @@ sub veranstaltung_duplizieren($$$) {
 	&$callback(qq{
 	    DROP TEMPORARY TABLE ${table}_temp
 	}, [], undef);
-	&$callback(qq{
-	    UPDATE vareihe SET version = version + 1
-	    WHERE vareihe IN
-		( SELECT vareihe
-		FROM vareihe_veranstaltung
-		WHERE id = ? )
-	}, [$id_neu], undef);
     }
+    &$callback(qq{
+	UPDATE vareihe SET version = version + 1
+	WHERE vareihe IN
+	    ( SELECT vareihe
+	    FROM vareihe_veranstaltung
+	    WHERE id = ? )
+    }, [$id_neu], undef);
 }
