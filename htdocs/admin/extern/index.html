@@ -16,7 +16,7 @@
       <tr ng-if="einstellungen.operation != 'import-remote' && einstellungen.operation != 'import-file'">
 	<th align="right"><label for="tag">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in veranstaltungen" id="tag">
+	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung_bezeichnung(veranstaltung) for veranstaltung in veranstaltungen" id="tag">
 	  </select>
 	</td>
       </tr>
