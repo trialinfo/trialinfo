@@ -178,7 +178,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 	set_focus('#suchbegriff', $timeout);
       }).
       error(function (data, status) {
-	if (status == 403)
+	if (status == 409 && 'error' in data && data.error.match('Duplicate'))
 	  $scope.fehler = 'Startnummer ' + $scope.fahrer.startnummer +
 			  ' existiert bereits.';
 	else

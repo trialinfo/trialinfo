@@ -246,7 +246,7 @@ sub importieren($$$$) {
 
     if ($tag && defined $veranstaltung->{tag}) {
 	$id = veranstaltung_tag_to_id($dbh, $veranstaltung->{tag});
-	die HTTPError->new('403 Duplicate Event', 'Veranstaltung existiert bereits')
+	die HTTPError->new('409 Conflict', 'Veranstaltung existiert bereits')
 	    if $create && defined $id;
     }
     if (defined $id) {
@@ -1023,7 +1023,7 @@ if ($@) {
 	}
     } else {
 	if ($@ =~ /Duplicate entry .* for key 'PRIMARY'/) {
-	    $headers->{status} = '403 Duplicate Row';
+	    $headers->{status} = '409 Conflict';
 	    $result = { error => $@ };
 	} else {
 	    print STDERR "$@\n";
