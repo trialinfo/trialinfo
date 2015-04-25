@@ -769,16 +769,25 @@ sub wertung_aktualisieren($$$) {
 			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, -1;
 }
 
-sub veranstaltung_duplizieren($$$) {
-    my ($callback, $id, $id_neu) = @_;
+sub veranstaltung_duplizieren($$$$) {
+    my ($callback, $id, $id_neu, $benutzer_name) = @_;
 
     foreach my $table (qw(fahrer fahrer_wertung klasse punkte runde sektion
 			  veranstaltung veranstaltung_feature kartenfarbe
 			  wertung wertungspunkte neue_startnummer
-			  vareihe_veranstaltung sektion_aus_wertung)) {
-	&$callback(qq{
-	    CREATE TEMPORARY TABLE ${table}_temp AS (SELECT * FROM $table WHERE id = ?)
-	}, [$id], undef);
+			  sektion_aus_wertung
+			  veranstaltung_benutzer veranstaltung_gruppe)) {
+	if ($table =~ /^veranstaltung_(benutzer|gruppe)$/) {
+	    &$callback(qq{
+		CREATE TEMPORARY TABLE ${table}_temp AS
+		    (SELECT * FROM $table WHERE id = ? AND vererben)
+	    }, [$id], undef);
+	} else {
+	    &$callback(qq{
+		CREATE TEMPORARY TABLE ${table}_temp AS
+		    (SELECT * FROM $table WHERE id = ?)
+	    }, [$id], undef);
+	}
 	if ($table =~ /^(veranstaltung|fahrer)$/) {
 	    &$callback(qq{
 		UPDATE ${table}_temp
@@ -798,6 +807,13 @@ sub veranstaltung_duplizieren($$$) {
 	    DROP TEMPORARY TABLE ${table}_temp
 	}, [], undef);
     }
+    &$callback(qq{
+	INSERT INTO vareihe_veranstaltung (vareihe, id)
+	SELECT vareihe, ?
+	FROM vareihe_veranstaltung
+	JOIN vareihe_alle_benutzer USING (vareihe)
+	WHERE id = ? AND name = ? AND NOT nur_lesen
+    }, [$id_neu, $id, $benutzer_name], undef);
     &$callback(qq{
 	UPDATE vareihe SET version = version + 1
 	WHERE vareihe IN

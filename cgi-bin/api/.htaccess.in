@@ -6,6 +6,6 @@ AuthBasicProvider file
 
 <Files api.pl>
   <LimitExcept OPTIONS>
-    Require group admin
+    Require valid-user
   </LimitExcept>
 </Files>

@@ -63,6 +63,114 @@ sub parameter($@) {
     return @params;
 }
 
+my $benutzer_name = $ENV{REMOTE_USER};
+
+sub veranstaltung_zugriff($;$) {
+    my ($id, $aendern) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT 1
+	FROM veranstaltung_alle_benutzer
+	WHERE name = ? AND id = ?
+    } . ($aendern ? 'AND NOT nur_lesen' : '') . q{
+	LIMIT 1
+    });
+    $sth->execute($benutzer_name, $id);
+    unless ($sth->fetchrow_array) {
+	die HTTPError->new("403 Forbidden", "Zugriff auf die Veranstaltung verweigert");
+    }
+}
+
+sub veranstaltung_lesen($) {
+    my ($id) = @_;
+
+    veranstaltung_zugriff $id;
+}
+
+sub veranstaltung_aendern($) {
+    my ($id) = @_;
+
+    veranstaltung_zugriff $id, 1;
+}
+
+sub benutzer_erzeugen() {
+    my $sth = $dbh->prepare(q{
+	SELECT 1
+	FROM benutzer
+	WHERE name = ?
+    });
+    $sth->execute($benutzer_name);
+    unless ($sth->fetchrow_array) {
+	$sth = $dbh->prepare(q{
+	    SELECT MAX(benutzer)
+	    FROM benutzer
+	});
+	$sth->execute;
+	my @row = $sth->fetchrow_array;
+
+	$dbh->do(q{
+	    INSERT INTO benutzer (benutzer, name)
+	    VALUES (?, ?)
+	}, undef, ($row[0] // 0) + 1, $benutzer_name);
+    }
+}
+
+sub veranstaltung_benutzer_eintragen($) {
+    my ($id) = @_;
+
+    benutzer_erzeugen;
+
+    $dbh->do(q{
+	INSERT IGNORE INTO veranstaltung_benutzer
+	    (id, benutzer, nur_lesen, vererben)
+	SELECT ?, benutzer, 0, 0
+	    FROM benutzer
+	    WHERE name = ?
+    }, undef, $id, $benutzer_name);
+}
+
+sub vareihe_zugriff($;$) {
+    my ($vareihe, $aendern) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT 1
+	FROM vareihe_alle_benutzer
+	WHERE name = ? AND vareihe = ?
+    } . ($aendern ? 'AND NOT nur_lesen' : '') . q{
+	LIMIT 1
+    });
+    $sth->execute($benutzer_name, $vareihe);
+    unless ($sth->fetchrow_array) {
+	die HTTPError->new("403 Forbidden", "Zugriff auf die Veranstaltungsreihe verweigert");
+    }
+}
+
+sub vareihe_lesen($) {
+    my ($id) = @_;
+
+    vareihe_zugriff $id;
+}
+
+sub vareihe_aendern($) {
+    my ($id) = @_;
+
+    vareihe_zugriff $id, 1;
+}
+
+sub vareihe_benutzer_eintragen($) {
+    my ($vareihe) = @_;
+
+    benutzer_erzeugen;
+
+    $dbh->do(q{
+	INSERT IGNORE INTO vareihe_benutzer
+	    (vareihe, benutzer, nur_lesen)
+	SELECT ?, benutzer, 0
+	    FROM benutzer
+	    WHERE name = ?
+    }, undef, $vareihe, $benutzer_name);
+}
+
 sub get_fahrer($$$;$$) {
     my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
     my $result;
@@ -250,6 +358,7 @@ sub importieren($$$$) {
 	    if $create && defined $id;
     }
     if (defined $id) {
+	veranstaltung_aendern $id;
 	if ($alt) {
 	    $alt->{veranstaltung}{basis} = { tag => $alt->{veranstaltung}{basis} }
 		if defined $alt->{veranstaltung}{basis};
@@ -275,6 +384,8 @@ sub importieren($$$$) {
 	if defined $veranstaltung->{basis};
     if ($tag) {
 	$veranstaltung->{sync_erlaubt} = json_bool(1);
+    } else {
+	veranstaltung_benutzer_eintragen $id;
     }
     veranstaltung_aktualisieren $do_sql, $id, $alt->{veranstaltung}, $veranstaltung, 0;
     fahrer_aktualisieren $do_sql, $id, $alt->{fahrer}, $neu->{fahrer}, 0;
@@ -319,6 +430,8 @@ sub importieren($$$$) {
 	$data1->{startnummern}{$id} = $data->{startnummern};
 	push @{$data1->{veranstaltungen}}, $id;
 	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
+	vareihe_benutzer_eintragen $vareihe
+	    unless $data0;
 	delete $vareihen->{$vareihe};
     }
     foreach my $vareihe (keys %$vareihen) {
@@ -371,9 +484,11 @@ eval {
 	my $sth = $dbh->prepare(q{
 	    SELECT vareihe, bezeichnung, kuerzel, abgeschlossen
 	    FROM vareihe
+	    JOIN vareihe_alle_benutzer USING (vareihe)
+	    WHERE vareihe_alle_benutzer.name = ?
 	    ORDER BY vareihe
 	});
-	$sth->execute();
+	$sth->execute($benutzer_name);
 	$result = [];
 	while (my $vareihe = $sth->fetchrow_hashref) {
 	    fixup_hashref($sth, $vareihe);
@@ -403,11 +518,12 @@ eval {
 	$sth = $dbh->prepare(q{
 	    SELECT DISTINCT id, tag, datum, dateiname, titel, aktiv
 	    FROM veranstaltung
+	    JOIN veranstaltung_alle_benutzer USING (id)
 	    LEFT JOIN wertung USING (id)
-	    WHERE wertung = 1
+	    WHERE veranstaltung_alle_benutzer.name = ? AND wertung = 1
 	    ORDER BY datum, titel, id
 	});
-	$sth->execute();
+	$sth->execute($benutzer_name);
 	$result = [];
 	my $veranstaltungen;
 	while (my $veranstaltung = $sth->fetchrow_hashref) {
@@ -437,14 +553,17 @@ eval {
 	}
     } elsif ($op =~ q<^GET/(|vorheriger/|naechster/)fahrer$>) {
 	    my ($id, $startnummer) = parameter($q, qw(id startnummer));
+	    veranstaltung_lesen $id;
 	    $result = get_fahrer($dbh, $id, $startnummer,
 		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef);
     } elsif ($op =~ q<^GET/(vorheriger/|naechster/)starter$>) {
 	    my ($id, $startnummer) = parameter($q, qw(id startnummer));
+	    veranstaltung_lesen $id;
 	    $result = get_fahrer($dbh, $id, $startnummer,
 		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef, 1);
     } elsif ($op eq "GET/veranstaltung") {
 	my ($id) = parameter($q, qw(id));
+	veranstaltung_lesen $id;
 	$result = cfg_aus_datenbank($dbh, $id, 1);
     } elsif ($op eq "OPTIONS/veranstaltung/export") {
     } elsif ($op eq "GET/veranstaltung/export") {
@@ -456,6 +575,7 @@ eval {
 	if ($@) {
 	    ($id) = parameter($q, qw(id));
 	}
+	veranstaltung_lesen $id;
 	$dbh->begin_work;
 	$result = export($id);
 	delete $result->{veranstaltung}{sync_erlaubt};
@@ -471,6 +591,8 @@ eval {
 	$result = Compress::Zlib::memGzip($result);
     } elsif ($op eq "GET/trialtool/cfg") {
 	my ($id) = parameter($q, qw(id));
+	veranstaltung_lesen $id;
+	$dbh->begin_work;
 	$dbh->begin_work;
 	my $dateiname = $q->url_param('name');
 	_utf8_on($dateiname)
@@ -479,6 +601,7 @@ eval {
 	$dbh->commit;
     } elsif ($op eq "GET/trialtool/dat") {
 	my ($id) = parameter($q, qw(id));
+	veranstaltung_lesen $id;
 	$dbh->begin_work;
 	my $dateiname = $q->url_param('name');
 	_utf8_on($dateiname)
@@ -531,7 +654,8 @@ eval {
 	$dbh->commit;
 	$headers->{status} = '200 Modified';
     } elsif ($op eq "GET/veranstaltung/vorschlaege") {
-	my @params = parameter($q, qw(id));
+	my ($id) = parameter($q, qw(id));
+	veranstaltung_lesen $id;
 	foreach my $feld (qw(bundesland land fahrzeug club)) {
 	    my $sth = $dbh->prepare(qq{
 		SELECT $feld
@@ -544,7 +668,7 @@ eval {
 		    LIMIT 100 ) as _
 		ORDER by $feld
 	    });
-	    $sth->execute(@params);
+	    $sth->execute($id);
 	    my $felder = [];
 	    while (my @row = $sth->fetchrow_array) {
 		fixup_arrayref($sth, \@row);
@@ -554,6 +678,7 @@ eval {
 	}
     } elsif ($op eq "GET/startnummer") {
 	my ($id) = parameter($q, qw(id));
+	veranstaltung_lesen $id;
 	my $startnummer;
 	my $klasse;
 	eval {
@@ -679,6 +804,7 @@ eval {
 	});
     } elsif ($op eq "PUT/fahrer") {
 	my ($id, $version) = parameter($q, qw(id version));
+	veranstaltung_aendern $id;
 	my $startnummer = $q->url_param('startnummer');  # Alte Startnummer
 	my $putdata = $q->param('PUTDATA');
 	_utf8_on($putdata);
@@ -750,6 +876,7 @@ eval {
 
 	$dbh->begin_work;
 	if (defined $id) {
+	    veranstaltung_aendern $id;
 	    $id_neu = $id;
 	} else {
 	    my $sth = $dbh->prepare(qq{
@@ -765,7 +892,8 @@ eval {
 	    my $basis_id = veranstaltung_tag_to_id($dbh, $cfg1->{basis}{tag});
 	    die "Basis-Veranstaltung $cfg1->{basis}{tag} nicht gefunden\n"
 		unless defined $basis_id;
-	    veranstaltung_duplizieren($do_sql, $basis_id, $id_neu);
+	    veranstaltung_lesen $basis_id;
+	    veranstaltung_duplizieren($do_sql, $basis_id, $id_neu, $benutzer_name);
 	    $cfg1->{tag} = random_tag(16);
 	    $version = 1;
 	}
@@ -778,6 +906,8 @@ eval {
 	veranstaltung_reset($dbh, $id_neu, $cfg1->{reset})
 	    if exists $cfg1->{reset} && $cfg1->{reset} ne "";
 	wertung_aktualisieren $dbh, $do_sql, $id_neu;
+	veranstaltung_benutzer_eintragen $id_neu
+	    unless defined $id && $id == $id_neu;
 	$dbh->commit;
 	$id = $id_neu;
 
@@ -800,6 +930,7 @@ eval {
 	    $data0 = vareihe_aus_datenbank($dbh, $vareihe);
 	    die HTTPError->new('409 Conflict', 'Invalid Row Version')
 		if $data0->{version} != $version;
+	    vareihe_aendern $vareihe;
 	}
 	unless (defined $vareihe) {
 	    my $sth = $dbh->prepare(qq{
@@ -812,12 +943,15 @@ eval {
 	    $vareihe = ($row[0] // 0) + 1;
 	}
 	vareihe_aktualisieren $do_sql, $vareihe, $data0, $data1, 1;
+	vareihe_benutzer_eintragen $vareihe
+	    unless $data0;
 	$dbh->commit;
 
 	$headers->{status} = $data0 ? '200 Modified' : '201 Created';
 	$result = vareihe_aus_datenbank($dbh, $vareihe);
     } elsif ($op eq "DELETE/fahrer") {
 	my ($id, $version, $startnummer) = parameter($q, qw(id version startnummer));
+	veranstaltung_aendern $id;
 
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
@@ -839,6 +973,7 @@ eval {
 	$headers->{status} = '200 Deleted';
     } elsif ($op eq "DELETE/veranstaltung") {
 	my ($id, $version) = parameter($q, qw(id version));
+	veranstaltung_aendern $id;
 
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
@@ -850,7 +985,8 @@ eval {
 	foreach my $tabelle (qw(fahrer fahrer_wertung klasse punkte runde
 				sektion veranstaltung_feature kartenfarbe
 				wertung wertungspunkte neue_startnummer
-				vareihe_veranstaltung sektion_aus_wertung)) {
+				vareihe_veranstaltung sektion_aus_wertung
+				veranstaltung_benutzer veranstaltung_gruppe)) {
 	    my $sth = $dbh->prepare(qq{
 		DELETE FROM $tabelle
 		WHERE id = ?
@@ -862,6 +998,7 @@ eval {
 	$headers->{status} = '200 Deleted';
     } elsif ($op eq "DELETE/vareihe") {
 	my ($vareihe, $version) = parameter($q, qw(vareihe version));
+	vareihe_aendern $vareihe;
 
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
@@ -870,7 +1007,8 @@ eval {
 	});
 	die HTTPError->new('409 Conflict', 'Invalid Row Version')
 	    if $sth->execute($vareihe, $version) != 1;
-	foreach my $tabelle (qw(vareihe_veranstaltung vareihe_klasse)) {
+	foreach my $tabelle (qw(vareihe_veranstaltung vareihe_klasse
+				vareihe_benutzer vareihe_gruppe)) {
 	    my $sth = $dbh->prepare(qq{
 		DELETE FROM $tabelle
 		WHERE vareihe = ?
@@ -882,6 +1020,7 @@ eval {
 	$headers->{status} = '200 Deleted';
     } elsif ($op eq "POST/veranstaltung/reset") {
 	my ($id, $version, $reset) = parameter($q, qw(id version reset));
+	veranstaltung_aendern $id;
 
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(q{
@@ -899,6 +1038,7 @@ eval {
 	$headers->{status} = '200 Modified';
     } elsif ($op eq "GET/fahrer/suchen") {
 	my ($id, $suchbegriff) = parameter($q, qw(id suchbegriff));
+	veranstaltung_lesen $id;
 	my $select_fahrer = q{
 	    SELECT startnummer, nachname, vorname, geburtsdatum, klasse
 	    FROM fahrer
@@ -936,12 +1076,14 @@ eval {
 	}
     } elsif ($op eq "GET/vareihe") {
 	my ($vareihe) = parameter($q, qw(vareihe));
+	vareihe_lesen $vareihe;
 	$result = vareihe_aus_datenbank($dbh, $vareihe);
 	unless ($result) {
 	    die HTTPError->new('404 Not Found', "Veranstaltungsreihe $vareihe nicht gefunden");
 	}
     } elsif ($op eq "GET/veranstaltung/liste") {
 	my ($id) = parameter($q, qw(id));
+	veranstaltung_lesen $id;
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
 	    SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
@@ -978,6 +1120,7 @@ eval {
 	my ($tag) = parameter($q, qw(tag));
 	$dbh->begin_work;
 	my $id = veranstaltung_tag_to_id($dbh, $tag);
+	veranstaltung_lesen $id;
 	$result = export($id)
 	    if $id;
 	$dbh->commit;
@@ -988,6 +1131,7 @@ eval {
 	$dbh->begin_work;
 	my $id = veranstaltung_tag_to_id($dbh, $tag);
 	if (defined $id) {
+	    veranstaltung_aendern $id;
 	    my $data0 = export($id);
 	    my $postdata = $q->param('POSTDATA');
 	    _utf8_on($postdata);
