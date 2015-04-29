@@ -134,25 +134,28 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       if (a.punkte === b.punkte && a.stechen === b.stechen &&
 	  !a.ausfall && !b.ausfall) {
 	for (var n = 0; n < 6; n++) {
-	  a.verteilung_klasse[n] = 'wichtig';
-	  b.verteilung_klasse[n] = 'wichtig';
-	  if (a.punkteverteilung[n] !== b.punkteverteilung[n])
+	  if (a.punkteverteilung[n] !== b.punkteverteilung[n]) {
+	    a.verteilung_klasse[n] = 'wichtig';
+	    b.verteilung_klasse[n] = 'wichtig';
 	    return;
+	  }
 	}
 	var runden = veranstaltung.klassen[a.klasse - 1].runden;
 	if (veranstaltung.wertungsmodus == 1) {
 	  for (var n = 0; n < runden; n++) {
-	    a.runde_klasse[n] = 'wichtig';
-	    b.runde_klasse[n] = 'wichtig';
-	    if (a.punkte_pro_runde[n] !== b.punkte_pro_runde[n])
+	    if (a.punkte_pro_runde[n] !== b.punkte_pro_runde[n]) {
+	      a.runde_klasse[n] = 'wichtig';
+	      b.runde_klasse[n] = 'wichtig';
 	      break;
+	    }
 	  }
 	} else if (veranstaltung.wertungsmodus == 2) {
 	  for (var n = runden - 1; n >= 0; n--) {
-	    a.runde_klasse[n] = 'wichtig';
-	    b.runde_klasse[n] = 'wichtig';
-	    if (a.punkte_pro_runde[n] !== b.punkte_pro_runde[n])
+	    if (a.punkte_pro_runde[n] !== b.punkte_pro_runde[n]) {
+	      a.runde_klasse[n] = 'wichtig';
+	      b.runde_klasse[n] = 'wichtig';
 	      break;
+	    }
 	  }
 	}
       }

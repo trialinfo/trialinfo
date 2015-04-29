@@ -222,47 +222,49 @@ sub tageswertung(@) {
 
 	if ($args{nach_relevanz} && $RenderOutput::html) {
 	    # Welche 0er, 1er, ... sind für den Rang relevant?
-	    my $sn_alt = 0;
-	    my $rn_alt = 0;
 	    for (my $n = 0; $n < @$fahrer_in_klasse - 1; $n++) {
 		my $a = $fahrer_in_klasse->[$n];
 		my $b = $fahrer_in_klasse->[$n + 1];
 
-		my $sn = 0;
+		next
+		    unless defined $a->{punkte} && defined $b->{punkte};
+
 		if ($a->{punkte} == $b->{punkte} &&
 		    !$a->{stechen} && !$b->{stechen}) {
-		    for (my $m = 0; $m < 5; $m++) {
-			$sn++;
-			last unless $a->{punkteverteilung}[$m] ==
-				    $b->{punkteverteilung}[$m];
-		    }
-		}
+		    my $m;
 
-		my $rn = 0;
-		if ($sn == 5) {
-		    my $ra = $a->{punkte_pro_runde};
-		    my $rb = $b->{punkte_pro_runde};
-
-		    if ($args{cfg}{wertungsmodus} == 1) {
-			for (my $m = 0; $m < $runden; $m++) {
-			    $rn++;
-			    last unless $ra->[$m] == $rb->[$m];
-			}
-		    } elsif ($args{cfg}{wertungsmodus} == 2) {
-			for (my $m = $runden - 1; $m >= 0; $m--) {
-			    $rn++;
-			    last unless $ra->[$m] == $rb->[$m];
+		    for ($m = 0; $m < 5; $m++) {
+			if ($a->{punkteverteilung}[$m] != $b->{punkteverteilung}[$m]) {
+			    $a->{punkteverteilung_wichtig}[$m] = 1;
+			    $b->{punkteverteilung_wichtig}[$m] = 1;
+			    last;
 			}
 		    }
-		}
 
-		$a->{sn} = max($sn_alt, $sn);
-		$a->{rn} = max($rn_alt, $rn);
-		$sn_alt = $sn;
-		$rn_alt = $rn;
+		    if ($m == 5) {
+			my $ra = $a->{punkte_pro_runde};
+			my $rb = $b->{punkte_pro_runde};
+
+			if ($args{cfg}{wertungsmodus} == 1) {
+			    for (my $m = 0; $m < $runden; $m++) {
+				if ($ra->[$m] != $rb->[$m]) {
+				    $a->{runde_wichtig}[$m] = 1;
+				    $b->{runde_wichtig}[$m] = 1;
+				    last;
+				}
+			    }
+			} elsif ($args{cfg}{wertungsmodus} == 2) {
+			    for (my $m = $runden - 1; $m >= 0; $m--) {
+				if ($ra->[$m] != $rb->[$m]) {
+				    $a->{runde_wichtig}[$m] = 1;
+				    $b->{runde_wichtig}[$m] = 1;
+				    last;
+				}
+			    }
+			}
+		    }
+		}
 	    }
-	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{sn} = $sn_alt;
-	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{rn} = $rn_alt;
 	}
 
 	foreach my $fahrer (@$fahrer_in_klasse) {
@@ -295,11 +297,7 @@ sub tageswertung(@) {
 		    $punkte = "-";
 		}
 
-		if (!defined $fahrer->{rn} ||
-		    ($args{cfg}{wertungsmodus} == 0 ||
-		     ($args{cfg}{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
-		     ($args{cfg}{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
-		     $fahrer->{ausfall} != 0)) {
+		if ($fahrer->{ausfall} != 0 || !$fahrer->{runde_wichtig}[$n]) {
 		    push @$class, "info";
 		} else {
 		    push @$class, "info2";
@@ -327,7 +325,7 @@ sub tageswertung(@) {
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
 		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
-		    if ($n < ($fahrer->{sn} // -1)) {
+		    if ($fahrer->{punkteverteilung_wichtig}[$n]) {
 			push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info2\"" ];
 		    } else {
 			push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info\"" ];
