@@ -111,7 +111,12 @@ table.wertung th {
 table.wertung tr.alt td {
   background-color:#EAF2D3;
 }
-table.wertung tr td.runde, table.wertung tr td.verteilung {
+table.wertung tr td.einzelpunkte, table.wertung tr td.verteilung {
+  color:#A0A0A0;
+}
+</style>
+<style type="text/css" ng-if="!features.einzelpunkte">
+table.wertung tr td.runde {
   color:#A0A0A0;
 }
 table.wertung tr td.wichtig {
@@ -120,22 +125,24 @@ table.wertung tr td.wichtig {
 </style>
 
 <p ng-if="anzeige.dauer == null">{{zusammenfassung}}</p>
-<div ng-repeat="klasse in klassen" ng-if="anzeige.klassen[klasse - 1] && fahrer_in_klassen[klasse - 1]" class="klasse" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
+<div ng-repeat="klasse in klassen" ng-init="runden = veranstaltung.klassen[klasse - 1].runden" ng-if="anzeige.klassen[klasse - 1] && fahrer_in_klassen[klasse - 1]" class="klasse" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2>{{veranstaltung.klassen[klasse - 1].bezeichnung}}</h2>
   <table class="wertung">
     <thead>
       <tr>
 	<th style="text-align:center" ng-bind-html="klassensymbol(klasse)"></th>
 	<th ng-repeat="feld in felder track by $index" ng-style="feld.style" ng-bind-html="feld.bezeichnung"></th>
-	<th style="text-align:right" ng-repeat="runde in rundenliste(klasse)"><span title="Runde {{runde}}">R{{runde}}</span></th>
+	<th style="display:none" ng-repeat-start="runde in rundenliste(klasse)"></th>
+	<th style="text-align:right; width:1.2em" ng-if="features.einzelpunkte" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" title="Sektion {{sektion}}">{{sektion}}</th>
+	<th style="text-align:right" ng-repeat-end ng-if="runden > 1"><span title="Runde {{runde}}">R{{runde}}</span></th>
 	<th style="text-align:right" ng-if="spalten[klasse - 1].zusatzpunkte"><span title="Zeit- und Zusatzpunkte">ZP</span></th>
 	<th style="text-align:right"><span title="Gesamtpunkte">Ges</span></th>
-	<th style="text-align:right"><span title="Nuller">0S</span></th>
-	<th style="text-align:right"><span title="Einser">1S</span></th>
-	<th style="text-align:right"><span title="Zweier">2S</span></th>
-	<th style="text-align:right"><span title="Dreier">3S</span></th>
-	<th style="text-align:right" ng-if="veranstaltung.vierpunktewertung"><span title="Vierer">4S</span></th>
-	<th style="text-align:right" ng-if="feature.spalte5er"><span title="Fünfer">5S</span></th>
+	<th style="text-align:right" ng-if="!features.einzelpunkte"><span title="Nuller">0S</span></th>
+	<th style="text-align:right" ng-if="!features.einzelpunkte"><span title="Einser">1S</span></th>
+	<th style="text-align:right" ng-if="!features.einzelpunkte"><span title="Zweier">2S</span></th>
+	<th style="text-align:right" ng-if="!features.einzelpunkte"><span title="Dreier">3S</span></th>
+	<th style="text-align:right" ng-if="!features.einzelpunkte && veranstaltung.vierpunktewertung"><span title="Vierer">4S</span></th>
+	<th style="text-align:right" ng-if="!features.einzelpunkte && features.spalte5er"><span title="Fünfer">5S</span></th>
 	<th style="text-align:right" ng-if="spalten[klasse - 1].stechen"><span title="Stechen">ST</span></th>
 	<th style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte"><span title="Wertungspunkte {{veranstaltung.wertungen[anzeige.wertung - 1].bezeichnung}}">WP</span></th>
       </tr>
@@ -146,23 +153,27 @@ table.wertung tr td.wichtig {
       <tr ng-class-even="'alt'" ng-if="fahrer.ausfall || fahrer.ausser_konkurrenz">
 	<td style="text-align:right"></td>
 	<td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
-	<td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.einzelpunkte[runde - 1]"></td>
+	<td style="display:none" ng-repeat-start="runde in rundenliste(klasse)"></td>
+	<td style="text-align:right" ng-if="features.einzelpunkte" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" class="einzelpunkte">{{fahrer.einzelpunkte(runde, sektion)}}</th>
+	<td style="text-align:right" ng-repeat-end ng-if="runden > 1" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.punkte_in_runde(runde)"></td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].zusatzpunkte">{{zusatzpunkte(fahrer)}}</td>
-	<td style="text-align:center" colspan="{{5 + spalten[klasse - 1].stechen + veranstaltung.vierpunktewertung + feature.spalte5er}}">{{ausfall(fahrer)}}</td>
+	<td style="text-align:center" colspan="{{1 + spalten[klasse - 1].stechen + (features.einzelpunkte ? 0 : 4 + veranstaltung.vierpunktewertung + features.spalte5er)}}">{{ausfall(fahrer)}}</td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{wertungspunkte(fahrer)}}</td>
       </tr>
       <tr ng-class-even="'alt'" ng-if="!(fahrer.ausfall || fahrer.ausser_konkurrenz)">
 	<td style="text-align:right">{{rang(fahrer)}}</td>
 	<td ng-repeat="feld in felder track by $index" ng-style="feld.style">{{$eval(feld.ausdruck, fahrer)}}</td>
-	<td style="text-align:right" ng-repeat="runde in rundenliste(klasse)" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.einzelpunkte[runde - 1]"></td>
+	<td style="display:none" ng-repeat-start="runde in rundenliste(klasse)"></td>
+	<td style="text-align:right" ng-if="features.einzelpunkte" ng-repeat="sektion in veranstaltung.sektionen[klasse - 1]" class="einzelpunkte">{{fahrer.einzelpunkte(runde, sektion)}}</th>
+	<td style="text-align:right" ng-repeat-end ng-if="runden > 1" class="runde {{fahrer.runde_klasse[runde - 1]}}" ng-bind-html="fahrer.punkte_in_runde(runde)"></td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].zusatzpunkte">{{zusatzpunkte(fahrer)}}</td>
 	<td style="text-align:right">{{gesamtpunkte(fahrer)}}</td>
-	<td style="text-align:right" class="verteilung {{fahrer.verteilung_klasse[0]}}">{{fahrer.punkteverteilung[0]}}</td>
-	<td style="text-align:right" class="verteilung {{fahrer.verteilung_klasse[1]}}">{{fahrer.punkteverteilung[1]}}</td>
-	<td style="text-align:right" class="verteilung {{fahrer.verteilung_klasse[2]}}">{{fahrer.punkteverteilung[2]}}</td>
-	<td style="text-align:right" class="verteilung {{fahrer.verteilung_klasse[3]}}">{{fahrer.punkteverteilung[3]}}</td>
-	<td style="text-align:right" ng-if="veranstaltung.vierpunktewertung" class="verteilung {{fahrer.verteilung_klasse[4]}}">{{fahrer.punkteverteilung[4]}}</td>
-	<td style="text-align:right" ng-if="feature.spalte5er" class="verteilung {{fahrer.verteilung_klasse[5]}}">{{fahrer.punkteverteilung[5]}}</td>
+	<td style="text-align:right" ng-if="!features.einzelpunkte" class="verteilung {{fahrer.verteilung_klasse[0]}}">{{fahrer.punkteverteilung[0]}}</td>
+	<td style="text-align:right" ng-if="!features.einzelpunkte" class="verteilung {{fahrer.verteilung_klasse[1]}}">{{fahrer.punkteverteilung[1]}}</td>
+	<td style="text-align:right" ng-if="!features.einzelpunkte" class="verteilung {{fahrer.verteilung_klasse[2]}}">{{fahrer.punkteverteilung[2]}}</td>
+	<td style="text-align:right" ng-if="!features.einzelpunkte" class="verteilung {{fahrer.verteilung_klasse[3]}}">{{fahrer.punkteverteilung[3]}}</td>
+	<td style="text-align:right" ng-if="!features.einzelpunkte && veranstaltung.vierpunktewertung" class="verteilung {{fahrer.verteilung_klasse[4]}}">{{fahrer.punkteverteilung[4]}}</td>
+	<td style="text-align:right" ng-if="!features.einzelpunkte && features.spalte5er" class="verteilung {{fahrer.verteilung_klasse[5]}}">{{fahrer.punkteverteilung[5]}}</td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].stechen">{{fahrer.stechen ? fahrer.stechen + '.' : ''}}</td>
 	<td style="text-align:right" ng-if="spalten[klasse - 1].wertungspunkte">{{wertungspunkte(fahrer)}}</td>
       </tr>

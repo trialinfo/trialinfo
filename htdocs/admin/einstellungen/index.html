@@ -282,6 +282,16 @@
 	</select>.</label>
       </p>
     </fieldset>
+  </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Auswertung</legend>
+    <fieldset style="display:inline">
+      <legend>Zusätzliche Informationen</legend>
+	<p>
+	  <input type="checkbox" ng-model="features.einzelpunkte" id="feature_einzelpunkte"><label for="feature_einzelpunkte">Einzelpunkte statt Punkteverteilung</label><br>
+	  <input type="checkbox" ng-model="features.spalte5er" id="feature_spalte5er"><label for="feature_spalte5er">Spalte für Fünfer in Punkteverteilung</label><br>
+	</p>
+    </fieldset>
   </fieldset>
   <p>
     <button type="button" ng-disabled="!(geaendert() && form.$valid) || busy" ng-click="speichern()">Speichern</button>

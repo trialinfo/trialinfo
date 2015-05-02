@@ -3,14 +3,14 @@
 function veranstaltungAuswertungController($scope, $sce, $route, $location, $timeout, $http, $q, auswertung) {
   $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.anzeige = { felder: [], klassen: [] };
+  $scope.features = features_aus_liste(auswertung.veranstaltung);
 
-  var auswertung_alt, veranstaltung, features;
+  var auswertung_alt, veranstaltung;
 
   function auswertung_zuweisen(a) {
     auswertung_alt = angular.copy(a);
     auswertung = a;
     veranstaltung = auswertung.veranstaltung;
-    features = features_aus_liste(veranstaltung);
     $scope.veranstaltung = veranstaltung;
     $scope.$root.kontext(veranstaltung.wertungen[($scope.anzeige.wertung || 1) - 1].titel);
     $scope.klassen = (function() {
@@ -60,24 +60,44 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 
       angular.forEach(auswertung.fahrer_in_klassen, function(fahrer_in_klasse, klasse_index) {
 	angular.forEach(fahrer_in_klasse, function(fahrer) {
-	  fahrer.einzelpunkte = [];
+	  var einzelpunkte = [];
 	  for (runde = 1; runde <= veranstaltung.klassen[klasse_index].runden; runde++) {
-	    var einzelpunkte = [];
+	    var einzelpunkte_in_runde = [];
 	    try {
 	      angular.forEach(veranstaltung.sektionen[fahrer.klasse - 1], function(sektion) {
 		if (sektionen_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1])
-		  einzelpunkte.push('-');
+		  einzelpunkte_in_runde.push('-');
 		else
-		  einzelpunkte.push(fahrer.punkte_pro_sektion[runde - 1][sektion - 1]);
+		  einzelpunkte_in_runde.push(fahrer.punkte_pro_sektion[runde - 1][sektion - 1]);
 	      });
 	    } catch (_) { }
-	    var punkte_in_runde = fahrer.punkte_pro_runde[runde - 1];
-	    if (punkte_in_runde === undefined)
-	      punkte_in_runde = fahrer.ausfall ? '-' : '';
-	    fahrer.einzelpunkte.push($sce.trustAsHtml(
-	      einzelpunkte.length == 0 ? punkte_in_runde :
-	      '<span title="' + einzelpunkte.join(' ') + '">' + punkte_in_runde + '</span>'));
+	    einzelpunkte.push(einzelpunkte_in_runde);
 	  }
+
+	  fahrer.einzelpunkte = function(runde, sektion) {
+	    var e;
+	    try {
+	      e = einzelpunkte[runde - 1][sektion - 1];
+	    } catch (_) { };
+	    if (e === undefined && this.ausfall)
+	      return '-';
+	    return e;
+	  };
+
+	  fahrer.punkte_in_runde = function(runde) {
+	    var punkte_in_runde = this.punkte_pro_runde[runde - 1];
+	    if (punkte_in_runde === undefined)
+	      punkte_in_runde = this.ausfall ? '-' : '';
+	    if (!$scope.features.einzelpunkte) {
+	      var einzelpunkte_in_runde = einzelpunkte[runde - 1];
+	      if (einzelpunkte_in_runde) {
+		return $sce.trustAsHtml(
+		  '<span title="' + einzelpunkte_in_runde.join(' ') + '">' + punkte_in_runde + '</span>'
+		);
+	      }
+	    }
+	    return $sce.trustAsHtml(punkte_in_runde + '');
+	  };
 	});
       });
     })();
@@ -449,9 +469,9 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       'margin-right': '1cm',
       'margin-bottom': '1cm',
     };
-    if (features.land || features.bundesland)
+    if ($scope.features.land || $scope.features.bundesland)
       defaults.feld.push('lbl');
-    if (features.fahrzeug)
+    if ($scope.features.fahrzeug)
       defaults.feld.push('fahrzeug');
     angular.forEach(defaults, function(value, key) {
       if (search[key] === undefined)
