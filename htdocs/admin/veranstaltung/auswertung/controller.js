@@ -3,7 +3,8 @@
 function veranstaltungAuswertungController($scope, $sce, $route, $location, $timeout, $http, $q, auswertung) {
   $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.anzeige = { felder: [], klassen: [] };
-  $scope.features = features_aus_liste(auswertung.veranstaltung);
+  var features = features_aus_liste(auswertung.veranstaltung);
+  $scope.features = features;
 
   var auswertung_alt, veranstaltung;
 
@@ -88,7 +89,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	    var punkte_in_runde = this.punkte_pro_runde[runde - 1];
 	    if (punkte_in_runde === undefined)
 	      punkte_in_runde = this.ausfall ? '-' : '';
-	    if (!$scope.features.einzelpunkte) {
+	    if (!features.einzelpunkte) {
 	      var einzelpunkte_in_runde = einzelpunkte[runde - 1];
 	      if (einzelpunkte_in_runde) {
 		return $sce.trustAsHtml(
@@ -282,7 +283,8 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       { name: 'Startnummer',
 	bezeichnung: '<span title="Startnummer">Nr.</span>',
 	ausdruck: "startnummer < 0 ? null : startnummer",
-	style: { 'text-align': 'center' } },
+	style: { 'text-align': 'center' },
+	when: function() { return features.startnummer } },
     name:
       { name: 'Name',
 	bezeichnung: 'Name',
@@ -293,22 +295,26 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       { name: 'Fahrzeug',
 	bezeichnung: 'Fahrzeug',
 	ausdruck: "fahrzeug",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	when: function() { return features.fahrzeug } },
     club:
       { name: 'Club',
 	bezeichnung: 'Club',
 	ausdruck: "club",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	when: function() { return features.club } },
     wohnort:
       { name: 'Wohnort',
 	bezeichnung: 'Wohnort',
 	ausdruck: "wohnort",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	when: function() { return features.wohnort } },
     lbl:
       { name: 'Land (Bundesland)',
 	bezeichnung: '<span title="Land (Bundesland)">Land</span>',
 	ausdruck: "land_bundesland(fahrer)",
-	style: { 'text-align': 'left' } },
+	style: { 'text-align': 'left' },
+	when: function() { return features.land || features.bundesland } },
   };
   angular.forEach(definierte_felder, function(feld) {
     feld.bezeichnung = $sce.trustAsHtml(feld.bezeichnung);
@@ -318,7 +324,8 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   $scope.feldliste = (function() {
     var feldliste = [];
     angular.forEach(definierte_felder, function(feld, key) {
-      feldliste.push({ key: key, name: feld.name });
+      if (!feld.when || feld.when())
+        feldliste.push({ key: key, name: feld.name });
     });
     feldliste = feldliste.sort(function(a, b) { return a.name.localeCompare(b.name); });
     feldliste.unshift({ key: '', name: '' });
@@ -458,10 +465,18 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       delete $scope.ignoreRouteUpdate;
       return;
     }
+
+    var felder = [];
+    angular.forEach(['startnummer', 'name', 'lbl', 'fahrzeug'], function(feld) {
+      var when = definierte_felder[feld].when;
+      if (!when || when())
+	felder.push(feld);
+    });
+
     var search = $location.search();
     var defaults = {
       wertung: veranstaltung.wertungen.length ? 1 : null,
-      feld: ['startnummer', 'name'],
+      feld: felder,
       'page-size': 'A4',
       'font-size': 8,
       'margin-left': '1cm',
@@ -469,10 +484,6 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
       'margin-right': '1cm',
       'margin-bottom': '1cm',
     };
-    if ($scope.features.land || $scope.features.bundesland)
-      defaults.feld.push('lbl');
-    if ($scope.features.fahrzeug)
-      defaults.feld.push('fahrzeug');
     angular.forEach(defaults, function(value, key) {
       if (search[key] === undefined)
 	search[key] = value;

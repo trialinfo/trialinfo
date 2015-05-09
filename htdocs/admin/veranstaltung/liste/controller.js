@@ -5,7 +5,8 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
   $scope.veranstaltung = veranstaltung;
-  $scope.features = features_aus_liste(veranstaltung);
+  var features = features_aus_liste(veranstaltung);
+  $scope.features = features;
   $scope.fold = {};
   $scope.anzeige = { felder: [] };
 
@@ -46,7 +47,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 
   var abgabe = otsv_beitrag(veranstaltung);
   if (abgabe) {
-    $scope.features.abgabe = true;
+    features.abgabe = true;
     angular.forEach(fahrerliste, function(fahrer) {
       fahrer.abgabe = abgabe(fahrer);
     });
@@ -103,115 +104,114 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	bezeichnung: '<span title="Startnummer">Nr.</span>',
 	ausdruck: "startnummer < 0 ? null : startnummer",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.startnummer; } },
     klasse:
       { name: 'Klasse (in Nennung)',
 	bezeichnung: '<span title="Klasse (in Nennung)">Kl.</span>',
 	ausdruck: "klasse",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.klasse; } },
     name:
       { name: 'Name',
 	bezeichnung: 'Name',
 	ausdruck: "join(' ', nachname, vorname)",
-	style: { 'text-align': 'left' },
-	feature: true },
+	style: { 'text-align': 'left' } },
     geburtsdatum:
       { name: 'Geburtsdatum',
 	bezeichnung: 'Geburtsdatum',
 	ausdruck: "geburtsdatum | date:'d.M.yyyy'",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.geburtsdatum; } },
     jahrgang:
       { name: 'Jahrgang',
 	bezeichnung: 'Jahrgang',
 	ausdruck: "geburtsdatum | date:'yyyy'",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.geburtsdatum; } },
     wohnort:
       { name: 'Wohnort',
 	bezeichnung: 'Wohnort',
 	ausdruck: "wohnort",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.wohnort; } },
     club:
       { name: 'Club',
 	bezeichnung: 'Club',
 	ausdruck: "club",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.club; } },
     fahrzeug:
       { name: 'Fahrzeug',
 	bezeichnung: 'Fahrzeug',
 	ausdruck: "fahrzeug",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.fahrzeug; } },
     land:
       { name: 'Land',
 	bezeichnung: 'Land',
 	ausdruck: "land",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.land; } },
     bundesland:
       { name: 'Bundesland',
 	bezeichnung: 'Bundesland',
 	ausdruck: "bundesland",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.bundesland; } },
     lbl:
       { name: 'Land (Bundesland)',
 	bezeichnung: '<span title="Land (Bundesland)">Land</span>',
 	ausdruck: "land_bundesland(fahrer)",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.bundesland || features.land; } },
     email:
       { name: 'E-Mail',
 	bezeichnung: 'E-Mail',
 	ausdruck: "email",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.email; } },
     startzeit:
       { name: 'Startzeit',
 	bezeichnung: 'Startzeit',
 	ausdruck: "startzeit | date:'H:mm'",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.startzeit; } },
     zielzeit:
       { name: 'Zielzeit',
 	bezeichnung: 'Zielzeit',
 	ausdruck: "zielzeit | date:'H:mm'",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.zielzeit; } },
     nennungseingang:
       { name: 'Nennungseingang',
 	bezeichnung: 'Nennungseingang',
 	ausdruck: "nennungseingang ? 'Ja' : ''",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.nennungseingang; } },
     start:
       { name: 'Start',
 	bezeichnung: 'Start',
 	ausdruck: "start ? 'Ja' : ''",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.start; } },
     start_morgen:
       { name: 'Start morgen',
 	bezeichnung: 'Start morgen',
 	ausdruck: "start_morgen ? 'Ja' : ''",
 	style: { 'text-align': 'center' },
-	feature: true },
+	when: function() { return features.start_morgen; } },
     versicherung:
       { name: 'Versicherung',
 	bezeichnung: 'Versicherung',
 	ausdruck: "versicherung",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.versicherung; } },
     lizenznummer:
       { name: 'Lizenznummer',
 	bezeichnung: 'Lizenznr.',
 	ausdruck: "lizenznummer",
 	style: { 'text-align': 'left' },
-	feature: true },
+	when: function() { return features.lizenznummer; } },
     aktuelle_runde:
       { name: 'Aktuelle Runde',
 	bezeichnung: '<span title="Aktuelle Runde">In Runde</span>',
@@ -222,41 +222,36 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	bezeichnung: 'Nenngeld',
 	ausdruck: 'nenngeld',
 	style: { 'text-align': 'right' },
-	feature: true,
+	when: function() { return features.nenngeld; },
 	aggregieren: function(a, b) { if (a != null || b != null) return Number(a) + Number(b); } },
     abgabe:
       { name: 'ÖTSV-Beitrag',
 	bezeichnung: 'ÖTSV-Beitrag',
 	ausdruck: 'abgabe',
 	style: { 'text-align': 'right' },
-	feature: true,
+	when: function() { return features.abgabe; },
 	aggregieren: function(a, b) { if (a != null || b != null) return Number(a) + Number(b); } },
   };
   angular.forEach([1, 2, 3, 4], function(wertung) {
-    if ($scope.features['wertung' + wertung]) {
-      var bezeichnung = $scope.wertungsbezeichnung(wertung);
-      definierte_felder['wertung' + wertung] = {
-	name: bezeichnung,
-	bezeichnung: bezeichnung,
-	ausdruck: "wertungen[" + (wertung - 1) + "] ? 'Ja' : ''",
-	style: { 'text-align': 'center' }
-      };
-    }
+    var bezeichnung = $scope.wertungsbezeichnung(wertung);
+    definierte_felder['wertung' + wertung] = {
+      name: bezeichnung,
+      bezeichnung: bezeichnung,
+      ausdruck: "wertungen[" + (wertung - 1) + "] ? 'Ja' : ''",
+      style: { 'text-align': 'center' },
+      when: function() { return features['wertung' + wertung]; }
+    };
   });
   angular.forEach(definierte_felder, function(feld) {
     feld.bezeichnung = $sce.trustAsHtml(feld.bezeichnung);
   });
 
   $scope.feldliste = (function() {
-    var felder = [ 'name' ];
+    var felder = [];
     angular.forEach(definierte_felder, function(feld, name) {
-      if (!feld.feature || $scope.features[name])
+      if (!feld.when || feld.when())
 	felder.push(name);
     });
-    if ($scope.features.land || $scope.features.bundesland)
-      felder.push('lbl');
-    if ($scope.features.geburtsdatum)
-      felder.push('jahrgang');
     var feldliste = [];
     angular.forEach(felder, function(feld) {
       feldliste.push({ key: feld, name: definierte_felder[feld].name });
@@ -686,13 +681,21 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       delete $scope.ignoreRouteUpdate;
       return;
     }
+
+    var felder = [];
+    angular.forEach(['startnummer', 'name'], function(feld) {
+      var when = definierte_felder[feld].when;
+      if (!when || when())
+	felder.push(feld);
+    });
+
     var search = $location.search();
     angular.forEach({
       start: 'yes',
       gruppierung: 'wertungsklasse',
       reihenfolge: 'startnummer',
       andere_klassen: 'yes',
-      feld: ['startnummer', 'name'],
+      feld: felder,
       'page-size': 'A4',
       'font-size': 8,
       'margin-left': '1cm',
