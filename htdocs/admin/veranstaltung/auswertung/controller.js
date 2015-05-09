@@ -319,8 +319,6 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
   angular.forEach(definierte_felder, function(feld) {
     feld.bezeichnung = $sce.trustAsHtml(feld.bezeichnung);
   });
-  $scope.anzeige.felder = ['startnummer', 'name', ''];
-  $scope.felder = [definierte_felder['startnummer'], definierte_felder['name']];
   $scope.feldliste = (function() {
     var feldliste = [];
     angular.forEach(definierte_felder, function(feld, key) {
