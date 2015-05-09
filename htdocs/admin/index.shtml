@@ -18,6 +18,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
       }
 
+      body { background-color:white; }
+
       span.accesskey { text-decoration:underline; }
       .punktespalte { width:2em; }
 
