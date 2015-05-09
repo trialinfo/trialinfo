@@ -561,7 +561,11 @@ eval {
 	    $result = get_fahrer($dbh, $id, $startnummer,
 		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef);
     } elsif ($op =~ q<^GET/(vorheriger/|naechster/)starter$>) {
-	    my ($id, $startnummer) = parameter($q, qw(id startnummer));
+	    my ($id) = parameter($q, qw(id));
+	    my $startnummer;
+	    eval {
+		($startnummer) = parameter($q, qw(startnummer));
+	    };
 	    veranstaltung_lesen $id;
 	    $result = get_fahrer($dbh, $id, $startnummer,
 		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef, 1);
