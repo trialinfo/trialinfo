@@ -202,10 +202,10 @@
 	<fieldset>
 	  <legend>Navigation</legend>
 	  <p>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'naechster')" tabindex="-1">|&lt;</button>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'vorheriger')" tabindex="-1">&lt;</button>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'naechster')" tabindex="-1">&gt;</button>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'vorheriger')" tabindex="-1">&gt;|</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(null, 'naechster')" tabindex="-1">|&lt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer_intern, 'vorheriger')" tabindex="-1">&lt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer_intern, 'naechster')" tabindex="-1">&gt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(null, 'vorheriger')" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
 	    <label for="suchbegriff" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>

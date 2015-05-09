@@ -50,9 +50,10 @@ function fahrer_laden($http, id, startnummer, richtung, fahrer) {
   var url = '/api/' + (richtung ? richtung + '/' : '') +
 		      (fahrer ? fahrer : 'fahrer');
   var params = {
-    'id': id,
-    'startnummer': startnummer ? startnummer : '0'
+    'id': id
   };
+  if (startnummer != null)
+    params.startnummer = startnummer;
   return $http.get(url, {'params': params});
 }
 

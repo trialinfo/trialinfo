@@ -393,24 +393,32 @@ sub fahrer_aus_datenbank($$;$$$) {
 	FROM fahrer
 	WHERE id = ?};
     my $args = [ $id ];
-    if (defined $startnummer) {
-	if (defined $starter) {
-	    $sql .= q{ AND start};
-	}
-	if (!defined $richtung) {
+    if ($starter) {
+	$sql .= q{ AND start};
+    } elsif ($richtung) {
+	$sql .= q{ AND (start OR startnummer > 0)};
+    }
+    if (!$richtung) {
+	if (defined $startnummer) {
 	    $sql .= q{ AND startnummer = ?};
-	} elsif ($richtung < 0) {
-	    $sql .= q{ AND startnummer < ? AND startnummer > 0
-		ORDER BY startnummer DESC
-		LIMIT 1};
-	    $startnummer = 1000000
-		if $startnummer == 0;
-	} elsif ($richtung > 0) {
-	    $sql .= q{ AND startnummer > ?
-		ORDER BY startnummer
-		LIMIT 1};
+	    push @$args, $startnummer;
 	}
-	push @$args, $startnummer;
+    } elsif ($richtung < 0) {
+	if (defined $startnummer) {
+	    $sql .= q{ AND startnummer < ?};
+	    push @$args, $startnummer;
+	}
+	$sql .= q{
+	    ORDER BY startnummer DESC
+	    LIMIT 1};
+    } else {
+	if (defined $startnummer) {
+	    $sql .= q{ AND startnummer > ?};
+	    push @$args, $startnummer;
+	}
+	$sql .= q{
+	    ORDER BY startnummer
+	    LIMIT 1};
     }
     my $sth = $dbh->prepare($sql);
     $sth->execute(@$args);
@@ -420,7 +428,7 @@ sub fahrer_aus_datenbank($$;$$$) {
 	my $startnummer = $fahrer->{startnummer};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
     }
-    if (defined $startnummer && defined $richtung) {
+    if (defined $startnummer || defined $richtung) {
 	my $startnummern = [ keys %$fahrer_nach_startnummer ];
 	if (@$startnummern == 1) {
 	    $startnummer = $startnummern->[0];
