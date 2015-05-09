@@ -189,7 +189,10 @@ sub tageswertung(@) {
 	    if $RenderOutput::html;
 	doc_h3 "$args{cfg}{klassen}[$klasse - 1]{bezeichnung}";
 	push @$format, "r3", "r3", "l$namenlaenge";
-	push @$header, [ "$farbe", "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
+	push @$header, [ "$farbe", "c" ];
+	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
+		if $features->{startnummer};
+	push @$header, "Name";
 	foreach my $spalte (@{$args{spalten}}) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
@@ -291,7 +294,8 @@ sub tageswertung(@) {
 	    } else {
 		push @$row, "";
 	    }
-	    push @$row, $fahrer->{startnummer};
+	    push @$row, $fahrer->{startnummer}
+		if $features->{startnummer};
 	    push @$row, [ $fahrer->{nachname} . " " . $fahrer->{vorname}, 'l', 'style="padding-right:1em"' ];
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);

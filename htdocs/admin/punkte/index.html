@@ -6,7 +6,7 @@
 	<fieldset>
 	  <legend>Punktevergabe</legend>
 	  <p ng-if="fahrer">
-	    {{fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
+	    {{fahrer.startnummer < 0 ? null : fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
 	    {{fahrer.nachname}} {{fahrer.vorname}} (Klasse {{fahrer.klasse}})
 	  </p>
 	  <p ng-if="!fahrer.startnummer">

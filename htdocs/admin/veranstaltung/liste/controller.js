@@ -693,7 +693,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     angular.forEach({
       start: 'yes',
       gruppierung: 'wertungsklasse',
-      reihenfolge: 'startnummer',
+      reihenfolge: features.startnummer ? 'startnummer' : 'name',
       andere_klassen: 'yes',
       feld: felder,
       'page-size': 'A4',

@@ -24,7 +24,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       var enabled = $scope.enabled;
       if (enabled.fahrer && $scope.features.klasse && fahrer.klasse === null)
 	set_focus('#klasse', $timeout);
-      else if (enabled.startnummer && fahrer.startnummer === null)
+      else if (features.startnummer && enabled.startnummer && fahrer.startnummer === null)
 	set_focus('#startnummer', $timeout);
       else if (enabled.fahrer) {
 	var felder = ['vorname', 'nachname', 'geburtsdatum'];

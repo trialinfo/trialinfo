@@ -100,7 +100,7 @@
 	      <select ng-model="anzeige.reihenfolge">
 		<option value="geburtsdatum" ng-if="features.geburtsdatum">Geburtsdatum</option>
 		<option value="name">Name</option>
-		<option value="startnummer">Startnummer</option>
+		<option value="startnummer" ng-if="features.startnummer">Startnummer</option>
 		<option value="startzeit" ng-if="features.startzeit">Startzeit</option>
 		<option value="zielzeit" ng-if="features.zielzeit">Zielzeit</option>
 	      </select>
