@@ -4,7 +4,8 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
   $scope.veranstaltung = veranstaltung;
-  $scope.features = features_aus_liste(veranstaltung);
+  var features = features_aus_liste(veranstaltung);
+  $scope.features = features;
   $scope.definierte_klassen = [];
   angular.forEach(veranstaltung.klassen, function(klasse, index) {
     if (klasse && klasse.bezeichnung != null && klasse.bezeichnung != '') {
@@ -22,7 +23,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var fahrer = $scope.fahrer;
     if (fahrer) {
       var enabled = $scope.enabled;
-      if (enabled.fahrer && $scope.features.klasse && fahrer.klasse === null)
+      if (enabled.fahrer && features.klasse && fahrer.klasse === null)
 	set_focus('#klasse', $timeout);
       else if (features.startnummer && enabled.startnummer && fahrer.startnummer === null)
 	set_focus('#startnummer', $timeout);
@@ -197,7 +198,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   }
 
   function wertungen_auffuellen(fahrer) {
-    angular.forEach($scope.features.wertungen, function(wertung) {
+    angular.forEach(features.wertungen, function(wertung) {
       if (!fahrer.wertungen[wertung - 1])
 	fahrer.wertungen[wertung - 1] = { aktiv: false };
     });
@@ -364,7 +365,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
     var accesskeys = 'aknvpmsfuäl';
     $scope.wertungen = [];
-    angular.forEach($scope.features.wertungen, function(wertung) {
+    angular.forEach(features.wertungen, function(wertung) {
       var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung || '';
       var label = bezeichnung, accesskey;
       for (var n = 0; n < bezeichnung.length; n++) {
