@@ -65,7 +65,7 @@ sub rang_vergleich($$$) {
     # richtig gereiht, wenn die Punkte sektionsweise statt rundenweise
     # eingegeben werden.
     return $b->{gefahrene_sektionen} <=> $a->{gefahrene_sektionen}
-	if $a->{gefahrene_sektionen} != $b->{gefahrene_sektionen};
+	if ($a->{gefahrene_sektionen} // 0) != ($b->{gefahrene_sektionen} // 0);
 
     # Aufsteigend nach Punkten
     return ($a->{punkte} // 0) <=> ($b->{punkte} // 0)
@@ -73,7 +73,7 @@ sub rang_vergleich($$$) {
 
     # Aufsteigend nach Ergebnis im Stechen
     return $a->{stechen} <=> $b->{stechen}
-	if  $a->{stechen} != $b->{stechen};
+	if  ($a->{stechen} // 0) != ($b->{stechen} // 0);
 
     # Abfallend nach 0ern, 1ern, 2ern, 3ern, 4ern
     for (my $n = 0; $n < 5; $n++) {
@@ -204,7 +204,7 @@ sub punkte_berechnen($$) {
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // [];
 
-	    my $auslassen = $cfg->{punkte_sektion_auslassen};
+	    my $auslassen = $cfg->{punkte_sektion_auslassen} // 0;
 	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    runde: for (my $runde = 1; $runde <= $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde - 1] // [];
