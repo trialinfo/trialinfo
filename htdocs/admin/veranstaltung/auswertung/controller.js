@@ -68,8 +68,12 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	      angular.forEach(veranstaltung.sektionen[fahrer.klasse - 1], function(sektion) {
 		if (sektionen_aus_wertung[fahrer.klasse - 1][runde - 1][sektion - 1])
 		  einzelpunkte_in_runde.push('-');
-		else
-		  einzelpunkte_in_runde.push(fahrer.punkte_pro_sektion[runde - 1][sektion - 1]);
+		else {
+		  var p = fahrer.punkte_pro_sektion[runde - 1][sektion - 1];
+		  if (p == -1)
+		    p = '-';
+		  einzelpunkte_in_runde.push(p);
+		}
 	      });
 	    } catch (_) { }
 	    einzelpunkte.push(einzelpunkte_in_runde);
