@@ -8,7 +8,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   $scope.features = features;
   $scope.definierte_klassen = [];
   angular.forEach(veranstaltung.klassen, function(klasse, index) {
-    if (klasse && klasse.bezeichnung != null && klasse.bezeichnung != '') {
+    if (klasse && klasse.runden && veranstaltung.sektionen[index]) {
       $scope.definierte_klassen.push(
 	angular.extend({'klasse': index + 1}, klasse));
     }
@@ -310,20 +310,6 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     }
   }
   $scope.$watch('fahrer.klasse', naechste_startnummer);
-
-  $scope.klasse_gueltig = function(klasse) {
-    /* ui-validate calls the validator function too early for numeric form
-     * fields which convert input fields to numbers or undefined; maybe this can be
-     * fixed there instead of here. */
-    if (klasse == '')
-      klasse = undefined;
-    else
-      klasse = +klasse;
-    if (klasse == null)
-      return true;
-    klasse = veranstaltung.klassen[klasse - 1];
-    return klasse && klasse.bezeichnung != null && klasse.bezeichnung != '';
-  };
 
   $scope.klasse_startet = function() {
     var fahrer = $scope.fahrer;
