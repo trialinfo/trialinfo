@@ -26,11 +26,11 @@
       </tr>
       <tr>
 	<th align="right"><label for="titel">Titel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].titel" id="titel" name="titel"></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].titel" id="titel" name="titel" nullable></td>
       </tr>
       <tr>
 	<th align="right"><label for="subtitel">Subtitel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].subtitel" id="subtitel"></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].subtitel" id="subtitel nullable"></td>
       </tr>
       <tr>
 	<th align="right"><label for="datum">Datum</label></th>
@@ -90,19 +90,19 @@
 	  <tr>
 	    <th align="right"><label for="wertung{{$index + 1}}_titel">Titel</label></th>
 	    <td>
-	      <input type="text" size="40" maxlength="70" ng-model="wertung.titel" id="wertung{{$index + 1}}_titel">
+	      <input type="text" size="40" maxlength="70" ng-model="wertung.titel" id="wertung{{$index + 1}}_titel" nullable>
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right"><label for="wertung{{$index + 1}}_subtitel">Subtitel</label></th>
 	    <td>
-	      <input type="text" size="40" maxlength="70" ng-model="wertung.subtitel" id="wertung{{$index + 1}}_subtitel">
+	      <input type="text" size="40" maxlength="70" ng-model="wertung.subtitel" id="wertung{{$index + 1}}_subtitel" nullable>
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right"><label for="wertung{{$index + 1}}_bezeichnung">Bezeichnung</label></th>
 	    <td>
-	      <input type="text" size="20" maxlength="20" ng-model="wertung.bezeichnung" id="wertung{{$index + 1}}_bezeichnung">
+	      <input type="text" size="20" maxlength="20" ng-model="wertung.bezeichnung" id="wertung{{$index + 1}}_bezeichnung" nullable>
 	    </td>
 	  </tr>
 	</table>
