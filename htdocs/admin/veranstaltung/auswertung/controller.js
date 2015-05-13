@@ -30,7 +30,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
     $scope.wertungen = (function() {
       var wertungen = [];
       angular.forEach(veranstaltung.wertungen, function(wertung, index) {
-	if (wertung.aktiv)
+	if (features['wertung' + (index + 1)])
 	  wertungen.push({ wertung: index + 1, bezeichnung: wertung.bezeichnung });
       });
       return wertungen;
@@ -448,8 +448,8 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 
     if (anzeige.wertung === '-')
       anzeige.wertung = null;
-    else if (anzeige['wertung'] !== undefined)
-      anzeige['wertung'] = +anzeige['wertung'];
+    else if (anzeige.wertung != null)
+      anzeige.wertung = +anzeige.wertung;
 
     if (anzeige['font-size'] !== undefined)
       anzeige['font-size'] = +anzeige['font-size'];
@@ -477,7 +477,7 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 
     var search = $location.search();
     var defaults = {
-      wertung: veranstaltung.wertungen.length ? 1 : null,
+      wertung: features.wertung1 ? 1 : null,
       feld: felder,
       'page-size': 'A4',
       'font-size': 8,

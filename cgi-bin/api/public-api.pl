@@ -156,22 +156,16 @@ if ($op eq "GET/veranstaltung/auswertung") {
     }
 
     $sth = $dbh->prepare(q{
-	SELECT wertung, titel, subtitel, bezeichnung, aktiv
+	SELECT wertung, titel, subtitel, bezeichnung
 	FROM wertung
-	LEFT JOIN (
-	    SELECT SUBSTR(feature, 8) AS wertung, 1 AS aktiv
-	    FROM veranstaltung_feature
-	    WHERE id = ? AND FEATURE LIKE 'wertung%') AS _ USING (wertung)
 	WHERE id = ?
     });
-    $sth->execute($id, $id);
+    $sth->execute($id);
     $veranstaltung->{wertungen} = [];
     while (my $row = $sth->fetchrow_hashref) {
 	fixup_hashref($sth, $row);
 	my $wertung = $row->{wertung};
 	delete $row->{wertung};
-	next unless $wertung == 1 || $row->{aktiv};
-	$row->{aktiv} = json_bool(!!$row->{aktiv});
 
 	$veranstaltung->{wertungen}[$wertung - 1] = $row;
     }
