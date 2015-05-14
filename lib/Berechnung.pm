@@ -170,6 +170,12 @@ sub punkte_berechnen($$) {
     # werden muss), und erst danach nach den erzielten Punkten.  Das ergibt
     # auch eine brauchbare Zwischenwertung, wenn die Ergebnisse Sektion für
     # Sektion statt Runde für Runde eingegeben werden.
+    #
+    # Das Trialtool setzt $fahrer->{runden} auf die letzte begonnene Runde,
+    # wodurch wir dann nicht erkennen können, welche Fahrer in der letzten
+    # Runde und welche Fahrer schon "fertig" sind.  Wir verhalten uns nur
+    # dann kompatibel, wenn die Daten vom Trialtool stammen, weil das
+    # Auswertungen wie "Fahrer auf der Strecke" stört.
 
     my $sektionen_aus_wertung;
     if ($cfg->{sektionen_aus_wertung}) {
@@ -185,6 +191,8 @@ sub punkte_berechnen($$) {
 	    }
 	}
     }
+
+    my $trialtool_kompatibel = !$sektionen_aus_wertung;
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	my $punkte_pro_runde;
@@ -251,7 +259,8 @@ sub punkte_berechnen($$) {
 	    $punkteverteilung = [(undef) x 6];
 	}
 
-	$fahrer->{runden} = $letzte_begonnene_runde;
+	$fahrer->{runden} = $trialtool_kompatibel ?
+	    $letzte_begonnene_runde : $letzte_vollstaendige_runde;
 	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;
 	$fahrer->{punkteverteilung} = $punkteverteilung;
