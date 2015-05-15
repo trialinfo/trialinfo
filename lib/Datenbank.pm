@@ -27,6 +27,7 @@ use Berechnung;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(cfg_aus_datenbank fahrer_aus_datenbank wertung_aus_datenbank
+	     veranstaltung_wertungen_aus_datenbank
 	     vareihe_aus_datenbank vareihen_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
 	     equal fixup_arrayref fixup_hashref);
@@ -186,18 +187,7 @@ sub cfg_aus_datenbank($$;$) {
 	$cfg->{basis} = { tag => undef };
     }
 
-    $sth = $dbh->prepare(q{
-	SELECT wertung, titel, subtitel, bezeichnung
-	FROM wertung
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    while (my $row = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $row);
-	my $wertung = $row->{wertung};
-	delete $row->{wertung};
-	$cfg->{wertungen}[$wertung - 1] = $row;
-    }
+    $cfg->{wertungen} = veranstaltung_wertungen_aus_datenbank($dbh, $id);
 
     $sth = $dbh->prepare(q{
 	SELECT klasse, bezeichnung, fahrzeit, runden, farbe, wertungsklasse,
@@ -303,6 +293,51 @@ sub fahrer_wertungen_aus_datenbank($$$;$) {
     }
 }
 
+sub gruppen_fahrer_aus_datenbank($$$;$) {
+    my ($dbh, $id, $fahrer_nach_startnummer, $startnummer) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT gruppe_startnummer, startnummer
+	FROM (
+	    SELECT id, startnummer AS gruppe_startnummer
+	    FROM fahrer
+	    WHERE fahrer.gruppe) AS gruppe
+	JOIN fahrer_gruppe USING (id, gruppe_startnummer)
+	WHERE id = ?} . (defined $startnummer ? " AND gruppe_startnummer = ?" : ""));
+    $sth->execute($id, defined $startnummer ? $startnummer : ());
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	my $startnummer = $row[0];
+	my $gruppe = $fahrer_nach_startnummer->{$startnummer}
+	    or next;
+	push @{$gruppe->{fahrer}}, $row[1];
+    }
+}
+
+sub gruppen_klassen_aus_datenbank($$$;$) {
+    my ($dbh, $id, $fahrer_nach_startnummer, $startnummer) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT DISTINCT gruppe_startnummer, klasse
+	FROM (
+	    SELECT id, startnummer AS gruppe_startnummer
+	    FROM fahrer
+	    WHERE fahrer.gruppe) AS gruppe
+	JOIN fahrer_gruppe USING (id, gruppe_startnummer)
+	JOIN fahrer USING (id, startnummer)
+	WHERE id = ? AND fahrer.start} . (defined $startnummer ? " AND gruppe_startnummer = ?" : "") . q{
+	ORDER BY klasse
+	});
+    $sth->execute($id, defined $startnummer ? $startnummer : ());
+    while (my @row = $sth->fetchrow_array) {
+	fixup_arrayref($sth, \@row);
+	my $startnummer = $row[0];
+	my $gruppe = $fahrer_nach_startnummer->{$startnummer}
+	    or next;
+	push @{$gruppe->{klassen}}, $row[1];
+    }
+}
+
 sub punkte_aus_datenbank($$$;$) {
     my ($dbh, $id, $fahrer_nach_startnummer, $startnummer) = @_;
 
@@ -378,13 +413,13 @@ sub punkteverteilung_umwandeln($) {
     $fahrer->{punkteverteilung} = $punkteverteilung;
 }
 
-sub fahrer_aus_datenbank($$;$$$) {
-    my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
+sub fahrer_aus_datenbank($$;$$$$) {
+    my ($dbh, $id, $startnummer, $richtung, $starter, $gruppe) = @_;
     my $fahrer_nach_startnummer = {};
 
     my $sql = q{
-	SELECT version, startnummer, klasse, helfer, nenngeld, bewerber, nachname,
-	       vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
+	SELECT version, startnummer, gruppe, klasse, helfer, nenngeld, bewerber,
+	       nachname, vorname, strasse, wohnort, plz, club, fahrzeug, geburtsdatum,
 	       telefon, lizenznummer, rahmennummer, kennzeichen, hubraum,
 	       email, bemerkung, bundesland, land, helfer_nummer, startzeit, zielzeit,
 	       stechen, start, start_morgen, versicherung,
@@ -396,7 +431,14 @@ sub fahrer_aus_datenbank($$;$$$) {
     if ($starter) {
 	$sql .= q{ AND start};
     } elsif ($richtung) {
-	$sql .= q{ AND (start OR startnummer > 0)};
+	$sql .= q{ AND (gruppe OR start OR startnummer > 0)};
+    }
+    if (defined $gruppe) {
+	if ($gruppe) {
+	    $sql .= q{ AND gruppe};
+	} else {
+	    $sql .= q{ AND NOT COALESCE(gruppe, 0)};
+	}
     }
     if (!$richtung) {
 	if (defined $startnummer) {
@@ -426,6 +468,10 @@ sub fahrer_aus_datenbank($$;$$$) {
 	fixup_hashref($sth, $fahrer);
 	punkteverteilung_umwandeln $fahrer;
 	my $startnummer = $fahrer->{startnummer};
+	if ($fahrer->{gruppe}) {
+	    $fahrer->{fahrer} = [];
+	    $fahrer->{klassen} = [];
+	}
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
     }
     if (defined $startnummer || defined $richtung) {
@@ -440,8 +486,31 @@ sub fahrer_aus_datenbank($$;$$$) {
     punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
     runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
     fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
+    gruppen_fahrer_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
+    gruppen_klassen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer, $startnummer;
 
     return $fahrer_nach_startnummer;
+}
+
+sub veranstaltung_wertungen_aus_datenbank($$) {
+    my ($dbh, $id) = @_;
+
+    my $sth = $dbh->prepare(q{
+	SELECT wertung, titel, subtitel, bezeichnung
+	FROM wertung
+	WHERE id = ?
+    });
+    $sth->execute($id);
+    my $wertungen = [];
+    while (my $row = $sth->fetchrow_hashref) {
+	fixup_hashref($sth, $row);
+	my $wertung = $row->{wertung};
+	delete $row->{wertung};
+
+	$wertungen->[$wertung - 1] = $row;
+    }
+
+    return $wertungen;
 }
 
 sub wertung_aus_datenbank($$) {
@@ -449,11 +518,11 @@ sub wertung_aus_datenbank($$) {
     my $fahrer_nach_startnummer = {};
 
     my $sth = $dbh->prepare(q{
-	SELECT startnummer, klasse, stechen, start, ausser_konkurrenz,
+	SELECT startnummer, gruppe, klasse, stechen, start, ausser_konkurrenz,
 	       ausfall, zusatzpunkte, s0, s1, s2, s3, s4, s5, punkte, runden,
 	       rang
 	FROM fahrer
-	WHERE id = ? /* and start */
+	WHERE id = ? /* AND start */
     });
     $sth->execute($id);
     while (my $fahrer = $sth->fetchrow_hashref) {
@@ -466,6 +535,7 @@ sub wertung_aus_datenbank($$) {
     punkte_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
     runden_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
     fahrer_wertungen_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
+    gruppen_fahrer_aus_datenbank $dbh, $id, $fahrer_nach_startnummer;
 
     return $fahrer_nach_startnummer;
 }

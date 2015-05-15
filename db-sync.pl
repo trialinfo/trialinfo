@@ -53,6 +53,7 @@ CREATE TABLE fahrer (
   version INT NOT NULL DEFAULT 1,
   id INT, -- veranstaltung
   startnummer INT,
+  gruppe BOOLEAN,
   klasse INT,
   helfer INT,
   bewerber VARCHAR(40),
@@ -95,6 +96,14 @@ CREATE TABLE fahrer (
   punkte INT, -- nicht in version berücksichtigt (berechnet)
   rang INT, -- nicht in version berücksichtigt (berechnet)
   PRIMARY KEY (id, startnummer)
+);
+
+DROP TABLE IF EXISTS fahrer_gruppe;
+CREATE TABLE fahrer_gruppe (
+  id INT, -- veranstaltung
+  gruppe_startnummer INT,
+  startnummer INT,
+  PRIMARY KEY (id, gruppe_startnummer, startnummer)
 );
 
 -- In fahrer.version berücksichtigt

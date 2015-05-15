@@ -47,25 +47,28 @@ my $status = '200 OK';
 my $json = JSON->new;
 if ($op eq "GET/veranstaltung/auswertung") {
     my ($id) = parameter($q, qw(id));
+
     my $sth = $dbh->prepare(q{
-	SELECT startnummer, wertungsklasse AS klasse, nachname, vorname, geburtsdatum,
-	       wohnort, club, fahrzeug, land, bundesland, lizenznummer,
+	SELECT startnummer, gruppe, wertungsklasse AS klasse, nachname, vorname,
+	       geburtsdatum, wohnort, club, fahrzeug, land, bundesland, lizenznummer,
 	       bewerber, rang, fahrer.runden, ausfall,
-	       fahrer.ausser_konkurrenz or klasse.ausser_konkurrenz as ausser_konkurrenz,
+	       fahrer.ausser_konkurrenz OR klasse.ausser_konkurrenz as ausser_konkurrenz,
 	       zusatzpunkte, punkte, s0, s1, s2, s3, s4, s5
 	FROM fahrer
-	JOIN klasse USING (id, klasse)
-	JOIN (
-	    SELECT DISTINCT klasse
-	    FROM sektion
-	    WHERE id = ?
-	) AS _ ON wertungsklasse = _.klasse
-	WHERE start AND id = ?
-	ORDER BY rang, startnummer
+	LEFT JOIN (
+	    SELECT klasse.klasse, klasse.wertungsklasse, klasse.ausser_konkurrenz
+	    FROM klasse
+	    JOIN (
+		SELECT DISTINCT klasse
+		FROM sektion
+		WHERE id = ?) AS _ ON wertungsklasse = _.klasse
+	    WHERE id = ?) AS klasse USING (klasse)
+	WHERE start AND (gruppe OR klasse IS NOT NULL) AND id = ?
     });
-    $sth->execute($id, $id);
-    my $fahrer = {};
+    $sth->execute($id, $id, $id);
+    my $fahrer_nach_startnummer = {};
     my $fahrer_in_klassen = [];
+    my $gruppen = [];
     while (my $row = $sth->fetchrow_hashref) {
 	fixup_hashref($sth, $row);
 	$row->{wertungen} = [];
@@ -77,9 +80,33 @@ if ($op eq "GET/veranstaltung/auswertung") {
 	    delete $row->{"s$n"};
 	}
 	my $startnummer = $row->{startnummer};
-	$fahrer->{$startnummer} = $row;
-	my $klasse = $row->{klasse};
-	push @{$fahrer_in_klassen->[$klasse - 1]}, $row;
+	$fahrer_nach_startnummer->{$startnummer} = $row;
+
+        if ($row->{gruppe}) {
+	    $row->{fahrer} = [];
+	    push @$gruppen, $row;
+	} else {
+	    my $klasse = $row->{klasse};
+	    push @{$fahrer_in_klassen->[$klasse - 1]}, $row;
+	}
+	delete $row->{gruppe};
+    }
+
+    if (@$gruppen) {
+	my $sth = $dbh->prepare(q{
+	    SELECT gruppe.startnummer, fahrer_gruppe.startnummer
+	    FROM fahrer AS gruppe
+	    JOIN fahrer_gruppe
+		ON gruppe.id = fahrer_gruppe.id AND
+		   gruppe.startnummer = fahrer_gruppe.gruppe_startnummer
+	    WHERE gruppe.id = ?
+	});
+	$sth->execute($id);
+	while (my @row = $sth->fetchrow_array) {
+	    fixup_arrayref($sth, \@row);
+	    my $gruppe = $fahrer_nach_startnummer->{$row[0]};
+	    push @{$gruppe->{fahrer}}, $row[1];
+	}
     }
 
     $sth = $dbh->prepare(q{
@@ -91,9 +118,9 @@ if ($op eq "GET/veranstaltung/auswertung") {
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
-	next unless exists $fahrer->{$startnummer};
+	next unless exists $fahrer_nach_startnummer->{$startnummer};
 
-	$fahrer->{$startnummer}{wertungen}[$row[1] - 1] = {
+	$fahrer_nach_startnummer->{$startnummer}{wertungen}[$row[1] - 1] = {
 	    rang => $row[2],
 	    punkte => $row[3],
 	}
@@ -108,9 +135,9 @@ if ($op eq "GET/veranstaltung/auswertung") {
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
-	next unless exists $fahrer->{$startnummer};
+	next unless exists $fahrer_nach_startnummer->{$startnummer};
 
-	$fahrer->{$startnummer}{punkte_pro_sektion}
+	$fahrer_nach_startnummer->{$startnummer}{punkte_pro_sektion}
 	    [$row[1] - 1][$row[2] - 1] = $row[3];
     }
 
@@ -123,9 +150,9 @@ if ($op eq "GET/veranstaltung/auswertung") {
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
-	next unless exists $fahrer->{$startnummer};
+	next unless exists $fahrer_nach_startnummer->{$startnummer};
 
-	$fahrer->{$startnummer}{punkte_pro_runde}
+	$fahrer_nach_startnummer->{$startnummer}{punkte_pro_runde}
 	    [$row[1] - 1] = $row[2];
     }
 
@@ -149,26 +176,15 @@ if ($op eq "GET/veranstaltung/auswertung") {
     while (my $row = $sth->fetchrow_hashref) {
 	fixup_hashref($sth, $row);
 	my $klasse = $row->{klasse};
-	delete $row->{klasse};
 	next unless $fahrer_in_klassen->[$klasse - 1];
 
+	delete $row->{klasse};
+	$row->{gruppen} = json_bool(0);
 	$veranstaltung->{klassen}[$klasse - 1] = $row;
     }
 
-    $sth = $dbh->prepare(q{
-	SELECT wertung, titel, subtitel, bezeichnung
-	FROM wertung
-	WHERE id = ?
-    });
-    $sth->execute($id);
-    $veranstaltung->{wertungen} = [];
-    while (my $row = $sth->fetchrow_hashref) {
-	fixup_hashref($sth, $row);
-	my $wertung = $row->{wertung};
-	delete $row->{wertung};
-
-	$veranstaltung->{wertungen}[$wertung - 1] = $row;
-    }
+    $veranstaltung->{wertungen} =
+	veranstaltung_wertungen_aus_datenbank($dbh, $id);
 
     $sth = $dbh->prepare(q{
 	SELECT klasse, sektion
@@ -202,6 +218,59 @@ if ($op eq "GET/veranstaltung/auswertung") {
 	push @{$veranstaltung->{sektionen_aus_wertung}[$klasse - 1][$row[1] - 1]}, $row[2];
     }
 
+    if (@$gruppen) {
+	push @$fahrer_in_klassen, $gruppen;
+
+	my $klassen = {};
+	foreach my $gruppe (@$gruppen) {
+	    foreach my $startnummer (@{$gruppe->{fahrer}}) {
+		    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+		    $klassen->{$fahrer->{klasse}} = 1;
+	    }
+	}
+
+	my $gruppen_klasse = {
+		bezeichnung => 'Gruppen',
+		gruppen => json_bool(1),
+	};
+	if (length keys %$klassen == 1) {
+	    # Wenn alle Fahrer in allen Gruppen in der selben Klasse sind,
+	    # duplizieren wir diese Klasse.
+	    my $klasse = (values %$klassen)[0];
+	    $gruppen_klasse->{runden} =
+		    $veranstaltung->{klassen}[$klasse - 1]{runden};
+	    push @{$veranstaltung->{sektionen}}, $veranstaltung->{sektionen}[$klasse - 1];
+	} else {
+	    # Wenn nicht, erzeugen wir für die Gruppen eine eigene Pseudo-Klasse
+	    # mit der maximalen Anzahl an Runden und allen enthaltenen Sektionen.
+
+	    my $runden = undef;
+	    my $sektionen = {};
+	    foreach my $klasse (values %$klassen) {
+		    my $klasse_runden = $veranstaltung->{klassen}[$klasse - 1]{runden};
+		    $runden = $klasse_runden
+			    if !defined $runden || $klasse_runden > $runden;
+
+		    my $klasse_sektionen = $veranstaltung->{sektionen}[$klasse - 1];
+		    foreach my $sektion (@$klasse_sektionen) {
+			    $sektionen->{$sektion + ''} = $sektion;
+		    }
+	    }
+
+	    $gruppen_klasse->{runden} = $runden;
+	    push @{$veranstaltung->{sektionen}}, [ sort { $a <=> $b } values %$sektionen ];
+	}
+	push @{$veranstaltung->{klassen}}, $gruppen_klasse;
+
+	# Ergebnisse in Sektionen aus der Wertung werden in der Gruppenwertung
+	# nicht berücksichtigt, es braucht für die Gruppen also auch keine
+	# eigenen Sektionen aus der Wertung.
+    }
+
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	delete $fahrer->{klasse};
+    }
+
     $sth = $dbh->prepare(q{
 	SELECT feature
 	FROM veranstaltung_feature
@@ -214,7 +283,7 @@ if ($op eq "GET/veranstaltung/auswertung") {
 	push @{$veranstaltung->{features}}, $row[0];
     }
     $result = { veranstaltung => $veranstaltung,
-		fahrer_in_klassen => $fahrer_in_klassen };
+		fahrer => $fahrer_in_klassen };
 } else {
     $status = "404 Not Found";
     $result->{error} = "Operation '$op' not defined";

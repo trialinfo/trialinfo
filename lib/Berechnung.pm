@@ -137,7 +137,7 @@ sub befahrene_sektionen($) {
     return $befahren;
 }
 
-sub punkte_berechnen($$) {
+sub fahrer_punkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
     my $befahren;
 
@@ -195,6 +195,8 @@ sub punkte_berechnen($$) {
     my $trialtool_kompatibel = !$sektionen_aus_wertung;
 
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	next if $fahrer->{gruppe};
+
 	my $punkte_pro_runde;
 	my $gesamtpunkte;
 	my $punkteverteilung;  # 0er, 1er, 2er, 3er, 4er, 5er
@@ -273,6 +275,101 @@ sub punkte_berechnen($$) {
     }
 }
 
+sub gruppen_punkte_berechnen($$) {
+    my ($fahrer_nach_startnummer, $cfg) = @_;
+    my $auslassen = $cfg->{punkte_sektion_auslassen} // 0;
+    my $gruppen = {};
+
+    foreach my $gruppe (values %$fahrer_nach_startnummer) {
+	next unless $gruppe->{gruppe};
+
+	my $gesamtpunkte;
+	my $punkte_pro_sektion = [];
+	my $punkte_pro_runde = [];
+	my $punkteverteilung;
+	my $runden;
+	my $offene_sektionen;
+
+	if ($gruppe->{start}) {
+	    foreach my $startnummer (@{$gruppe->{fahrer}}) {
+		my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+		if ($fahrer->{start}) {
+		    my $fahrer_punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
+		    for (my $runde = 0; $runde < @$fahrer_punkte_pro_sektion; $runde++) {
+			my $punkte_in_runde = $fahrer_punkte_pro_sektion->[$runde] // [];
+			for (my $sektion = 0; $sektion < @$punkte_in_runde; $sektion++) {
+			    my $p = $punkte_in_runde->[$sektion];
+			    $punkte_pro_sektion->[$runde][$sektion] +=
+				$p == -1 ? $auslassen : $p
+				if defined $p;
+			}
+		    }
+		    my $fahrer_punkteverteilung = $fahrer->{punkteverteilung} // [];
+		    for (my $idx = 0; $idx < @$fahrer_punkteverteilung; $idx++) {
+			$punkteverteilung->[$idx] += $fahrer_punkteverteilung->[$idx]
+			    if defined $fahrer_punkteverteilung->[$idx];
+		    }
+		}
+		my $fahrer_punkte_pro_runde = $fahrer->{punkte_pro_runde} // [];
+		for (my $runde = 0; $runde < @$fahrer_punkte_pro_runde; $runde++) {
+		    $punkte_pro_runde->[$runde] += $fahrer_punkte_pro_runde->[$runde]
+			if defined $fahrer_punkte_pro_runde->[$runde];
+		}
+		unless (defined $runden && $runden < $fahrer->{runden}) {
+		    $runden = $fahrer->{runden};
+		}
+		$offene_sektionen += $fahrer->{offene_sektionen};
+	    }
+
+	    $gesamtpunkte = $gruppe->{zusatzpunkte};
+	    foreach my $punkte (@$punkte_pro_runde) {
+		$gesamtpunkte += $punkte;
+	    }
+	}
+
+	if ($punkteverteilung) {
+	    for (my $n = 0; $n <= 5; $n++) {
+		$punkteverteilung->[$n] //= 0;
+	    }
+	}
+
+	$gruppe->{runden} = $runden;
+	$gruppe->{punkte} = $gesamtpunkte;
+	$gruppe->{punkte_pro_sektion} = $punkte_pro_sektion;
+	$gruppe->{punkte_pro_runde} = $punkte_pro_runde;
+	$gruppe->{punkteverteilung} = $punkteverteilung;
+	$gruppe->{offene_sektionen} = $offene_sektionen;
+
+	my $startnummer = $gruppe->{startnummer};
+	$gruppen->{$startnummer} = $gruppe;
+    }
+    return $gruppen;
+}
+
+sub raenge_berechnen($$) {
+    my ($fahrer_in_klasse, $cfg) = @_;
+
+    my $raenge = {};
+    my $rang = 1;
+    $fahrer_in_klasse = [
+	sort { rang_vergleich($a, $b, $cfg) }
+	     grep { $_->{start} } @$fahrer_in_klasse ];
+    my $vorheriger_fahrer;
+    foreach my $fahrer (@$fahrer_in_klasse) {
+	my $startnummer = $fahrer->{startnummer};
+	if ($vorheriger_fahrer && rang_vergleich($vorheriger_fahrer, $fahrer, $cfg) == 0) {
+	    my $n = $vorheriger_fahrer->{startnummer};
+	    my $vorheriger_rang = $raenge->{$n};
+	    $raenge->{$startnummer} = $vorheriger_rang;
+	} else {
+	    $raenge->{$startnummer} = $rang;
+	}
+	$vorheriger_fahrer = $fahrer;
+	$rang++;
+    }
+    return $raenge;
+}
+
 sub rang_und_wertungspunkte_berechnen($$) {
     my ($fahrer_nach_startnummer, $cfg) = @_;
     my $wertungspunkte = $cfg->{wertungspunkte};
@@ -282,7 +379,19 @@ sub rang_und_wertungspunkte_berechnen($$) {
 
     wertungsklassen_setzen $fahrer_nach_startnummer, $cfg;
 
-    punkte_berechnen $fahrer_nach_startnummer, $cfg;
+    fahrer_punkte_berechnen $fahrer_nach_startnummer, $cfg;
+
+    my $gruppen = gruppen_punkte_berechnen $fahrer_nach_startnummer, $cfg;
+
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{rang} = undef;
+	foreach my $wertung (@{$fahrer->{wertungen}}) {
+	    if (defined $wertung) {
+		delete $wertung->{rang};
+		delete $wertung->{punkte};
+	    }
+	}
+    }
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
 
@@ -290,30 +399,12 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	# $fahrer->{rang} ist der Rang in der Tages-Gesamtwertung, in der alle
-	# Starter aufscheinen.
+	# startenden Fahrer aufscheinen (aber nicht die Gruppen).
 
-	my $rang = 1;
-	$fahrer_in_klasse = [
-	    sort { rang_vergleich($a, $b, $cfg) }
-		 map { $_->{start} ? $_ : () } @$fahrer_in_klasse ];
-	my $vorheriger_fahrer;
-	foreach my $fahrer (@$fahrer_in_klasse) {
-	    $fahrer->{rang} =
-		$vorheriger_fahrer &&
-		rang_vergleich($vorheriger_fahrer, $fahrer, $cfg) == 0 ?
-		    $vorheriger_fahrer->{rang} : $rang;
-	    $rang++;
-	    $vorheriger_fahrer = $fahrer;
-	}
-	$fahrer_nach_klassen->{$klasse} = $fahrer_in_klasse;
-    }
-
-    foreach my $fahrer (values %$fahrer_nach_startnummer) {
-	foreach my $wertung (@{$fahrer->{wertungen}}) {
-	    if (defined $wertung) {
-		delete $wertung->{rang};
-		delete $wertung->{punkte};
-	    }
+	my $raenge = raenge_berechnen($fahrer_in_klasse, $cfg);
+	foreach my $startnummer (keys %$raenge) {
+	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	    $fahrer->{rang} = $raenge->{$startnummer};
 	}
     }
 
@@ -324,32 +415,27 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	    $wertung == 1 || $cfg->{wertungspunkte_234};
 
 	foreach my $klasse (keys %$fahrer_nach_klassen) {
-	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
 	    my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	    # $fahrer->{wertungen}[]{rang} ist der Rang in der jeweiligen
 	    # Teilwertung.
 
-	    my $rang = 1;
-	    my $vorheriger_fahrer;
-	    foreach my $fahrer (@$fahrer_in_klasse) {
-		my $keine_wertung1 =
-		  $cfg->{klassen}[$fahrer->{klasse} - 1]{keine_wertung1};
-		next unless defined $fahrer->{rang} &&
-			    $fahrer->{wertungen}[$wertung - 1]{aktiv} &&
-			    ($wertung > 1 || !$keine_wertung1);
-		if ($vorheriger_fahrer &&
-		    $vorheriger_fahrer->{rang} == $fahrer->{rang}) {
-		    $fahrer->{wertungen}[$wertung - 1]{rang} =
-			$vorheriger_fahrer->{wertungen}[$wertung - 1]{rang};
-		} else {
-		    $fahrer->{wertungen}[$wertung - 1]{rang} = $rang;
-		}
-		$rang++;
+	    $fahrer_in_klasse = [ grep {
+		$_->{wertungen}[$wertung - 1]{aktiv} &&
+		($wertung > 1 ||
+		 !$cfg->{klassen}[$_->{klasse} - 1]{keine_wertung1})
+	    } @$fahrer_in_klasse ];
 
-		$vorheriger_fahrer = $fahrer;
+	    my $raenge = raenge_berechnen($fahrer_in_klasse, $cfg);
+	    foreach my $startnummer (keys %$raenge) {
+		my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+		$fahrer->{wertungen}[$wertung - 1]{rang} =
+		    $raenge->{$startnummer};
 	    }
+
 	    if ($wertungspunkte_vergeben) {
+		my $runden = $cfg->{klassen}[$klasse - 1]{runden};
+
 		if ($cfg->{punkteteilung}) {
 		    my ($m, $n);
 		    for ($m = 0; $m < @$fahrer_in_klasse; $m = $n) {
@@ -411,7 +497,7 @@ sub fahrer_nach_klassen($) {
     my $fahrer_nach_klassen;
 
     foreach my $fahrer (values %$fahrer_nach_startnummern) {
-	my $klasse = $fahrer->{wertungsklasse};
+	my $klasse = $fahrer->{gruppe} ? 0 : $fahrer->{wertungsklasse};
 	push @{$fahrer_nach_klassen->{$klasse}}, $fahrer
 	    if defined $klasse;
     }

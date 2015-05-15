@@ -222,13 +222,31 @@ sub fahrer_wertungen_hash($) {
 sub startnummer_aendern($$$$) {
     my ($callback, $id, $alt, $neu) = @_;
 
-    foreach my $tabelle (qw(fahrer fahrer_wertung punkte runde neue_startnummer)) {
+    foreach my $tabelle (qw(fahrer fahrer_wertung punkte runde neue_startnummer fahrer_gruppe)) {
 	&$callback(qq{
 	    UPDATE $tabelle
 	    SET startnummer = ?
 	    WHERE id = ? AND startnummer = ?
 	}, [$neu, $id, $alt], undef);
     }
+    &$callback(qq{
+	UPDATE fahrer_gruppe
+	SET gruppe_startnummer = ?
+	WHERE id = ? AND gruppe_startnummer = ?
+    }, [$neu, $id, $alt], undef);
+}
+
+sub gruppe_fahrer_hash($) {
+    my ($gruppe) = @_;
+
+    my $hash = {};
+    if ($gruppe && $gruppe->{gruppe}) {
+	my $fahrer = $gruppe->{fahrer} // [];
+	foreach my $startnummer (@$fahrer) {
+	    $hash->{$startnummer} = [];
+	}
+    }
+    return $hash;
 }
 
 sub einen_fahrer_aktualisieren($$$$$) {
@@ -284,13 +302,21 @@ sub einen_fahrer_aktualisieren($$$$$) {
 		fahrer_wertungen_hash($neu)
 	    and $changed = 1;
     }
+    if (!$neu || exists $neu->{gruppe}) {
+	hash_aktualisieren $callback, 'fahrer_gruppe',
+		[qw(id gruppe_startnummer startnummer)], [],
+		[$id, $startnummer],
+		gruppe_fahrer_hash($alt),
+		gruppe_fahrer_hash($neu)
+	    and $changed = 1;
+    }
 
     my $felder = [];
     my $felder_alt = $alt ? [] : undef;
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
 	foreach my $feld (qw(
-	    klasse helfer bewerber nenngeld nachname vorname strasse wohnort
+	    gruppe klasse helfer bewerber nenngeld nachname vorname strasse wohnort
 	    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
 	    kennzeichen hubraum email bemerkung land bundesland helfer_nummer
 	    startzeit zielzeit stechen nennungseingang start

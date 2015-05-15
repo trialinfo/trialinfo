@@ -171,12 +171,13 @@ sub vareihe_benutzer_eintragen($) {
     }, undef, $vareihe, $benutzer_name);
 }
 
-sub get_fahrer($$$;$$) {
-    my ($dbh, $id, $startnummer, $richtung, $starter) = @_;
+sub get_fahrer($$$;$$$) {
+    my ($dbh, $id, $startnummer, $richtung, $starter, $gruppen) = @_;
     my $result;
 
     my $fahrer_nach_startnummer =
-	fahrer_aus_datenbank($dbh, $id, $startnummer, $richtung, $starter);
+	fahrer_aus_datenbank($dbh, $id, $startnummer,
+			     $richtung, $starter, $gruppen);
     my $startnummern = [ keys %$fahrer_nach_startnummer ];
     $result = $fahrer_nach_startnummer->{$startnummern->[0]}
 	if @$startnummern == 1;
@@ -557,18 +558,24 @@ eval {
 	    eval {
 		($startnummer) = parameter($q, qw(startnummer));
 	    };
+	    my $gruppen = $q->url_param('gruppen');
+
 	    veranstaltung_lesen $id;
 	    $result = get_fahrer($dbh, $id, $startnummer,
-		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef);
+		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef,
+		0, $gruppen);
     } elsif ($op =~ q<^GET/(vorheriger/|naechster/)starter$>) {
 	    my ($id) = parameter($q, qw(id));
 	    my $startnummer;
 	    eval {
 		($startnummer) = parameter($q, qw(startnummer));
 	    };
+	    my $gruppen = $q->url_param('gruppen');
+
 	    veranstaltung_lesen $id;
 	    $result = get_fahrer($dbh, $id, $startnummer,
-		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef, 1);
+		$1 eq 'vorheriger/' ? -1 : $1 eq 'naechster/' ? 1 : undef,
+		1, $gruppen);
     } elsif ($op eq "GET/veranstaltung") {
 	my ($id) = parameter($q, qw(id));
 	veranstaltung_lesen $id;
@@ -975,6 +982,11 @@ eval {
 	    });
 	    $sth->execute($id, $startnummer);
 	}
+	$sth = $dbh->prepare(qq{
+	    DELETE FROM fahrer_gruppe
+	    WHERE id = ? AND (gruppe_startnummer = ? OR startnummer = ?)
+	});
+	$sth->execute($id, $startnummer, $startnummer);
 	wertung_aktualisieren $dbh, $do_sql, $id;
 	$dbh->commit;
 
@@ -1044,8 +1056,63 @@ eval {
 	$dbh->commit;
 
 	$headers->{status} = '200 Modified';
+    } elsif ($op eq "GET/fahrer/hash") {
+	my ($id, $suchbegriff) = parameter($q, qw(id));
+	my $gruppen = $q->url_param('gruppen');
+	my $gruppe_filter = defined $gruppen ?
+	    ($gruppen ? ' AND fahrer.gruppe' :
+		       ' AND NOT COALESCE(fahrer.gruppe, 0)') :
+	    '';
+
+	veranstaltung_lesen $id;
+	my $sth = $dbh->prepare(qq{
+	    SELECT startnummer, gruppe, nachname, vorname, geburtsdatum, klasse, start
+	    FROM fahrer
+	    WHERE id = ?$gruppe_filter
+	});
+	$sth->execute($id);
+	$result = {};
+	while (my $row = $sth->fetchrow_hashref) {
+	    fixup_hashref($sth, $row);
+	    my $startnummer = $row->{startnummer};
+	    delete $row->{startnummer};
+	    if (!$row->{gruppe}) {
+		$row->{gruppen} = [];
+	    } else {
+		$row->{fahrer} = [];
+	    }
+	    delete $row->{gruppe};
+	    $result->{$startnummer} = $row;
+	}
+
+	$sth = $dbh->prepare(q{
+	    SELECT gruppe_startnummer, startnummer
+	    FROM fahrer_gruppe
+	    WHERE id = ?
+	});
+	$sth->execute($id);
+	while (my @row = $sth->fetchrow_array) {
+	    fixup_arrayref($sth, \@row);
+	    my $fahrer = $result->{$row[1] + 0};
+	    push @{$fahrer->{gruppen}}, $row[0]
+		if $fahrer && $fahrer->{gruppen};
+
+	    my $gruppe = $result->{$row[0] + 0};
+	    push @{$gruppe->{fahrer}}, $row[1]
+		if $gruppe && $gruppe->{fahrer};
+	}
     } elsif ($op eq "GET/fahrer/suchen") {
 	my ($id, $suchbegriff) = parameter($q, qw(id suchbegriff));
+	my $filter = '';
+	my $gruppe = $q->url_param('gruppe');
+	if (defined $gruppe) {
+	    $filter .= ($gruppe ? ' AND gruppe' :
+				  ' AND NOT COALESCE(gruppe, 0)');
+	}
+	if ($q->url_param('aktiv')) {
+	    $filter .= ' AND (start OR startnummer >= 0)';
+	}
+
 	veranstaltung_lesen $id;
 	my $select_fahrer = q{
 	    SELECT startnummer, nachname, vorname, geburtsdatum, klasse
@@ -1053,8 +1120,8 @@ eval {
 	};
 	$result = [];
 	if ($suchbegriff =~ /^-?\d+$/) {
-	    my $sth = $dbh->prepare($select_fahrer . q{
-		WHERE id = ? AND startnummer = ?
+	    my $sth = $dbh->prepare($select_fahrer . qq{
+		WHERE id = ? AND startnummer = ?$filter
 	    });
 	    $sth->execute($id, $suchbegriff);
 	    while (my $row = $sth->fetchrow_hashref) {
@@ -1069,10 +1136,10 @@ eval {
 	    $suchbegriff =~ s/\*/%/g;
 	    $suchbegriff = "$suchbegriff%";
 
-	    my $sth = $dbh->prepare($select_fahrer . q{
+	    my $sth = $dbh->prepare($select_fahrer . qq{
 		WHERE id = ? AND
 		      (CONCAT(COALESCE(vorname, ''), ' ', COALESCE(nachname, '')) LIKE ? OR
-		       CONCAT(COALESCE(nachname, ''), ' ', COALESCE(vorname, '')) LIKE ?)
+		       CONCAT(COALESCE(nachname, ''), ' ', COALESCE(vorname, '')) LIKE ?)$filter
 		ORDER BY nachname, vorname
 		LIMIT 20
 	    });
@@ -1094,7 +1161,7 @@ eval {
 	veranstaltung_lesen $id;
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
-	    SELECT startnummer, klasse, nachname, vorname, startzeit, zielzeit,
+	    SELECT startnummer, gruppe, klasse, nachname, vorname, startzeit, zielzeit,
 		   nennungseingang, start, start_morgen, geburtsdatum,
 		   wohnort, club, fahrzeug, versicherung, land, bundesland,
 		   lizenznummer, email, runden, ausfall, nenngeld
@@ -1106,8 +1173,26 @@ eval {
 	while (my $row = $sth->fetchrow_hashref) {
 	    fixup_hashref($sth, $row);
 	    $row->{wertungen} = [];
+	    if ($row->{gruppe}) {
+		$row->{fahrer} = [];
+	    }
 	    my $startnummer = $row->{startnummer};
 	    $fahrer->{$startnummer} = $row;
+	}
+
+	$sth = $dbh->prepare(q{
+	    SELECT gruppe.startnummer, fahrer_gruppe.startnummer
+	    FROM fahrer AS gruppe
+	    JOIN fahrer_gruppe
+		ON gruppe.id = fahrer_gruppe.id AND
+		   gruppe.startnummer = fahrer_gruppe.gruppe_startnummer
+	    WHERE gruppe.id = ?
+	});
+	$sth->execute($id);
+	while (my @row = $sth->fetchrow_array) {
+	    fixup_arrayref($sth, \@row);
+	    my $f = $fahrer->{$row[0]};
+	    push @{$f->{fahrer}}, $row[1];
 	}
 
 	$sth = $dbh->prepare(qq{
