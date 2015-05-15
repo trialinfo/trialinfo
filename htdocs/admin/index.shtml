@@ -186,11 +186,17 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    controller: 'veranstaltungController',
 	    templateUrl: 'veranstaltung/index.html',
 	    resolve: veranstaltungController.resolve
-	  }).when('/veranstaltung/:id/nennungen', {
-	    titel: 'Nennungen',
+	  }).when('/veranstaltung/:id/fahrer', {
+	    titel: 'Fahrer',
 	    controller: 'nennungenController',
 	    templateUrl: 'nennungen/index.html',
-	    resolve: nennungenController.resolve,
+	    resolve: nennungenController.resolveFactory(false),
+	    reloadOnSearch: false
+	  }).when('/veranstaltung/:id/gruppen', {
+	    titel: 'Gruppen',
+	    controller: 'nennungenController',
+	    templateUrl: 'nennungen/index.html',
+	    resolve: nennungenController.resolveFactory(true),
 	    reloadOnSearch: false
 	  }).when('/veranstaltung/:id/punkte', {
 	    titel: 'Punktevergabe',

@@ -34,7 +34,7 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
   }(veranstaltung);
 
   /* Um die Maske sinnvoll darstellen zu können, Felder für die befahrenen
-   * Sektionen und Runden der ersten definierten Klasse anzeigen.  Das
+   * Sektionen und Runden der ersten startenden Klasse anzeigen.  Das
    * stimmt zumindest bei allen Veranstaltungen, bei denen alle Klassen
    * die selben Sektionen und Runden befahren.  */
   for (var klasse = 1; klasse < veranstaltung.sektionen.length + 1; klasse++) {
@@ -49,7 +49,8 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
     try {
       var fahrer = $scope.fahrer;
       return fahrer.start &&
-	     $scope.startende_klassen[wertungs_klasse(fahrer) - 1];
+	     (fahrer.gruppe ||
+	      $scope.startende_klassen[wertungs_klasse(fahrer) - 1]);
     } catch (_) {}
   };
 
@@ -138,7 +139,11 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 
   $scope.fahrer_suchen = function() {
     if ($scope.suchbegriff != '') {
-      fahrer_suchen($http, veranstaltung.id, $scope.suchbegriff).
+      var params = {
+	id: veranstaltung.id,
+	suchbegriff: $scope.suchbegriff
+      };
+      $http.get('/api/fahrer/suchen', {'params': params}).
 	success(function(fahrerliste) {
 	  fahrerliste = fahrerliste.filter(function(fahrer) {
 	    return fahrer.startnummer !== null && fahrer.klasse !== null;
@@ -158,7 +163,9 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
     if (fahrer && fahrer.start) {
       var runde = fahrer.runden || 1;
       var wertungsklasse = wertungs_klasse(fahrer);
-      var sektionen = veranstaltung.sektionen[wertungsklasse - 1] // [];
+      if (!wertungsklasse)
+	return null;
+      var sektionen = veranstaltung.sektionen[wertungsklasse - 1] || [];
       for (var index = 0; index < sektionen.length; index++) {
 	var sektion = sektionen[index];
 	var punkte = fahrer.punkte_pro_sektion[runde - 1][sektion - 1];
@@ -197,7 +204,12 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
 
   function punkte_berechnen() {
     var fahrer = $scope.fahrer;
-    if (fahrer) {
+    if (fahrer && fahrer.gruppe) {
+      fahrer.punkte = fahrer.zusatzpunkte;
+      for (runde = 1; runde <= fahrer.punkte_pro_sektion.length; runde++) {
+	fahrer.punkte += fahrer.punkte_pro_runde[runde - 1];
+      }
+    } else if (fahrer) {
       fahrer.punkte_pro_runde = [];
       if (fahrer.start) {
 	var wertungsklasse = wertungs_klasse(fahrer);
@@ -279,16 +291,45 @@ function punkteController($scope, $sce, $http, $timeout, $route, $location, vera
     fahrer_zuweisen($scope.fahrer_alt);
   };
 
-  $scope.rundenliste = function(klasse) {
+  $scope.rundenliste = function() {
     try {
-      var rundenliste = [];
-      if ($scope.startende_klassen[klasse - 1]) {
-	var runden = veranstaltung.klassen[klasse - 1].runden;
-	for (var n = 1; n <= runden; n++)
-	  rundenliste.push(n);
-	return rundenliste;
+      var runden = 0;
+      var fahrer = $scope.fahrer;
+      if (fahrer && fahrer.gruppe) {
+	angular.forEach(fahrer.klassen, function(klasse) {
+	  var wertungsklasse = veranstaltung.klassen[klasse - 1].wertungsklasse;
+	  var r = veranstaltung.klassen[wertungsklasse - 1].runden;
+	  runden = Math.max(runden, r);
+	});
+      } else {
+	var wertungsklasse = $scope.wertungsklasse;
+	runden = veranstaltung.klassen[wertungsklasse - 1].runden;
       }
+      var rundenliste = [];
+      for (var n = 1; n <= runden; n++)
+	rundenliste.push(n);
+      return rundenliste;
     } catch (_) { }
+  };
+
+  $scope.sektionsliste = function() {
+    var fahrer = $scope.fahrer;
+    if (!fahrer || !fahrer.gruppe) {
+      var wertungsklasse = $scope.wertungsklasse;
+      var sektionen = veranstaltung.sektionen[wertungsklasse - 1];
+      return sektionen;
+    }
+
+    var enthaltene_sektionen = {};
+    angular.forEach(fahrer.klassen, function(klasse) {
+      var wertungsklasse = veranstaltung.klassen[klasse - 1].wertungsklasse;
+      var sektionen = veranstaltung.sektionen[wertungsklasse - 1];
+      angular.forEach(sektionen, function(sektion) {
+	enthaltene_sektionen[sektion] = true;
+      });
+    });
+    var sektionen = Object.keys(enthaltene_sektionen).map(function(key) { return +key; });
+    return sektionen.sort();
   };
 
   $scope.klassensymbol = function() {

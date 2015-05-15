@@ -13,6 +13,14 @@
       <fieldset style="display:inline">
 	<legend>Anzeige einstellen</legend>
 	<table>
+	  <tr ng-if="fahrer_gruppen"><th align="right">Fahrer/Gruppen</th>
+	    <td>
+	      <select ng-model="anzeige.fahrer_gruppen">
+		<option value=""></option>
+		<option value="fahrer">Fahrer</option>
+		<option value="gruppen">Gruppen</option>
+	      </select>
+	    </td></tr>
 	  <tr ng-if="wertungen.length"><th align="right">Wertung</th>
 	    <td>
 	      <select ng-model="anzeige.wertung" ng-options="wertung.wertung as wertung.bezeichnung for wertung in wertungen">
@@ -21,12 +29,12 @@
 	    </td></tr>
 	  <tr ng-if="wertungen.length && anzeige.wertung !== null"><th align="right">Alle Fahrer</th>
 	    <td>
-	      <input type="checkbox" ng-model="anzeige.alle" id="alle"><label for="alle">Auch Fahrer ohne {{veranstaltung.wertungen[anzeige.wertung - 1].bezeichnung}} anzeigen</label>
+	      <input type="checkbox" ng-model="anzeige.alle" id="alle"><label for="alle">Auch Fahrer und Gruppen ohne {{veranstaltung.wertungen[anzeige.wertung - 1].bezeichnung}} anzeigen</label>
 	    </td></tr>
 	  <tr><th align="right">Klassen</th>
             <td>
-              <span ng-repeat="klasse in klassen">
-		<input type="checkbox" ng-model="anzeige.klassen[klasse - 1]" id="klasse_{{klasse}}"><label for="klasse_{{klasse}}">{{klasse}}</label>
+              <span ng-repeat="klasse in klassen | filter:ist_fahrerklasse">
+		<input type="checkbox" ng-model="anzeige.klassen[klasse - 1]" id="klasse_{{klasse}}"><label for="klasse_{{klasse}}">{{veranstaltung.klassen[klasse - 1].gruppen ? 'Gruppen' : klasse}}</label>
               </span>
             </td></tr>
 	  <tr><th align="right">Felder</th>
@@ -125,7 +133,7 @@ table.wertung tr td.wichtig {
 </style>
 
 <p ng-if="anzeige.dauer == null">{{zusammenfassung}}</p>
-<div ng-repeat="klasse in klassen" ng-init="runden = veranstaltung.klassen[klasse - 1].runden" ng-if="anzeige.klassen[klasse - 1] && fahrer_in_klassen[klasse - 1]" class="klasse" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
+<div ng-repeat="klasse in klassen | filter:klasse_anzeigen" ng-init="runden = veranstaltung.klassen[klasse - 1].runden" class="klasse" ng-class="!$first && anzeige.seitenumbruch ? 'page-break' : ''">
   <h2>{{veranstaltung.klassen[klasse - 1].bezeichnung}}</h2>
   <table class="wertung">
     <thead>

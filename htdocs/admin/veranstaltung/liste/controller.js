@@ -17,6 +17,27 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     4: 'Tagesversicherung'
   };
 
+  var fahrer_nach_startnummer = (function(fahrerliste) {
+    var fahrer_nach_startnummer = {};
+    angular.forEach(fahrerliste, function(fahrer) {
+      fahrer_nach_startnummer[fahrer.startnummer] = fahrer;
+    });
+    return fahrer_nach_startnummer;
+  })(fahrerliste);
+
+  angular.forEach(fahrerliste, function(gruppe) {
+    if (gruppe.gruppe) {
+      angular.forEach(gruppe.fahrer, function(startnummer) {
+	var fahrer = fahrer_nach_startnummer[startnummer];
+	if (fahrer) {
+	  if (!fahrer.gruppen)
+	    fahrer.gruppen = [];
+	  fahrer.gruppen.push(gruppe.startnummer);
+	}
+      });
+    }
+  });
+
   function otsv_beitrag(veranstaltung) {
     if (veranstaltung.art === 'otsv2014' || veranstaltung.art === 'otsv+osk2014') {
       var jetzt;
@@ -82,7 +103,14 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	  fahrer.wertungen[0] = false;
       } catch(_) { }
     }
+
+    if (fahrer.gruppe)
+      $scope.anzeige.gruppen = true;
+    else
+      $scope.anzeige.fahrer = true;
   });
+  if ($scope.anzeige.fahrer && $scope.anzeige.gruppen)
+    $scope.fahrer_gruppen = true;
 
   $scope.land_bundesland = function(fahrer) {
     var land_bundesland = [];
@@ -97,6 +125,18 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     var w = veranstaltung.wertungen[wertung - 1];
     return w && w.bezeichnung ? w.bezeichnung : 'Wertung ' + wertung;
   };
+
+  $scope.gruppenliste = function(gruppen) {
+    var liste = [];
+    angular.forEach(gruppen, function(startnummer) {
+      var gruppe = fahrer_nach_startnummer[startnummer];
+      if (gruppe)
+	liste.push(gruppe);
+    });
+    return liste.map(function(gruppe) {
+      return join(' ', gruppe.nachname, gruppe.vorname);
+    }).sort(function(a, b) { return a.localeCompare(b); }).join(', ');
+  }
 
   var definierte_felder = {
     startnummer:
@@ -217,6 +257,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	bezeichnung: '<span title="Aktuelle Runde">In Runde</span>',
 	ausdruck: "(!start || ausfall || runden >= veranstaltung.klassen[veranstaltung.klassen[klasse - 1].wertungsklasse - 1]['runden']) ? null : runden + 1",
 	style: { 'text-align': 'center' } },
+    gruppen:
+      { name: 'Gruppen',
+	bezeichnung: 'Gruppen',
+	ausdruck: 'gruppenliste(gruppen)',
+	style: { 'text-align': 'left' },
+	when: function() { return $scope.fahrer_gruppen; } },
     nenngeld:
       { name: 'Nenngeld',
 	bezeichnung: 'Nenngeld',
@@ -261,35 +307,22 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     return feldliste;
   })();
 
-  function generic_compare(v1, v2) {
-    if ((v1 == null) || (v2 == null))
-      return (v1 == null) - (v2 == null);
-    var t1 = typeof v1;
-    var t2 = typeof v2;
-    if (t1 == t2) {
-      if (v1 === v2)
-	return 0;
-      if (t1 == 'string')
-	return v1.localeCompare(v2);
-      else
-        return v1 < v2 ? -1 : 1;
-    } else
-      return t1 < t2 ? -1 : 1;
-  };
-
   function filter(fahrer) {
     var anzeige = $scope.anzeige;
+    if ((fahrer.gruppe && !anzeige.gruppen) ||
+	(!fahrer.gruppe && !anzeige.fahrer))
+      return false;
     if (anzeige.startnummer !== null &&
 	(fahrer.startnummer >= 0) !== anzeige.startnummer)
       return false;
     if (anzeige.nennungseingang !== null &&
-	fahrer.nennungseingang !== anzeige.nennungseingang)
+	!fahrer.nennungseingang  == anzeige.nennungseingang)
       return false;
     if (anzeige.start !== null &&
-	fahrer.start !== anzeige.start)
+	!fahrer.start == anzeige.start)
       return false;
     if (anzeige.start_morgen !== null &&
-	fahrer.start_morgen !== anzeige.start_morgen)
+	!fahrer.start_morgen == anzeige.start_morgen)
       return false;
     for (var wertung = 1; wertung <= 4; wertung++) {
       if (anzeige['wertung' + wertung] !== null &&
@@ -316,7 +349,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       try {
 	var klasse = veranstaltung.klassen[
 	  veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1];
-	if (!fahrer.start || fahrer.ausfall || fahrer.runden >= klasse.runden)
+	if (!fahrer.start || fahrer.ausfall || fahrer.runden >= klasse.runden || fahrer.gruppe)
 	  return false;
       } catch(_) { }
     }
@@ -325,30 +358,19 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       anzeige.klassen[fahrer.wertungsklasse];
   }
 
-  function make_compare(comparators) {
-    return function(f1, f2) {
-      for (var n = 0; n < comparators.length; n++) {
-	var cmp = comparators[n](f1, f2);
-	if (cmp)
-	  return cmp;
-      }
-      return 0;
-    }
-  }
-
-  function group_by(array, comparator) {
+  function group_by(fahrerliste, compare) {
     var result = [];
-    if (!array.length)
+    if (!fahrerliste.length)
       return [];
-    var group = [array[0]];
-    for (var n = 1; n != array.length; n++) {
-      if (comparator(group[0], array[n])) {
-	result.push(group);
+    var group = [fahrerliste[0]];
+    for (var n = 1; n != fahrerliste.length; n++) {
+      if (compare(group[0], fahrerliste[n])) {
+	result.push({gruppe: group[0], fahrerliste: group});
 	group = [];
       }
-	group.push(array[n]);
+      group.push(fahrerliste[n]);
     }
-    result.push(group);
+    result.push({gruppe: group[0], fahrerliste: group});
     return result;
   }
 
@@ -360,8 +382,15 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   var gruppieren_funktionen = {
     wertungsklasse: {
       heading: function(f) {
+	function klassenbezeichnung(klasse) {
+	  var bezeichnung = veranstaltung.klassen[klasse - 1].bezeichnung;
+	  if (bezeichnung == null || bezeichnung == '')
+	    bezeichnung = 'Klasse ' + klasse;
+	  return bezeichnung;
+	}
+
 	return klasse_andere(f) != null ?
-	       veranstaltung.klassen[f.wertungsklasse - 1].bezeichnung :
+	       klassenbezeichnung(f.wertungsklasse) :
 	       'Andere Klassen';
       },
       compare: function(f1, f2) {
@@ -417,6 +446,39 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
       compare: function(f1, f2) {
 	return generic_compare(f1.abgabe, f2.abgabe);
       }
+    },
+    gruppe: {
+      heading: function(f) {
+	return f ? join(' ', f.nachname, f.vorname) : 'Keine Gruppen';
+      },
+      group_by: function(fahrerliste) {
+	var gruppen = {}, keine_gruppen = [];
+	angular.forEach(fahrerliste, function(fahrer) {
+	  if (fahrer.gruppen && fahrer.gruppen.length) {
+	    angular.forEach(fahrer.gruppen, function(startnummer) {
+	      if (!gruppen[startnummer])
+		gruppen[startnummer] = [];
+	      gruppen[startnummer].push(fahrer);
+	    });
+	  } else
+	    keine_gruppen.push(fahrer);
+	});
+
+	var ergebnisliste = [];
+	if (keine_gruppen.length)
+	  ergebnisliste.push({gruppe: null, fahrerliste: keine_gruppen});
+	return ergebnisliste.concat(
+	  Object.keys(gruppen).map(function(startnummer) {
+	    return {
+	      gruppe: fahrer_nach_startnummer[startnummer],
+	      fahrerliste: gruppen[startnummer]
+	    };
+	  }).sort(function(g1, g2) {
+	    return generic_compare(g1.gruppe.nachname, g2.gruppe.nachname) ||
+		   generic_compare(g1.gruppe.vorname, g2.gruppe.vorname);
+	  })
+	);
+      }
     }
   };
 
@@ -442,7 +504,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   $scope.gruppe_ueberschrift = function(gruppe) {
     var gruppieren = gruppieren_funktionen[$scope.anzeige.gruppierung];
     if (gruppieren)
-      return gruppieren.heading(gruppe[0]);
+      return gruppieren.heading(gruppe);
   };
 
   var tristate_optionen = (function() {
@@ -554,23 +616,37 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   }
 
   function aktualisieren() {
-    var ergebnisliste = [];
-    angular.forEach(fahrerliste, function(fahrer) {
-      if (filter(fahrer))
-	ergebnisliste.push(fahrer);
+    var gefiltert = fahrerliste.filter(filter);
+
+    $scope.anzahl_fahrer = 0;
+    $scope.anzahl_gruppen = 0;
+    angular.forEach(gefiltert, function(fahrer) {
+      if (fahrer.gruppe)
+	$scope.anzahl_gruppen++;
+      else
+	$scope.anzahl_fahrer++;
     });
-    $scope.gesamt = ergebnisliste.length;
-    var gruppieren = gruppieren_funktionen[$scope.anzeige.gruppierung];
+
+    var ergebnisliste = (function(fahrerliste) {
+      var gruppieren = gruppieren_funktionen[$scope.anzeige.gruppierung];
+      if (gruppieren) {
+	if (gruppieren.group_by)
+	  return gruppieren.group_by(gefiltert);
+	else {
+	  var compare = gruppieren.compare;
+	  return group_by(gefiltert.sort(compare), compare);
+	}
+      } else
+	return [{gruppe: null, fahrerliste: fahrerliste}];
+    })(gefiltert);
+
     var sortieren = sortieren_funktionen[$scope.anzeige.reihenfolge];
-    comparators = [];
-    if (gruppieren)
-      comparators.push(gruppieren.compare);
-    if (sortieren)
-      comparators.push(sortieren);
-    ergebnisliste = ergebnisliste.sort(make_compare(comparators));
-    $scope.ergebnisliste = gruppieren ?
-      group_by(ergebnisliste, gruppieren.compare) :
-      [ergebnisliste];
+    if (sortieren) {
+      angular.forEach(ergebnisliste, function(gruppe) {
+	gruppe.fahrerliste = gruppe.fahrerliste.sort(sortieren);
+      });
+    }
+    $scope.ergebnisliste = ergebnisliste;
 
     var aggregat_berechnen = false;
     angular.forEach($scope.felder, function(feld) {
@@ -585,7 +661,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	angular.forEach($scope.felder, function(feld) {
 	  var agg = null;
 	  if (feld.aggregieren)
-	    angular.forEach(gruppe, function(fahrer) {
+	    angular.forEach(gruppe.fahrerliste, function(fahrer) {
 	      agg = feld.aggregieren(agg, $scope.$eval(feld.ausdruck, fahrer));
 	    });
 	  liste.push(agg);
@@ -642,6 +718,19 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     $scope.fold.einstellungen = !$scope.fold.einstellungen;
   }
 
+  $scope.$watch('anzeige.fahrer_gruppen', function() {
+    var fahrer_gruppen = $scope.anzeige.fahrer_gruppen;
+    $scope.anzeige.fahrer = fahrer_gruppen != 'gruppen';
+    $scope.anzeige.gruppen = fahrer_gruppen != 'fahrer';
+    if (!$scope.anzeige.fahrer)
+      $scope.anzeige.unterwegs = false;
+    angular.forEach(veranstaltung.wertungen, function(wertung, index) {
+      if (!$scope.anzeige.fahrer && !wertung.fahrer)
+	$scope.anzeige['wertung' + (index + 1)] = null;
+      else if (!$scope.anzeige.gruppe && !wertung.gruppe)
+	$scope.anzeige['wertung' + (index + 1)] = null;
+    });
+  });
   $scope.$watch('anzeige.start', function() {
     if (!$scope.anzeige.start)
       $scope.anzeige.unterwegs = false;

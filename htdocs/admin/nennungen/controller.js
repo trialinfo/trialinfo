@@ -1,11 +1,37 @@
 'use strict;'
 
-function nennungenController($scope, $sce, $http, $timeout, $q, $route, $location, veranstaltung, vorschlaege) {
+function nennungenController($scope, $sce, $http, $timeout, $q, $route, $location,
+			     veranstaltung, vorschlaege, gruppen, fahrer_hash, gruppen_hash) {
   $scope.$root.kontext(veranstaltung.wertungen[0].titel);
 
+  /* Im Fahrer-Nennformular Gruppenwertungen herausfiltern und im
+     Gruppen-Nennformular Fahrerwertungen herausfiltern.  Eine Wertung ist eine
+     Fahrerwertung, wenn startende Fahrer in der Wertung sind, und eine
+     Gruppenwertung, wenn startende Gruppen in der Wertung sind; wenn in einer
+     Wertung niemand startet, ist auch die Art der Wertung nicht definiert. */
+
+  angular.forEach(veranstaltung.wertungen, function(wertung, index) {
+    if ((gruppen ? wertung.fahrer : wertung.gruppen) && wertung.fahrer != wertung.gruppen) {
+      veranstaltung.features = veranstaltung.features.filter(
+	function(feature) {
+	  return feature != 'wertung' + (index + 1);
+	});
+    }
+  });
+
   $scope.veranstaltung = veranstaltung;
+
   var features = features_aus_liste(veranstaltung);
+  if (gruppen) {
+    /* Folgende Features deaktivieren wir für Gruppen: */
+    angular.forEach(['startnummer', 'vorname', 'geburtsdatum', 'strasse',
+		     'plz', 'wohnort', 'telefon', 'lizenznummer', 'fahrzeug',
+		     'hubraum', 'email', 'kennzeichen', 'rahmennummer'], function(feature) {
+      delete features[feature];
+    });
+  }
   $scope.features = features;
+
   $scope.definierte_klassen = [];
   angular.forEach(veranstaltung.klassen, function(klasse, index) {
     if (klasse && klasse.runden && veranstaltung.sektionen[index]) {
@@ -17,15 +43,28 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   wertungslabels_erzeugen();
 
   $scope.vorschlaege = vorschlaege;
+  $scope.gruppen = gruppen;
   $scope.enabled = {neu: true};
+
+  $scope.intern = {};
+  $scope.suche = {};
+  $scope.mitglied_suche = {};
+
+  function startnummer_sichtbar(fahrer) {
+    var startnummer = fahrer ? fahrer.startnummer : null;
+    return startnummer == null || startnummer < 0 ? null : startnummer;
+  }
 
   function fahrer_fokusieren() {
     var fahrer = $scope.fahrer;
     if (fahrer) {
       var enabled = $scope.enabled;
-      if (enabled.fahrer && features.klasse && fahrer.klasse === null)
+      if (enabled.fahrer && gruppen)
+	set_focus('#mitglied_suchbegriff', $timeout);
+      else if (enabled.fahrer && features.klasse && fahrer.klasse === null)
 	set_focus('#klasse', $timeout);
-      else if (features.startnummer && enabled.startnummer && fahrer.startnummer === null)
+      else if (features.startnummer && enabled.startnummer &&
+	       startnummer_sichtbar(fahrer) == null)
 	set_focus('#startnummer', $timeout);
       else if (enabled.fahrer) {
 	var felder = ['vorname', 'nachname', 'geburtsdatum'];
@@ -42,23 +81,12 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     $scope.fehler = undefined;
   }
 
-  function startnummer_intern() {
-    var fahrer = $scope.fahrer;
-    if (fahrer) {
-      var startnummer = fahrer.startnummer_intern;
-      if (startnummer === undefined)
-	  startnummer = fahrer.startnummer;
-      return startnummer;
-    }
-  }
-
   function url_aktualisieren() {
-    var startnummer = startnummer_intern();
-    if ($location.search().startnummer !== startnummer) {
+    var startnummer = $scope.fahrer ? $scope.fahrer.startnummer : null;
+    if ($location.search().startnummer != startnummer) {
       var search = {};
-      if (startnummer)
+      if (startnummer != null)
 	search.startnummer = startnummer;
-      $scope.ignoreRouteUpdate = true;
       $location.search(search).replace();
     }
   }
@@ -67,23 +95,22 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     if ($scope.form)
       $scope.form.$setPristine();
     if (fahrer) {
-      if (fahrer.startnummer < 0) {
-	fahrer.startnummer_intern = fahrer.startnummer;
-	fahrer.startnummer = null;
-      }
       wertungen_auffuellen(fahrer);
+      if (fahrer.fahrer)
+	fahrer.fahrer = fahrerliste_normalisieren(fahrer.fahrer);
     }
     $scope.fahrer = fahrer;
+    $scope.intern.startnummer = startnummer_sichtbar(fahrer);
     $scope.fahrer_alt = angular.copy(fahrer);
-    $scope.suchbegriff = '';
+    $scope.suche.begriff = '';
+    $scope.mitglied_suche.begriff = '';
+    $scope.mitglied_liste = [];
 
     $scope.fahrer_ist_neu = false;
     angular.extend($scope.enabled, {
-      'startnummer': fahrer && fahrer.startnummer === null,
+      'startnummer': fahrer && startnummer_sichtbar(fahrer) == null,
       'fahrer': fahrer && true,
-      'loeschen': fahrer &&
-		  (fahrer.startnummer !== null ||
-		   fahrer.startnummer_intern !== undefined),
+      'loeschen': fahrer && fahrer.startnummer != null,
       neu: true,
       verwerfen: false,
     });
@@ -92,7 +119,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   }
 
   $scope.fahrer_laden = function(startnummer, richtung) {
-    fahrer_laden($http, veranstaltung.id, startnummer, richtung).
+    fahrer_laden($http, veranstaltung.id, startnummer, richtung, null, gruppen).
       success(function(fahrer) {
 	if (Object.keys(fahrer).length) {
 	  fahrer_zuweisen(fahrer);
@@ -104,8 +131,13 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.fahrer_suchen = function() {
-    if ($scope.suchbegriff !== '') {
-      fahrer_suchen($http, veranstaltung.id,  $scope.suchbegriff).
+    if ($scope.suche.begriff !== '') {
+      var params = {
+	id: veranstaltung.id,
+	suchbegriff: $scope.suche.begriff,
+	gruppe: gruppen ? 1 : 0
+      };
+      $http.get('/api/fahrer/suchen', {'params': params}).
 	success(function(fahrerliste) {
 	  if (fahrerliste.length == 1)
 	    $scope.fahrer_laden(fahrerliste[0].startnummer);
@@ -119,7 +151,8 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.geaendert = function() {
-    return !angular.equals($scope.fahrer_alt, $scope.fahrer);
+    return !(angular.equals($scope.fahrer_alt, $scope.fahrer) &&
+	     startnummer_sichtbar($scope.fahrer_alt) == $scope.intern.startnummer);
   };
 
   $scope.$watch('fahrer.geburtsdatum', function(geburtsdatum) {
@@ -156,9 +189,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var startnummer;
     var version;
     if ($scope.fahrer_alt) {
-      startnummer = $scope.fahrer_alt.startnummer_intern;
-      if (startnummer === undefined)
-	startnummer = $scope.fahrer_alt.startnummer;
+      startnummer = $scope.fahrer_alt.startnummer;
       version = $scope.fahrer_alt.version;
     }
     if (version === undefined)
@@ -166,22 +197,31 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     var fahrer = $scope.fahrer;
     if (fahrer.start)
       fahrer.nennungseingang = true;
-    if (fahrer.startnummer_intern !== undefined) {
+
+    if ($scope.intern.startnummer != startnummer_sichtbar(fahrer)) {
       fahrer = angular.copy(fahrer);
-      if (fahrer.startnummer === null)
-	fahrer.startnummer = fahrer.startnummer_intern;
-      delete fahrer.startnummer_intern;
+      fahrer.startnummer = $scope.intern.startnummer;
     }
+
+    /* Nicht gültige Wertungen deaktivieren.  Das umfasst für Fahrer die
+       Gruppenwertungen, und für Gruppen die Fahrerwertungen. */
+    if (fahrer.start) {
+      angular.forEach(fahrer.wertungen, function(wertung, index) {
+	if (!features['wertung' + (index + 1)])
+	  wertung.aktiv = false;
+      });
+    }
+
     $scope.busy = true;
     fahrer_speichern($http, veranstaltung.id, startnummer, version, fahrer).
-      success(function(fahrer) {
-	fahrer_zuweisen(fahrer);
+      success(function(fahrer_neu) {
+	hashes_aktualisieren(fahrer, fahrer_neu);
+	fahrer_zuweisen(fahrer_neu);
 	set_focus('#suchbegriff', $timeout);
       }).
       error(function (data, status) {
 	if (status == 409 && 'error' in data && data.error.match('Duplicate'))
-	  $scope.fehler = 'Startnummer ' + $scope.fahrer.startnummer +
-			  ' existiert bereits.';
+	  $scope.fehler = 'Startnummer ' + fahrer.startnummer + ' existiert bereits.';
 	else
 	  netzwerkfehler(data, status);
       }).
@@ -211,11 +251,14 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
      * geändert, obwohl alles gleich ist.  Wir könnten hier alle Properties
      * setzen, aber das dupliziert nur den HTML-Code und ist fehleranfällig. */
     var fahrer = {
+      'gruppe': gruppen,
       'klasse': null,
       'startnummer': null,
       'wertungen': [ { aktiv: veranstaltung.wertung1_markiert } ],
       'versicherung': veranstaltung.versicherung
     };
+    if (gruppen)
+      fahrer.fahrer = [];
     fahrer_zuweisen(fahrer);
     $scope.fahrer_ist_neu = true;
     angular.extend($scope.enabled, {
@@ -235,7 +278,9 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     set_focus('#startnummer', $timeout);
   };
 
-  $scope.fahrer_name = fahrer_name;
+  $scope.fahrer_name = function(fahrer) {
+    return fahrer_name(fahrer, $scope);
+  };
   $scope.fahrer_infos = fahrer_infos;
 
   var canceler;
@@ -247,7 +292,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
        * fields which convert input fields to numbers or undefined; maybe this can be
        * fixed there instead of here. */
       if (startnummer == '')
-	startnummer = undefined;
+	startnummer = null;
       else
 	startnummer = +startnummer;
     }
@@ -311,12 +356,13 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   }
   $scope.$watch('fahrer.klasse', naechste_startnummer);
 
-  $scope.klasse_startet = function() {
+  $scope.kann_starten = function() {
     var fahrer = $scope.fahrer;
-    if (fahrer)
-      return fahrer.klasse != null &&
-	veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1];
-  };
+    return !fahrer ||
+	   fahrer.gruppe ||
+	   (fahrer.klasse != null &&
+	    veranstaltung.sektionen[veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse - 1]);
+  }
 
   $scope.osk_lizenz = function(fahrer) {
     return fahrer.lizenznummer.match(/^(IJM|JM|JMJ) ?[0-9]+$/);
@@ -332,24 +378,165 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   };
 
   $scope.loeschen = function() {
-    if (confirm('Fahrer ' + fahrer_name($scope.fahrer, $scope) + ' wirklich löschen?')) {
+    if (confirm((gruppen ? 'Gruppe' : 'Fahrer') + ' ' + fahrer_name($scope.fahrer, $scope) + ' wirklich löschen?')) {
       var fahrer_alt = $scope.fahrer_alt;
-      var startnummer = $scope.fahrer_alt.startnummer_intern;
-      if (startnummer === undefined)
-	startnummer = $scope.fahrer_alt.startnummer;
-      var version = $scope.fahrer_alt.version;
+      var startnummer = fahrer_alt.startnummer;
+      var version = fahrer_alt.version;
       fahrer_loeschen($http, veranstaltung.id, startnummer, version).
-	success(function(fahrer) {
+	success(function() {
 	  fahrer_zuweisen(undefined);
+	  hashes_aktualisieren(fahrer_alt, null);
 	  set_focus('#suchbegriff', $timeout);
 	}).
 	error(netzwerkfehler);
     }
   };
 
+  $scope.mitglied_startet = function(startnummer) {
+    var fahrer = fahrer_hash[startnummer];
+    if (!fahrer)
+      return true;
+    var wertungsklasse = veranstaltung.klassen[fahrer.klasse - 1].wertungsklasse;
+    return fahrer.start && veranstaltung.sektionen[wertungsklasse - 1];
+  };
+
+  $scope.mitglied_name = function(startnummer) {
+    var name;
+    var list = [];
+    if (startnummer >= 0)
+      list.push(startnummer);
+    var fahrer = fahrer_hash[startnummer];
+    if (fahrer) {
+      name = join(' ', fahrer.nachname, fahrer.vorname);
+      angular.forEach(fahrer.gruppen, function(startnummer) {
+	if (startnummer == $scope.fahrer.startnummer)
+	  return;
+	var gruppe = gruppen_hash[startnummer];
+	if (!gruppe)
+	  return;
+	var name = join(' ', gruppe.nachname, gruppe.vorname);
+	if (name != '')
+	  list.push(name);
+      });
+    } else {
+      name = 'Unbekannter Fahrer';
+    }
+    return name +
+	   (list.length ? ' (' + list.join(', ') + ')' : '');
+  };
+
+  $scope.mitglied_liste = [];
+
+  $scope.fahrer_entfernen = function(startnummer) {
+    $scope.mitglied_suche.begriff = '';
+
+    var fahrer = $scope.fahrer;
+    $scope.fahrer.fahrer = fahrer.fahrer.filter(function(s) {
+      return s != startnummer;
+    });
+    $scope.mitglied_liste.push(startnummer);
+    $scope.mitglied_liste = fahrerliste_normalisieren($scope.mitglied_liste);
+  };
+
+  $scope.fahrer_hinzufuegen = function(startnummer) {
+    $scope.mitglied_suche.begriff = '';
+
+    $scope.mitglied_liste = $scope.mitglied_liste.filter(function(s) {
+      return s != startnummer;
+    });
+
+    var fahrer = $scope.fahrer;
+    for (var n = 0; n < fahrer.fahrer.length; n++)
+      if (fahrer.fahrer[n] == startnummer)
+	return;
+    fahrer.fahrer.push(startnummer);
+    fahrer.fahrer = fahrerliste_normalisieren(fahrer.fahrer);
+  };
+
+  function hash_liste_normalisieren(hash, startnummern) {
+    return startnummern.sort(function(a, b) {
+      var fa = hash[a], fb = hash[b];
+      if (!fa || !fb)
+	return !fa - !fb;
+      return generic_compare(fa.nachname, fb.nachname) ||
+	     generic_compare(fa.vorname, fb.vorname) ||
+	     a - b;
+    });
+  }
+
+  function fahrerliste_normalisieren(startnummern) {
+    return hash_liste_normalisieren(fahrer_hash, startnummern);
+  }
+
+  function gruppenliste_normalisieren(startnummern) {
+    return hash_liste_normalisieren(gruppen_hash, startnummern);
+  }
+
+  $scope.mitglied_suchen = function() {
+    if ($scope.mitglied_suche.begriff !== '') {
+      var params = {
+	id: veranstaltung.id,
+	suchbegriff: $scope.mitglied_suche.begriff,
+	gruppe: 0,
+	aktiv: 1,
+      };
+      $http.get('/api/fahrer/suchen', {'params': params}).
+	success(function(fahrerliste) {
+	  $scope.mitglied_liste = fahrerliste_normalisieren(
+	    fahrerliste.map(function(fahrer) {
+	      return fahrer.startnummer;
+	    }).filter(function(startnummer) {
+	      return !$scope.fahrer.fahrer.some(function(s) {
+		return s == startnummer;
+	      });
+	    }));
+	  }).
+        error(netzwerkfehler);
+    } else {
+      delete $scope.mitglied_fahrerliste;
+    }
+  }
+
+  function hashes_aktualisieren(gruppe_alt, gruppe) {
+    if (gruppe_alt && gruppe_alt.gruppe) {
+      var hashed = gruppen_hash[gruppe_alt.startnummer];
+      if (hashed) {
+	angular.forEach(gruppe_alt.fahrer || [], function(startnummer) {
+	  var fahrer = fahrer_hash[startnummer];
+	  fahrer.gruppen = fahrer.gruppen.filter(function(startnummer) {
+	    return startnummer != gruppe_alt.startnummer;
+	  });
+	});
+	delete gruppen_hash[gruppe_alt.startnummer];
+      }
+    }
+    if (gruppe && gruppe.gruppe) {
+      var hashed = {};
+      angular.forEach(['vorname', 'nachname', 'klasse', 'geburtsdatum'], function(name) {
+	hashed[name] = gruppe[name];
+      });
+      gruppen_hash[gruppe.startnummer] = hashed;
+      angular.forEach(gruppe.fahrer || [], function(startnummer) {
+	var fahrer = fahrer_hash[startnummer];
+	fahrer.gruppen.push(gruppe.startnummer);
+	fahrer.gruppen = gruppenliste_normalisieren(fahrer.gruppen);
+      });
+    }
+  }
+
+  $scope.wertungen_aktiv = function() {
+    var fahrer = $scope.fahrer;
+    var wertungen = fahrer ? fahrer.wertungen : [];
+    for (var n = 0; n < wertungen.length; n++) {
+      if (wertungen[n] && wertungen[n].aktiv)
+	return true;
+    }
+    return false;
+  };
+
   function wertungslabels_erzeugen() {
     /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-    var accesskeys = 'aknvpmsfuäl';
+    var accesskeys = 'aknvpmsuäl' + gruppen ? 'g' : 'f';
     $scope.wertungen = [];
     angular.forEach(features.wertungen, function(wertung) {
       var bezeichnung = veranstaltung.wertungen[wertung - 1].bezeichnung || '';
@@ -395,16 +582,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   });
 
   $scope.$on('$routeUpdate', function() {
-    if ($scope.ignoreRouteUpdate) {
-      delete $scope.ignoreRouteUpdate;
-      return;
-    }
-    var intern = startnummer_intern();
-    if (intern == null)
-      intern = undefined;
-    var startnummer = $location.search().startnummer;
-    if (startnummer !== intern) {
-      if (startnummer !== undefined)
+    var startnummer = $scope.fahrer ? $scope.fahrer.startnummer : null;
+    if ($location.search().startnummer != startnummer) {
+      startnummer = $location.search().startnummer;
+      if (startnummer != null)
 	$scope.fahrer_laden(startnummer);
       else
 	fahrer_zuweisen(undefined);
@@ -413,13 +594,32 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
   $scope.$emit('$routeUpdate');
 }
 
-nennungenController.resolve = {
-  veranstaltung: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/veranstaltung',
-				      {params: $route.current.params}));
-  },
-  vorschlaege: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/veranstaltung/vorschlaege',
-				      {params: $route.current.params}));
-  }
+nennungenController.resolveFactory = function (gruppen) {
+  return {
+    veranstaltung: function($q, $http, $route) {
+      return http_request($q, $http.get('/api/veranstaltung',
+					{params: $route.current.params}));
+    },
+    vorschlaege: function($q, $http, $route) {
+      return http_request($q, $http.get('/api/veranstaltung/vorschlaege',
+					{params: $route.current.params}));
+    },
+    fahrer_hash: function($q, $http, $route) {
+      if (gruppen) {
+	var params = angular.extend({gruppen: 0}, $route.current.params);
+	return http_request($q, $http.get('/api/fahrer/hash',
+					  {params: params}));
+      }
+    },
+    gruppen_hash: function($q, $http, $route) {
+      if (gruppen) {
+	var params = angular.extend({gruppen: 1}, $route.current.params);
+	return http_request($q, $http.get('/api/fahrer/hash',
+					  {params: params}));
+      }
+    },
+    gruppen: function() {
+      return gruppen;
+    },
+  };
 };
