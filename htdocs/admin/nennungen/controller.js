@@ -358,13 +358,13 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 	var key = bezeichnung[n].toLowerCase();
 	if (accesskeys.indexOf(key) == -1) {
 	  accesskey = key;
-	  label = $sce.trustAsHtml(
-	    bezeichnung.substr(0, n) +
-	    '<span class="accesskey">' + bezeichnung[n] + '</span>' +
-	    bezeichnung.substr(n + 1));
+	  label = bezeichnung.substr(0, n) +
+		  '<span class="accesskey">' + bezeichnung[n] + '</span>' +
+		  bezeichnung.substr(n + 1);
 	  break;
 	}
       }
+      label = $sce.trustAsHtml(label);
       $scope.wertungen[wertung - 1] = {label: label, accesskey: accesskey};
     });
   }
