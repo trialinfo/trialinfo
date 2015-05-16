@@ -310,8 +310,9 @@ function veranstaltungAuswertungController($scope, $sce, $route, $location, $tim
 	list.push(ausfall[4] + ' nicht gewertet');
       if (ausser_konkurrenz)
 	list.push(ausser_konkurrenz + ' außer Konkurrenz');
-      return gesamt +
-	     (list.length ? ' (davon ' + list.join(', ') + ')' : '') + '.';
+      if (list.length)
+	gesamt += ' (davon ' + list.join(', ') + ')';
+      return gesamt ? gesamt + '.' : null;
     })();
     url_aktualisieren();
   }
