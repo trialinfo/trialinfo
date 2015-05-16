@@ -61,11 +61,11 @@ sub rang_vergleich($$$) {
 	    if !$a->{ausfall} != !$b->{ausfall};
     }
 
-    # Abfallend nach gefahrenen Sektionen: dadurch werden die Fahrer auf dann
+    # Aufsteigend nach offenen Sektionen: dadurch werden die Fahrer auf dann
     # richtig gereiht, wenn die Punkte sektionsweise statt rundenweise
     # eingegeben werden.
-    return $b->{gefahrene_sektionen} <=> $a->{gefahrene_sektionen}
-	if ($a->{gefahrene_sektionen} // 0) != ($b->{gefahrene_sektionen} // 0);
+    return $a->{offene_sektionen} <=> $b->{offene_sektionen}
+	if ($a->{offene_sektionen} // 0) != ($b->{offene_sektionen} // 0);
 
     # Aufsteigend nach Punkten
     return ($a->{punkte} // 0) <=> ($b->{punkte} // 0)
@@ -198,7 +198,7 @@ sub punkte_berechnen($$) {
 	my $punkte_pro_runde;
 	my $gesamtpunkte;
 	my $punkteverteilung;  # 0er, 1er, 2er, 3er, 4er, 5er
-	my $gefahrene_sektionen;
+	my $offene_sektionen;
 	my $sektion_ausgelassen;
 	my $letzte_begonnene_runde;
 	my $letzte_vollstaendige_runde;
@@ -206,23 +206,22 @@ sub punkte_berechnen($$) {
 	my $klasse = $fahrer->{wertungsklasse};
 	if (defined $klasse && $fahrer->{start}) {
 	    my $punkte_pro_sektion = $fahrer->{punkte_pro_sektion} // [];
-	    $gesamtpunkte = $fahrer->{zusatzpunkte};
-	    $punkteverteilung = [(0) x 6];
-	    $gefahrene_sektionen = 0;
+	    $offene_sektionen = 0;
 
 	    my $sektionen = $cfg->{sektionen}[$klasse - 1] // [];
 
 	    my $auslassen = $cfg->{punkte_sektion_auslassen} // 0;
 	    my $runden = $cfg->{klassen}[$klasse - 1]{runden};
-	    runde: for (my $runde = 1; $runde <= $runden; $runde++) {
+	    for (my $runde = 1; $runde <= $runden; $runde++) {
 		my $punkte_in_runde = $punkte_pro_sektion->[$runde - 1] // [];
 		foreach my $sektion (@$sektionen) {
 		    next if $sektionen_aus_wertung &&
 			$sektionen_aus_wertung->[$klasse - 1][$runde - 1][$sektion - 1];
 		    my $p = $punkte_in_runde->[$sektion - 1];
 		    if (defined $p) {
-			unless ($sektion_ausgelassen) {
-			    $gefahrene_sektionen++;
+			if ($sektion_ausgelassen) {
+			    $offene_sektionen++;
+			} else {
 			    $punkte_pro_runde->[$runde - 1] += $p == -1 ? $auslassen : $p;
 			    $punkteverteilung->[$p]++
 				if $p >= 0 && $p <= 5;
@@ -230,6 +229,7 @@ sub punkte_berechnen($$) {
 			}
 		    } elsif ($sektionen_aus_wertung) {
 			$sektion_ausgelassen = 1;
+			$offene_sektionen++;
 			$letzte_vollstaendige_runde = $runde - 1
 			    unless defined $letzte_vollstaendige_runde;
 		    } else {
@@ -237,13 +237,12 @@ sub punkte_berechnen($$) {
 			    unless defined $letzte_vollstaendige_runde;
 			$befahren = befahrene_sektionen($fahrer_nach_startnummer)
 			    unless defined $befahren;
-			$sektion_ausgelassen = 1
-			    if defined $befahren->[$klasse - 1][$runde - 1][$sektion - 1];
+			if (defined $befahren->[$klasse - 1][$runde - 1][$sektion - 1]) {
+			    $sektion_ausgelassen = 1;
+			    $offene_sektionen++;
+			}
 		    }
 		}
-	    }
-	    foreach my $punkte (@$punkte_pro_runde) {
-		$gesamtpunkte += $punkte;
 	    }
 	    $letzte_begonnene_runde //= 0;
 	    $letzte_vollstaendige_runde = $runden
@@ -252,11 +251,17 @@ sub punkte_berechnen($$) {
 		print STDERR "Warnung: Ergebnisse von Fahrer $fahrer->{startnummer} " .
 			     "in Runde $letzte_begonnene_runde sind unvollständig!\n";
 	    }
+
+	    $gesamtpunkte = $fahrer->{zusatzpunkte};
+	    foreach my $punkte (@$punkte_pro_runde) {
+		$gesamtpunkte += $punkte;
+	    }
 	}
 
-	unless ($gefahrene_sektionen) {
-	    $gesamtpunkte = undef;
-	    $punkteverteilung = [(undef) x 6];
+	if ($punkteverteilung) {
+	    for (my $n = 0; $n <= 5; $n++) {
+		$punkteverteilung->[$n] //= 0;
+	    }
 	}
 
 	$fahrer->{runden} = $trialtool_kompatibel ?
@@ -264,7 +269,7 @@ sub punkte_berechnen($$) {
 	$fahrer->{punkte} = $gesamtpunkte;
 	$fahrer->{punkte_pro_runde} = $punkte_pro_runde;
 	$fahrer->{punkteverteilung} = $punkteverteilung;
-	$fahrer->{gefahrene_sektionen} = $gefahrene_sektionen;
+	$fahrer->{offene_sektionen} = $offene_sektionen;
     }
 }
 
