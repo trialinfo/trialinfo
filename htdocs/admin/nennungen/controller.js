@@ -207,7 +207,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
        Gruppenwertungen, und für Gruppen die Fahrerwertungen. */
     if (fahrer.start) {
       angular.forEach(fahrer.wertungen, function(wertung, index) {
-	if (!features['wertung' + (index + 1)])
+	if (wertung && !features['wertung' + (index + 1)])
 	  wertung.aktiv = false;
       });
     }
