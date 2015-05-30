@@ -5,7 +5,7 @@
   </form>
 </p>
 <p>
-  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar"><a href="#/veranstaltung/{{veranstaltung.id}}" ng-style="veranstaltung.aktiv ? undefined : {'text-decoration': 'line-through'}" title="{{veranstaltung.aktiv ? '' : 'Veranstaltung nicht aktiv (siehe Einstellungen).'}}">{{veranstaltung_bezeichnung(veranstaltung)}}</a><br></span>
+  <span ng-repeat="veranstaltung in veranstaltungen | filter:veranstaltung_sichtbar"><a href="veranstaltung/{{veranstaltung.id}}" ng-style="veranstaltung.aktiv ? undefined : {'text-decoration': 'line-through'}" title="{{veranstaltung.aktiv ? '' : 'Veranstaltung nicht aktiv (siehe Einstellungen).'}}">{{veranstaltung_bezeichnung(veranstaltung)}}</a><br></span>
 </p>
 <p>
   <button ng-click="neue_veranstaltung()">Neue Veranstaltung</button>
@@ -18,7 +18,7 @@
   </form>
 </p>
 <p>
-  <span ng-repeat="vareihe in vareihen | filter:vareihe_sichtbar"><a href="#/vareihe/{{vareihe.vareihe}}">{{vareihe.bezeichnung}}</a><br></span>
+  <span ng-repeat="vareihe in vareihen | filter:vareihe_sichtbar"><a href="vareihe/{{vareihe.vareihe}}">{{vareihe.bezeichnung}}</a><br></span>
 </p>
 <p>
   <button ng-click="neue_vareihe()">Neue Veranstaltungsreihe</button>

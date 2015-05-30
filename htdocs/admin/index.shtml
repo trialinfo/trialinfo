@@ -11,6 +11,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 <html ng-app='application'>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <base href="/admin/">
     <title ng-bind="$root.titel">Trial-Auswertung</title>
     <style type="text/css">
       *
@@ -137,6 +138,10 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    delete $cookies.authinfo;
 	  },
 
+	  logged_in: function() {
+	    return 'authinfo' in $rootScope || 'authinfo' in $cookies;
+	  },
+
 	  verify_login: function() {
 	    var deferred = $q.defer();
 	    if ('authinfo' in $rootScope)
@@ -231,6 +236,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    controller: 'externController',
 	    templateUrl: 'extern/index.html',
 	    resolve: externController.resolve
+	  }).when('/hilfe', {
+	    templateUrl: 'hilfe/index.html',
 	  }).otherwise({
 	    redirectTo: '/login'
 	  });
@@ -257,6 +264,10 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	);
       });
 
+      application.config(function($locationProvider) {
+	$locationProvider.html5Mode(true);
+      });
+
       application.run(function($rootScope, $route, $location, $http, AuthService) {
 	$rootScope.kontext = function(kontext) {
 	  var titel = [kontext];
@@ -271,20 +282,31 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 
 	$rootScope.join = join;
 
-	$rootScope.$on('$locationChangeStart', function() {
-	    function success() {
-	    }
+	$rootScope.$on('$routeChangeStart', function(event, next) {
+	  function success() {
+	  }
 
-	    function error() {
-                $location.path('/login').replace();
-	    }
+	  function error() {
+	    /* preventDefault() funktioniert erst in neueren Angular-Versionen: */
+	    event.preventDefault();
+	    $rootScope.$evalAsync(function () {
+	      $location.path('/login').replace();
+	    });
+	  }
 
-            /* Redirect to login page if not logged in. */
-            if ($location.path() !== '/login') {
-	      AuthService.verify_login().
-		then(success, error);
-	    }
+	  /* Redirect to login page if not logged in or login no longer valid. */
+	  if ($location.path() !== '/login') {
+	    AuthService.verify_login().
+	      then(success, error);
+	  }
         });
+
+	/* Wenn wir uns auf verify_login() von oben verlassen, ist das aus
+	   irgend einem Grund zu spät; mit neueren Versionen von Angular
+	   solte der logged_in()-Check aber überflüssig werden: */
+	if ($location.path() !== '/login' && !AuthService.logged_in()) {
+	  $location.path('/login').replace();
+	}
       });
     </script>
   </head>
