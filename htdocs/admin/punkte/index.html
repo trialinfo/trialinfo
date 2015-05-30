@@ -7,7 +7,7 @@
 	  <legend>Punktevergabe</legend>
 	  <p ng-if="fahrer">
 	    {{fahrer.startnummer < 0 ? null : fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
-	    {{fahrer.nachname}} {{fahrer.vorname}} (Klasse {{fahrer.klasse}})
+	    {{fahrer.nachname}} {{fahrer.vorname}} (<span title="{{veranstaltung.klassen[fahrer.klasse - 1].bezeichnung}}">Klasse {{fahrer.klasse}}</span>)
 	  </p>
 	  <p ng-if="!fahrer.startnummer">
 	    &nbsp;
