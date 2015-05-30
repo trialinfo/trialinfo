@@ -279,9 +279,9 @@ sub fahrer_wertungen_aus_datenbank($$$;$) {
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
-	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
-	$$fahrer->{startnummer} = $row[0];
-	$$fahrer->{wertungen}[$row[1] - 1] = {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer}
+	    or next;
+	$fahrer->{wertungen}[$row[1] - 1] = {
 	    aktiv => json_bool(1),
 	    rang => $row[2],
 	    punkte => $row[3]
@@ -349,9 +349,9 @@ sub punkte_aus_datenbank($$$;$) {
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
-	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
-	$$fahrer->{startnummer} = $row[0];
-	$$fahrer->{punkte_pro_sektion}[$row[1] - 1][$row[2] - 1] = $row[3];
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer}
+	    or next;
+	$fahrer->{punkte_pro_sektion}[$row[1] - 1][$row[2] - 1] = $row[3];
     }
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	$fahrer->{punkte_pro_sektion} = []
@@ -370,9 +370,9 @@ sub runden_aus_datenbank($$$;$) {
     while (my @row = $sth->fetchrow_array) {
 	fixup_arrayref($sth, \@row);
 	my $startnummer = $row[0];
-	my $fahrer = \$fahrer_nach_startnummer->{$startnummer};
-	$$fahrer->{startnummer} = $row[0];
-	$$fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer}
+	    or next;
+	$fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
     }
     foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	$fahrer->{punkte_pro_runde} = []
@@ -453,7 +453,7 @@ sub fahrer_aus_datenbank($$;$$$$) {
 	$sql .= q{
 	    ORDER BY startnummer DESC
 	    LIMIT 1};
-    } else {
+    } elsif ($richtung > 0) {
 	if (defined $startnummer) {
 	    $sql .= q{ AND startnummer > ?};
 	    push @$args, $startnummer;
