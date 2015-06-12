@@ -48,7 +48,7 @@ Systemvoraussetzungen
    perl-DBD-MySQL, perl-CGI, perl-JSON, perl-Clone, perl-URI-Escape oder
    perl-Any-URI-Escape + perl-URI-Escape-XS, perl-Class-Accessor-Lite,
    perl-Module-Load, perl-Module-Loaded, perl-Encode-Locale, perl-IO-Zlib,
-   perl-PDF-API2.
+   perl-PDF-API2, perl-HTML-Entities-Interpolate.
 
    (Die Paketnamen weichen teilweise ab; unter Debian heißt perl-PDF-API2
    z.B. libpdf-api2-perl.)
