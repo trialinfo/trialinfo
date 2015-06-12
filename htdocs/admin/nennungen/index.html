@@ -1,15 +1,15 @@
-<h1>{{veranstaltung.wertungen[0].titel}} – Nennungen</h1>
+<h1>{{veranstaltung.wertungen[0].titel}} – {{gruppen ? 'Gruppen' : 'Fahrer'}}</h1>
 <table>
   <tr>
     <td valign="top">
       <form name="form" ng-keydown="keydown($event)">
-	<fieldset>
-	  <legend>Nennungen</legend>
+	<fieldset style="display:inline">
+	  <legend>Nennung</legend>
 	  <table>
-	    <tr ng-if="features.klasse">
+	    <tr ng-if="!gruppen && features.klasse">
 	      <th align="right"><label for="klasse" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
 	      <td>
-		<input ng-disabled="!enabled.fahrer" type="text" numeric size="2" maxlength="2" min="1" max="15" ng-model="fahrer.klasse" id="klasse" ui-validate="'klasse_gueltig($value)'">
+		<input ng-disabled="!enabled.fahrer" type="text" numeric size="2" maxlength="2" min="1" max="15" ng-model="fahrer.klasse" id="klasse">
 		<select ng-disabled="!enabled.fahrer" ng-model="fahrer.klasse" ng-options="klasse.klasse as klasse.klasse + ': ' + klasse.bezeichnung for klasse in definierte_klassen" tabindex="-1">
 		  <option value=""></option>
 		</select>
@@ -21,7 +21,7 @@
 	    <tr ng-if="features.startnummer">
 	      <th align="right"><label for="startnummer" accesskey="t">S<span class="accesskey">t</span>artnummer</label></th>
 	      <td>
-		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="fahrer.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
+		<input ng-if="features.startnummer" ng-disabled="!enabled.startnummer" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="intern.startnummer" name="startnummer" id="startnummer" ui-validate="'startnummer_gueltig($value)'">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.vorname">
@@ -31,7 +31,7 @@
 	      </td>
 	    </tr>
 	    <tr ng-if="features.nachname">
-	      <th align="right"><label for="nachname" accesskey="n"><span class="accesskey">N</span>achname</label></th>
+	      <th align="right"><label for="nachname" accesskey="n"><span ng-if="gruppen"><span class="accesskey">N</span>ame</span><span ng-if="!gruppen"><span class="accesskey">N</span>achname</label></span></th>
 	      <td>
 		<input ng-disabled="!enabled.fahrer" type="text" size="30" maxlength="30" ng-model="fahrer.nachname" id="nachname">
 	      </td>
@@ -178,7 +178,7 @@
 		    <label for="nennungseingang" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
 		</span>
 		<input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.start" id="start">
-		  <label for="start" accesskey="s" ng-style="!klasse_startet() ? {'text-decoration': 'line-through'} : {}" title="{{!klasse_startet() ? (fahrer.klasse == null ? 'Fahrer ist keiner Klasse zugewiesen.' : 'Klasse ' + fahrer.klasse + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
+		  <label for="start" accesskey="s" ng-style="!kann_starten() ? {'text-decoration': 'line-through'} : {}" title="{{!kann_starten() ? (fahrer.klasse == null ? (gruppen ? 'Gruppe' : 'Fahrer') + ' ist keiner Klasse zugewiesen.' : 'Klasse ' + fahrer.klasse + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
 		<span ng-if="features.start_morgen">
 		  <input ng-disabled="!enabled.fahrer" type="checkbox" ng-model="fahrer.start_morgen" id="start_morgen">
 		    <label for="start_morgen" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
@@ -194,6 +194,12 @@
 	      </td>
 	    </tr>
 	  </table>
+	</fieldset><br>
+	<fieldset style="display:inline" ng-if="gruppen && fahrer">
+	  <legend>Fahrer in Gruppe</legend>
+	  <span ng-repeat="startnummer in fahrer.fahrer">
+	    <a href="" ng-click="fahrer_entfernen(startnummer)" ng-style="mitglied_startet(startnummer) ? {} : {'text-decoration': 'line-through'}" title="Aus Gruppe entfernen{{mitglied_startet(startnummer) ? '' : ' (Fahrer startet nicht)'}}">{{mitglied_name(startnummer)}}</a><br>
+	  </span>
 	</fieldset>
       </form>
     </td>
@@ -202,20 +208,30 @@
 	<fieldset>
 	  <legend>Navigation</legend>
 	  <p>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'naechster')" tabindex="-1">|&lt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(null, 'naechster')" tabindex="-1">|&lt;</button>
 	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'vorheriger')" tabindex="-1">&lt;</button>
 	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'naechster')" tabindex="-1">&gt;</button>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'vorheriger')" tabindex="-1">&gt;|</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(null, 'vorheriger')" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
-	    <label for="suchbegriff" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>
-	    <input type="text" ng-disabled="geaendert()" size="20" maxlength="40" ng-model="suchbegriff" onchange="angular.element(this).scope().fahrer_suchen()" id="suchbegriff" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
+	    <label for="suchbegriff" accesskey="f" ng-if="!gruppen"><span class="accesskey">F</span>ahrer suchen:</label>
+	    <label for="suchbegriff" accesskey="g" ng-if="gruppen"><span class="accesskey">G</span>ruppe suchen:</label><br>
+	    <input type="text" ng-disabled="geaendert()" size="20" maxlength="40" ng-model="suche.begriff" onchange="angular.element(this).scope().fahrer_suchen()" id="suchbegriff" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>
 	    <span ng-repeat="fahrer in fahrerliste">
-	      <a href="" ng-click="fahrer_laden(fahrer.startnummer)" title="{{fahrer_infos(fahrer, this)}}">{{fahrer_name(fahrer, this)}}</a><br>
+	      <a href="" ng-click="fahrer_laden(fahrer.startnummer)" title="{{fahrer_infos(fahrer, this)}}">{{fahrer_name(fahrer)}}</a><br>
 	    </span>
-	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine Fahrer gefunden.</span>
+	    <span ng-if="fahrerliste != null && fahrerliste.length == 0">Keine {{gruppen ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
+	  </p>
+	  <p ng-if="gruppen && fahrer">
+	    <label for="mitglied_suchbegriff">Fahrer suchen:</label><br>
+	    <input type="text" ng-disabled="!fahrer" size="20" maxlength="40" ng-model="mitglied_suche.begriff" onchange="angular.element(this).scope().mitglied_suchen()" id="mitglied_suchbegriff" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off">
+	  </p>
+	  <p>
+	    <span ng-repeat="startnummer in mitglied_liste">
+	      <a href="" ng-click="fahrer_hinzufuegen(startnummer)" ng-style="mitglied_startet(startnummer) ? {} : {'text-decoration': 'line-through'}" title="Zu Gruppe hinzufügen{{mitglied_startet(startnummer) ? '' : ' (Fahrer startet nicht)'}}">{{mitglied_name(startnummer)}}</a><br>
+	    </span>
 	  </p>
 	  <p>
 	    <span style="color: red" ng-if="fehler">{{fehler}}<br></span>
@@ -229,13 +245,14 @@
 	    <span ng-if="!startnummer_belegt.startnummer && startnummer_belegt.naechste_startnummer">
 	      Nächste freie Startnummer in Klasse: {{startnummer_belegt.naechste_startnummer}}<br>
 	    </span>
-	    <span ng-if="fahrer.start && !klasse_startet()" style="color: red">
+	    <span ng-if="fahrer.start && !kann_starten()" style="color: red">
 	      <span ng-if="fahrer.klasse != null">
-		Für Klasse {{fahrer.klasse}} sind keine zu befahrenen Sektionen<br>
+		Für Klasse {{fahrer.klasse}} sind keine zu befahrenen Runden und Sektionen<br>
 		ausgewählt, die Klasse startet daher nicht.
 	      </span>
 	      <span ng-if="fahrer.klasse == null">
-		Fahrer ist keiner Klasse zugewiesen,<br>und kann daher nicht starten.
+		Fahrer ist keiner Klasse zugewiesen,<br>
+		und kann daher nicht gewertet werden.
 	      </span>
 	    </span>
 	    <span ng-if="veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014'" style="color: red">
@@ -281,9 +298,14 @@
 	    <button type="button" ng-disabled="!(geaendert() || enabled.verwerfen) || busy" ng-click="verwerfen()" tabindex="-1">Verwerfen</button>
 	  </p>
 	  <p>
-	    <button type="button" ng-disabled="geaendert() || !enabled.neu" ng-click="neuer_fahrer()" accesskey="u" tabindex="-1">Ne<span class="accesskey">u</span>er Fahrer</button><br>
-	    <button type="button" ng-disabled="!enabled.fahrer || enabled.startnummer" ng-click="startnummer_aendern()" accesskey="ä" tabindex="-1">Startnummer <span class="accesskey">ä</span>ndern</button><br>
-	    <button type="button" ng-disabled="geaendert() || !enabled.loeschen" ng-disabled="!enabled.fahrer" ng-click="loeschen()" accesskey="l" tabindex="-1">Fahrer <span class="accesskey">l</span>öschen</button>
+	    <button type="button" ng-disabled="geaendert() || !enabled.neu" ng-click="neuer_fahrer()" accesskey="u" tabindex="-1">
+	      <span ng-if="!gruppen">Ne<span class="accesskey">u</span>er Fahrer</span>
+	      <span ng-if="gruppen">Ne<span class="accesskey">u</span>e Gruppe</button></span><br>
+	    <span ng-if="features.startnummer">
+	      <button type="button" ng-disabled="!enabled.fahrer || enabled.startnummer" ng-click="startnummer_aendern()" accesskey="ä" tabindex="-1">Startnummer <span class="accesskey">ä</span>ndern</button><br>
+	    </span>
+	    <button type="button" ng-disabled="geaendert() || !enabled.loeschen" ng-disabled="!enabled.fahrer" ng-click="loeschen()" accesskey="l" tabindex="-1">
+	      {{gruppen ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
 	  </p>
 	</fieldset>
       </form>

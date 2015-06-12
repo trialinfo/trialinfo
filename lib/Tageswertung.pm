@@ -115,6 +115,7 @@ sub tageswertung(@) {
 	klassenfarben => $Auswertung::klassenfarben,
 	@_,
     );
+    my $features = $args{features};
 
     my $ausfall = {
 	3 => "ausgefallen",
@@ -176,7 +177,9 @@ sub tageswertung(@) {
 		if defined $fahrer->{wertungen}[$args{wertung} - 1]{punkte};
 	}
 
-	my $ausfall_fmt = "c" . (5 + $vierpunktewertung + $stechen);
+	my $ausfall_fmt = "c" . (1 + ($features->{einzelpunkte} ?
+				        0 :
+					4 + $vierpunktewertung + exists($features->{spalte5er}) + $stechen));
 
 	if ($RenderOutput::html && exists $args{klassenfarben}{$klasse}) {
 	    $farbe = "<span style=\"color:$args{klassenfarben}{$klasse}\">◼</span>";
@@ -186,14 +189,25 @@ sub tageswertung(@) {
 	    if $RenderOutput::html;
 	doc_h3 "$args{cfg}{klassen}[$klasse - 1]{bezeichnung}";
 	push @$format, "r3", "r3", "l$namenlaenge";
-	push @$header, [ "$farbe", "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";
+	push @$header, [ "$farbe", "c" ];
+	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
+		if $features->{startnummer};
+	push @$header, "Name";
 	foreach my $spalte (@{$args{spalten}}) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
 	}
 	for (my $n = 0; $n < $runden; $n++) {
-	    push @$format, "r2";
-	    push @$header, [ "R" . ($n + 1), "r1", "title=\"Runde " . ($n + 1) . "\"" ];
+	    if ($features->{einzelpunkte}) {
+		foreach my $sektion (@{$args{cfg}{sektionen}[$klasse - 1]}) {
+		    push @$format, "r2";
+		    push @$header, [ $sektion, "r1", "style=\"width:1.2em\" title=\"Sektion $sektion\"" ];
+		}
+	    }
+	    if ($runden > 1) {
+		push @$format, "r2";
+		push @$header, [ "R" . ($n + 1), "r1", "title=\"Runde " . ($n + 1) . "\"" ];
+	    }
 	}
 	if ($zusatzpunkte) {
 	    push @$format, "r2";
@@ -201,14 +215,20 @@ sub tageswertung(@) {
 	}
 	push @$format, "r3";
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
-	push @$format, "r2", "r2", "r2", "r2";
-	push @$header, [ "0S", "r1", "title=\"Nuller\"" ];
-	push @$header, [ "1S", "r1", "title=\"Einser\"" ];
-	push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
-	push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
-	if ($vierpunktewertung) {
-	    push @$format, "r2";
-	    push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
+	unless ($features->{einzelpunkte}) {
+	    push @$format, "r2", "r2", "r2", "r2";
+	    push @$header, [ "0S", "r1", "title=\"Nuller\"" ];
+	    push @$header, [ "1S", "r1", "title=\"Einser\"" ];
+	    push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
+	    push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
+	    if ($vierpunktewertung) {
+		push @$format, "r2";
+		push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
+	    }
+	    if ($features->{spalte5er}) {
+		push @$format, "r2";
+		push @$header, [ "5S", "r1", "title=\"Fünfer\"" ];
+	    }
 	}
 	if ($stechen) {
 	    push @$format, "r2";
@@ -222,47 +242,49 @@ sub tageswertung(@) {
 
 	if ($args{nach_relevanz} && $RenderOutput::html) {
 	    # Welche 0er, 1er, ... sind für den Rang relevant?
-	    my $sn_alt = 0;
-	    my $rn_alt = 0;
 	    for (my $n = 0; $n < @$fahrer_in_klasse - 1; $n++) {
 		my $a = $fahrer_in_klasse->[$n];
 		my $b = $fahrer_in_klasse->[$n + 1];
 
-		my $sn = 0;
+		next
+		    unless defined $a->{punkte} && defined $b->{punkte};
+
 		if ($a->{punkte} == $b->{punkte} &&
 		    !$a->{stechen} && !$b->{stechen}) {
-		    for (my $m = 0; $m < 5; $m++) {
-			$sn++;
-			last unless $a->{punkteverteilung}[$m] ==
-				    $b->{punkteverteilung}[$m];
-		    }
-		}
+		    my $m;
 
-		my $rn = 0;
-		if ($sn == 5) {
-		    my $ra = $a->{punkte_pro_runde};
-		    my $rb = $b->{punkte_pro_runde};
-
-		    if ($args{cfg}{wertungsmodus} == 1) {
-			for (my $m = 0; $m < $runden; $m++) {
-			    $rn++;
-			    last unless $ra->[$m] == $rb->[$m];
-			}
-		    } elsif ($args{cfg}{wertungsmodus} == 2) {
-			for (my $m = $runden - 1; $m >= 0; $m--) {
-			    $rn++;
-			    last unless $ra->[$m] == $rb->[$m];
+		    for ($m = 0; $m < 5; $m++) {
+			if ($a->{punkteverteilung}[$m] != $b->{punkteverteilung}[$m]) {
+			    $a->{punkteverteilung_wichtig}[$m] = 1;
+			    $b->{punkteverteilung_wichtig}[$m] = 1;
+			    last;
 			}
 		    }
-		}
 
-		$a->{sn} = max($sn_alt, $sn);
-		$a->{rn} = max($rn_alt, $rn);
-		$sn_alt = $sn;
-		$rn_alt = $rn;
+		    if ($m == 5) {
+			my $ra = $a->{punkte_pro_runde};
+			my $rb = $b->{punkte_pro_runde};
+
+			if ($args{cfg}{wertungsmodus} == 1) {
+			    for (my $m = 0; $m < $runden; $m++) {
+				if ($ra->[$m] != $rb->[$m]) {
+				    $a->{runde_wichtig}[$m] = 1;
+				    $b->{runde_wichtig}[$m] = 1;
+				    last;
+				}
+			    }
+			} elsif ($args{cfg}{wertungsmodus} == 2) {
+			    for (my $m = $runden - 1; $m >= 0; $m--) {
+				if ($ra->[$m] != $rb->[$m]) {
+				    $a->{runde_wichtig}[$m] = 1;
+				    $b->{runde_wichtig}[$m] = 1;
+				    last;
+				}
+			    }
+			}
+		    }
+		}
 	    }
-	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{sn} = $sn_alt;
-	    $fahrer_in_klasse->[@$fahrer_in_klasse - 1]{rn} = $rn_alt;
 	}
 
 	foreach my $fahrer (@$fahrer_in_klasse) {
@@ -272,45 +294,55 @@ sub tageswertung(@) {
 	    } else {
 		push @$row, "";
 	    }
-	    push @$row, $fahrer->{startnummer};
+	    push @$row, $fahrer->{startnummer}
+		if $features->{startnummer};
 	    push @$row, [ $fahrer->{nachname} . " " . $fahrer->{vorname}, 'l', 'style="padding-right:1em"' ];
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
 	    }
 	    for (my $n = 0; $n < $runden; $n++) {
-		my $punkte;
-		my $fmt;
-		my $class;
+		if ($features->{einzelpunkte}) {
+		    my $punkte_pro_runde = $fahrer->{punkte_pro_sektion}[$n];
 
-		if (punkte_in_runde($fahrer->{punkte_pro_sektion}[$n])) {
-		    $punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
-		    if ($n >= $fahrer->{runden} && $RenderOutput::html) {
-			push @$class, "incomplete";
+		    foreach my $sektion (@{$args{cfg}{sektionen}[$klasse - 1]}) {
+			my $p = $punkte_pro_runde->[$sektion - 1];
+			$p = '-'
+			    if !defined $p && $fahrer->{ausfall} != 0;
+			push @$row, [ $p, "r1", "class=\"info\"" ];
 		    }
-		    if ($args{alle_punkte}) {
-			my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
-			push @$fmt, "title=\"$punkte_pro_sektion\"";
-		    }
-		} elsif ($fahrer->{ausfall}) {
-		    $punkte = "-";
 		}
 
-		if (!defined $fahrer->{rn} ||
-		    ($args{cfg}{wertungsmodus} == 0 ||
-		     ($args{cfg}{wertungsmodus} == 1 && $n >= $fahrer->{rn}) ||
-		     ($args{cfg}{wertungsmodus} == 2 && $n < $runden - $fahrer->{rn}) ||
-		     $fahrer->{ausfall} != 0)) {
-		    push @$class, "info";
-		} else {
-		    push @$class, "info2";
-		}
+		if ($runden > 1) {
+		    my $punkte;
+		    my $fmt;
+		    my $class;
 
-		push @$fmt, "class=\"" . join(" ", @$class) . "\""
-		    if $class;
-		if ($fmt) {
-		    push @$row, [ $punkte, "r1", join(" ", @$fmt) ];
-		} else {
-		    push @$row, $punkte;
+		    if (punkte_in_runde($fahrer->{punkte_pro_sektion}[$n])) {
+			$punkte = $fahrer->{punkte_pro_runde}[$n] // "-";
+			if ($n >= $fahrer->{runden} && $RenderOutput::html) {
+			    push @$class, "incomplete";
+			}
+			if ($args{alle_punkte}) {
+			    my $punkte_pro_sektion = punkte_pro_sektion($fahrer, $n, $args{cfg});
+			    push @$fmt, "title=\"$punkte_pro_sektion\"";
+			}
+		    } elsif ($fahrer->{ausfall}) {
+			$punkte = "-";
+		    }
+
+		    if ($fahrer->{ausfall} != 0 || !$fahrer->{runde_wichtig}[$n]) {
+			push @$class, "info";
+		    } else {
+			push @$class, "info2";
+		    }
+
+		    push @$fmt, "class=\"" . join(" ", @$class) . "\""
+			if $class;
+		    if ($fmt) {
+			push @$row, [ $punkte, "r1", join(" ", @$fmt) ];
+		    } else {
+			push @$row, $punkte;
+		    }
 		}
 	    }
 	    push @$row, $fahrer->{zusatzpunkte} || ""
@@ -326,11 +358,20 @@ sub tageswertung(@) {
 		push @$row, [ join(", ", @details), $ausfall_fmt ];
 	    } else {
 		push @$row, $fahrer->{punkte} // "";
-		for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
-		    if ($n < ($fahrer->{sn} // -1)) {
-			push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info2\"" ];
-		    } else {
-			push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info\"" ];
+		unless ($features->{einzelpunkte}) {
+		    for (my $n = 0; $n < 4 + $vierpunktewertung; $n++) {
+			if ($fahrer->{punkteverteilung_wichtig}[$n]) {
+			    push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info2\"" ];
+			} else {
+			    push @$row, [ $fahrer->{punkteverteilung}[$n], "r", "class=\"info\"" ];
+			}
+		    }
+		    if ($features->{spalte5er}) {
+			if ($fahrer->{punkteverteilung_wichtig}[5]) {
+			    push @$row, [ $fahrer->{punkteverteilung}[5], "r", "class=\"info2\"" ];
+			} else {
+			    push @$row, [ $fahrer->{punkteverteilung}[5], "r", "class=\"info\"" ];
+			}
 		    }
 		}
 		if ($stechen) {

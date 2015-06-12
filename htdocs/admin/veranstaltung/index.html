@@ -1,12 +1,13 @@
 <h1>{{veranstaltung.wertungen[0].titel}}</h1>
-<a href="#/veranstaltung/{{veranstaltung.id}}/auswertung">Auswertung</a><br>
-<a href="#/veranstaltung/{{veranstaltung.id}}/liste">Fahrerliste</a> (<a href="#/veranstaltung/{{veranstaltung.id}}/liste?unterwegs">Fahrer auf der Strecke</a>)<br>
+<a href="veranstaltung/{{veranstaltung.id}}/auswertung">Auswertung</a><br>
+<a href="veranstaltung/{{veranstaltung.id}}/liste">Fahrerliste</a> (<a href="veranstaltung/{{veranstaltung.id}}/liste?unterwegs">Fahrer auf der Strecke</a>)<br>
 <br>
-<a href="#/veranstaltung/{{veranstaltung.id}}/nennungen">Nennungen</a><br>
-<a href="#/veranstaltung/{{veranstaltung.id}}/punkte">Punktevergabe</a><br>
+<a href="veranstaltung/{{veranstaltung.id}}/fahrer">Fahrer</a><br>
+<a href="veranstaltung/{{veranstaltung.id}}/gruppen">Gruppen</a><br>
+<a href="veranstaltung/{{veranstaltung.id}}/punkte">Punktevergabe</a><br>
 <br>
-<a href="#/veranstaltung/{{veranstaltung.id}}/einstellungen">Einstellungen</a><br>
-<a href="#/veranstaltung/{{veranstaltung.id}}/sektionen">Sektionen aus der Wertung</a><br>
+<a href="veranstaltung/{{veranstaltung.id}}/einstellungen">Einstellungen</a><br>
+<a href="veranstaltung/{{veranstaltung.id}}/sektionen">Sektionen aus der Wertung</a><br>
 <br>
 <a ng-if="!fold.zuruecksetzen" href="" ng-click="$parent.fold.zuruecksetzen = true">↓ Zurücksetzen</a>
 <a ng-if="fold.zuruecksetzen" href="" ng-click="$parent.fold.zuruecksetzen = false">↑ Zurücksetzen</a><br>

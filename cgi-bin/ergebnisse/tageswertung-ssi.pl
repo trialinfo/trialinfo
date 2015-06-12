@@ -259,7 +259,8 @@ tageswertung cfg => $cfg,
 	     nach_relevanz => $nach_relevanz,
 	     @klassen ? (klassen => \@klassen) : (),
 	     statistik_gesamt => 1,
-	     statistik_pro_klasse => 0;
+	     statistik_pro_klasse => 0,
+	     features => $features;
 
 print "<p>Letzte Änderung: $mtime</p>\n"
     if defined $mtime;

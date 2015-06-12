@@ -142,7 +142,11 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     }
     for (var wertung = 1; wertung <= 4; wertung++)
       if (!veranstaltung.wertungen[wertung - 1])
-	veranstaltung.wertungen[wertung - 1] = {};
+	veranstaltung.wertungen[wertung - 1] = {
+	    titel: null,
+	    subtitel: null,
+	    bezeichnung: null,
+	};
 
     if (veranstaltung.datum === undefined)
       veranstaltung.datum = $scope.$eval('heute | date:"yyyy-MM-dd"', {heute: Date.now()});

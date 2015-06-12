@@ -6,8 +6,8 @@
 	<fieldset>
 	  <legend>Punktevergabe</legend>
 	  <p ng-if="fahrer">
-	    {{fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
-	    {{fahrer.nachname}} {{fahrer.vorname}} (Klasse {{fahrer.klasse}})
+	    {{fahrer.startnummer < 0 ? null : fahrer.startnummer}} <span ng-bind-html="klassensymbol()"></span>
+	    {{fahrer.nachname}} {{fahrer.vorname}} (<span ng-if="!fahrer.gruppe" title="{{veranstaltung.klassen[fahrer.klasse - 1].bezeichnung}}">Klasse {{fahrer.klasse}}</span><span ng-if="fahrer.gruppe">Gruppe</span>)
 	  </p>
 	  <p ng-if="!fahrer.startnummer">
 	    &nbsp;
@@ -18,24 +18,24 @@
 	      <table>
 		<tr>
 		  <th class="punktespalte"></th>
-		  <th class="punktespalte" ng-repeat="sektion in veranstaltung.sektionen[wertungsklasse - 1]"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
+		  <th class="punktespalte" ng-repeat="sektion in sektionsliste()"><span title="Sektion {{sektion}}">{{sektion}}</span></th>
 		</tr>
-		<tr ng-repeat="runde in rundenliste(wertungsklasse)">
+		<tr ng-repeat="runde in rundenliste()">
 		  <th>
 		    <label for="punkte_{{runde}}_{{veranstaltung.sektionen[wertungsklasse - 1][0]}}" title="Runde {{runde}}" accesskey="{{runde}}">
 		      R<span class="accesskey">{{runde}}</span>
 		    </label>
 		  </th>
-		  <td ng-repeat="sektion in veranstaltung.sektionen[wertungsklasse - 1]" align="center">
-		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet()" punkte id="punkte_{{runde}}_{{sektion}}" style="text-align:center" tab-to="punkte_tab_to(runde, $index)">
+		  <td ng-repeat="sektion in sektionsliste()" align="center">
+		    <input ng-if="!sektion_aus_wertung[wertungsklasse - 1][runde - 1][sektion - 1]" type="text" size="1" maxlength="1" ng-model="fahrer.punkte_pro_sektion[runde - 1][sektion - 1]" ng-disabled="!fahrer_startet() || fahrer.gruppe" punkte id="punkte_{{runde}}_{{sektion}}" style="text-align:center" tab-to="punkte_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
 		    <span ng-if="fahrer.start" title="Runde {{runde}}">{{fahrer.punkte_pro_runde[runde - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
-	      <p ng-if="fahrer && !startende_klassen[wertungsklasse - 1]" style="color: red">
-		Für Klasse {{wertungsklasse}} sind keine zu befahrenen Sektionen<br>
+	      <p ng-if="fahrer && !fahrer_startet()" style="color: red">
+		Für Klasse {{wertungsklasse}} sind keine zu befahrenen Runden und Sektionen<br>
 		ausgewählt, die Klasse startet daher nicht.
 	      </p>
 	    </fieldset>
@@ -53,7 +53,7 @@
 		<td>
 		  <input type="text" size="3" ng-model="fahrer.punkte" disabled="disabled">
 		    <span ng-if="fahrer.start" style="font-weight:bold">
-		      &nbsp; (<span ng-repeat="h in fahrer.punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
+		    &nbsp; (<span ng-repeat="h in fahrer.punkteverteilung track by $index"><span ng-if="veranstaltung.vierpunktewertung || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
 		</td>
 	      </tr>
@@ -111,10 +111,10 @@
 	<fieldset>
 	  <legend>Navigation</legend>
 	  <p>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'naechster')" tabindex="-1">|&lt;</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(null, 'naechster')" tabindex="-1">|&lt;</button>
 	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'vorheriger')" tabindex="-1">&lt;</button>
 	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(fahrer.startnummer, 'naechster')" tabindex="-1">&gt;</button>
-	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(0, 'vorheriger')" tabindex="-1">&gt;|</button>
+	    <button type="button" ng-disabled="geaendert()" ng-click="fahrer_laden(null, 'vorheriger')" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
 	    <label for="suchbegriff" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>

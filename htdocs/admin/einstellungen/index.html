@@ -26,11 +26,11 @@
       </tr>
       <tr>
 	<th align="right"><label for="titel">Titel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].titel" id="titel" name="titel"></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].titel" id="titel" name="titel" nullable></td>
       </tr>
       <tr>
 	<th align="right"><label for="subtitel">Subtitel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].subtitel" id="subtitel"></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="veranstaltung.wertungen[0].subtitel" id="subtitel nullable"></td>
       </tr>
       <tr>
 	<th align="right"><label for="datum">Datum</label></th>
@@ -90,19 +90,19 @@
 	  <tr>
 	    <th align="right"><label for="wertung{{$index + 1}}_titel">Titel</label></th>
 	    <td>
-	      <input type="text" size="40" maxlength="70" ng-model="wertung.titel" id="wertung{{$index + 1}}_titel">
+	      <input type="text" size="40" maxlength="70" ng-model="wertung.titel" id="wertung{{$index + 1}}_titel" nullable>
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right"><label for="wertung{{$index + 1}}_subtitel">Subtitel</label></th>
 	    <td>
-	      <input type="text" size="40" maxlength="70" ng-model="wertung.subtitel" id="wertung{{$index + 1}}_subtitel">
+	      <input type="text" size="40" maxlength="70" ng-model="wertung.subtitel" id="wertung{{$index + 1}}_subtitel" nullable>
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right"><label for="wertung{{$index + 1}}_bezeichnung">Bezeichnung</label></th>
 	    <td>
-	      <input type="text" size="20" maxlength="20" ng-model="wertung.bezeichnung" id="wertung{{$index + 1}}_bezeichnung">
+	      <input type="text" size="20" maxlength="20" ng-model="wertung.bezeichnung" id="wertung{{$index + 1}}_bezeichnung" nullable>
 	    </td>
 	  </tr>
 	</table>
@@ -223,11 +223,11 @@
     </table>
   </fieldset><br>
   <fieldset style="display:inline">
-    <legend>Nennformular</legend>
+    <legend>Fahrer und Gruppen</legend>
     <fieldset style="display:inline">
       <legend>Sichtbare Felder</legend>
 	<p>
-	  <input type="checkbox" ng-model="features.startnummer" id="feature_startnummer" disabled="disabled"><label for="feature_startnummer">Startnummer</label><br>
+	  <input type="checkbox" ng-model="features.startnummer" id="feature_startnummer"><label for="feature_startnummer">Startnummer</label><br>
 	  <input type="checkbox" ng-model="features.klasse" id="feature_klasse" disabled="disabled"><label for="feature_klasse">Klasse</label><br>
 	  <input type="checkbox" ng-model="features.nachname" id="feature_nachname" disabled="disabled"><label for="feature_nachname">Nachname</label><br>
 	  <input type="checkbox" ng-model="features.vorname" id="feature_vorname" disabled="disabled"><label for="feature_vorname">Vorname</label><br>
@@ -281,6 +281,16 @@
 	  <option value="4">Tagesversicherung</option>
 	</select>.</label>
       </p>
+    </fieldset>
+  </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Auswertung</legend>
+    <fieldset style="display:inline">
+      <legend>Zusätzliche Informationen</legend>
+	<p>
+	  <input type="checkbox" ng-model="features.einzelpunkte" id="feature_einzelpunkte"><label for="feature_einzelpunkte">Einzelpunkte statt Punkteverteilung</label><br>
+	  <input type="checkbox" ng-model="features.spalte5er" id="feature_spalte5er"><label for="feature_spalte5er">Spalte für Fünfer in Punkteverteilung</label><br>
+	</p>
     </fieldset>
   </fieldset>
   <p>

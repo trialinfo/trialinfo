@@ -11,12 +11,15 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 <html ng-app='application'>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <base href="/admin/">
     <title ng-bind="$root.titel">Trial-Auswertung</title>
     <style type="text/css">
       *
       {
       font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
       }
+
+      body { background-color:white; }
 
       span.accesskey { text-decoration:underline; }
       .punktespalte { width:2em; }
@@ -36,10 +39,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 
     <script src="../js/angular.js"></script>
     <script src="../js/angular-route.js"></script>
+    <script src="../js/angular-cookies.js"></script>
     <script src="../js/validate.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="directives.js"></script>
     <script src="api.js"></script>
+    <script src="login/controller.js"></script>
     <script src="main/controller.js"></script>
     <script src="veranstaltung/controller.js"></script>
     <script src="nennungen/controller.js"></script>
@@ -68,7 +73,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       SYNC_TARGET = true;
 <!--#endif -->
 
-      var application = angular.module('application', ['ngRoute', 'ui.validate']);
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'ui.validate']);
 
       application.directive('isoDate', isoDateDirective);
       application.directive('isoTime', isoTimeDirective);
@@ -82,6 +87,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.directive('autofocus', autofocusDirective);
       application.directive('tabTo', tabTo);
 
+      application.controller('loginController', loginController);
       application.controller('mainController', mainController);
       application.controller('veranstaltungController', veranstaltungController);
       application.controller('nennungenController', nennungenController);
@@ -93,22 +99,104 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.controller('externController', externController);
       application.controller('syncController', syncController);
 
+      application.factory('AuthService', function($http, $cookies, $rootScope, $q) {
+	function store_login(username, password) {
+	  $rootScope.authinfo = {
+	    username: username,
+	    password: password
+	  };
+	  var authinfo = btoa(username + ':' + password);
+	  $http.defaults.headers.common.Authorization = 'Basic ' + authinfo;
+	  $cookies.authinfo = authinfo;
+	}
+
+	return {
+	  login: function(username, password) {
+	    var config = {
+	      headers: {
+		Authorization: 'Basic ' + btoa(username + ':' + password)
+	      }
+	    };
+	    var deferred = $q.defer();
+	    $http.get('/api/null', config).
+	      success(function(data, status) {
+		if (status == 200) {
+		  store_login(username, password);
+		  deferred.resolve();
+		} else
+		  deferred.reject();
+	      }).
+	      error(function() {
+		deferred.reject();
+	      });
+	    return deferred.promise;
+	  },
+
+	  logout: function() {
+	    delete $rootScope.authinfo;
+	    delete $http.defaults.headers.common.Authorization;
+	    delete $cookies.authinfo;
+	  },
+
+	  logged_in: function() {
+	    return 'authinfo' in $rootScope || 'authinfo' in $cookies;
+	  },
+
+	  verify_login: function() {
+	    var deferred = $q.defer();
+	    if ('authinfo' in $rootScope)
+	      deferred.resolve();
+	    else if ('authinfo' in $cookies) {
+	      var split = atob($cookies.authinfo).split(':');
+	      store_login(split[0], split[1]);
+
+	      function success() {
+		deferred.resolve();
+	      }
+
+	      var AuthService = this;
+	      function error() {
+		AuthService.logout();
+		deferred.reject();
+	      }
+
+	      this.login(split[0], split[1]).
+		then(success, error);
+	    } else
+	      deferred.reject();
+	    return deferred.promise;
+	  }
+	};
+      });
+
       application.config(function($routeProvider) {
-	$routeProvider.
-	  when('/', {
+	$routeProvider
+	  .when('/login', {
+	    titel: 'Anmeldung',
+	    controller: 'loginController',
+	    templateUrl: 'login/index.html',
+	    hideMenus: true
+	  }).when('/', {
 	    titel: 'Trial-Auswertung',
 	    controller: 'mainController',
 	    templateUrl: 'main/index.html',
-	    resolve: mainController.resolve
+	    resolve: mainController.resolve,
+	    hideMenus: true
 	  }).when('/veranstaltung/:id', {
 	    controller: 'veranstaltungController',
 	    templateUrl: 'veranstaltung/index.html',
 	    resolve: veranstaltungController.resolve
-	  }).when('/veranstaltung/:id/nennungen', {
-	    titel: 'Nennungen',
+	  }).when('/veranstaltung/:id/fahrer', {
+	    titel: 'Fahrer',
 	    controller: 'nennungenController',
 	    templateUrl: 'nennungen/index.html',
-	    resolve: nennungenController.resolve,
+	    resolve: nennungenController.resolveFactory(false),
+	    reloadOnSearch: false
+	  }).when('/veranstaltung/:id/gruppen', {
+	    titel: 'Gruppen',
+	    controller: 'nennungenController',
+	    templateUrl: 'nennungen/index.html',
+	    resolve: nennungenController.resolveFactory(true),
 	    reloadOnSearch: false
 	  }).when('/veranstaltung/:id/punkte', {
 	    titel: 'Punktevergabe',
@@ -154,10 +242,39 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    controller: 'externController',
 	    templateUrl: 'extern/index.html',
 	    resolve: externController.resolve
+	  }).when('/hilfe', {
+	    templateUrl: 'hilfe/index.html',
 	  }).otherwise({
-	    redirectTo: '/'
+	    redirectTo: '/login'
 	  });
-      }).run(function($rootScope, $route) {
+      });
+
+      application.config(function($httpProvider) {
+	$httpProvider.responseInterceptors.push(
+	  function($location, $q) {
+	    function success(response) {
+	      return response;
+	    }
+
+	    function error(response) {
+              if (response.status === 401) {
+		$location.path('/login').replace();
+	      }
+	      return $q.reject(response);
+            }
+
+	    return function(promise) {
+	      return promise.then(success, error);
+	    };
+	  }
+	);
+      });
+
+      application.config(function($locationProvider) {
+	$locationProvider.html5Mode(true);
+      });
+
+      application.run(function($rootScope, $route, $location, $http, AuthService) {
 	$rootScope.kontext = function(kontext) {
 	  var titel = [kontext];
 	  if ($route.current.titel)
@@ -170,6 +287,32 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	});
 
 	$rootScope.join = join;
+
+	$rootScope.$on('$routeChangeStart', function(event, next) {
+	  function success() {
+	  }
+
+	  function error() {
+	    /* preventDefault() funktioniert erst in neueren Angular-Versionen: */
+	    event.preventDefault();
+	    $rootScope.$evalAsync(function () {
+	      $location.path('/login').replace();
+	    });
+	  }
+
+	  /* Redirect to login page if not logged in or login no longer valid. */
+	  if ($location.path() !== '/login') {
+	    AuthService.verify_login().
+	      then(success, error);
+	  }
+        });
+
+	/* Wenn wir uns auf verify_login() von oben verlassen, ist das aus
+	   irgend einem Grund zu spät; mit neueren Versionen von Angular
+	   solte der logged_in()-Check aber überflüssig werden: */
+	if ($location.path() !== '/login' && !AuthService.logged_in()) {
+	  $location.path('/login').replace();
+	}
       });
     </script>
   </head>

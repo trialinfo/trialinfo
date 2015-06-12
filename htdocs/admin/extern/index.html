@@ -16,7 +16,7 @@
       <tr ng-if="einstellungen.operation != 'import-remote' && einstellungen.operation != 'import-file'">
 	<th align="right"><label for="tag">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung.titel for veranstaltung in veranstaltungen" id="tag">
+	  <select ng-model="einstellungen.veranstaltung" ng-options="veranstaltung as veranstaltung_bezeichnung(veranstaltung) for veranstaltung in veranstaltungen" id="tag">
 	  </select>
 	</td>
       </tr>
@@ -81,7 +81,7 @@
       <tr>
 	<th align="right"><label for="tra_datei">tra-Datei</label></th>
 	<td>
-	  <input type="file" id="tra_datei" ng-disabled="busy" ng-model="einstellungen.tra_datei" required>
+	  <input type="file" id="tra_datei" ng-disabled="busy" ng-model="einstellungen.tra_datei">
 	</td>
       </tr>
       <tr>
@@ -95,13 +95,13 @@
       <tr>
 	<th align="right"><label for="cfg_datei">cfg-Datei</label></th>
 	<td>
-	  <input type="file" id="cfg_datei" ng-disabled="busy" ng-model="einstellungen.cfg_datei" required>
+	  <input type="file" id="cfg_datei" ng-disabled="busy" ng-model="einstellungen.cfg_datei">
 	</td>
       </tr>
       <tr>
 	<th align="right"><label for="dat_datei">dat-Datei</label></th>
 	<td>
-	  <input type="file" id="dat_datei" ng-disabled="busy" ng-model="einstellungen.dat_datei" required>
+	  <input type="file" id="dat_datei" ng-disabled="busy" ng-model="einstellungen.dat_datei">
 	</td>
       </tr>
       <tr>

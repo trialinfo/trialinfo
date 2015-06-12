@@ -222,13 +222,31 @@ sub fahrer_wertungen_hash($) {
 sub startnummer_aendern($$$$) {
     my ($callback, $id, $alt, $neu) = @_;
 
-    foreach my $tabelle (qw(fahrer fahrer_wertung punkte runde neue_startnummer)) {
+    foreach my $tabelle (qw(fahrer fahrer_wertung punkte runde neue_startnummer fahrer_gruppe)) {
 	&$callback(qq{
 	    UPDATE $tabelle
 	    SET startnummer = ?
 	    WHERE id = ? AND startnummer = ?
 	}, [$neu, $id, $alt], undef);
     }
+    &$callback(qq{
+	UPDATE fahrer_gruppe
+	SET gruppe_startnummer = ?
+	WHERE id = ? AND gruppe_startnummer = ?
+    }, [$neu, $id, $alt], undef);
+}
+
+sub gruppe_fahrer_hash($) {
+    my ($gruppe) = @_;
+
+    my $hash = {};
+    if ($gruppe && $gruppe->{gruppe}) {
+	my $fahrer = $gruppe->{fahrer} // [];
+	foreach my $startnummer (@$fahrer) {
+	    $hash->{$startnummer} = [];
+	}
+    }
+    return $hash;
 }
 
 sub einen_fahrer_aktualisieren($$$$$) {
@@ -284,13 +302,21 @@ sub einen_fahrer_aktualisieren($$$$$) {
 		fahrer_wertungen_hash($neu)
 	    and $changed = 1;
     }
+    if (!$neu || exists $neu->{gruppe}) {
+	hash_aktualisieren $callback, 'fahrer_gruppe',
+		[qw(id gruppe_startnummer startnummer)], [],
+		[$id, $startnummer],
+		gruppe_fahrer_hash($alt),
+		gruppe_fahrer_hash($neu)
+	    and $changed = 1;
+    }
 
     my $felder = [];
     my $felder_alt = $alt ? [] : undef;
     my $felder_neu = $neu ? [] : undef;
     if ($neu) {
 	foreach my $feld (qw(
-	    klasse helfer bewerber nenngeld nachname vorname strasse wohnort
+	    gruppe klasse helfer bewerber nenngeld nachname vorname strasse wohnort
 	    plz club fahrzeug geburtsdatum telefon lizenznummer rahmennummer
 	    kennzeichen hubraum email bemerkung land bundesland helfer_nummer
 	    startzeit zielzeit stechen nennungseingang start
@@ -769,16 +795,25 @@ sub wertung_aktualisieren($$$) {
 			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, -1;
 }
 
-sub veranstaltung_duplizieren($$$) {
-    my ($callback, $id, $id_neu) = @_;
+sub veranstaltung_duplizieren($$$$) {
+    my ($callback, $id, $id_neu, $benutzer_name) = @_;
 
     foreach my $table (qw(fahrer fahrer_wertung klasse punkte runde sektion
 			  veranstaltung veranstaltung_feature kartenfarbe
 			  wertung wertungspunkte neue_startnummer
-			  vareihe_veranstaltung sektion_aus_wertung)) {
-	&$callback(qq{
-	    CREATE TEMPORARY TABLE ${table}_temp AS (SELECT * FROM $table WHERE id = ?)
-	}, [$id], undef);
+			  sektion_aus_wertung
+			  veranstaltung_benutzer veranstaltung_gruppe)) {
+	if ($table =~ /^veranstaltung_(benutzer|gruppe)$/) {
+	    &$callback(qq{
+		CREATE TEMPORARY TABLE ${table}_temp AS
+		    (SELECT * FROM $table WHERE id = ? AND vererben)
+	    }, [$id], undef);
+	} else {
+	    &$callback(qq{
+		CREATE TEMPORARY TABLE ${table}_temp AS
+		    (SELECT * FROM $table WHERE id = ?)
+	    }, [$id], undef);
+	}
 	if ($table =~ /^(veranstaltung|fahrer)$/) {
 	    &$callback(qq{
 		UPDATE ${table}_temp
@@ -797,12 +832,19 @@ sub veranstaltung_duplizieren($$$) {
 	&$callback(qq{
 	    DROP TEMPORARY TABLE ${table}_temp
 	}, [], undef);
-	&$callback(qq{
-	    UPDATE vareihe SET version = version + 1
-	    WHERE vareihe IN
-		( SELECT vareihe
-		FROM vareihe_veranstaltung
-		WHERE id = ? )
-	}, [$id_neu], undef);
     }
+    &$callback(qq{
+	INSERT INTO vareihe_veranstaltung (vareihe, id)
+	SELECT vareihe, ?
+	FROM vareihe_veranstaltung
+	JOIN vareihe_alle_benutzer USING (vareihe)
+	WHERE id = ? AND name = ? AND NOT nur_lesen
+    }, [$id_neu, $id, $benutzer_name], undef);
+    &$callback(qq{
+	UPDATE vareihe SET version = version + 1
+	WHERE vareihe IN
+	    ( SELECT vareihe
+	    FROM vareihe_veranstaltung
+	    WHERE id = ? )
+    }, [$id_neu], undef);
 }

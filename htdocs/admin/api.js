@@ -46,22 +46,17 @@ function startende_klassen(veranstaltung) {
   return gestartet;
 }
 
-function fahrer_laden($http, id, startnummer, richtung, fahrer) {
+function fahrer_laden($http, id, startnummer, richtung, fahrer, gruppen) {
   var url = '/api/' + (richtung ? richtung + '/' : '') +
 		      (fahrer ? fahrer : 'fahrer');
   var params = {
-    'id': id,
-    'startnummer': startnummer ? startnummer : '0'
+    'id': id
   };
+  if (startnummer != null)
+    params.startnummer = startnummer;
+  if (gruppen != null)
+    params.gruppen = gruppen ? 1 : 0;
   return $http.get(url, {'params': params});
-}
-
-function fahrer_suchen($http, id, suchbegriff) {
-  var params = {
-    'id': id,
-    'suchbegriff': suchbegriff
-  };
-  return $http.get('/api/fahrer/suchen', {'params': params});
 }
 
 function fahrer_speichern($http, id, startnummer, version, fahrer) {
@@ -243,4 +238,20 @@ function veranstaltung_bezeichnung(veranstaltung) {
   });
   return veranstaltung.titel +
 	 (kuerzel.length ? ' (' + kuerzel.sort().join(', ') + ')' : '');
+}
+
+function generic_compare(v1, v2) {
+  if ((v1 == null) || (v2 == null))
+    return (v1 == null) - (v2 == null);
+  var t1 = typeof v1;
+  var t2 = typeof v2;
+  if (t1 == t2) {
+    if (v1 === v2)
+      return 0;
+    if (t1 == 'string')
+      return v1.localeCompare(v2);
+    else
+      return v1 < v2 ? -1 : 1;
+  } else
+    return t1 < t2 ? -1 : 1;
 }
