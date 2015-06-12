@@ -284,7 +284,7 @@ CREATE TABLE vareihe_klasse (
 );
 
 -- Berechtigungen
-DROP TABLE IS EXISTS benutzer;
+DROP TABLE IF EXISTS benutzer;
 CREATE TABLE benutzer (
   benutzer INT,
   name VARCHAR(30) NOT NULL,
@@ -297,7 +297,7 @@ CREATE TABLE benutzer (
 CREATE UNIQUE INDEX benutzer_name
 ON benutzer (name);
 
-DROP TABLE IS EXISTS gruppe;
+DROP TABLE IF EXISTS gruppe;
 CREATE TABLE gruppe (
   gruppe INT,
   name VARCHAR(30) NOT NULL,
