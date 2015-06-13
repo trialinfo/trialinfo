@@ -436,6 +436,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     });
     $scope.mitglied_liste.push(startnummer);
     $scope.mitglied_liste = fahrerliste_normalisieren($scope.mitglied_liste);
+    set_focus('#mitglied_suchbegriff', $timeout);
   };
 
   $scope.fahrer_hinzufuegen = function(startnummer) {
@@ -451,6 +452,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 	return;
     fahrer.fahrer.push(startnummer);
     fahrer.fahrer = fahrerliste_normalisieren(fahrer.fahrer);
+    set_focus('#mitglied_suchbegriff', $timeout);
   };
 
   function hash_liste_normalisieren(hash, startnummern) {
@@ -482,7 +484,7 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
       };
       $http.get('/api/fahrer/suchen', {'params': params}).
 	success(function(fahrerliste) {
-	  $scope.mitglied_liste = fahrerliste_normalisieren(
+	  var gefunden = fahrerliste_normalisieren(
 	    fahrerliste.map(function(fahrer) {
 	      return fahrer.startnummer;
 	    }).filter(function(startnummer) {
@@ -490,7 +492,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
 		return s == startnummer;
 	      });
 	    }));
-	  }).
+	  $scope.mitglied_liste = gefunden;
+	  if (gefunden.length == 1)
+	    $scope.fahrer_hinzufuegen(gefunden[0]);
+	}).
         error(netzwerkfehler);
     } else {
       delete $scope.mitglied_fahrerliste;
