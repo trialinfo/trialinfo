@@ -480,7 +480,8 @@ if (exists $ENV{'HTTP_ORIGIN'}) {
 my $json = JSON->new;
 
 eval {
-    if ($op eq 'GET/null') {
+    if ($op =~ m<^OPTIONS/.+>) {
+    } elsif ($op eq 'GET/null') {
     } elsif ($op eq 'GET/vareihen') {
 	my $sth = $dbh->prepare(q{
 	    SELECT vareihe, bezeichnung, kuerzel, abgeschlossen
@@ -495,7 +496,6 @@ eval {
 	    fixup_hashref($sth, $vareihe);
 	    push @$result, $vareihe;
 	}
-    } elsif ($op eq "OPTIONS/veranstaltungen") {
     } elsif ($op eq "GET/veranstaltungen") {
 	my $sth = $dbh->prepare(q{
 	    SELECT DISTINCT id
@@ -580,7 +580,6 @@ eval {
 	my ($id) = parameter($q, qw(id));
 	veranstaltung_lesen $id;
 	$result = cfg_aus_datenbank($dbh, $id, 1);
-    } elsif ($op eq "OPTIONS/veranstaltung/export") {
     } elsif ($op eq "GET/veranstaltung/export") {
 	my $id;
 	eval {
@@ -601,7 +600,7 @@ eval {
 	$headers->{'Content-Type'} = 'application/octet-stream';
 	$headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\""
 	    if $dateiname;
-	$result = "/* $result->{format} */\n" . $json->canonical->encode($result);
+	$result = $json->canonical->encode($result);
 	$result = Encode::encode_utf8($result);
 	$result = Compress::Zlib::memGzip($result);
     } elsif ($op eq "GET/trialtool/cfg") {
@@ -623,7 +622,6 @@ eval {
 	    if $dateiname;
 	$result = dat_export($id, $headers, $dateiname);
 	$dbh->commit;
-    } elsif ($op eq "OPTIONS/veranstaltung/import") {
     } elsif ($op eq "POST/veranstaltung/import") {
 	my $data = decode_base64($q->param('POSTDATA'));
 	$data = Compress::Zlib::memGunzip($data)
@@ -1213,11 +1211,11 @@ eval {
 	my ($tag) = parameter($q, qw(tag));
 	$dbh->begin_work;
 	my $id = veranstaltung_tag_to_id($dbh, $tag);
-	veranstaltung_lesen $id;
-	$result = export($id)
-	    if $id;
+	if ($id) {
+	    veranstaltung_lesen $id;
+	    $result = export($id);
+	}
 	$dbh->commit;
-    } elsif ($op eq "OPTIONS/veranstaltung/patch") {
     } elsif ($op eq "POST/veranstaltung/patch") {
 	my ($tag) = parameter($q, qw(tag));
 
