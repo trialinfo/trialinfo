@@ -600,7 +600,7 @@ eval {
 	$headers->{'Content-Type'} = 'application/octet-stream';
 	$headers->{'Content-Disposition'} = "attachment; filename=\"$dateiname\""
 	    if $dateiname;
-	$result = "/* $result->{format} */\n" . $json->canonical->encode($result);
+	$result = $json->canonical->encode($result);
 	$result = Encode::encode_utf8($result);
 	$result = Compress::Zlib::memGzip($result);
     } elsif ($op eq "GET/trialtool/cfg") {
