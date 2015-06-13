@@ -1211,9 +1211,10 @@ eval {
 	my ($tag) = parameter($q, qw(tag));
 	$dbh->begin_work;
 	my $id = veranstaltung_tag_to_id($dbh, $tag);
-	veranstaltung_lesen $id;
-	$result = export($id)
-	    if $id;
+	if ($id) {
+	    veranstaltung_lesen $id;
+	    $result = export($id);
+	}
 	$dbh->commit;
     } elsif ($op eq "POST/veranstaltung/patch") {
 	my ($tag) = parameter($q, qw(tag));
