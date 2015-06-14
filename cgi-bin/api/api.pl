@@ -360,6 +360,7 @@ sub importieren($$$$) {
     }
     if (defined $id) {
 	veranstaltung_aendern $id;
+	# FIXME: Wenn kein Zugriff auf bestehende Veranstaltung, Kopie importieren?
 	if ($alt) {
 	    $alt->{veranstaltung}{basis} = { tag => $alt->{veranstaltung}{basis} }
 		if defined $alt->{veranstaltung}{basis};
@@ -385,9 +386,8 @@ sub importieren($$$$) {
 	if defined $veranstaltung->{basis};
     if ($tag) {
 	$veranstaltung->{sync_erlaubt} = json_bool(1);
-    } else {
-	veranstaltung_benutzer_eintragen $id;
     }
+    veranstaltung_benutzer_eintragen $id;
     veranstaltung_aktualisieren $do_sql, $id, $alt->{veranstaltung}, $veranstaltung, 0;
     fahrer_aktualisieren $do_sql, $id, $alt->{fahrer}, $neu->{fahrer}, 0;
     my $sth = $dbh->prepare(q{
