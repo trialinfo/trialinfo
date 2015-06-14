@@ -1000,7 +1000,7 @@ eval {
 	});
 	die HTTPError->new('409 Conflict', 'Invalid Row Version')
 	    if $sth->execute($id, $version) != 1;
-	foreach my $tabelle (qw(fahrer fahrer_wertung klasse punkte runde
+	foreach my $tabelle (qw(fahrer fahrer_gruppe fahrer_wertung klasse punkte runde
 				sektion veranstaltung_feature kartenfarbe
 				wertung wertungspunkte neue_startnummer
 				vareihe_veranstaltung sektion_aus_wertung
