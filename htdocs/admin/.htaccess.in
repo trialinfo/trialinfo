@@ -9,8 +9,9 @@ RewriteEngine On
 RewriteBase /admin/
 
 # Don't rewrite files
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
+##RewriteCond %{REQUEST_FILENAME} -f [OR]
+##RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
 # Rewrite everything else to index.shtml to allow html5 state links
