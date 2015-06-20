@@ -27,7 +27,8 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(einen_fahrer_aktualisieren fahrer_aktualisieren
 	     veranstaltung_aktualisieren wertung_aktualisieren
-	     veranstaltung_duplizieren vareihe_aktualisieren);
+	     veranstaltung_duplizieren vareihe_aktualisieren
+	     veranstaltung_rechte_vererben);
 use strict;
 
 # datensatz_aktualisieren
@@ -795,25 +796,37 @@ sub wertung_aktualisieren($$$) {
 			 $fahrer_nach_startnummer0, $fahrer_nach_startnummer1, -1;
 }
 
+sub veranstaltung_rechte_vererben($$$) {
+    my ($callback, $basis_tag, $id) = @_;
+
+    &$callback(qq{
+	INSERT INTO veranstaltung_benutzer
+	    SELECT ?, benutzer, nur_lesen, vererben
+	    FROM veranstaltung
+	    JOIN veranstaltung_benutzer USING (id)
+	    WHERE tag = ? AND vererben
+    }, [$id, $basis_tag], undef);
+
+    &$callback(qq{
+	INSERT INTO veranstaltung_gruppe
+	    SELECT ?, gruppe, nur_lesen, vererben
+	    FROM veranstaltung
+	    JOIN veranstaltung_gruppe USING (id)
+	    WHERE tag = ? AND vererben
+    }, [$id, $basis_tag], undef);
+}
+
 sub veranstaltung_duplizieren($$$$) {
     my ($callback, $id, $id_neu, $benutzer_name) = @_;
 
     foreach my $table (qw(fahrer fahrer_wertung klasse punkte runde sektion
 			  veranstaltung veranstaltung_feature kartenfarbe
 			  wertung wertungspunkte neue_startnummer
-			  sektion_aus_wertung
-			  veranstaltung_benutzer veranstaltung_gruppe)) {
-	if ($table =~ /^veranstaltung_(benutzer|gruppe)$/) {
-	    &$callback(qq{
-		CREATE TEMPORARY TABLE ${table}_temp AS
-		    (SELECT * FROM $table WHERE id = ? AND vererben)
-	    }, [$id], undef);
-	} else {
-	    &$callback(qq{
-		CREATE TEMPORARY TABLE ${table}_temp AS
-		    (SELECT * FROM $table WHERE id = ?)
-	    }, [$id], undef);
-	}
+			  sektion_aus_wertung)) {
+	&$callback(qq{
+	    CREATE TEMPORARY TABLE ${table}_temp AS
+		(SELECT * FROM $table WHERE id = ?)
+	}, [$id], undef);
 	if ($table =~ /^(veranstaltung|fahrer)$/) {
 	    &$callback(qq{
 		UPDATE ${table}_temp
