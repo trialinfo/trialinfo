@@ -381,6 +381,8 @@ sub importieren($$$$) {
 	my @row = $sth->fetchrow_array;
 	$id = ($row[0] // 0) + 1;
 	$veranstaltung->{id} = $id;
+	veranstaltung_rechte_vererben $do_sql, $veranstaltung->{basis}, $id
+	    if defined $veranstaltung->{basis};
     }
     $veranstaltung->{basis} = { tag => $veranstaltung->{basis} }
 	if defined $veranstaltung->{basis};
@@ -907,6 +909,7 @@ eval {
 		unless defined $basis_id;
 	    veranstaltung_lesen $basis_id;
 	    veranstaltung_duplizieren($do_sql, $basis_id, $id_neu, $benutzer_name);
+	    veranstaltung_rechte_vererben $do_sql, $cfg1->{basis}{tag}, $id_neu;
 	    $cfg1->{tag} = random_tag(16);
 	    $version = 1;
 	}
