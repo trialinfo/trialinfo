@@ -63,7 +63,15 @@ DOWNLOAD_FILES = \
 	htdocs/js/json-diff.js \
 	htdocs/js/validate.js \
 
+# From https://github.com/zigorou/perl-json-pointer:
+JSON_POINTER_FILES = \
+	lib/JSON/Pointer.pm \
+	lib/JSON/Pointer/Context.pm \
+	lib/JSON/Pointer/Exception.pm \
+	lib/JSON/Pointer/Syntax.pm \
+
 COMMON_FILES = \
+	$(JSON_POINTER_FILES) \
 	htdocs/ergebnisse.css \
 	lib/Auswertung.pm.txt \
 	lib/Berechnung.pm \
@@ -81,10 +89,6 @@ COMMON_FILES = \
 	lib/JSON/Patch/Operator/Remove.pm \
 	lib/JSON/Patch/Operator/Replace.pm \
 	lib/JSON/Patch/Operator/Test.pm \
-	lib/JSON/Pointer.pm \
-	lib/JSON/Pointer/Context.pm \
-	lib/JSON/Pointer/Exception.pm \
-	lib/JSON/Pointer/Syntax.pm \
 	lib/JSON_bool.pm \
 	lib/Jahreswertung.pm \
 	lib/Parse/Binary/FixedFormat.pm \
