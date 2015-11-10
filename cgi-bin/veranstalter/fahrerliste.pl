@@ -37,20 +37,31 @@ unless (defined $id) {
     my $sth;
     if ($vareihe) {
 	$sth = $dbh->prepare(q{
-	    SELECT id, titel
+	    SELECT id, titel, GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	    FROM veranstaltung
 	    JOIN vareihe_veranstaltung USING (id)
 	    JOIN wertung USING (id)
+	    LEFT JOIN (
+	        SELECT DISTINCT id, vareihe.kuerzel
+		FROM vareihe_veranstaltung
+		JOIN vareihe USING (vareihe)
+		WHERE vareihe != ?) AS _ USING (id)
 	    WHERE vareihe = ? AND wertung = 1
+	    GROUP BY id
 	    ORDER BY datum
 	});
-	$sth->execute($vareihe);
+	$sth->execute($vareihe, $vareihe);
     } else {
 	$sth = $dbh->prepare(q{
-	    SELECT id, titel
+	    SELECT id, titel, GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	    FROM veranstaltung
 	    JOIN wertung USING (id)
+	    LEFT JOIN (
+		SELECT DISTINCT id, vareihe.kuerzel
+		FROM vareihe_veranstaltung
+		JOIN vareihe USING (vareihe)) AS _ USING (id)
 	    WHERE wertung = 1
+	    GROUP BY id
 	    ORDER BY datum
 	});
 	$sth->execute;
@@ -61,6 +72,8 @@ unless (defined $id) {
     print "<p>\n";
     while (my @row = $sth->fetchrow_array) {
 	my ($id, $titel) = @row;
+	$titel .= " ($row[2])"
+	    if defined $row[2];
 	print "<a href=\"?id=$id\">$titel</a> " .
 	      "(<a href=\"?id=$id&gestartet=1\">Starter</a>)<br>\n";
     }
