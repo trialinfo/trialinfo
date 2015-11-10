@@ -62,6 +62,7 @@ if (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$vareihe_bezeichnung";
 
+my $veranstaltungen = [];
 my $veranstaltungstitel;
 $sth = $dbh->prepare(q{
     SELECT id, titel, GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
@@ -75,9 +76,11 @@ $sth = $dbh->prepare(q{
 	WHERE vareihe != ?) AS _ USING (id)
     WHERE aktiv AND wertung = 1 AND vareihe = ?
     GROUP BY id
+    ORDER BY datum
 });
 $sth->execute($vareihe, $vareihe);
 while (my @row = $sth->fetchrow_array) {
+    push @$veranstaltungen, $row[0];
     $veranstaltungstitel->{$row[0]} = $row[1];
     $veranstaltungstitel->{$row[0]} .= " ($row[2])"
 	if defined $row[2];
@@ -147,7 +150,9 @@ push @$format, qw(r3);
 push @$header, qw(Summe);
 
 my $body;
-foreach my $id (sort { $a <=> $b } keys %$starter) {
+foreach my $id (@$veranstaltungen) {
+    next unless exists $starter->{$id};
+
     my @k = ();
     for (my $n = 0; $n < @$klassen; $n++) {
 	my $klasse = $klassen->[$n];
@@ -160,7 +165,9 @@ doc_h2 "Starterzahlen";
 doc_table header => $header, body => $body, format => $format;
 
 $body = [];
-foreach my $id (sort { $a <=> $b } keys %$starter) {
+foreach my $id (@$veranstaltungen) {
+    next unless exists $nummern->{$id};
+
     my @k = ();
     for (my $n = 0; $n < @$klassen; $n++) {
 	my $klasse = $klassen->[$n];
