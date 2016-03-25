@@ -1,7 +1,7 @@
-Nuller-Info
-===========
+TrialInfo
+=========
 
-Nuller-Info ist ein Auswertungssystem für Trial Motorrad- und Fahrrad-
+TrialInfo ist ein Auswertungssystem für Trial Motorrad- und Fahrrad-
 Wettbewerbe. Es unterstützt alle wesentlichen Schritte zur Verwaltung einzelner
 Veranstaltungen und zur Erstellung von Gesamtwertungen über mehrere
 Veranstaltungen.
@@ -108,18 +108,18 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
   Beispielkonfiguration für Apache:
 
     <VirtualHost *:80>
-	DocumentRoot /home/agruen/nuller-info/htdocs
+	DocumentRoot /home/agruen/trialinfo/htdocs
 	ServerName trials.home
 
-	ScriptAlias /cgi-bin/ "/home/agruen/nuller-info/cgi-bin/"
+	ScriptAlias /cgi-bin/ "/home/agruen/trialinfo/cgi-bin/"
 
-	<Directory "/home/agruen/nuller-info/htdocs">
+	<Directory "/home/agruen/trialinfo/htdocs">
 	    Options Indexes
 	    AllowOverride All
 	    Require all granted
 	</Directory>
 
-	<Directory "/home/agruen/nuller-info/cgi-bin">
+	<Directory "/home/agruen/trialinfo/cgi-bin">
 	    Options None
 	    AllowOverride All
 	    Require all granted
