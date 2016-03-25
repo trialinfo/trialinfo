@@ -235,7 +235,7 @@ htdocs/js/angular%:
 htdocs/js/validate.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
-		https://github.com/angular-ui/ui-utils/raw/master/modules/validate/validate.js
+		https://github.com/angular-ui/ui-utils/raw/v2.0.0/modules/validate/validate.js
 
 update-perl-json-pointer:
 	@set -xe; \
