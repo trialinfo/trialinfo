@@ -39,7 +39,7 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
   });
 
   function otsv_beitrag(veranstaltung) {
-    if (veranstaltung.art === 'otsv2014' || veranstaltung.art === 'otsv+osk2014') {
+    if (veranstaltung.art === 'otsv2014' || veranstaltung.art === 'otsv+osk2014' || veranstaltung.art === 'otsv2016' || veranstaltung.art === 'otsv+osk2016') {
       var jetzt;
       if (veranstaltung.datum &&
 	  (match = veranstaltung.datum.match(/^(\d{4})-(\d{2})-(\d{2})$/)))

@@ -265,19 +265,28 @@ function einstellungenController($scope, $http, $timeout, $location, veranstaltu
     if (art) {
       angular.forEach(veranstaltung.klassen, function(klasse, index) {
 	klasse.wertungsklasse =
-	  (art === 'otsv2014' && index >= 10 && index <= 12) ? index - 9 :
-	  (art === 'otsv+osk2014' && index == 0) ? 11 : index + 1;
+	  ((art === 'otsv2014' ||
+	    art === 'otsv2016') &&
+	   index >= 10 && index <= 12) ? index - 9 :
+	  ((art === 'otsv+osk2014' ||
+	    art === 'otsv+osk2016') &&
+	   index == 0) ? 11 : index + 1;
 	klasse.keine_wertung1 =
-	  ((art === 'otsv2014' || art === 'otsv+osk2014') && index == 6) ||
-	  (art === 'otsv2014' && (index == 0 || (index >= 10 && index <= 12)));
+	  ((art === 'otsv2014' || art === 'otsv+osk2014') &&
+	   index == 6) ||
+	  ((art === 'otsv2014' ||
+	    art === 'otsv2016') &&
+	   (index == 0 || (index >= 10 && index <= 12)));
 	klasse.ausser_konkurrenz =
-	  (art === 'otsv+osk2014' && index == 0);
+	  ((art === 'otsv+osk2014' ||
+	    art === 'otsv+osk2016') && index == 0);
       });
-      if (art === 'otsv2014' || art === 'otsv+osk2014') {
+      if (art === 'otsv2014' || art === 'otsv+osk2014' ||
+	  art === 'otsv2016' || art === 'otsv+osk2016') {
 	$scope.features.startzeit = $scope.features.zielzeit =
-	  art === 'otsv+osk2014';
+	  (art === 'otsv+osk2014' || art === 'otsv+osk2016');
 	$scope.features.start_morgen =
-	  art === 'otsv2014';
+	  (art === 'otsv2014' || art === 'otsv2016');
       }
     }
   };
