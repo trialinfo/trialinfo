@@ -1,5 +1,5 @@
-NAME = trial-auswertung
-VERSION = 0.17
+NAME = trialinfo
+VERSION = 0.18
 
 MOUNTPOINT ?= /mnt/easyserver
 
@@ -101,7 +101,6 @@ COMMON_FILES = \
 
 LOCAL_FILES = \
 	db-sync.pl \
-	db-export.pl \
 	README \
 	IO/Tee.pm \
 	jahreswertung.pl \

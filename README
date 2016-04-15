@@ -130,8 +130,8 @@ Die Verzeichnisse htdocs/veranstalter/, cgi-bin/veranstalter/, admin/, api/
 geben auch Zugriff auf Funktionen, die üblicherweise nicht öffentlich
 zugänglich sein sollen.
 
-Je nach Konfiguration kann es sein, dass die Konfiguration für die
-Trial-Auswertung mit dem Befehl "a2ensite" aktiviert werden muss.
+Je nach Konfiguration kann es sein, dass die Konfiguration für TrialInfo mit
+dem Befehl "a2ensite" aktiviert werden muss.
 
 Standardmäßig ist der Zugriff auf den Veranstalter-Bereich auf die Gruppe
 "veranstalter" beschränkt.  Zum Rechtemodell in der Administration siehe unten.
