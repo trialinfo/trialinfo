@@ -6,10 +6,10 @@
   <style type="text/css">
     li { margin: 1em 0; }
   </style>
-  <title>Trial-Auswertung</title>
+  <title>TrialInfo</title>
 </head>
 <body>
-<h1>Trial-Auswertung</h1>
+<h1>TrialInfo</h1>
 <p>Dieses Auswertungssystem für Motorrad- und Fahrrad-Trial-Wettbewerbe
 unterstützt alle wesentlichen Schritte zur Verwaltung von Veranstaltungen und
 zur Erstellung von Gesamtwertungen über mehrere Veranstaltungen hinweg
@@ -54,7 +54,7 @@ beziehungsweise Command + Plus (⌘+) und Command + Minus (⌘−).</p>
 <p>Es können bei Bedarf Seiten der Applikation in mehreren Tabs oder Fenstern
 geöffnet werden, zwischen denen gewechselt werden kann.</p>
 
-<h2>Übersicht über die Trial-Auswertung</h2>
+<h2>Übersicht über TrialInfo</h2>
 <p>Nach der Eingabe von Benutzername und Kennwort kommt man auf die
 Übersichtsseite, auf der alle vorhandenen Veranstaltungen und
 Veranstaltungsreihen aufgelistet sind.  Hier kann man zu einer der Veranstaltungen
@@ -108,7 +108,7 @@ Auswertung in einem neuen Fenster zu öffnen, das Fenster auf den zusätzlichen
 Bildschirm zu verschieben, und den Fensterrahmen zu verbergen (üblicherweise
 mit der Taste F11).</p>
 
-<p>Wenn das Auswertungssystem entsprechend konfiguriert ist, kann man in den
+<p>Wenn TrialInfo entsprechend konfiguriert ist, kann man in den
 Anzeigeeinstellungen auch verschiedene Druckeinstellungen vornehmen und die
 Auswertung in eine PDF-Datei umwandeln.  Zum Ausdrucken liefert das bessere
 Ergebnisse aus ein direktes Ausdrucken der Auswertungsseite.  Die
@@ -126,7 +126,7 @@ der Veranstaltung; unsinnige Optionen werden nicht angeboten.  Wenn eine
 bestimmte Liste nicht verfügbar ist, kann das also an den
 Veranstaltungseinstellungen liegen.</p>
 
-<p>Wenn das Auswertungssystem entsprechend konfiguriert ist, kann man in den
+<p>Wenn TrialInfo entsprechend konfiguriert ist, kann man in den
 Anzeigeeinstellungen auch verschiedene Druckeinstellungen vornehmen und die
 Fahrerliste in eine PDF-Datei umwandeln. Die Druckeinstellungen stehen nur zur
 Verfügung, wenn der Server die PDF-Erzeugung unterstützt.</p>
@@ -215,16 +215,15 @@ sichtbaren Feldern im Nennformular.</p>
 <h3 id="veranstaltung_aktiv">Allgemein / Veranstaltung anzeigen und in
 Wertungen berücksichtigen</h3>
 <p>Durch diese Option kann man eine Veranstaltung auf den Ergebnisseiten
-verbergen und sie in Veranstaltungsreihen ignorieren. Im Auswertungssystem
-bleibt die Veranstaltung sichtbar; sie erscheint in der Übersichtsseite
+verbergen und sie in Veranstaltungsreihen ignorieren. In TrialInfo bleibt die
+Veranstaltung sichtbar; sie erscheint in der Übersichtsseite
 durchgestrichen.</p>
 
 <h3>Allgemein / Synchronisieren erlauben</h3>
 <p>Diese Option gibt an, ob die Veranstaltung durch Synchronisierung
 aktualisiert werden darf.  Die Quelle der Aktualisierung ist eine andere
-Installation des Auswertungssystems.  Die Einstellung wird nur angeboten, wenn
-das Auswertungssystem grundsätzlich als Synchronisierungs-Ziel konfiguriert
-ist.</p>
+Installation von TrialInfo.  Die Einstellung wird nur angeboten, wenn TrialInfo
+grundsätzlich als Synchronisierungs-Ziel konfiguriert ist.</p>
 
 <h3>Wertungspunkte / Punkteteilung bei gleicher Platzierung</h3>
 <p>Wenn es ex aequo-Platzierungen gibt, bekommen normalerweise allen Fahrer die
@@ -364,8 +363,7 @@ von Dateien bzw. auf Dateien.</p>
 Nach der Auswahl der Quelladresse kann die Liste der Veranstaltungen von diesem
 Server abgerufen werden. Danach wählt man aus der Liste der Veranstaltungen
 diejenige aus, die importiert werden soll und startet den Import. Nach einigen
-Sekunden wechselt das Auswertungsystem zur neu importierten
-Veranstaltung.</p>
+Sekunden wechselt TrialInfo zur neu importierten Veranstaltung.</p>
 
 <h3>Synchronisieren</h3>
 <p>Diese Aktion startet die laufende Synchronisation einer Veranstaltung auf
@@ -380,22 +378,21 @@ nach dem Auftreten von Fehlern neu starten.</p>
 Veranstaltungsverwaltung wechselt.</p>
 
 <h3>Datei-Import</h3>
-<p>Veranstaltungen von der Trial-Auswertung oder vom TrialTool importieren.
-Hier wählt man das Format und die Datei (*.tra für das
-Trial-Auswertungs-Format) oder die Dateien (*.cfg und *.dat für das
-TrialTool-Format) aus und startet dann den Import.</p>
+<p>Veranstaltungen von TrialInfo vom TrialTool importieren.  Hier wählt man das
+Format und die Datei (*.tra für TrialInfo) oder die Dateien (*.cfg und *.dat
+für das TrialTool-Format) aus und startet dann den Import.</p>
 
 <h3>Datei-Export</h3>
 <p>Die Daten einer Veranstaltungen auf Dateien exportieren. Neben einem eigenen
-Format für die Trial-Auswertung selbst (*.tra) wird auch das TrialTool-Format
-unterstützt (*.cfg und *.dat). Nach der Auswahl der Veranstaltung und des
-Formats wird die Datei oder werden die Dateien als Verknüpfungen angezeigt; die
-Verknüpfungen speichert man dann.</p>
+Format für TrialInfo selbst (*.tra) wird auch das TrialTool-Format unterstützt
+(*.cfg und *.dat). Nach der Auswahl der Veranstaltung und des Formats wird die
+Datei oder werden die Dateien als Verknüpfungen angezeigt; die Verknüpfungen
+speichert man dann.</p>
 
 <p>Im TrialTool-Format werden beide Dateien (*.cfg und *.dat) benötigt.
 Außerdem ist zu beachten, dass das TrialTool-Format nicht alle Möglichkeiten
-der Trial-Auswertung unterstützt. Beim Export in dieses Format wird versucht,
-die Informationen so gut wie möglich zu abzubilden.</p>
+von TrialInfo unterstützt. Beim Export in dieses Format wird versucht, die
+Informationen so gut wie möglich zu abzubilden.</p>
 
 </body>
 </html>
