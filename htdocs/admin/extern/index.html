@@ -53,7 +53,7 @@
       <tr>
 	<th align="right"><label for="url"></label></th>
 	<td>
-	  <button ng-click="import_remote()" ng-disabled="!(liste_abgerufen && remote.veranstaltung) || busy">Importieren</button>
+	  <button ng-click="import_remote()" ng-disabled="!(liste_abgerufen && remote.veranstaltung) || busy">Importieren (vom Server)</button>
 	</td>
       </tr>
     </tbody>
@@ -73,7 +73,7 @@
       <tr>
 	<th align="right"></th>
 	<td>
-	  <button ng-click="synchronize()" ng-disabled="!form.$valid">Synchronisieren</button>
+	  <button ng-click="synchronize()" ng-disabled="!form.$valid">Synchronisieren (zum Server)</button>
 	</td>
       </tr>
     </tbody>
