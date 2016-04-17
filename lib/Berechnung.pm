@@ -351,11 +351,11 @@ sub raenge_berechnen($$) {
 
     my $raenge = {};
     my $rang = 1;
-    $fahrer_in_klasse = [
+    $$fahrer_in_klasse = [
 	sort { rang_vergleich($a, $b, $cfg) }
-	     grep { $_->{start} } @$fahrer_in_klasse ];
+	     grep { $_->{start} } @$$fahrer_in_klasse ];
     my $vorheriger_fahrer;
-    foreach my $fahrer (@$fahrer_in_klasse) {
+    foreach my $fahrer (@$$fahrer_in_klasse) {
 	my $startnummer = $fahrer->{startnummer};
 	if ($vorheriger_fahrer && rang_vergleich($vorheriger_fahrer, $fahrer, $cfg) == 0) {
 	    my $n = $vorheriger_fahrer->{startnummer};
@@ -401,7 +401,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 	# $fahrer->{rang} ist der Rang in der Tages-Gesamtwertung, in der alle
 	# startenden Fahrer aufscheinen (aber nicht die Gruppen).
 
-	my $raenge = raenge_berechnen($fahrer_in_klasse, $cfg);
+	my $raenge = raenge_berechnen(\$fahrer_in_klasse, $cfg);
 	foreach my $startnummer (keys %$raenge) {
 	    my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	    $fahrer->{rang} = $raenge->{$startnummer};
@@ -426,7 +426,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 		 !$cfg->{klassen}[$_->{klasse} - 1]{keine_wertung1})
 	    } @$fahrer_in_klasse ];
 
-	    my $raenge = raenge_berechnen($fahrer_in_klasse, $cfg);
+	    my $raenge = raenge_berechnen(\$fahrer_in_klasse, $cfg);
 	    foreach my $startnummer (keys %$raenge) {
 		my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 		$fahrer->{wertungen}[$wertung - 1]{rang} =
@@ -442,7 +442,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			my $fahrer_m = $fahrer_in_klasse->[$m];
 			if (ausser_konkurrenz($fahrer_m, $cfg) ||
 			    $fahrer_m->{ausfall} ||
-			    $fahrer_m->{runden} < $runden ||
+			    ($fahrer_m->{runden} // 0) < $runden ||
 			    !defined $fahrer_m->{wertungen}[$wertung - 1]{rang}) {
 			    $n = $m + 1;
 			    next;
