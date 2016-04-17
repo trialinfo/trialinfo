@@ -442,7 +442,7 @@ sub rang_und_wertungspunkte_berechnen($$) {
 			my $fahrer_m = $fahrer_in_klasse->[$m];
 			if (ausser_konkurrenz($fahrer_m, $cfg) ||
 			    $fahrer_m->{ausfall} ||
-			    $fahrer_m->{runden} < $runden ||
+			    ($fahrer_m->{runden} // 0) < $runden ||
 			    !defined $fahrer_m->{wertungen}[$wertung - 1]{rang}) {
 			    $n = $m + 1;
 			    next;
