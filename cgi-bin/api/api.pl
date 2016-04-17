@@ -1164,7 +1164,7 @@ eval {
 	my $sth = $dbh->prepare(qq{
 	    SELECT startnummer, gruppe, klasse, nachname, vorname, startzeit, zielzeit,
 		   nennungseingang, start, start_morgen, geburtsdatum,
-		   wohnort, club, fahrzeug, versicherung, land, bundesland,
+		   wohnort, club, fahrzeug, versicherung, plz, land, bundesland,
 		   lizenznummer, email, runden, ausfall, nenngeld
 	    FROM fahrer
 	    WHERE id = ?

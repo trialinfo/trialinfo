@@ -186,6 +186,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	ausdruck: "fahrzeug",
 	style: { 'text-align': 'left' },
 	when: function() { return features.fahrzeug; } },
+    plz:
+      { name: 'Postleitzahl',
+        bezeichnung: 'PLZ',
+        ausdruck: "plz",
+	style: { 'text-align': 'center' },
+	when: function() { return features.plz; } },
     land:
       { name: 'Land',
 	bezeichnung: 'Land',
