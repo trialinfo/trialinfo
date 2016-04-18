@@ -337,6 +337,26 @@ sub dat_export($$$) {
     return dat_datei_daten($cfg, $fahrer_nach_startnummer);
 }
 
+sub naeheste_basis($) {
+    my ($veranstaltung) = @_;
+    my $basis2 = $veranstaltung->{basis2} // [ $veranstaltung->{basis} // () ];
+
+    my $sth = $dbh->prepare(q{
+	SELECT tag
+	FROM veranstaltung
+    });
+    $sth->execute;
+    my $tags = {};
+    while (my @row = $sth->fetchrow_array) {
+	$tags->{$row[0]} = 1;
+    }
+    foreach my $basis (@$basis2) {
+	return $basis
+	    if exists $tags->{$basis};
+    }
+    return undef;
+}
+
 sub importieren($$$$) {
     my ($alt, $neu, $tag, $create) = @_;
     my $veranstaltung = $neu->{veranstaltung};
@@ -381,8 +401,9 @@ sub importieren($$$$) {
 	my @row = $sth->fetchrow_array;
 	$id = ($row[0] // 0) + 1;
 	$veranstaltung->{id} = $id;
-	veranstaltung_rechte_vererben $do_sql, $veranstaltung->{basis}, $id
-	    if defined $veranstaltung->{basis};
+	my $basis = naeheste_basis($veranstaltung);
+	veranstaltung_rechte_vererben $do_sql, $basis, $id
+	    if defined $basis;
     }
     $veranstaltung->{basis} = { tag => $veranstaltung->{basis} }
 	if defined $veranstaltung->{basis};
