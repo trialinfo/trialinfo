@@ -1165,7 +1165,7 @@ eval {
 	    SELECT startnummer, gruppe, klasse, nachname, vorname, startzeit, zielzeit,
 		   nennungseingang, start, start_morgen, ausser_konkurrenz, geburtsdatum,
 		   wohnort, club, fahrzeug, versicherung, plz, land, bundesland,
-		   lizenznummer, email, runden, ausfall, nenngeld
+		   lizenznummer, telefon, email, runden, ausfall, nenngeld
 	    FROM fahrer
 	    WHERE id = ?
 	});
