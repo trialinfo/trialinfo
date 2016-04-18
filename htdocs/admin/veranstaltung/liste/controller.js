@@ -210,6 +210,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	ausdruck: "land_bundesland(fahrer)",
 	style: { 'text-align': 'left' },
 	when: function() { return features.bundesland || features.land; } },
+    telefon:
+      { name: 'Telefon',
+	bezeichnung: 'Telefon',
+	ausdruck: "telefon",
+	style: { 'text-align': 'left' },
+	when: function() { return features.telefon; } },
     email:
       { name: 'E-Mail',
 	bezeichnung: 'E-Mail',
