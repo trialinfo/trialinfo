@@ -183,8 +183,27 @@ sub cfg_aus_datenbank($$;$) {
 	    $basis->{anzahl_start_morgen} = $row[0];
 	}
 	$cfg->{basis} = $basis;
+
+	my $basis_hash = {};
+	$sth = $dbh->prepare(q{
+	    SELECT tag, basis
+	    FROM veranstaltung
+	    WHERE basis IS NOT NULL
+	});
+	$sth->execute;
+	while (my @row = $sth->fetchrow_array) {
+	    $basis_hash->{$row[0]} = $row[1];
+	}
+	my $basis2 = [];
+	push @$basis2, $basis_tag;
+	while (exists $basis_hash->{$basis_tag}) {
+	    $basis_tag = $basis_hash->{$basis_tag};
+	    push @$basis2, $basis_tag;
+	}
+	$cfg->{basis2} = $basis2;
     } else {
 	$cfg->{basis} = { tag => undef };
+	$cfg->{basis2} = undef;
     }
 
     $cfg->{wertungen} = veranstaltung_wertungen_aus_datenbank($dbh, $id);
