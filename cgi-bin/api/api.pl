@@ -1163,7 +1163,7 @@ eval {
 	$dbh->begin_work;
 	my $sth = $dbh->prepare(qq{
 	    SELECT startnummer, gruppe, klasse, nachname, vorname, startzeit, zielzeit,
-		   nennungseingang, start, start_morgen, geburtsdatum,
+		   nennungseingang, start, start_morgen, ausser_konkurrenz, geburtsdatum,
 		   wohnort, club, fahrzeug, versicherung, plz, land, bundesland,
 		   lizenznummer, email, runden, ausfall, nenngeld
 	    FROM fahrer

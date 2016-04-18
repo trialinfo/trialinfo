@@ -246,6 +246,11 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	ausdruck: "start_morgen ? 'Ja' : ''",
 	style: { 'text-align': 'center' },
 	when: function() { return features.start_morgen; } },
+    ausser_konkurrenz:
+      { name: 'Außer Konkurrenz',
+        bezeichnung: '<span title="Außer Konkurrenz">A.K.</span>',
+	ausdruck: "ausser_konkurrenz ? 'Ja' : ''",
+	style: { 'text-align': 'center' } },
     versicherung:
       { name: 'Versicherung',
 	bezeichnung: 'Versicherung',
