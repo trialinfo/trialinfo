@@ -25,9 +25,9 @@ MAKEFLAGS = --no-print-directory
 CURL = curl
 SED = sed
 
-HAVE_WEASYPRINT_testing = 1
-HAVE_WEASYPRINT_staging = 0
-HAVE_WEASYPRINT_production = 0
+HAVE_WEASYPRINT_testing = true
+HAVE_WEASYPRINT_staging = false
+HAVE_WEASYPRINT_production = false
 
 # Laut Dokumentation unterstützt Apache ab Version 2.3.13 eine neue Syntax für
 # die Ausdrücke in SSI #if-Befehlen. Die neue Syntax ist ab Version 2.4 per
@@ -45,15 +45,15 @@ SSI_LEGACY_EXPR_PARSER_production = 0
 
 # Ist auf andere Server synchronisieren erlaubt?
 #
-SYNC_SOURCE_testing = 1
-SYNC_SOURCE_staging = 0
-SYNC_SOURCE_production = 0
+SYNC_SOURCE_testing = true
+SYNC_SOURCE_staging = false
+SYNC_SOURCE_production = false
 
 # Ist auf diesen Server snchronisieren erlaubt?
 #
-SYNC_TARGET_testing = 0
-SYNC_TARGET_staging = 1
-SYNC_TARGET_production = 1
+SYNC_TARGET_testing = false
+SYNC_TARGET_staging = true
+SYNC_TARGET_production = true
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
@@ -112,6 +112,7 @@ GENERATED_WEB_FILES = \
 	cgi-bin/veranstalter/.htaccess \
 	htdocs/admin/hilfe/.htaccess \
 	htdocs/admin/.htaccess \
+	htdocs/admin/index.shtml \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/.htaccess \
