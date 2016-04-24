@@ -124,6 +124,7 @@ unless (defined $id) {
 	$sth = $dbh->prepare(q{
 	    SELECT id, titel,
 		   GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
+	    FROM veranstaltung
 	    JOIN wertung USING (id)
 	    LEFT JOIN (
 		SELECT DISTINCT id, vareihe.kuerzel
