@@ -24,7 +24,7 @@ GENERATED_FILES = \
 	cgi-bin/veranstalter/.htaccess \
 	htdocs/admin/hilfe/.htaccess \
 	htdocs/admin/.htaccess \
-	htdocs/admin/index.shtml \
+	htdocs/admin/index.html \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/.htaccess \
