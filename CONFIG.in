@@ -16,7 +16,7 @@ SSI_LEGACY_EXPR_PARSER = true
 
 # Ist auf andere Server synchronisieren erlaubt?
 #
-SYNC_SOURCE = true
+SYNC_SOURCE = false
 
 # Ist auf diesen Server snchronisieren erlaubt?
 # (Dann kann man in den Einstellungen das Synchronisieren in eine Veranstaltung
