@@ -9,7 +9,7 @@ HAVE_WEASYPRINT ?= true
 SSI_LEGACY_EXPR_PARSER ?= true
 SYNC_SOURCE ?= true
 SYNC_TARGET ?= false
-AUTH_PREFIX ?= $(PWD)
+AUTH_PREFIX ?= $(CURDIR)
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
@@ -83,7 +83,7 @@ update-perl-json-pointer:
 	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
 	files=($$(find $$tmpdir/perl-json-pointer-master/lib -type f -printf '%P\n')); \
 	( cd $$tmpdir/perl-json-pointer-master/lib; \
-	  cp --parents "$${files[@]}" $(PWD)/lib ); \
+	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
 	git add -v "$${files[@]/#/lib/}"
 
 update-perl-json-patch:
@@ -95,7 +95,7 @@ update-perl-json-patch:
 	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
 	files=($$(find $$tmpdir/perl-json-patch-master/lib -type f -printf '%P\n')); \
 	( cd $$tmpdir/perl-json-patch-master/lib; \
-	  cp --parents "$${files[@]}" $(PWD)/lib ); \
+	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
 	git add -v "$${files[@]/#/lib/}"
 
 htdocs/js/json-diff.js:
