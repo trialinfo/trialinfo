@@ -138,6 +138,19 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
     }).sort(function(a, b) { return a.localeCompare(b); }).join(', ');
   }
 
+  $scope.anschrift = function(fahrer) {
+    var anschrift = [], plz_wohnort = [];
+    if (fahrer.strasse != '' && fahrer.strasse != null)
+      anschrift.push(fahrer.strasse);
+    if (fahrer.plz != '' && fahrer.plz != null)
+      plz_wohnort.push(fahrer.plz);
+    if (fahrer.wohnort != '' && fahrer.wohnort != null)
+      plz_wohnort.push(fahrer.wohnort);
+    if (plz_wohnort.length)
+      anschrift.push(plz_wohnort.join(' '));
+    return anschrift.join(', ');
+  }
+
   var definierte_felder = {
     startnummer:
       { name: 'Startnummer',
@@ -198,6 +211,12 @@ function veranstaltungListeController($scope, $sce, $route, $location, $timeout,
 	ausdruck: "land",
 	style: { 'text-align': 'left' },
 	when: function() { return features.land; } },
+    anschrift:
+      { name: 'Anschrift',
+        bezeichnung: 'Anschrift',
+	ausdruck: "anschrift(fahrer)",
+	style: { 'text-align': 'left' },
+	when: function() { return features.strasse || features.plz || features.wohnort } },
     bundesland:
       { name: 'Bundesland',
 	bezeichnung: 'Bundesland',
