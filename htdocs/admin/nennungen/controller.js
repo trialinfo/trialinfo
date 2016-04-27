@@ -539,6 +539,11 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     return false;
   };
 
+  $scope.ist_oesterreich = function(land) {
+    return ['A', 'AT', 'AUT', 'Austria', 'Ö', 'Österreich']
+      .find(function(_) { return land == _ });
+  };
+
   function wertungslabels_erzeugen() {
     /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
     var accesskeys = 'aknvpmsuäl' + gruppen ? 'g' : 'f';
