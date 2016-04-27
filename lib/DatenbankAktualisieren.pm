@@ -627,7 +627,7 @@ sub veranstaltung_aktualisieren($$$$$) {
 	    and $changed = 1;
     }
 
-    while (!$alt && !$neu->{tag}) {
+    if (!$alt && !exists $neu->{tag}) {
 	$neu->{tag} = random_tag(16);
     }
 
@@ -747,7 +747,7 @@ sub vareihe_aktualisieren($$$$$) {
 	    and $changed = 1;
     }
 
-    while (!$alt && !$neu->{tag}) {
+    if (!$alt && !exists $neu->{tag}) {
 	$neu->{tag} = random_tag(16);
     }
 
