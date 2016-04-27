@@ -262,6 +262,9 @@
 		und kann daher nicht gewertet werden.
 	      </span>
 	    </span>
+	    <span ng-if="veranstaltung.art.match('^otsv') && ist_oesterreich(fahrer.land)" style="color: red">
+	      Bitte das Feld Staatsangehörigkeit für Österreicher leer lassen.
+	    </span>
 	    <span ng-if="veranstaltung.art == 'otsv2014' || veranstaltung.art == 'otsv+osk2014' || veranstaltung.art == 'otsv2016' || veranstaltung.art == 'otsv+osk2016'" style="color: red">
 	      <span ng-if="fahrer.geburtsdatum">
 		<span ng-if="(fahrer.klasse == 3 || fahrer.klasse == 5) && jahrgang_alter >= 45">

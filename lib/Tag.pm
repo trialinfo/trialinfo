@@ -26,10 +26,10 @@ sub random_tag($) {
     my ($bytes) = @_;
     my $tag;
 
-    open my $fh, '<', '/dev/random'
-	or die "/dev/random: $!\n";
+    open my $fh, '<', '/dev/urandom'
+	or die "/dev/urandom: $!\n";
     (read $fh, $tag, $bytes) == $bytes
-	or die "/dev/random: $!\n";
+	or die "/dev/urandom: $!\n";
     $tag =~ s/(.)/sprintf("%02x",ord($1))/egs;
 
     return $tag;
