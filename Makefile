@@ -36,6 +36,9 @@ download: $(DOWNLOAD_FILES)
 
 generate: $(GENERATED_FILES)
 
+update:
+	@./make-trialinfo-update
+
 ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
 SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
 else
