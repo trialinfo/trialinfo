@@ -1,0 +1,24 @@
+#! /bin/bash
+
+set -e
+
+update=$(readlink -f $0)
+cd /home/otsv/git/trialinfo/
+
+if [ "$(git rev-parse HEAD)" = 70d051b06b2afdc117d5658baeae0ffd49a94017 ]; then
+    git reset --hard HEAD
+fi
+
+read hash dummy < <(
+    git bundle unbundle <(
+	    dd if="$update" bs=512 skip=@BLOCKS@ status=none
+	) refs/heads/otsv
+    )
+git merge $hash
+make
+
+echo
+echo "Update auf $hash erfolgreich!"
+echo
+read
+exit
