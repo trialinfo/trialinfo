@@ -630,7 +630,6 @@ eval {
 	my ($id) = parameter($q, qw(id));
 	veranstaltung_lesen $id;
 	$dbh->begin_work;
-	$dbh->begin_work;
 	my $dateiname = $q->url_param('name');
 	_utf8_on($dateiname)
 	    if $dateiname;
