@@ -182,6 +182,10 @@ function nennungenController($scope, $sce, $http, $timeout, $q, $route, $locatio
     $scope.jahrgang_alter = jahrgang_alter.getFullYear() - 1970 - 1;
   });
 
+  $scope.jahrgang = function(alter) {
+    return new Date().getFullYear() - alter - 1;
+  }
+
   $scope.speichern = function() {
     if ($scope.busy)
       return;
