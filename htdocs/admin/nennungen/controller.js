@@ -547,7 +547,10 @@ var nennungenController = [
     };
 
     $scope.ist_oesterreich = function(land) {
-      return ['A', 'AT', 'AUT', 'Austria', 'Ö', 'Österreich']
+      try {
+	land = land.toLocaleLowerCase();
+      } catch (_) { }
+      return ['a', 'at', 'aut', 'austria', 'ö', 'österreich']
 	.find(function(_) { return land == _ });
     };
 
