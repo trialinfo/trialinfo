@@ -57,6 +57,11 @@ if (my @row = $sth->fetchrow_array) {
 	FROM vareihe_veranstaltung
 	JOIN wertung USING (id)
 	JOIN veranstaltung USING (id)
+	JOIN (
+	    SELECT DISTINCT id
+	    FROM fahrer
+	    WHERE start
+	) AS _2 USING (id)
 	LEFT JOIN (
 	    SELECT DISTINCT id, vareihe.kuerzel
 	    FROM vareihe_veranstaltung
