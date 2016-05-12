@@ -376,11 +376,11 @@ var nennungenController = [
     };
 
     $scope.fahrer_in_wertung1 = function(fahrer) {
-      if (!fahrer.wertungen[0].aktiv || fahrer.ausser_konkurrenz)
+      if (!fahrer.wertungen[0].aktiv)
 	return false;
       if (fahrer.klasse != null) {
 	var klasse = veranstaltung.klassen[fahrer.klasse - 1];
-	return !(klasse.keine_wertung1 || klasse.ausser_konkurrenz);
+	return !klasse.keine_wertung1;
       }
     };
 
