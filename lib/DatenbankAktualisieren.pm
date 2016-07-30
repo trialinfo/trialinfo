@@ -801,6 +801,7 @@ sub veranstaltung_rechte_vererben($$$) {
 
     &$callback(qq{
 	INSERT INTO veranstaltung_benutzer
+	    (id, benutzer, nur_lesen, vererben)
 	    SELECT ?, benutzer, nur_lesen, vererben
 	    FROM veranstaltung
 	    JOIN veranstaltung_benutzer USING (id)
@@ -809,6 +810,7 @@ sub veranstaltung_rechte_vererben($$$) {
 
     &$callback(qq{
 	INSERT INTO veranstaltung_gruppe
+	    (id, gruppe, nur_lesen, vererben)
 	    SELECT ?, gruppe, nur_lesen, vererben
 	    FROM veranstaltung
 	    JOIN veranstaltung_gruppe USING (id)
