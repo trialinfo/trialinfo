@@ -213,8 +213,7 @@ sub fahrer_wertungen_hash($) {
 	for (my $n = 0; $n < @$wertungen; $n++) {
 	    my $wertung = $wertungen->[$n];
 	    next unless $wertung && $wertung->{aktiv};
-	    $hash->{$n + 1} = [ $wertung->{rang},
-				$wertung->{punkte} ];
+	    $hash->{$n + 1} = [];
 	}
     }
     return $hash;
@@ -297,7 +296,7 @@ sub einen_fahrer_aktualisieren($$$$$) {
 	}
 
 	hash_aktualisieren $callback, 'fahrer_wertung',
-		[qw(id startnummer wertung)], [qw(wertungsrang wertungspunkte)],
+		[qw(id startnummer wertung)], [],
 		[$id, $startnummer],
 		fahrer_wertungen_hash($alt),
 		fahrer_wertungen_hash($neu)

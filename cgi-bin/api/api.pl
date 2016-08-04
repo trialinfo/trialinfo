@@ -178,6 +178,10 @@ sub get_fahrer($$$;$$$) {
     my $fahrer_nach_startnummer =
 	fahrer_aus_datenbank($dbh, $id, $startnummer,
 			     $richtung, $starter, $gruppen);
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{wertungen} =
+	    [map { $_->{aktiv} } @{$fahrer->{wertungen}}];
+    }
     my $startnummern = [ keys %$fahrer_nach_startnummer ];
     $result = $fahrer_nach_startnummer->{$startnummern->[0]}
 	if @$startnummern == 1;
@@ -851,6 +855,11 @@ eval {
 	die "Ungültige Startnummer\n"
 	    if defined $fahrer1->{startnummer} &&
 	       $fahrer1->{startnummer} !~ /^-?\d+$/;
+
+	eval {
+	    $fahrer1->{wertungen} =
+		[map { {aktiv => $_} } @{$fahrer1->{wertungen}}];
+	};
 
 	my $fahrer0;
 	$dbh->begin_work;

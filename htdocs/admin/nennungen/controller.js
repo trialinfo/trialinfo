@@ -98,7 +98,6 @@ var nennungenController = [
       if ($scope.form)
 	$scope.form.$setPristine();
       if (fahrer) {
-	wertungen_auffuellen(fahrer);
 	if (fahrer.fahrer)
 	  fahrer.fahrer = fahrerliste_normalisieren(fahrer.fahrer);
       }
@@ -215,7 +214,7 @@ var nennungenController = [
       if (fahrer.start) {
 	angular.forEach(fahrer.wertungen, function(wertung, index) {
 	  if (wertung && !features['wertung' + (index + 1)])
-	    wertung.aktiv = false;
+	    fahrer.wertungen[index] = false;
 	});
       }
 
@@ -244,13 +243,6 @@ var nennungenController = [
       fahrer_zuweisen($scope.fahrer_ist_neu ? undefined : $scope.fahrer_alt);
     }
 
-    function wertungen_auffuellen(fahrer) {
-      angular.forEach(features.wertungen, function(wertung) {
-	if (!fahrer.wertungen[wertung - 1])
-	  fahrer.wertungen[wertung - 1] = { aktiv: false };
-      });
-    }
-
     $scope.neuer_fahrer = function() {
       /* FIXME: Wenn Felder gesetzt werden, werden hier die entsprechenden
        * Properties gesetzt; wenn die Felder dann gelöscht werden, bleiben die
@@ -261,7 +253,7 @@ var nennungenController = [
 	'gruppe': gruppen,
 	'klasse': null,
 	'startnummer': null,
-	'wertungen': [ { aktiv: veranstaltung.wertung1_markiert } ],
+	'wertungen': [ veranstaltung.wertung1_markiert ],
 	'versicherung': veranstaltung.versicherung
       };
       if (gruppen)
@@ -376,7 +368,7 @@ var nennungenController = [
     };
 
     $scope.fahrer_in_wertung1 = function(fahrer) {
-      if (!fahrer.wertungen[0].aktiv)
+      if (!fahrer.wertungen[0])
 	return false;
       if (fahrer.klasse != null) {
 	var klasse = veranstaltung.klassen[fahrer.klasse - 1];
@@ -540,7 +532,7 @@ var nennungenController = [
       var fahrer = $scope.fahrer;
       var wertungen = fahrer ? fahrer.wertungen : [];
       for (var n = 0; n < wertungen.length; n++) {
-	if (wertungen[n] && wertungen[n].aktiv)
+	if (wertungen[n])
 	  return true;
       }
       return false;
