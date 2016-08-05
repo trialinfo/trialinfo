@@ -1,0 +1,21 @@
+*
+{
+font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+
+body { background-color:white; }
+
+span.accesskey { text-decoration:underline; }
+.punktespalte { width:2em; }
+
+input, textarea, select, button { font-family:inherit; font-size:inherit; }
+
+textarea.ng-invalid.ng-dirty, input.ng-invalid.ng-dirty {
+  color: #e00000;
+  background-color: #fff0f0;
+}
+
+@media print {
+  .no-print, .no-print * { display:none !important; }
+  .page-break { page-break-before:always; }
+}

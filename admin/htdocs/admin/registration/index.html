@@ -1,0 +1,344 @@
+<h1>{{event.rankings[0].title}} – {{groups ? 'Gruppen' : 'Fahrer'}}</h1>
+<table>
+  <tr>
+    <td valign="top">
+      <form name="form" ng-keydown="keydown($event)">
+	<fieldset style="display:inline">
+	  <legend>Nennung</legend>
+	  <table>
+	    <tr ng-if="!groups && features.class">
+	      <th align="right"><label for="class" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" numeric size="2" maxlength="2" min="1" max="15" ng-model="rider.class" id="class">
+		<select ng-disabled="!enabled.rider" ng-model="rider.class" ng-options="class.class as class.class + ': ' + class.name for class in defined_classes" tabindex="-1">
+		  <option value=""></option>
+		</select>
+		<span ng-if="rider.class != null && rider.class != event.classes[rider.class - 1].ranking_class">
+		  (Wertung in Klasse {{event.classes[rider.class - 1].ranking_class}})</br>
+		</span>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.number">
+	      <th align="right"><label for="number" accesskey="t">S<span class="accesskey">t</span>artnummer</label></th>
+	      <td>
+		<input ng-if="features.number" ng-disabled="!enabled.number" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="internal.number" name="number" id="number" ui-validate="'number_valid($value)'">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.first_name">
+	      <th align="right"><label for="first_name" accesskey="v"><span class="accesskey">V</span>orname</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="30" maxlength="30" ng-model="rider.first_name" id="first_name">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.last_name">
+	      <th align="right"><label for="last_name" accesskey="n"><span ng-if="groups"><span class="accesskey">N</span>ame</span><span ng-if="!groups"><span class="accesskey">N</span>achname</label></span></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="30" maxlength="30" ng-model="rider.last_name" id="last_name">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.street">
+	      <th align="right"><label for="street">Straße</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="30" maxlength="30" ng-model="rider.street" id="street">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.zip || features.city">
+	      <th align="right"><span ng-if="features.zip"><label for="zip">PLZ </span><span ng-if="features.city">Wohnort</label></th>
+	      <td>
+		<span ng-if="features.zip">
+		  <input ng-disabled="!enabled.rider" type="text" size="5" maxlength="5" ng-model="rider.zip" id="zip">
+		</span>
+		<span ng-if="features.city">
+		  <input ng-disabled="!enabled.rider" type="text" size="25" maxlength="40" ng-model="rider.city">
+		</span>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.country">
+	      <th align="right"><label for="country">Staatsangehörigkeit</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="15" ng-model="rider.country" id="country" list="country_list">
+		<datalist id="country_list">
+		  <option ng-repeat="country in suggestions.country" value="{{country}}">
+		</datalist>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.province">
+	      <th align="right"><label for="province">Bundesland</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="20" ng-model="rider.province" list="province_list">
+		<datalist id="province_list">
+		  <option ng-repeat="province in suggestions.province" value="{{province}}">
+		</datalist>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.phone">
+	      <th align="right"><label for="phone">Telefon</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.date_of_birth">
+	      <th align="right"><label for="date_of_birth" accesskey="g"><span class="accesskey">G</span>eburtsdatum</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="10" maxlength="10" ng-model="rider.date_of_birth" iso-date name="date_of_birth" id="date_of_birth">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.license">
+	      <th align="right"><label for="license">Lizenznummer</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.license" id="license">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.club">
+	      <th align="right"><label for="club">Club</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="25" maxlength="40" ng-model="rider.club" id="club" list="club_list">
+		<datalist id="club_list">
+		  <option ng-repeat="club in suggestions.club" value="{{club}}">
+		</datalist>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.applicant">
+	      <th align="right"><label for="applicant">Bewerber</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="40" maxlength="40" ng-model="rider.applicant" id="applicant">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.vehicle">
+	      <th align="right"><label for="vehicle">Fahrzeug</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="30" ng-model="rider.vehicle" id="vehicle" list="vehicle_list">
+		<datalist id="vehicle_list">
+		  <option ng-repeat="vehicle in suggestions.vehicle" value="{{vehicle}}">
+		</datalist>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.frame_number">
+	      <th align="right"><label for="frame_number">Rahmennummer</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.frame_number" id="frame_number">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.registration">
+	      <th align="right"><label for="registration">Pol. Kennzeichen</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="15" ng-model="rider.registration" id="registration">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.displacement">
+	      <th align="right"><label for="displacement">Hubraum</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="10" maxlength="10" ng-model="rider.displacement" id="displacement">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.entry_fee">
+	      <th align="right"><label for="entry_fee">Nenngeld</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="10" maxlength="10" ng-model="rider.entry_fee" id="entry_fee">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.insurance">
+	      <th align="right"><label for="insurance">Versicherung</label></th>
+	      <td>
+		<select ng-disabled="!enabled.rider" ng-model="rider.insurance" numeric id="insurance">
+		  <option value=""></option>
+		  <option value="1">ADAC-Versicherung</option>
+		  <option value="2">DMV-Versicherung</option>
+		  <option value="3">KFZ-Versicherung</option>
+		  <option value="4">Tagesversicherung</option>
+		</select>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.email">
+	      <th align="right"><label for="email">E-Mail</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="40" maxlength="60" ng-model="rider.email" id="email">
+	      </td>
+	    </tr>
+	    <tr ng-if="features.comment">
+	      <th align="right"><label for="comment">Bemerkungen</label></th>
+	      <td>
+		<textarea ng-disabled="!enabled.rider" rows="2" cols="70" maxlength="150" ng-model="rider.comment" id="comment"></textarea>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.rankings">
+	      <th align="right"><label for="ranking{{features.rankings[0]}}">Wertungen</label></th>
+	      <td>
+		<span ng-repeat="ranking in features.rankings">
+		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.rankings[ranking - 1]" id="ranking{{ranking}}" accesskey="{{rankings[ranking - 1].accesskey}}">
+		    <label for="ranking{{ranking}}" ng-bind-html="rankings[ranking - 1].label" ng-style="ranking == 1 && no_ranking1 ? {'text-decoration': 'line-through'} : {}" title="{{ranking == 1 && no_ranking1 ? 'Klasse ' + rider.class + ' nimmt an dieser Wertung nicht teil.': ''}}"></label>
+		</span>
+	      </td>
+	    </tr>
+	    <tr>
+	      <th align="right">Teilnahme</th>
+	      <td>
+		<span ng-if="features.registered">
+		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.registered" id="registered">
+		    <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
+		</span>
+		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start" id="start">
+		  <label for="start" accesskey="s" ng-style="!may_start() ? {'text-decoration': 'line-through'} : {}" title="{{!may_start() ? (rider.class == null ? (groups ? 'Gruppe' : 'Fahrer') + ' ist keiner Klasse zugewiesen.' : 'Klasse ' + rider.class + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
+		<span ng-if="features.start_tomorrow">
+		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow">
+		    <label for="start_tomorrow" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
+		</span>
+		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.non_competing" id="non_competing">
+		  <label for="non_competing" accesskey="a" ng-style="non_competing ? {'text-decoration': 'line-through'} : {}" title="{{non_competing ? 'Klasse ' + rider.class + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
+	      </td>
+	    </tr>
+	    <tr ng-if="features.minder">
+	      <th align="right"><label for="minder">Minder</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="rider.minder" id="minder">
+	      </td>
+	    </tr>
+	  </table>
+	</fieldset><br>
+	<fieldset style="display:inline" ng-if="groups && rider">
+	  <legend>Fahrer in Gruppe</legend>
+	  <span ng-repeat="number in rider.riders">
+	    <a href="" ng-click="remove_member(number)" ng-style="member_starts(number) ? {} : {'text-decoration': 'line-through'}" title="Aus Gruppe entfernen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
+	  </span>
+	</fieldset>
+      </form>
+    </td>
+    <td valign="top">
+      <form name="navigation">
+	<fieldset>
+	  <legend>Navigation</legend>
+	  <p>
+	    <button type="button" ng-disabled="modified()" ng-click="load_first_rider()" tabindex="-1">|&lt;</button>
+	    <button type="button" ng-disabled="modified()" ng-click="load_previous_rider()" tabindex="-1">&lt;</button>
+	    <button type="button" ng-disabled="modified()" ng-click="load_next_rider()" tabindex="-1">&gt;</button>
+	    <button type="button" ng-disabled="modified()" ng-click="load_last_rider()" tabindex="-1">&gt;|</button>
+	  </p>
+	  <p>
+	    <label for="search_term" accesskey="f" ng-if="!groups"><span class="accesskey">F</span>ahrer suchen:</label>
+	    <label for="search_term" accesskey="g" ng-if="groups"><span class="accesskey">G</span>ruppe suchen:</label><br>
+	    <input type="text" ng-disabled="modified()" size="20" maxlength="40" ng-model="search.term" onchange="angular.element(this).scope().find_riders()" id="search_term" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
+	  </p>
+	  <p>
+	    <span ng-repeat="rider in rider_list">
+	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider, this)}}">{{rider_name(rider)}}</a><br>
+	    </span>
+	    <span ng-if="rider_list != null && rider_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
+	  </p>
+	  <p ng-if="groups && rider">
+	    <label for="member_search_term">Fahrer suchen:</label><br>
+	    <input type="text" ng-disabled="!rider" size="20" maxlength="40" ng-model="member_search.term" onchange="angular.element(this).scope().find_members()" id="member_search_term" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off">
+	  </p>
+	  <p>
+	    <span ng-repeat="number in members_list">
+	      <a href="" ng-click="add_member(number)" ng-style="member_starts(number) ? {} : {'text-decoration': 'line-through'}" title="Zu Gruppe hinzufügen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
+	    </span>
+	  </p>
+	  <p>
+	    <span style="color:red" ng-if="error">{{error}}<br></span>
+	    <!-- if (!(rider && rider.start && starting_classes[rider.class - 1])) ... -->
+	    <span ng-if="number_used.number">
+	      <span ng-if="number_used.id" style="color:green">
+		Vorsicht, Startnummer war bereits in Verwendung:<br>
+		{{number_used.title}}<br>
+		{{number_used.last_name}} {{number_used.first_name}}<br>
+		<!-- Nächste freie Startnummer: {{number_used.next_number}}<br> -->
+	      </span>
+	      <span ng-if="!number_used.id" style="color:red">
+		Startnummer belegt:<br>
+		{{number_used.last_name}} {{number_used.first_name}}<br>
+		Nächste freie Startnummer: {{number_used.next_number}}<br>
+	      </span>
+	    </span>
+	    <span ng-if="!number_used.number && number_used.next_number">
+	      Nächste freie Startnummer in Klasse: {{number_used.next_number}}<br>
+	    </span>
+	    <span ng-if="rider.start && !may_start()" style="color:red">
+	      <span ng-if="rider.class != null">
+		Für Klasse {{rider.class}} sind keine zu befahrenen Runden und Sektionen<br>
+		ausgewählt, die Klasse startet daher nicht.
+	      </span>
+	      <span ng-if="rider.class == null">
+		Fahrer ist keiner Klasse zugewiesen,<br>
+		und kann daher nicht gewertet werden.
+	      </span>
+	    </span>
+	    <span ng-if="event.type.match('^otsv') && is_austria(rider.country)" style="color:red">
+	      Bitte das Feld Staatsangehörigkeit für Österreicher leer lassen.
+	    </span>
+	    <span ng-if="event.type == 'otsv2014' || event.type == 'otsv+osk2014' || event.type == 'otsv2016' || event.type == 'otsv+osk2016'" style="color:red">
+	      <span ng-if="!rider.non_competing">
+		<span ng-if="rider.date_of_birth">
+		  <span ng-if="(rider.class == 3 || rider.class == 5) && age_year >= 45">
+		    Fahrer ist vor Jahrgang {{year_for_age(44)}} geboren<br>und muss stattdessen in Klasse {{rider.class + 1}} starten.
+		  </span>
+		  <span ng-if="(rider.class == 4 || rider.class == 6) && age_year < 45">
+		    Fahrer ist nach Jahrgang {{year_for_age(45)}} geboren<br>und muss stattdessen in Klasse {{rider.class - 1}} starten.
+		  </span>
+		  <span ng-if="rider.class == 11 && age < 14">
+		    Fahrer ist unter 14 Jahre alt<br>und darf in Klasse 11 noch nicht starten.
+		  </span>
+		  <span ng-if="rider.class == 12">
+		    <span ng-if="age < 12">
+		      Fahrer ist unter 12 Jahre alt<br>und darf in Klasse 12 noch nicht starten.
+		    </span>
+		    <span ng-if="age_year >= 18">
+		      Fahrer ist vor Jahrgang {{year_for_age(17)}} geboren<br>und darf in Klasse 12 nicht mehr starten.
+		    </span>
+		  </span>
+		  <span ng-if="rider.class == 13">
+		    <span ng-if="age < 10">
+		      Fahrer ist unter 10 Jahre alt<br>und darf in Klasse 13 noch nicht starten.
+		    </span>
+		    <span ng-if="age_year >= 16">
+		      Fahrer ist vor Jahrgang {{year_for_age(15)}} geboren<br>und darf in Klasse 13 nicht mehr starten.
+		    </span>
+		  </span>
+		</span>
+		<span ng-if="rider.class >= 11 && rider.class <= 13">
+		  <span ng-if="!rider.license">
+		    Bitte die Lizenznummer eintragen.
+		  </span>
+		  <span ng-if="rider.license && !osk_license(rider) && rider_in_ranking1(rider)">
+		    Fahrer hat keine OSK-Lizenznummer (IJM / JM / JMJ)<br>und darf an der Jahreswertung nicht teilnehmen.
+		  </span>
+		</span>
+	      </span>
+	    </span>
+	    <span ng-if="event.type == 'otsv-ecup2015'" style="color:red">
+	      <span ng-if="!rider.non_competing">
+		<span ng-if="rider.date_of_birth">
+		  <span ng-if="rider.class == 1 && age_year > 6">
+		    Fahrer ist vor Jahrgang {{year_for_age(6)}} geboren<br>und muss in einer höheren Klasse starten.
+		  </span>
+		  <span ng-if="(rider.class == 2 || rider.class == 3) && age_year < 7" style="color:green">
+		    Fahrer ist nach Jahrgang {{year_for_age(7)}} geboren<br>und darf auch in einer niedrigeren Klasse starten.
+		  </span>
+		  <span ng-if="(rider.class == 2 || rider.class == 3) && age_year > 8">
+		    Fahrer ist vor Jahrgang {{year_for_age(8)}} geboren<br>und muss in einer höheren Klasse starten.
+		  </span>
+		  <span ng-if="(rider.class == 4 || rider.class == 5) && age_year < 9" style="color:green">
+		    Fahrer ist nach Jahrgang {{year_for_age(9)}} geboren<br>und darf auch in einer niedrigeren Klasse starten.
+		  </span>
+		</span>
+	      </span>
+	    </span>
+	  </p>
+	  <p>
+	    <button type="button" ng-disabled="!(modified() && form.$valid) || busy" ng-click="save()" tabindex="-1">Speichern</button>
+	    <button type="button" ng-disabled="!(modified() || enabled.discard) || busy" ng-click="discard()" tabindex="-1">Verwerfen</button>
+	  </p>
+	  <p>
+	    <button type="button" ng-disabled="modified() || !enabled.neu" ng-click="new_rider()" accesskey="u" tabindex="-1">
+	      <span ng-if="!groups">Ne<span class="accesskey">u</span>er Fahrer</span>
+	      <span ng-if="groups">Ne<span class="accesskey">u</span>e Gruppe</button></span><br>
+	    <span ng-if="features.number">
+	      <button type="button" ng-disabled="!enabled.rider || enabled.number" ng-click="change_number()" accesskey="ä" tabindex="-1">Startnummer <span class="accesskey">ä</span>ndern</button><br>
+	    </span>
+	    <button type="button" ng-disabled="modified() || !enabled.remove" ng-disabled="!enabled.rider" ng-click="remove()" accesskey="l" tabindex="-1">
+	      {{groups ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
+	  </p>
+	</fieldset>
+      </form>
+    </td>
+  </tr>
+</table>

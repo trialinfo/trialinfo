@@ -1,0 +1,13 @@
+To install all required npm packages:
+$ npm install
+
+To start in development mode:
+$ npm start
+
+To build and start in production mode:
+$ npm run build
+$ npm run serve
+
+Babel may be running slow. I've seen a recommendation for running this to speed
+things up:
+$ npm dedupe

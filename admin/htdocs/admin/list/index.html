@@ -1,0 +1,198 @@
+<style type="text/css">
+  a:link,a:visited { text-decoration:none; color:black; }
+  a:hover,a:active { text-decoration:underline; color:#551a8b; }
+</style>
+
+<style type="text/css" ng-bind-html="print_style()">
+</style>
+
+<h1><a href="" ng-click="settings($event)">{{event.rankings[0].title}}</a></h1>
+<div ng-if="fold.settings" class="no-print">
+  <p>
+    <form name="form">
+      <fieldset style="display:inline">
+	<legend>Anzeige einstellen</legend>
+	<table>
+	  <tr ng-if="riders_groups"><th align="right">Fahrer/Gruppen</th>
+	    <td>
+	      <select ng-model="show.riders_groups">
+		<option value=""></option>
+		<option value="rider">Fahrer</option>
+		<option value="groups">Gruppen</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-if="features.number"><th align="right">Startnummer</th>
+	    <td>
+	      <select ng-model="show.number" yes-no-null title="Fahrer ist eine Startnummer zugeordnet">
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-if="features.registration"><th align="right">Nennungseingang</th>
+	    <td>
+	      <select ng-model="show.registration" yes-no-null>
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Start</th>
+	    <td>
+	      <select ng-model="show.start" yes-no-null title="Fahrer oder Gruppe startet">
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+		<span ng-if="show.riders">
+		  <input type="checkbox" ng-model="show.riding" id="riding"><label for="riding">Fahrer auf der Strecke</label>
+		</span>
+	    </td>
+	  </tr>
+	  <tr ng-if="features.start_tomorrow"><th align="right"><span title="Fahrer oder Gruppe startet morgen">Start morgen</span></th>
+	    <td>
+	      <select ng-model="show.start_tomorrow" yes-no-null>
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-repeat="ranking in [1,2,3,4]" ng-if="features['ranking' + ranking] && ((show.riders && event.rankings[ranking - 1].riders) || (show.groups && event.rankings[ranking - 1].groups))">
+	    <th align="right">{{ranking_name(ranking)}}</th>
+	    <td>
+	      <select ng-model="show['ranking' + ranking]" yes-no-null>
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr ng-if="features.number">
+	    <th align="right">Startnummernbereich</th>
+	    <td>
+	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="show.number_min" title="Von"> −
+	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="show.number_max" title="Bis">
+	    </td>
+	  </tr>
+	  <tr ng-if="features.date_of_birth">
+	    <th align="right">Jahrgangsbereich</th>
+	    <td>
+	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="show.year_min" title="Von"> −
+	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="show.year_max" title="Bis (Fehlendes Geburtsdatum zählt als „älter“.)">
+	    </td>
+	  </tr>
+	  <tr>
+	    <th align="right">Klasse (in Wertung)</th>
+	    <td>
+	      <span ng-repeat="class in starting_classes"><input type="checkbox" ng-model="show.classes[class]" id="{{'class' + class}}" title="{{event.classes[class - 1].name}}"><label for="{{'class' + class}}" title="{{event.classes[class - 1].name}}">{{class}}</label> </span>
+	      <input type="checkbox" ng-model="show.other_classes" id="other_classes"><label for="other_classes">Andere</label>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Gruppieren nach</th>
+	    <td>
+	      <select ng-model="show.group_by">
+		<option value="-"></option>
+		<option value="club" ng-if="features.club">Club</option>
+		<option value="vehicle" ng-if="features.vehicle">Fahrzeug</option>
+		<option value="group" ng-if="riders_groups">Gruppe</option>
+		<option value="ranking_class">Klasse (in Wertung)</option>
+		<option value="country_province" ng-if="features.country || features.province">Land (Bundesland)</option>
+		<option value="org_fee" ng-if="features.org_fee">ÖTSV-Beitrag</option>
+		<option value="insurance" ng-if="features.insurance">Versicherung</option>
+		<option value="city" ng-if="features.city">Wohnort</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Sortieren nach</th>
+	    <td>
+	      <select ng-model="show.order_by">
+		<option value="date_of_birth" ng-if="features.date_of_birth">Geburtsdatum</option>
+		<option value="name">Name</option>
+		<option value="number" ng-if="features.number">Startnummer</option>
+		<option value="start_time" ng-if="features.start_time">Startzeit</option>
+		<option value="finish_time" ng-if="features.finish_time">Zielzeit</option>
+	      </select>
+	    </td></tr>
+	  <tr><th align="right">Felder</th>
+	    <td>
+	      <span ng-repeat="_ in show.fields track by $index">
+		<select ng-model="show.fields[$index]" ng-options="field.key as field.name for field in field_list">
+		</select>
+	      </span>
+	    </td></tr>
+	</table>
+      </fieldset><br>
+    </form>
+    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST" ng-if="HAVE_WEASYPRINT">
+      <fieldset style="display:inline">
+	<legend>Drucken</legend>
+	<table>
+	  <tr><th align="right">Seitenformat</th>
+	    <td>
+	      <select ng-model="show['page-size']">
+		<option value="A4">A4 Hochformat</option>
+		<option value="A4 landscape">A4 Querformat</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th align="right">Ränder</th>
+	    <td>
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-left']" title="Links" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-top']" title="Oben" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-right']" title="Rechts" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-bottom']" title="Unten" style="text-align:center">
+	    </td>
+	  </tr>
+	  <tr><th align="right">Schriftgröße</th>
+	    <td>
+	      <input type="text" numeric min="6" max="20" size="2" maxlength="2" ng-model="show['font-size']" style="text-align:center"> Punkt
+	    </td>
+	  </tr>
+	  <tr ng-if="show.group_by != '-'"><th></th>
+	    <td>
+	      <input type="checkbox" ng-model="show['page-break']" id="page-break"><label for="page-break">Seitenumbruch zwischen den Gruppen</label>
+	    </td>
+	  </tr>
+	  <tr><th></th>
+	    <td><button type="submit" ng-click="create_pdf($event)">PDF erzeugen</button></td>
+	  </tr>
+	</table>
+      </fieldset>
+      <input type="hidden" name="filename" value="Fahrerliste {{event.rankings[0].title}}.pdf">
+      <input type="hidden" name="url" value="{{url}}">
+      <input type="hidden" name="html" value="{{html}}">
+    </form>
+  </p>
+</div>
+
+<style type="text/css">
+table.liste td, table.liste th {
+  padding: 0 0.5em 0 0.5em
+}
+</style>
+
+<p>
+  <span ng-if="num_riders">{{num_riders}} Fahrer</span><span ng-if="num_riders && num_groups"> und </span><span ng-if="num_groups == 1">1 Gruppe</span><span ng-if="num_groups > 1">{{num_groups}} Gruppen</span><span ng-if="!(num_riders || num_groups)">Keine Fahrer oder Gruppen</span>.
+</p>
+<div ng-repeat="group in resulting_list" ng-init="group_index = $index" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
+  <h2 ng-if="show.group_by != '-'">{{group_heading(group.group)}}</h2>
+  <table class="liste">
+    <thead>
+      <tr>
+	<th ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.heading"></th>
+      </tr>
+    </thead>
+    <tr ng-repeat="rider in group.list">
+      <td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+    </tr>
+    <tbody ng-if="aggregat[group_index]">
+      <tr>
+	<th ng-repeat="field in fields track by $index" ng-style="field.style">{{aggregat[group_index][$index]}}</th>
+      </tr>
+    </tbody>
+  </table>
+</div>

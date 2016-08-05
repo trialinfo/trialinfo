@@ -12,19 +12,18 @@ SYNC_TARGET ?= false
 AUTH_PREFIX ?= $(CURDIR)
 
 DOWNLOAD_FILES = \
-	htdocs/js/angular.js \
-	htdocs/js/angular.min.js \
-	htdocs/js/angular-route.js \
-	htdocs/js/angular-cookies.js \
-	htdocs/js/json-diff.js \
-	htdocs/js/validate.js \
+	admin/htdocs/js/angular.js \
+	admin/htdocs/js/angular.min.js \
+	admin/htdocs/js/angular-route.js \
+	admin/htdocs/js/angular-cookies.js \
+	admin/htdocs/js/json-diff.js \
+	admin/htdocs/js/validate.js \
 
 GENERATED_FILES = \
 	cgi-bin/api/.htaccess \
 	cgi-bin/veranstalter/.htaccess \
-	htdocs/admin/hilfe/.htaccess \
-	htdocs/admin/.htaccess \
-	htdocs/admin/index.html \
+	admin/htdocs/admin/help/.htaccess \
+	admin/htdocs/config.js \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/.htaccess \
@@ -38,6 +37,12 @@ generate: $(GENERATED_FILES)
 
 update:
 	@./make-trialinfo-update
+
+install:
+	cd admin && npm install
+
+start:
+	cd admin && npm start
 
 ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
 SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
@@ -65,17 +70,22 @@ $(GENERATED_FILES): %: %.in
 
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
-ANGULAR_VERSION=1.2.27
-htdocs/js/angular%:
+ANGULAR_VERSION=1.2.32
+admin/htdocs/js/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
 
 # AngularUI Validate
-htdocs/js/validate.js:
+admin/htdocs/js/validate.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular-ui/ui-utils/raw/v2.0.0/modules/validate/validate.js
+
+admin/htdocs/js/json-diff.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js
 
 update-perl-json-pointer:
 	@set -xe; \
@@ -100,11 +110,6 @@ update-perl-json-patch:
 	( cd $$tmpdir/perl-json-patch-master/lib; \
 	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
 	git add -v "$${files[@]/#/lib/}"
-
-htdocs/js/json-diff.js:
-	@mkdir -p  $(dir $@)
-	$(CURL) -o $@ --fail --silent --location \
-		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js
 
 clean:
 	rm -f $(DOWNLOAD_FILES)

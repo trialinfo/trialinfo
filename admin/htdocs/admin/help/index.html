@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="../../admin.css" />
+  <style type="text/css">
+    li { margin: 1em 0; }
+  </style>
+  <title>TrialInfo</title>
+</head>
+<body>
+<h1>TrialInfo</h1>
+<p>Dieses Auswertungssystem für Motorrad- und Fahrrad-Trial-Wettbewerbe
+unterstützt alle wesentlichen Schritte zur Verwaltung von Veranstaltungen und
+zur Erstellung von Gesamtwertungen über mehrere Veranstaltungen hinweg
+(Fahrer, Gruppen, Punktevergabe, Erstellung von Listen, Auswertungen).</p>
+
+<p>Das System ist komplett über einen Web-Browser bedienbar. Es kann auch von
+mehreren Geräten aus gleichzeitig verwendet werden. Wird dabei versucht, die
+selben Daten mehrfach zu verändern, dann werden diese Konflikte erkannt, und es
+kommt zu Fehlermeldungen.</p>
+
+<h2>Formulare und Navigation</h2>
+<p>Die Formulare und die ganze Web-Applikation sind so gestaltet, dass alle
+häufig wiederholten Tätigkeiten über die Tastatur ausgeführt werden können.
+Wichtige Felder in den Formularen können über die Tastatur angesprungen,
+wichtige Aktionen über die Tastatur ausgelöst werden:
+<ul>
+<li> Die Eingabetaste (⏎) speichert ein Formular.
+<li> Die Escape-Taste (⎋) verwirft die Änderungen in einem Formular.
+<li> Unterstrichene Buchstaben in Formularen kennzeichnen, dass eine
+browserabhängige Tastenkombination plus der unterstrichene Buchstabe das Feld
+anspringt oder die Aktion auslöst.  Auf PCs ist diese Tastenkombination oft Alt
++ Umschalttaste (⎇ ⇧), auf MacOS Ctrl + Option (^⌥). Es gibt dazu eine
+Übersicht auf <a href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.
+</ul>
+</p>
+
+<p>Formulare werden nicht automatisch gespeichert, sondern erst, wenn die
+Änderungen mit der Eingabetaste (⏎) bestätigt werden. Der Web-Browser
+warnt wenn versucht wird, ein Formular mit nicht gespeicherten Änderungen zu
+verlassen.</p>
+
+<p>Die Navigation in der Web-Applikation erfolgt über die Verknüpfungen auf den
+einzelnen Seiten und über die Zurück-Taste, um auf die vorige Seite zu
+springen. Auf Tastaturen, auf denen es keine Zurück-Taste gibt, ist die
+entsprechende Tastaturkombination meist Alt + Links (⎇ ←) oder Command + Links
+(⌘←).</p>
+
+<p>Die Schriftgröße lässt sich über den Web-Browser verändern; über die
+Tastatur üblicherweise mit Ctrl + Plus (^+) und Ctrl + Minus (^−)
+beziehungsweise Command + Plus (⌘+) und Command + Minus (⌘−).</p>
+
+<p>Es können bei Bedarf Seiten der Applikation in mehreren Tabs oder Fenstern
+geöffnet werden, zwischen denen gewechselt werden kann.</p>
+
+<h2>Übersicht über TrialInfo</h2>
+<p>Nach der Eingabe von Benutzername und Kennwort kommt man auf die
+Übersichtsseite, auf der alle vorhandenen Veranstaltungen und
+Veranstaltungsreihen aufgelistet sind.  Hier kann man zu einer der Veranstaltungen
+oder Veranstaltungsreihen wechseln, oder eine neue Veranstaltung oder
+Veranstaltungsreihe anlegen.</p>
+
+<p>Abgeschlossene Veranstaltungsreihen und die dazugehörigen Veranstaltungen
+sind zunächst verborgen, und können durch Auswählen von „alte Veranstaltungen
+anzeigen“ bzw. „abgeschlossene Veranstaltungsreihen anzeigen“ eingeblendet
+werden.<p>
+
+<p>Veranstaltungen, die in ihren Einstellungen als inaktiv markiert sind,
+erscheinen in der Übersicht durchgestrichen (siehe <a
+href="#veranstaltung_aktiv">Veranstaltung anzeigen und in Wertungen
+berücksichtigen</a>).</p>
+
+<p>Bei Auswahl einer Veranstaltung erscheint die Veranstaltungsübersicht.
+Dort kann man zur Auswertung dieser Veranstaltung springen, Fahrerlisten
+erstellen, die Fahrer und Gruppen verwalten, Ergebnisse eingeben, Einstellungen
+vornehmen, Sektionen aus der Wertung nehmen, die Daten der Veranstaltung
+zurücksetzen, und die Veranstaltung löschen.</p>
+
+<p>Bei Auswahl einer Veranstaltungsreihe kann man zur Gesamtwertung der
+Veranstaltungsreihe springen, Eigenschaften der Veranstaltungsreihe
+ändern, die enthaltenen Veranstaltungen und Klassen definieren, und
+Startnummernänderungen vornehmen.</p>
+
+<h2>Auswertung</h2>
+<p>Von der Veranstaltungsübersicht kann man zur Auswertung dieser Veranstaltung
+springen. Zunächst erscheint dort eine Standard-Ansicht.  Durch Auswahl der
+Überschrift können verschiedene Einstellungen gemacht werden: Es kann geändert
+werden, welche Wertung, Klassen, und Informationen zu den Fahrern angezeigt
+werden.</p>
+
+<p>Die Einstellungsmöglichkeiten verändern sich passend zu den Einstellungen
+der Veranstaltung; unsinnige Optionen werden nicht angeboten. Wenn eine
+bestimmte Auswertung nicht verfügbar ist, kann das also an den
+Veranstaltungseinstellungen liegen.</p>
+
+<p>Am Tag der Veranstaltung wird in der Auswertung der Zeitpunkt der letzten
+Änderung angezeigt, um erkennen zu können, wie aktuell die Daten sind. Danach
+wird die letzte Änderung zwar immer noch gespeichert, aber nicht mehr
+angezeigt.</p>
+
+<p>Wird der Präsentations-Modus aktiviert, dann werden die Ergebnisse
+seitenweise dargestellt, und es erfolgt je nach eingestellter Geschwindigkeit
+schnell oder langsam ein automatischer Seitenwechsel. Diese Darstellungsart ist
+dazu gedacht, um Zuschauern die laufenden Ergebnisse anzeigen zu können,
+üblicherweise auf einem zusätzlichen Bildschirm. Es ist dazu sinnvoll, die
+Auswertung in einem neuen Fenster zu öffnen, das Fenster auf den zusätzlichen
+Bildschirm zu verschieben, und den Fensterrahmen zu verbergen (üblicherweise
+mit der Taste F11).</p>
+
+<p>Wenn TrialInfo entsprechend konfiguriert ist, kann man in den
+Anzeigeeinstellungen auch verschiedene Druckeinstellungen vornehmen und die
+Auswertung in eine PDF-Datei umwandeln.  Zum Ausdrucken liefert das bessere
+Ergebnisse aus ein direktes Ausdrucken der Auswertungsseite.  Die
+Druckeinstellungen stehen nur dann zur Verfügung, wenn der Server die
+PDF-Erzeugung unterstützt.</p>
+
+<h2>Fahrerliste und Fahrer auf der Strecke</h2>
+<p>Beim Aufruf der Fahrerliste erscheint zunächst eine Liste der Fahrer,
+gruppiert nach Klassen und sortiert nach Startnummern. Durch Auswahl der
+Überschrift lässt sich die Anzeige der Fahrerliste ähnlich wie in der
+Auswertung einstellen.</p>
+
+<p>Die Einstellungsmöglichkeiten verändern sich passend zu den Einstellungen
+der Veranstaltung; unsinnige Optionen werden nicht angeboten.  Wenn eine
+bestimmte Liste nicht verfügbar ist, kann das also an den
+Veranstaltungseinstellungen liegen.</p>
+
+<p>Wenn TrialInfo entsprechend konfiguriert ist, kann man in den
+Anzeigeeinstellungen auch verschiedene Druckeinstellungen vornehmen und die
+Fahrerliste in eine PDF-Datei umwandeln. Die Druckeinstellungen stehen nur zur
+Verfügung, wenn der Server die PDF-Erzeugung unterstützt.</p>
+
+<p>Die Ansicht "Fahrer auf der Strecke" zeigt alle Fahrer an, die den
+Wettbewerb noch nicht abgeschlossen haben und die nicht ausgefallen sind. Das
+dient dazu, um einen Überblick über den aktuellen Stand der Veranstaltung zu
+bekommen.</p>
+
+<h2>Fahrer</h2>
+<p>Hier kann im Bereich Navigation nach vorhandenen Fahrern gesucht und
+zwischen Fahrern gewechselt werden. Es können neue Fahrer angelegt und
+bestehende Fahrer gelöscht werden.</p>
+
+<p>Bei Fahrern, denen keine Startnummer zugeordnet ist, ist das Feld
+Startnummer leer.</p>
+
+<p>Sobald einem Fahrer eine Startnummer zugeordnet wurde, ist das Feld
+Startnummer für Änderungen gesperrt, um es zu schützen.  Diese Sperre kann
+über die Schaltfläche <em>Startnummer ändern</em> aufgehoben werden.</p>
+
+<p>Eine Änderung der Startnummer hat auf die Punkte des Fahrers keine
+Auswirkung. Beachten Sie aber, dass die Ergebnisse von Veranstaltungsreihen
+aufgrund der Startnummern zugeordnet werden. Innerhalb der Veranstaltungsreihen
+gibt es die Möglichkeit, verschiedene Startnummern einander zuzuordnen, wenn
+sich die Startnummer eines Fahrers zwischen Veranstaltungen geändert hat (siehe
+<a href="#vareihe_startnummern">Startnummernänderungen</a>).  Das ist oft
+sinnvoller, als nachträglich die Startnummern in den einzelnen Veranstaltungen
+zu ändern.</p>
+
+<p>Die beiden Nennformulare können eine relativ große Anzahl an Feldern
+enthalten.  Um die Übersichtlichkeit zu erhöhen, können nicht verwendete Felder
+in den Veranstaltungseinstellungen ausgeblendet werden. Die hinterlegten Daten
+gehen dabei nicht verloren.</p>
+
+<h2>Gruppen</h2>
+<p>Hier können Gruppen von Fahrern definiert werden. Im einfachsten Fall dient
+das dazu, um Gruppenlisten erstellen zu können, auch wenn die Fahrer einzeln
+gewertet werden.  Wenn für eine Gruppe das Häkchen „Start“ aktiviert ist, wird
+aber auch eine Gruppenwertung erstellt.</p>
+
+<p>Das Gruppenformular funktioniert wie das Fahrerformular, es werden
+allerdings weniger Felder angeboten und den Gruppen können Fahrer zugeordnet
+werden.  Gruppen haben keine Startnummern.  Ein Fahrer kann Mitglied in
+mehreren Gruppen sein.</p>
+
+<h2>Punktevergabe</h2>
+<p>Hier werden die Punkte der Fahrer in den einzelnen Sektionen erfasst,
+typischerweise rundenweise.</p>
+
+<p>Um eine Sektion aus ausgelassen zu markieren, muss „−“ in das entsprechende
+Punktefeld eingetragen werden. Die Sektion wird dann mit den entsprechenden
+Strafpunkten gewertet.</p>
+
+<p>Die Punkte von Gruppen ergeben sich aus der Summe der Punkte der Mitglieder,
+es können aber Zusatzpunkte vergeben und Gruppen als ausgefallen markiert
+werden.</p>
+
+<h2>Suche in den Fahrern, Gruppen, und in der Punktevergabe</h2>
+<p>Die Suche ist über die Startnummer oder über Bestandteile des Namens
+möglich. Beispiele:
+<ul>
+<li> „470“ findet den Fahrer mit der Startnummer 470.
+
+<li> „an gr“ findet sowohl Andreas Grünbacher als auch Andreas Gradl.
+
+<li> „*bacher“ findet alle Fahrer mit dem Namensbestandteil „bacher“.
+</ul>
+</p>
+
+<p>Wenn die Suche kein eindeutiges Ergebnis liefert, werden die Treffer in
+einer Liste angezeigt, aus der der richtige Fahrer bzw. die richtige Gruppe
+ausgewählt werden kann.</p>
+
+<p>Im Nennformular findet die Suche alle Fahrer bzw. Gruppen, über die Daten
+vorliegen. In der Punktevergabe liefert die Suche nach Namen lediglich Fahrer
+und Gruppen, die als Starter markiert sind. Die Suche nach Startnummer liefert
+auch Fahrer und Gruppen, die nicht als Starter markiert sind; solche Fahrer und
+Gruppen können direkt in der Punktevergabe als Starter markiert werden.</p>
+
+<h2>Einstellungen</h2>
+<p>Hier ist die Konfiguration der Veranstaltung definiert, von Bezeichnung und
+Datum über die Wertungen, Klassen und befahrene Sektionen, bis zu den
+sichtbaren Feldern im Nennformular.</p>
+
+<h3 id="veranstaltung_aktiv">Allgemein / Veranstaltung anzeigen und in
+Wertungen berücksichtigen</h3>
+<p>Durch diese Option kann man eine Veranstaltung auf den Ergebnisseiten
+verbergen und sie in Veranstaltungsreihen ignorieren. In TrialInfo bleibt die
+Veranstaltung sichtbar; sie erscheint in der Übersichtsseite
+durchgestrichen.</p>
+
+<h3>Allgemein / Synchronisieren erlauben</h3>
+<p>Diese Option gibt an, ob die Veranstaltung durch Synchronisierung
+aktualisiert werden darf.  Die Quelle der Aktualisierung ist eine andere
+Installation von TrialInfo.  Die Einstellung wird nur angeboten, wenn TrialInfo
+grundsätzlich als Synchronisierungs-Ziel konfiguriert ist.</p>
+
+<h3>Wertungspunkte / Punkteteilung bei gleicher Platzierung</h3>
+<p>Wenn es ex aequo-Platzierungen gibt, bekommen normalerweise allen Fahrer die
+maximalen Wertungspunkte: zwei Erste bekommen beide die Wertungspunkte für den
+ersten Platz, der nächste Fahrer hat Platz 3. Bei Punkteteilung werden in
+diesem Fall die Wertungspunkte für den ersten und zweiten Platz unter den
+beiden Ersten aufgeteilt, usw.</p>
+
+<h3>Klassen</h3>
+<p>Das Feld <em>Wertung in Klasse</em> definiert hier, dass eine Klasse nicht
+eigenständig startet, sondern gemeinsam mit der angegebenen Klasse gewertet
+wird. Das Äquivalent wäre, die Klassen aller betroffenen Fahrer und Gruppen
+zu ändern. Dieses Feld ist üblicherweise leer.</p>
+
+<p>Das Feld <em>Keine Wertung&nbsp;1</em> gibt an, dass Fahrer und Gruppen in
+dieser Klasse an Wertung&nbsp;1 unabhängig von den Fahrer- und
+Gruppeneinstellungen nicht teilnehmen, und daher auch keine Wertungspunkte
+erhalten können. Das Äquivalent wäre, alle betroffenen Fahrer und Gruppen
+einzeln aus Wertung&nbsp;1 zu nehmen.</p>
+
+<p>Das Feld <em>Außer Konkurrenz</em> gibt an, dass Fahrer in dieser Klasse nur
+außer Konkurrenz starten dürfen.</p>
+
+<h3>Nennformular / Sichtbare Felder / Start morgen</h3>
+<p>Wenn diese Einstellung aktiviert ist, kann im Nennformular angewählt werden,
+dass ein Fahrer auch morgen (beziehungsweise bei der nächsten Veranstaltung)
+startet. So kann an Wochenenden am Samstag erfasst werden, welche Fahrer schon
+für Sonntag genannt haben.  Wenn die nächste Veranstaltung dann basierend auf
+dieser Veranstaltung angelegt wird, werden diese Fahrer automatisch als Starter
+markiert.</p>
+
+<h3>Auswertung / Zusätzliche Informationen</h3>
+<p>Durch die Option „Einzelpunkte statt Punkteverteilung“ werden in der
+Auswertung zusätzlich zu den Punkten pro Runde auch die Punkte pro Sektion
+angezeigt, dafür entfallen die Spalten für die Punkteverteilung (Anzahl der
+Nuller usw.)</p>
+
+<p>Durch die „Option Spalte für Fünfer in Punkteverteilung“ wird auch die
+Anzahl der Fünfer angezeigt, falls die Punkteverteilung angezeigt wird. Die
+Fünfer werden üblicherweise nicht angezeigt, weil sie sich aus den anderen
+Spalten ergeben.</p>
+
+<h2>Sektionen aus der Wertung</h2>
+<p>Hier lässt sich definieren, welche Sektionen für welche Klassen in welchen
+Runden nicht gewertet werden sollen, unabhängig davon, ob in der Punktevergabe
+Punkte dafür eingetragen wurden.</p>
+
+<p>Wird eine Sektion aus der Wertung genommen, so scheint sie nicht mehr in der
+Punktevergabe auf. Die vergebenen Punkte werden nicht gelöscht, sondern nur
+nicht mehr angezeigt und in der Wertungsberechnung ignoriert.</p>
+
+<h2 id="reset">Zurücksetzen</h2>
+<p>Hier kann eine Veranstaltung auf einen definierten Stand zurückgesetzt
+werden. Die Auswahlmöglichkeiten sind:
+<ul>
+<li>Start: löscht alle Daten der Punktevergabe und alle aus der Wertung
+genommenen Sektionen. Die Nennungen von Fahrern und Gruppen sind davon nicht
+betroffen.
+
+<li>Nennbeginn: Löscht zusätzlich Nennungseingang, Start, Start morgen und das
+Nenngeld aller Fahrer und Gruppen. Wenn in der vorigen Veranstaltung Fahrer
+oder Gruppen für den „Start morgen“ markiert sind, wird bei diesen Fahrern und
+Gruppen Nennungseingang und Start gesetzt.
+
+<li>Nur Stammdaten: Löscht alles außer den Stammdaten der Fahrer und Gruppen,
+inklusive Startnummern und Lizenznummern.
+</ul>
+Nach einer Rückfrage wird die Veranstaltung zurückgesetzt. Achtung, die dabei
+gelöschten Daten sind danach wirklich weg!</p>
+
+<h2>Löschen</h2>
+Hier kann man nach einer Rückfrage die Veranstaltung löschen.  Achtung, die
+Veranstaltung ist danach wirklich weg!
+
+<h2>Neue Veranstaltung</h2>
+<p>Beim Anlegen einer neuen Veranstaltung kann man eine der existierenden
+Veranstaltungen als Basis angeben. Alle Daten der Basisveranstaltung werden in
+die neue Veranstaltung kopiert und können dort unabhängig von der
+Basisveranstaltung verändert werden.  Man hat auch die Möglichkeit, die
+Daten der neuen Veranstaltung direkt beim Erzeugen der neuen Veranstaltung
+zurückzusetzen (siehe <a href="#reset">Zurücksetzen</a>).</p>
+
+<p>Es werden nur Veranstaltungen als Basis angeboten, die nicht verborgen sind
+– weil sie nicht Teil einer Veranstaltungsreihe sind, oder weil sie Teil einer
+Veranstaltungsreihe sind, die nicht abgeschlossen ist.<p>
+
+<p>Die neue Veranstaltung wird den Veranstaltungsreihen zugeordnet, denen schon
+die Basisveranstaltung zugeordnet ist, sofern der Benutzer Schreibzugriff auf
+die jeweilige Veranstaltungsreihe hat.</p>
+
+<h2>Veranstaltungsreihen</h2>
+<p>Eine Veranstaltungsreihe ist meist eine Serie von Veranstaltungen,
+für die es eine gemeinsame Wertung gibt. Veranstaltungsreihen können aber auch
+verwendet werden, um mehrere Veranstaltungen ohne Wertung zusammenzufassen, zum
+Beispiel alle Veranstaltungen verschiedenster Art eines Jahres.</p>
+
+<p>Für die Definition von Veranstaltungsreihen werden nur Veranstaltungen
+angeboten, die nicht verborgen sind – weil sie nicht Teil einer
+Veranstaltungsreihe sind, oder weil sie Teil einer Veranstaltungsreihe sind,
+die nicht abgeschlossen ist.<p>
+
+<p>Um eine gemeinsame Wertung zu definieren, muss in der Veranstaltungsreihe
+die entsprechende Wertung ausgewählt werden und es müssen die enthaltenen
+Veranstaltungen und Klassen zugeordnet werden. Eine Veranstaltung wird
+nur dann in einer Klasse berücksichtigt, wenn die Klasse Teil der
+Veranstaltungsreihe ist, die Klasse startet (Runden und Sektionen definiert,
+<em>Wertung in Klasse</em> leer), und die Klasse nicht von der Wertung
+ausgenommen ist (<em>Keine Wertung&nbsp;1</em> deaktiviert).</p>
+
+<h3>Allgemein / abgeschlossen</h3>
+<p>Wenn eine Veranstaltungsreihe als abgeschlossen markiert ist, ist sie auf
+der Übersichtsseite zunächst verborgen, ebenso wie die dazugehörigen
+Veranstaltungen (solange diese nicht auch noch anderen, aktiven
+Veranstaltungsreihen zugeordnet sind).</p>
+
+<h3>Klassen</h3>
+<p>Definiert die Klassen, die Teil der Veranstaltungsreihe sind und die Anzahl
+der Läufe und Streichresultate dieser Klasse. Die Anzahl der Läufe muss nur
+dann zwingend angegeben werden, wenn Streichresultate berücksichtigt werden
+sollen. Wenn angegeben, wird sie auf Ergebnislisten angezeigt.</p>
+
+<h3 id="vareihe_startnummern">Startnummernänderungen</h3>
+<p>Hier kann für die Veranstaltungsreihe definiert werden, dass bestimmte
+Startnummern in bestimmten Veranstaltungen durch andere ersetzt werden sollen,
+oder dass die erzielten Wertungspunkte eines Fahrers nicht berücksichtigt
+werden sollen.</p>
+
+<p>Wenn ein Fahrer zum Beispiel beim ersten Wettbewerb einer Serie mit
+Startnummer 7 startet, und ihm dann für alle weiteren Wettbewerbe Startnummer
+70 zugeordnet wird, würde dieser Fahrer in der gemeinsamen Wertung zwei Mal
+aufscheinen, und die erzielten Wertungspunkte würden nicht addiert werden.
+Eine Startnummernänderung im ersten Wettbewerb von 7 auf 70 Löst dieses
+Problem.</p>
+
+<p>Um die Wertungspunkte eines Fahrers bei einer Veranstaltung zu ignorieren,
+wird das Feld <em>Nach</em> leer gelassen. Das kann dann sinnvoll sein, wenn
+ein Fahrer die Klasse wechselt, und die Wertungspunkte in seiner alten Klasse
+nicht mehr in der Gesamtwertung aufscheinen sollen.</p>
+
+<p>Die Veranstaltungswertung änder sich dabei nicht; die schlechter platzierten
+Fahrer rücken nicht nach. Wenn das stattdessen erwünscht ist, muss der Fahrer
+oder die Gruppe in der Veranstaltung aus dieser Wertung genommen werden.</p>
+
+<h2>Synchronisieren, Import und Export</h2>
+<p>Über diese Schaltfläche können folgende Aktionen durchgeführt werden: Import
+einer Veranstaltung von einem anderen Server, laufendes Synchronisieren einer
+Veranstaltung auf einen anderen Server, Import und Export von Veranstaltungen
+von Dateien bzw. auf Dateien.</p>
+
+<h3>Server-Import</h3>
+<p>Über diese Aktion importiert man eine Veranstaltung von einem andern Server.
+Nach der Auswahl der Quelladresse kann die Liste der Veranstaltungen von diesem
+Server abgerufen werden. Danach wählt man aus der Liste der Veranstaltungen
+diejenige aus, die importiert werden soll und startet den Import. Nach einigen
+Sekunden wechselt TrialInfo zur neu importierten Veranstaltung.</p>
+
+<h3>Synchronisieren</h3>
+<p>Diese Aktion startet die laufende Synchronisation einer Veranstaltung auf
+einen anderen Server. Nach der Auswahl der Veranstaltung, der Zieladresse, und
+des Intervalls zwsichen den Aktualisierungen startet man die Synchronisierung.
+Daraufhin erscheint im rechten oberen Eck des Fensters ein Rechteck mit dem
+Namen der Veranstaltung, dem Status (Grün für erfolgreich, Orange für nicht
+synchron, und Rot für Fehler). Man kann dort die Synchronisierung abbrechen und
+nach dem Auftreten von Fehlern neu starten.</p>
+
+<p>Die Statusanzeige bleibt sichtbar, wenn man auf andere Seiten der
+Veranstaltungsverwaltung wechselt.</p>
+
+<h3>Datei-Import</h3>
+<p>Veranstaltungen von TrialInfo vom TrialTool importieren.  Hier wählt man das
+Format und die Datei (*.tra für TrialInfo) oder die Dateien (*.cfg und *.dat
+für das TrialTool-Format) aus und startet dann den Import.</p>
+
+<h3>Datei-Export</h3>
+<p>Die Daten einer Veranstaltungen auf Dateien exportieren. Neben einem eigenen
+Format für TrialInfo selbst (*.tra) wird auch das TrialTool-Format unterstützt
+(*.cfg und *.dat). Nach der Auswahl der Veranstaltung und des Formats wird die
+Datei oder werden die Dateien als Verknüpfungen angezeigt; die Verknüpfungen
+speichert man dann.</p>
+
+<p>Im TrialTool-Format werden beide Dateien (*.cfg und *.dat) benötigt.
+Außerdem ist zu beachten, dass das TrialTool-Format nicht alle Möglichkeiten
+von TrialInfo unterstützt. Beim Export in dieses Format wird versucht, die
+Informationen so gut wie möglich zu abzubilden.</p>
+
+</body>
+</html>

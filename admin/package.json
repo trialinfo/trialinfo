@@ -1,0 +1,41 @@
+{
+  "name": "admin",
+  "version": "0.0.0",
+  "description": "New TrialInfo backend replacing the Perl+CGI backend",
+  "author": "Andreas Gruenbacher <andreas.gruenbacher@gmail.com>",
+  "license": "AGPL-3.0+",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trialinfo/trialinfo.git"
+  },
+  "dependencies": {
+    "apache-md5": "~1.0",
+    "bluebird": ">=3.0",
+    "clone": "^1.0.2",
+    "compression": "~1.0",
+    "deep-equal": "^1.0.1",
+    "express": "~3.5",
+    "mysql": "~2.10",
+    "passport": "~0.3",
+    "passport-local": "~1.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.11.4",
+    "babel-preset-es2016": "^6.11.3",
+    "babel-preset-stage-2": "^6.11.0",
+    "nodemon": "^1.10.0"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js --exec babel-node",
+    "build": "babel index.js -d dist",
+    "serve": "export NODE_ENV=production; node dist/index.js"
+  },
+  "babel": {
+    "presets": [
+      "es2016",
+      "stage-2"
+    ],
+    "plugins": []
+  }
+}

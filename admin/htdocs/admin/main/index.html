@@ -1,0 +1,34 @@
+<h1>Veranstaltungen</h1>
+<p>
+  <form ng-if="closed_events">
+    <input type="checkbox" ng-model="show.closed_events" id="show_closed_events" style="display:none"><label for="show_closed_events" style="color:grey"><span ng-if="!show.closed_events">Alte Veranstaltungen anzeigen</span><span ng-if="show.closed_events">Alte Veranstaltungen verbergen</span></label>
+  </form>
+</p>
+<p>
+  <span ng-repeat="event in events | filter:event_visible"><a href="event/{{event.id}}" ng-style="event.enabled ? undefined : {'text-decoration': 'line-through'}" title="{{event.enabled ? '' : 'Veranstaltung nicht aktiv (siehe Einstellungen).'}}">{{event_name(event)}}</a><br></span>
+</p>
+<p>
+  <button ng-click="new_event()">Neue Veranstaltung</button>
+</p>
+
+<h1>Veranstaltungsreihen</h1>
+<p>
+  <form ng-if="closed_series">
+    <input type="checkbox" ng-model="show.closed_series" id="show_closed_series" style="display:none"><label for="show_closed_series" style="color:grey"><span ng-if="!show.closed_series">Abgeschlossene Veranstaltungsreihen anzeigen</span><span ng-if="show.closed_series">Abgeschlossene Veranstaltungsreihen verbergen</span></label>
+  </form>
+</p>
+<p>
+  <span ng-repeat="serie in series | filter:serie_visible"><a href="serie/{{serie.serie}}">{{serie.name}}</a><br></span>
+</p>
+<p>
+  <button ng-click="new_serie()">Neue Veranstaltungsreihe</button>
+</p>
+<p>
+  <button ng-click="sync_import_export()"><span ng-if="SYNC_SOURCE">Synchronisieren,</span> Import und Export</button>
+</p>
+<p>
+  <button ng-click="logout()" title="Aktueller Benutzer: {{authinfo.username}}">Abmelden</button>
+</p>
+<p>
+  <a href="help/">Hilfe zu TrialInfo</a>
+</p>

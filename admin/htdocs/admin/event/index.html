@@ -1,0 +1,53 @@
+<h1>{{event.rankings[0].title}}</h1>
+<a href="event/{{event.id}}/scores">Auswertung</a><br>
+<a href="event/{{event.id}}/list">Fahrerliste</a> (<a href="event/{{event.id}}/list?riding">Fahrer auf der Strecke</a>)<br>
+<br>
+<a href="event/{{event.id}}/riders">Fahrer</a><br>
+<a href="event/{{event.id}}/groups">Gruppen</a><br>
+<a href="event/{{event.id}}/marks">Punktevergabe</a><br>
+<br>
+<a href="event/{{event.id}}/settings">Einstellungen</a><br>
+<a href="event/{{event.id}}/zones">Sektionen aus der Wertung</a><br>
+<br>
+<a ng-if="!fold.reset" href="" ng-click="$parent.fold.reset = true">↓ Zurücksetzen</a>
+<a ng-if="fold.reset" href="" ng-click="$parent.fold.reset = false">↑ Zurücksetzen</a><br>
+<table ng-if="fold.reset">
+  <tr>
+    <td>
+      <button ng-click="reset('start')">Start</button>
+    </td>
+    <td>
+      Löscht alle Daten in der Punktevergabe und die Sektionen aus der Wertung.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <button ng-click="reset('registration')">Nennbeginn</button>
+    </td>
+    <td>
+      Löscht zusätzlich <span ng-if="features.registered">Nennungseingang,</span>
+      Start<span ng-if="features.start_tomorrow">, Start morgen</span>
+      und das Nenngeld<span ng-if="event.base.start_tomorrow"> und setzt
+      <span ng-if="features.nennungseingang">Nennungseingang und</span> Start bei
+      {{event.base.start_tomorrow}} Fahrern mit Start morgen in
+      {{event.base.title}}</span>.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <button ng-click="reset('initial')">Nur Stammdaten</button>
+    </td>
+    <td>
+      Löscht alles außer den Stammdaten der Fahrer, inklusive Startnummern und Lizenznummern.
+    </td>
+  </tr>
+</table>
+<a ng-if="!fold.remove" href="" ng-click="$parent.fold.remove = true">↓ Löschen</a>
+<a ng-if="fold.remove" href="" ng-click="$parent.fold.remove = false">↑ Löschen</a><br>
+<table ng-if="fold.remove">
+  <tr>
+    <td>
+      <button ng-click="remove()">Veranstaltung löschen</button>
+    </td>
+  </tr>
+</table>

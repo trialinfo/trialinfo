@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2016  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html ng-app='application'>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <base href="/admin/">
+    <title ng-bind="$root.title">TrialInfo</title>
+    <link rel="stylesheet" type="text/css" href="../admin.css" />
+
+    <script src="../js/angular.min.js"></script>
+    <script src="../js/angular-route.js"></script>
+    <script src="../js/angular-cookies.js"></script>
+    <script src="../js/validate.js"></script>
+    <script src="../js/json-diff.js"></script>
+    <script src="directives.js"></script>
+    <script src="api.js"></script>
+    <script src="main/controller.js"></script>
+    <script src="event/controller.js"></script>
+    <script src="registration/controller.js"></script>
+    <script src="marks/controller.js"></script>
+    <script src="settings/controller.js"></script>
+    <script src="zones/controller.js"></script>
+    <script src="scores/controller.js"></script>
+    <script src="list/controller.js"></script>
+    <script src="serie/controller.js"></script>
+    <script src="extern/controller.js"></script>
+    <script src="sync/controller.js"></script>
+    <script src="../config.js"></script>
+    <script>
+
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'ui.validate']);
+
+      application.directive('isoDate', isoDateDirective);
+      application.directive('isoTime', isoTimeDirective);
+      application.directive('isoTimestamp', isoTimestampDirective);
+      application.directive('numeric', numericDirective);
+      application.directive('punkte', punkteDirective);
+      application.directive('yesNoNull', yesNoNullDirective);
+      application.directive('rankingClass', rankingClassDirective);
+      application.directive('nullable', nullableDirective);
+
+      application.directive('autofocus', autofocusDirective);
+      application.directive('tabTo', tabTo);
+
+      application.controller('mainController', mainController);
+      application.controller('eventController', eventController);
+      application.controller('registrationController', registrationController);
+      application.controller('settingsController', settingsController);
+      application.controller('zonesController', zonesController);
+      application.controller('eventScoresController', eventScoresController);
+      application.controller('eventListController', eventListController);
+      application.controller('serieController', serieController);
+      application.controller('externController', externController);
+      application.controller('syncController', syncController);
+
+      application.config([
+        '$routeProvider',
+	function($routeProvider) {
+	  $routeProvider
+	    .when('/', {
+	      title: 'TrialInfo',
+	      controller: 'mainController',
+	      templateUrl: 'main/index.html',
+	      resolve: mainController.resolve,
+	      hideMenus: true
+	    }).when('/event/:id', {
+	      controller: 'eventController',
+	      templateUrl: 'event/index.html',
+	      resolve: eventController.resolve
+	    }).when('/event/:id/riders', {
+	      title: 'Fahrer',
+	      controller: 'registrationController',
+	      templateUrl: 'registration/index.html',
+	      resolve: registrationController.resolveFactory(false),
+	      reloadOnSearch: false
+	    }).when('/event/:id/groups', {
+	      title: 'Gruppen',
+	      controller: 'registrationController',
+	      templateUrl: 'registration/index.html',
+	      resolve: registrationController.resolveFactory(true),
+	      reloadOnSearch: false
+	    }).when('/event/:id/marks', {
+	      title: 'Punktevergabe',
+	      controller: 'marksController',
+	      templateUrl: 'marks/index.html',
+	      resolve: marksController.resolve,
+	      reloadOnSearch: false
+	    }).when('/event/neu/settings', {
+	      controller: 'settingsController',
+	      templateUrl: 'settings/index.html',
+	      resolve: settingsController.resolve
+	    }).when('/event/:id/settings', {
+	      title: 'Einstellungen',
+	      controller: 'settingsController',
+	      templateUrl: 'settings/index.html',
+	      resolve: settingsController.resolve
+	    }).when('/event/:id/zones', {
+	      title: 'Sektionen aus der Wertung',
+	      controller: 'zonesController',
+	      templateUrl: 'zones/index.html',
+	      resolve: zonesController.resolve
+	    }).when('/event/:id/scores', {
+	      title: 'Auswertung',
+	      controller: eventScoresController,
+	      templateUrl: 'scores/index.html',
+	      resolve: eventScoresController.resolve,
+	      reloadOnSearch: false
+	    }).when('/event/:id/list', {
+	      title: 'Fahrerliste',
+	      controller: eventListController,
+	      templateUrl: 'list/index.html',
+	      resolve: eventListController.resolve,
+	      reloadOnSearch: false
+	    }).when('/serie/neu', {
+	      controller: 'serieController',
+	      templateUrl: 'serie/index.html',
+	      resolve: serieController.resolve
+	    }).when('/serie/:serie', {
+	      controller: 'serieController',
+	      templateUrl: 'serie/index.html',
+	      resolve: serieController.resolve
+	    }).when('/extern', {
+	      controller: 'externController',
+	      templateUrl: 'extern/index.html',
+	      resolve: externController.resolve
+	    }).when('/help', {
+	      templateUrl: 'help/index.html',
+	    }).otherwise({
+	      redirectTo: '/'
+	    });
+	}]);
+
+      application.config([
+        '$httpProvider',
+	function($httpProvider) {
+	  $httpProvider.responseInterceptors.push(
+	    function($location, $q) {
+	      function success(response) {
+		return response;
+	      }
+
+	      function error(response) {
+		if (response.status === 403) {
+		  $window.location.href = '/login';
+		}
+		return $q.reject(response);
+	      }
+
+	      return function(promise) {
+		return promise.then(success, error);
+	      };
+	    }
+	  );
+	}]);
+
+      application.config([
+	'$locationProvider',
+	function($locationProvider) {
+	  $locationProvider.html5Mode(true);
+	}]);
+
+      application.run([
+	'$rootScope', '$route', '$location', '$http',
+	function($rootScope, $route, $location, $http) {
+	  $rootScope.context = function(context) {
+	    var title = [context];
+	    if ($route.current.title)
+	      title.push($route.current.title);
+	    $rootScope.title = title.join(' - ');
+	  };
+
+	  $rootScope.$on("$routeChangeSuccess", function() {
+	    $rootScope.title = $route.current.title || '';
+	  });
+
+	  $rootScope.join = join;
+
+	  $rootScope.$on('$routeChangeStart', function(event, next) {
+	    function success() {
+	    }
+
+	    function error() {
+	      /* preventDefault() funktioniert erst in neueren Angular-Versionen: */
+	      event.preventDefault();
+	      $rootScope.$evalAsync(function () {
+		$window.location.href = '/login';
+	      });
+	    }
+	  });
+	}]);
+    </script>
+  </head>
+  <body>
+    <div style="position:fixed; top:0px; right:1em" ng-controller="syncController" class="no-print">
+      <p style="font-weight:bold; text-align:right; background-color:#FFFFE0; padding:0.5em; padding-left:1em; padding-right:1em; border:solid 1px" ng-if="visible">
+	{{title}} <span ng-bind-html="zustand()"></span>
+	<button ng-click="close()" tabindex="-1" ng-if="running">Beenden</button>
+	<button ng-click="start()" tabindex="-1" ng-if="!running">Neustart</button>
+	<span ng-if="source_error"><br>{{source_error}}</span>
+	<span ng-if="target_error"><br>{{target_error}}</span>
+      </p>
+    </div>
+    <div ng-view>
+    </div>
+  </body>
+</html>

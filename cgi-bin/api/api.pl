@@ -1087,7 +1087,7 @@ eval {
 
 	$headers->{status} = '200 Modified';
     } elsif ($op eq "GET/fahrer/hash") {
-	my ($id, $suchbegriff) = parameter($q, qw(id));
+	my ($id) = parameter($q, qw(id));
 	my $gruppen = $q->url_param('gruppen');
 	my $gruppe_filter = defined $gruppen ?
 	    ($gruppen ? ' AND fahrer.gruppe' :

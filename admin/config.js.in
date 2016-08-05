@@ -1,0 +1,27 @@
+var config = {
+  database: {
+    host: '<<hostname>>',
+    user: '<<username>>',
+    password: '<<password>>',
+    database: '<<name>>'
+  },
+/*
+  session: {
+    secret: '<<secret>>',
+  },
+*/
+/*
+  http: {
+    port: 80
+  },
+*/
+/*
+  https: {
+    port: 443,
+    key: '<<keyfile>>',
+    cert: '<<certfile>>'
+  }
+*/
+};
+
+module.exports = config;
