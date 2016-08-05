@@ -353,15 +353,15 @@ CREATE TABLE benutzer_gruppe (
 
 -- DROP VIEW IF EXISTS veranstaltung_alle_benutzer;
 CREATE VIEW veranstaltung_alle_benutzer AS
-  SELECT DISTINCT id, name, password, 0 AS nur_lesen
+  SELECT DISTINCT id, name, 0 AS nur_lesen
   FROM veranstaltung, benutzer
   WHERE benutzer.admin
 UNION
-  SELECT id, name, password, nur_lesen
+  SELECT id, name, nur_lesen
   FROM veranstaltung_benutzer
   JOIN benutzer USING (benutzer)
 UNION
-  SELECT id, benutzer.name AS name, password, nur_lesen
+  SELECT id, benutzer.name AS name, nur_lesen
   FROM veranstaltung_gruppe
   JOIN gruppe USING (gruppe)
   JOIN benutzer_gruppe USING (gruppe)
@@ -369,15 +369,15 @@ UNION
 
 -- DROP VIEW IF EXISTS vareihe_alle_benutzer;
 CREATE VIEW vareihe_alle_benutzer AS
-  SELECT DISTINCT vareihe, name, password, 0 AS nur_lesen
+  SELECT DISTINCT vareihe, name, 0 AS nur_lesen
   FROM vareihe, benutzer
   WHERE benutzer.admin
 UNION
-  SELECT vareihe, name, password, nur_lesen
+  SELECT vareihe, name, nur_lesen
   FROM vareihe_benutzer
   JOIN benutzer USING (benutzer)
 UNION
-  SELECT vareihe, benutzer.name AS name, password, nur_lesen
+  SELECT vareihe, benutzer.name AS name, nur_lesen
   FROM vareihe_gruppe
   JOIN gruppe USING (gruppe)
   JOIN benutzer_gruppe USING (gruppe)
