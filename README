@@ -229,6 +229,12 @@ WebKit-basierte Lösungen wie wkhtmltopdf nur sehr mangelhaft beherrschen.
   yum install weasyprint
 
 
+Perl-Module
+===========
+git://github.com/zigorou/perl-json-pointer.git
+git://github.com/zigorou/perl-json-patch.git
+
+
 Lizenz
 ======
 
