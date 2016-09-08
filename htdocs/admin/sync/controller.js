@@ -144,6 +144,34 @@ var syncController = [
 	});
     }
 
+    function export_import() {
+      var cancel = $q.defer();
+      var export_request =
+	$http.get('/api/veranstaltung/export',
+		  {params: {tag: $scope.von_tag},
+		   timeout: cancel.promise,
+		   responseType: 'arraybuffer'});
+      return make_request('export request', export_request, cancel).
+	then(function(data) {
+	  var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	  var cancel = $q.defer();
+	  var import_request =
+	    $http.post($scope.url + '/api/veranstaltung/import', enc,
+		       {params: {tag: $scope.zu_tag},
+			timeout: cancel.promise,
+			withCredentials: true});
+	    return make_request('import request', import_request, cancel).
+	      catch(function(result) {
+		$scope.target_error = url_fehler($scope.url, result[0].error);
+		$scope.stop();
+		return $q.reject();
+	      });
+	}, function() {
+	  $scope.source_error = url_fehler('', 'Export fehlgeschlagen');
+	  $scope.stop();
+	});
+    }
+
     function make_target_request(kein_import) {
       delete $scope.target_dump;
       var cancel = $q.defer();
@@ -160,33 +188,10 @@ var syncController = [
 	    $scope.target_error = url_fehler($scope.url, 'Veranstaltung ' + $scope.zu_tag + ' existiert nicht');
 	    $scope.stop();
 	  } else {
-	    var cancel = $q.defer();
-	    var export_request =
-	      $http.get('/api/veranstaltung/export',
-			{params: {tag: $scope.von_tag},
-			 timeout: cancel.promise,
-			 responseType: 'arraybuffer'});
-	    make_request('export request', export_request, cancel).
-	      then(function(data) {
-		var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
-		var cancel = $q.defer();
-		var import_request =
-		  $http.post($scope.url + '/api/veranstaltung/import', enc,
-			     {params: {tag: $scope.zu_tag},
-			      timeout: cancel.promise,
-			      withCredentials: true});
-		  make_request('import request', import_request, cancel).
-		    then(function() {
-		      make_target_request(true);
-		    }, function(result) {
-		      $scope.target_error = url_fehler($scope.url, result[0].error);
-		      $scope.stop();
-		    });
-	      }, function() {
-		$scope.source_error = url_fehler('', 'Export fehlgeschlagen');
-		$scope.stop();
+	    export_import()
+	      .then(function() {
+		make_target_request(true);
 	      });
-	  }
 	}, function(result) {
 	  $scope.target_error = url_fehler($scope.url, result[0].error);
 	  later('target timeout', make_target_request, $scope.timeout);
