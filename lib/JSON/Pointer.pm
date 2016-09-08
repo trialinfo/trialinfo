@@ -13,11 +13,15 @@ use JSON::Pointer::Exception qw(:all);
 use JSON::Pointer::Syntax qw(is_array_numeric_index);
 use URI::Escape qw(uri_unescape);
 
-our $VERSION = '0.03';
+our $VERSION = '0.07';
 
 sub traverse {
-    my ($class, $document, $pointer, $strict) = @_;
-    $strict = 1 unless defined $strict;
+    my ($class, $document, $pointer, $opts) = @_;
+    $opts = +{
+        strict => 1,
+        inclusive => 0,
+        %{ $opts || +{} }
+    };
     $pointer = uri_unescape($pointer);
 
     my @tokens  = JSON::Pointer::Syntax->tokenize($pointer);
@@ -36,29 +40,30 @@ sub traverse {
 
         if ($type eq "HASH") {
             unless (exists $parent->{$token}) {
-                return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, $strict);
+                return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, $opts->{strict});
             }
 
             $context->next($parent->{$token});
             next;
         }
         elsif ($type eq "ARRAY") {
-            my $elements_length = $#{$parent} + 1;
+            if ($token eq '-') {
+                $token = $#{$parent} + 1;
+            }
 
-            if (is_array_numeric_index($token) && $token <= $elements_length) {
+            my $max_index = $#{$parent};
+            $max_index++ if $opts->{inclusive};
+
+            if (is_array_numeric_index($token) && $token <= $max_index) {
                 $context->next($parent->[$token]);
                 next;
             }
-            elsif ($token eq "-") {
-                $context->next(undef);
-                next;
-            }
             else {
-                return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, $strict);
+                return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, $opts->{strict});
             }
         }
         else {
-            return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, $strict);
+            return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, $opts->{strict});
         }
     }
 
@@ -72,7 +77,52 @@ sub get {
 
     my $context;
     eval {
-        $context = $class->traverse($document, $pointer, $strict);
+        $context = $class->traverse($document, $pointer, +{ strict => $strict });
+    };
+    if (my $e = $@) {
+        croak $e;
+    }
+
+    return $context->result ? $context->target : undef;
+}
+
+sub get_relative {
+    my ($class, $document, $current_pointer, $relative_pointer, $strict) = @_;
+    $strict = 0 unless defined $strict;
+
+    my @current_tokens = JSON::Pointer::Syntax->tokenize($current_pointer);
+
+    my $context = JSON::Pointer::Context->new(+{
+        pointer => $current_pointer,
+        tokens  => \@current_tokens,
+        target  => $document,
+        parent  => $document,
+    });
+
+    my ($steps, $relative_pointer_suffix, $use_index) =
+        ($relative_pointer =~ m{^(0|[1-9]?[0-9]+)([^#]*)(#?)$});
+    $relative_pointer_suffix ||= "";
+
+    unless (defined $steps) {
+        return _throw_or_return(ERROR_INVALID_POINTER_SYNTAX, $context, +{ strict => $strict });
+    }
+
+    for (my $i = 0; $i < $steps; $i++) {
+        if (@current_tokens == 0) {
+            return _throw_or_return(ERROR_POINTER_REFERENCES_NON_EXISTENT_VALUE, $context, +{ strict => $strict });
+        }
+        pop(@current_tokens);
+    }
+
+    if ($use_index) {
+        my @relative_tokens = JSON::Pointer::Syntax->tokenize($relative_pointer_suffix);
+        return (@relative_tokens > 0) ? $relative_tokens[-1] : $current_tokens[-1];
+    }
+
+    my $absolute_pointer = JSON::Pointer::Syntax->as_pointer(@current_tokens) . $relative_pointer_suffix;
+
+    eval {
+        $context = $class->traverse($document, $absolute_pointer, +{ strict => $strict });
     };
     if (my $e = $@) {
         croak $e;
@@ -83,16 +133,14 @@ sub get {
 
 sub contains {
     my ($class, $document, $pointer) = @_;
-    my $context = $class->traverse($document, $pointer, 0);
+    my $context = $class->traverse($document, $pointer, +{ strict => 0 });
     return $context->result;
 }
 
 sub add {
     my ($class, $document, $pointer, $value) = @_;
 
-    my $patched_document = clone($document);
-
-    my $context = $class->traverse($patched_document, $pointer, 0);
+    my $context = $class->traverse($document, $pointer, +{ strict => 0, inclusive => 1 });
     my $parent  = $context->parent;
     my $type    = ref $parent;
 
@@ -110,10 +158,10 @@ sub add {
         }
         else {
             ### pointer is empty string (whole document)
-            $patched_document = $value;
+            $document = $value;
         }
 
-        return $patched_document;
+        return $document;
     }
     elsif ($type eq "ARRAY") {
         unless ($context->result) {
@@ -131,10 +179,10 @@ sub add {
             splice(@$parent, $target_index, 0, $value);
         }
         else {
-            $patched_document = $value;
+            $document = $value;
         }
 
-        return $patched_document;
+        return $document;
     }
     else {
         unless ($context->result) {
@@ -151,9 +199,7 @@ sub add {
 sub remove {
     my ($class, $document, $pointer) = @_;
 
-    my $patched_document = clone($document);
-
-    my $context = $class->traverse($patched_document, $pointer, 1);
+    my $context = $class->traverse($document, $pointer);
     my $parent  = $context->parent;
     my $type    = ref $parent;
 
@@ -161,11 +207,11 @@ sub remove {
         my $target_member = $context->last_token;
         if (defined $target_member) {
             my $removed = delete $parent->{$target_member};
-            return wantarray ? ($patched_document, $removed) : $patched_document;
+            return wantarray ? ($document, $removed) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? (undef, $patched_document) : undef;
+            return wantarray ? (undef, $document) : undef;
         }
     }
     elsif ($type eq "ARRAY") {
@@ -174,11 +220,11 @@ sub remove {
             my $parent_array_length = $#{$parent} + 1;
             $target_index = $parent_array_length if ($target_index eq "-");
             my $removed = splice(@$parent, $target_index, 1);
-            return wantarray ? ($patched_document, $removed) : $patched_document;
+            return wantarray ? ($document, $removed) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? (undef, $patched_document) : undef;
+            return wantarray ? (undef, $document) : undef;
         }
     }
     else {
@@ -189,15 +235,14 @@ sub remove {
             );
         }
 
-        return wantarray ? (undef, $patched_document) : undef;
+        return wantarray ? (undef, $document) : undef;
     }
 }
 
 sub replace {
     my ($class, $document, $pointer, $value) = @_;
 
-    my $patched_document = clone($document);
-    my $context = $class->traverse($patched_document, $pointer, 1);
+    my $context = $class->traverse($document, $pointer);
     my $parent  = $context->parent;
     my $type    = ref $parent;
 
@@ -206,11 +251,11 @@ sub replace {
         if (defined $target_member) {
             my $replaced = $parent->{$context->last_token};
             $parent->{$context->last_token} = $value;
-            return wantarray ? ($patched_document, $replaced) : $patched_document;
+            return wantarray ? ($document, $replaced) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? ($value, $patched_document) : $value;
+            return wantarray ? ($value, $document) : $value;
         }
     }
     else {
@@ -220,11 +265,11 @@ sub replace {
             $target_index = $parent_array_length if ($target_index eq "-");
             my $replaced = $parent->[$target_index];
             $parent->[$target_index] = $value;
-            return wantarray ? ($patched_document, $replaced) : $patched_document;
+            return wantarray ? ($document, $replaced) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? ($value, $patched_document) : $value;
+            return wantarray ? ($value, $document) : $value;
         }
     }
 }
@@ -235,20 +280,21 @@ sub set {
 
 sub copy {
     my ($class, $document, $from_pointer, $to_pointer) = @_;
-    my $context = $class->traverse($document, $from_pointer, 1);
+    my $context = $class->traverse($document, $from_pointer);
     return $class->add($document, $to_pointer, $context->target);
 }
 
 sub move {
     my ($class, $document, $from_pointer, $to_pointer) = @_;
-    my ($patched_document, $removed) = $class->remove($document, $from_pointer);
-    $class->add($patched_document, $to_pointer, $removed);
+    my $removed;
+    ($document, $removed) = $class->remove($document, $from_pointer);
+    $class->add($document, $to_pointer, $removed);
 }
 
 sub test {
     my ($class, $document, $pointer, $value) = @_;
 
-    my $context = $class->traverse($document, $pointer, 0);
+    my $context = $class->traverse($document, $pointer, +{ strict => 0 });
 
     return 0 unless $context->result;
 
@@ -296,13 +342,13 @@ sub _throw_or_return {
 sub _is_iv_or_nv {
     my $value = shift;
     my $flags = B::svref_2object(\$value)->FLAGS;
-    return ($flags & ( B::SVp_IOK | B::SVp_NOK )) and !($flags & B::SVp_POK);
+    return ( ($flags & ( B::SVp_IOK | B::SVp_NOK )) && !($flags & B::SVp_POK) );
 }
 
 sub _is_pv {
     my $value = shift;
     my $flags = B::svref_2object(\$value)->FLAGS;
-    return !($flags & ( B::SVp_IOK | B::SVp_NOK )) and ($flags & B::SVp_POK);
+    return ( !($flags & ( B::SVp_IOK | B::SVp_NOK )) && ($flags & B::SVp_POK) );
 }
 
 1;
@@ -315,7 +361,7 @@ JSON::Pointer - A Perl implementation of JSON Pointer (RFC6901)
 
 =head1 VERSION
 
-This document describes JSON::Pointer version 0.03.
+This document describes JSON::Pointer version 0.07.
 
 =head1 SYNOPSIS
 
@@ -367,6 +413,32 @@ For example,
 
   use JSON::Pointer;
   print JSON::Pointer->get({ foo => 1, bar => { "qux" => "hello" } }, "/bar/qux"); ### hello
+
+=head2 get_relative($document :HashRef/ArrayRef/Scalar, $current_pointer :Str, $relative_pointer :Str, $strict :Int) :Scalar
+
+B<This method is highly EXPERIMENTAL>. Because this method depends on L<http://tools.ietf.org/html/draft-luff-relative-json-pointer-00> draft spec.
+
+=over
+
+=item $document :HashRef/ArrayRef/Scalar
+
+Target perl data structure that is able to be presented by JSON format.
+
+=item $current_pointer : Str
+
+JSON Pointer string to identify specified current position in the document.
+
+=item $relative_pointer : Str
+
+JSON Relative Pointer string to identify specified value from current position in the document
+
+=item $strict :Int
+
+Strict mode. When this value equals true value, this method may throw exception on error.
+When this value equals false value, this method return undef value on error.
+
+
+=back
 
 =head2 contains($document :HashRef/ArrayRef/Scalar, $pointer :Str) :Int
 
@@ -566,7 +638,7 @@ This method distinguish type of each values.
   print JSON::Pointer->test($document, "/foo", 1); ### 1
   print JSON::Pointer->test($document, "/foo", "1"); ### 0
 
-=head2 traverse($document, $pointer, $strict) : JSON::Pointer::Context
+=head2 traverse($document, $pointer, $opts) : JSON::Pointer::Context
 
 This method is used as internal implementation only.
 
@@ -593,6 +665,8 @@ Many codes in this module is inspired by the module.
 =item L<http://tools.ietf.org/html/rfc6901>
 
 =item L<http://tools.ietf.org/html/rfc6902>
+
+=item L<http://tools.ietf.org/html/draft-luff-relative-json-pointer-00>
 
 =back
 

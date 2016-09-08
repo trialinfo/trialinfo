@@ -8,7 +8,7 @@ use Exporter qw(import);
 use JSON::Pointer::Context;
 use JSON::Pointer::Exception qw(:all);
 
-our $VERSION = '0.03';
+our $VERSION = '0.07';
 our @EXPORT_OK = qw(
     escape_reference_token
     unescape_reference_token
@@ -62,14 +62,14 @@ sub tokenize {
 }
 
 sub as_pointer {
-    my ($class, $tokens) = @_;
+    my $class = shift;
+    my @tokens = (ref $_[0] eq "ARRAY") ? @{$_[0]} : @_;
 
-    return @$tokens > 0 ? "/" . join(
+    return @tokens > 0 ? "/" . join(
         "/", 
         map { escape_reference_token($_) }
-        @$tokens
+        @tokens
     ) : "";
-
 }
 
 sub is_array_numeric_index {
@@ -87,7 +87,7 @@ JSON::Pointer::Syntax - JSON Pointer syntax functions
 
 =head1 VERSION
 
-This document describes JSON::Pointer::Syntax version 0.03.
+This document describes JSON::Pointer::Syntax version 0.07.
 
 =head1 SYNOPSIS
 

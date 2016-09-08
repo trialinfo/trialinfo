@@ -77,10 +77,10 @@ nicht MyISAM) verwendet wird.
 
   $ mysql --user=root --password
   Enter password: 
-  > CREATE DATABASE trials CHARACTER SET utf8;
+  > CREATE DATABASE trialinfo CHARACTER SET utf8;
   > CREATE USER 'admin'@'localhost' IDENTIFIED BY 'password';
   > CREATE USER 'admin'@'%' IDENTIFIED BY 'password';
-  > GRANT ALL PRIVILEGES ON trials.* TO 'admin'@'%';
+  > GRANT ALL PRIVILEGES ON trialinfo.* TO 'admin'@'%';
 
 
 Die anfängliche Datenbankstruktur lässt sich danach mit "db-sync
@@ -89,7 +89,7 @@ Die anfängliche Datenbankstruktur lässt sich danach mit "db-sync
 
   Beispiel
   --------
-  $ ./db-sync.pl --db='mysql:trials;host=localhost' \
+  $ ./db-sync.pl --db='mysql:trialinfo;host=localhost' \
 		 --user=admin \
 		 --password=password \
 		 --create-tables
@@ -109,7 +109,7 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 
     <VirtualHost *:80>
 	DocumentRoot /home/agruen/trialinfo/htdocs
-	ServerName trials.home
+	ServerName trialinfo.home
 
 	ScriptAlias /cgi-bin/ "/home/agruen/trialinfo/cgi-bin/"
 
@@ -227,6 +227,12 @@ sehr langsam, dafür erzeugt es aber einen ordentlichen Seitenumbruch, was z.B.
 WebKit-basierte Lösungen wie wkhtmltopdf nur sehr mangelhaft beherrschen.
 
   yum install weasyprint
+
+
+Perl-Module
+===========
+git://github.com/zigorou/perl-json-pointer.git
+git://github.com/zigorou/perl-json-patch.git
 
 
 Lizenz
