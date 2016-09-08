@@ -140,9 +140,7 @@ sub contains {
 sub add {
     my ($class, $document, $pointer, $value) = @_;
 
-    my $patched_document = clone($document);
-
-    my $context = $class->traverse($patched_document, $pointer, +{ strict => 0, inclusive => 1 });
+    my $context = $class->traverse($document, $pointer, +{ strict => 0, inclusive => 1 });
     my $parent  = $context->parent;
     my $type    = ref $parent;
 
@@ -160,10 +158,10 @@ sub add {
         }
         else {
             ### pointer is empty string (whole document)
-            $patched_document = $value;
+            $document = $value;
         }
 
-        return $patched_document;
+        return $document;
     }
     elsif ($type eq "ARRAY") {
         unless ($context->result) {
@@ -181,10 +179,10 @@ sub add {
             splice(@$parent, $target_index, 0, $value);
         }
         else {
-            $patched_document = $value;
+            $document = $value;
         }
 
-        return $patched_document;
+        return $document;
     }
     else {
         unless ($context->result) {
@@ -201,9 +199,7 @@ sub add {
 sub remove {
     my ($class, $document, $pointer) = @_;
 
-    my $patched_document = clone($document);
-
-    my $context = $class->traverse($patched_document, $pointer);
+    my $context = $class->traverse($document, $pointer);
     my $parent  = $context->parent;
     my $type    = ref $parent;
 
@@ -211,11 +207,11 @@ sub remove {
         my $target_member = $context->last_token;
         if (defined $target_member) {
             my $removed = delete $parent->{$target_member};
-            return wantarray ? ($patched_document, $removed) : $patched_document;
+            return wantarray ? ($document, $removed) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? (undef, $patched_document) : undef;
+            return wantarray ? (undef, $document) : undef;
         }
     }
     elsif ($type eq "ARRAY") {
@@ -224,11 +220,11 @@ sub remove {
             my $parent_array_length = $#{$parent} + 1;
             $target_index = $parent_array_length if ($target_index eq "-");
             my $removed = splice(@$parent, $target_index, 1);
-            return wantarray ? ($patched_document, $removed) : $patched_document;
+            return wantarray ? ($document, $removed) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? (undef, $patched_document) : undef;
+            return wantarray ? (undef, $document) : undef;
         }
     }
     else {
@@ -239,15 +235,14 @@ sub remove {
             );
         }
 
-        return wantarray ? (undef, $patched_document) : undef;
+        return wantarray ? (undef, $document) : undef;
     }
 }
 
 sub replace {
     my ($class, $document, $pointer, $value) = @_;
 
-    my $patched_document = clone($document);
-    my $context = $class->traverse($patched_document, $pointer);
+    my $context = $class->traverse($document, $pointer);
     my $parent  = $context->parent;
     my $type    = ref $parent;
 
@@ -256,11 +251,11 @@ sub replace {
         if (defined $target_member) {
             my $replaced = $parent->{$context->last_token};
             $parent->{$context->last_token} = $value;
-            return wantarray ? ($patched_document, $replaced) : $patched_document;
+            return wantarray ? ($document, $replaced) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? ($value, $patched_document) : $value;
+            return wantarray ? ($value, $document) : $value;
         }
     }
     else {
@@ -270,11 +265,11 @@ sub replace {
             $target_index = $parent_array_length if ($target_index eq "-");
             my $replaced = $parent->[$target_index];
             $parent->[$target_index] = $value;
-            return wantarray ? ($patched_document, $replaced) : $patched_document;
+            return wantarray ? ($document, $replaced) : $document;
         }
         else {
             ### pointer is empty string (whole document)
-            return wantarray ? ($value, $patched_document) : $value;
+            return wantarray ? ($value, $document) : $value;
         }
     }
 }
@@ -291,8 +286,9 @@ sub copy {
 
 sub move {
     my ($class, $document, $from_pointer, $to_pointer) = @_;
-    my ($patched_document, $removed) = $class->remove($document, $from_pointer);
-    $class->add($patched_document, $to_pointer, $removed);
+    my $removed;
+    ($document, $removed) = $class->remove($document, $from_pointer);
+    $class->add($document, $to_pointer, $removed);
 }
 
 sub test {

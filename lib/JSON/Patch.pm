@@ -4,6 +4,7 @@ use 5.008_001;
 use strict;
 use warnings;
 
+use Clone qw(clone);
 use JSON::Patch::Context;
 use JSON::Patch::Exception qw(:codes);
 use Module::Load;
@@ -104,8 +105,10 @@ sub validate_operation {
 sub patch {
     my ($self, $document) = @_;
 
+    my $patched_document = clone($document);
+
     my $ctx = JSON::Patch::Context->new(+{
-        document => $document,
+        document => $patched_document,
     });
 
     my $pos = 0;
