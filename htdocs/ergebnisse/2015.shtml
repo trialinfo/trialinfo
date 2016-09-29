@@ -10,7 +10,7 @@
 <h1>ÖTSV Veranstaltungsergebnisse 2015</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=16&spalte=lbl&spalte=fahrzeug&kuerzel" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=16&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=16" -->
 
 <h2>Jahreswertungen</h2>
 <p>

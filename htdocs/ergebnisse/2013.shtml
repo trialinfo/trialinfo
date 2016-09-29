@@ -10,7 +10,7 @@
 <h1>ÖTSV Veranstaltungsergebnisse 2013</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=6&spalte=lbl&spalte=fahrzeug&kuerzel" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=6&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=6" -->
 
 <p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
 
