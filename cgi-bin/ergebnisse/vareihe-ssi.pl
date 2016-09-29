@@ -32,7 +32,7 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 
 my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
-my $wertung = $q->param('wertung') // 1;
+my @nicht = $q->param('nicht');
 
 my @spalten = $q->param('spalte');
 my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
@@ -43,37 +43,53 @@ my $url = $q->param('url') // 'tageswertung.shtml';
 print "Content-type: text/html; charset=utf-8\n\n";
 
 my $sth = $dbh->prepare(q{
-    SELECT bezeichnung
+    SELECT bezeichnung, wertung, COUNT(wertungsklasse) AS klassen
     FROM vareihe
+    LEFT JOIN vareihe_klasse USING (vareihe)
     WHERE vareihe = ?
 });
 $sth->execute($vareihe);
 if (my @row = $sth->fetchrow_array) {
-    my ($bezeichnung) = @row;
+    my ($bezeichnung, $wertung, $klassen) = @row;
+    $wertung //= 1;
     #doc_h1 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
 	SELECT id, titel,
 	       GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
 	FROM vareihe_veranstaltung
 	JOIN wertung USING (id)
-	JOIN veranstaltung USING (id)
-	JOIN (
-	    SELECT DISTINCT id
-	    FROM fahrer
-	    WHERE start
-	) AS _2 USING (id)
+	JOIN veranstaltung USING (id)} .
+	($klassen ? q{
+	  JOIN (
+	    SELECT DISTINCT id, vareihe
+	    FROM vareihe_klasse JOIN klasse USING (wertungsklasse)
+	  ) AS _1 USING (vareihe, id)
+	} : q{}) . q{
 	LEFT JOIN (
-	    SELECT DISTINCT id, vareihe.kuerzel
-	    FROM vareihe_veranstaltung
-	    JOIN vareihe USING (vareihe)
-	    JOIN vareihe_klasse USING (vareihe)
-	    JOIN klasse USING (id, wertungsklasse)
-	    WHERE klasse.gestartet) AS _ USING (id)
+	    SELECT id, kuerzel FROM (
+		SELECT DISTINCT id, vareihe, kuerzel
+		FROM vareihe_veranstaltung
+		JOIN vareihe USING (vareihe)
+		WHERE vareihe NOT IN (
+		  SELECT vareihe from vareihe_klasse
+		)
+
+		UNION
+
+		SELECT DISTINCT id, vareihe, kuerzel
+		FROM vareihe_veranstaltung
+		JOIN vareihe USING (vareihe)
+		JOIN vareihe_klasse USING (vareihe)
+		JOIN klasse USING (id, wertungsklasse)
+	    ) AS _3} .
+	    (@nicht ? q{
+	    WHERE vareihe NOT IN (} . join(', ', map { '?' } @nicht) . q{)} : q{}) .
+	q{) AS _4 USING (id)
 	WHERE aktiv AND vareihe = ? AND wertung = ?
 	GROUP BY id
 	ORDER BY datum;
     });
-    $sth2->execute($vareihe, $wertung);
+    $sth2->execute(@nicht, $vareihe, $wertung);
     print "<p>\n";
     while (my @row = $sth2->fetchrow_array) {
 	my ($id, $titel, $kuerzel) = @row;
