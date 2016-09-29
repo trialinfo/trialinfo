@@ -9,20 +9,27 @@
 <body>
 <h1>ÖTSV Veranstaltungsergebnisse 2016</h1>
 
-<h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=24&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=24" -->
-
-<p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
-
-<h2>Jahreswertungen</h2>
+<h2>ÖTSV Cup und OSK Staatsmeisterschaft</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=25&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=24" -->
 <p>
-<a href="jahreswertung.shtml?vareihe=25&spalte=lbl&spalte=fahrzeug">ÖTSV Cup</a><br>
-<a href="jahreswertung.shtml?vareihe=26&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft</a><br>
-<a href="jahreswertung.shtml?vareihe=29&spalte=lbl">ÖTSV Kids e-Cup</a><br>
-<br>
-<a href="jahreswertung.shtml?vareihe=27">ÖTSV Bike Trial Cup</a>
+<a href="jahreswertung.shtml?vareihe=25&spalte=lbl&spalte=fahrzeug">ÖTSV Cup Gesamt</a><br>
+<a href="jahreswertung.shtml?vareihe=26&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft Gesamt</a><br>
 </p>
+
+<h2>ÖTSV Kids e-Cup</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=29spalte=lbl&spalte=fahrzeug&kuerzel&nicht=24&nicht=29" -->
 <p>
+<a href="jahreswertung.shtml?vareihe=29&spalte=lbl">Gesamt</a><br>
+</p>
+
+<h2>ÖTSV Bike Trial Cup</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=27&spalte=lbl&kuerzel&nicht=24&nicht=27" -->
+<p>
+<a href="jahreswertung.shtml?vareihe=27&spalte=lbl">Gesamt</a>
+</p>
+
+<h2>A-Cup</h2>
+<p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
 
 <h2>Sonstiges</h2>
 <p>
