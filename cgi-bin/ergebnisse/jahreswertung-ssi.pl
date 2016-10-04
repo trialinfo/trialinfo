@@ -173,8 +173,26 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, klasse, wertungsklasse
+    SELECT id, klasse, wertungsklasse, runden, keine_wertung1
     FROM klasse
+    JOIN vareihe_veranstaltung USING (id)
+    JOIN vareihe_klasse USING (wertungsklasse, vareihe)
+    WHERE vareihe = ?
+});
+$sth->execute($vareihe);
+while (my $row = $sth->fetchrow_hashref) {
+    my $id = $row->{id};
+    delete $row->{id};
+    my $klasse = $row->{klasse};
+    delete $row->{klasse};
+    my $cfg = $veranstaltungen->{$id}{cfg};
+    $cfg->{klassen}[$klasse - 1] = $row;
+}
+
+$sth = $dbh->prepare(q{
+    SELECT id, klasse, sektion
+    FROM sektion
+    JOIN klasse USING (id, klasse)
     JOIN vareihe_veranstaltung USING (id)
     JOIN vareihe_klasse USING (wertungsklasse, vareihe)
     WHERE vareihe = ?
@@ -182,7 +200,7 @@ $sth = $dbh->prepare(q{
 $sth->execute($vareihe);
 while (my @row = $sth->fetchrow_array) {
     my $cfg = $veranstaltungen->{$row[0]}{cfg};
-    $cfg->{klassen}[$row[1] - 1]{wertungsklasse} = $row[2];
+    push @{$cfg->{sektionen}[$row[1] - 1]}, $row[2];
 }
 
 foreach my $id (keys %$veranstaltungen) {

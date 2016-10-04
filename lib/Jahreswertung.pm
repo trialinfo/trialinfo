@@ -38,8 +38,8 @@ sub streichen($$$$) {
     $streichresultate = $streichresultate->{$klasse}
 	if ref($streichresultate) eq 'HASH';
 
-    $laeufe_gesamt = max($laeufe_bisher, $laeufe_gesamt);
-    return $laeufe_bisher - max(0, $laeufe_gesamt - $streichresultate);
+    $laeufe_gesamt = max($laeufe_bisher, $laeufe_gesamt // 0);
+    return $laeufe_bisher - max(0, $laeufe_gesamt - ($streichresultate // 0));
 }
 
 sub wertungsrang_cmp($$) {
@@ -267,14 +267,26 @@ sub jahreswertung(@) {
 	}
     }
 
+    my $startende_klassen;
+
     my $laeufe_pro_klasse;
     foreach my $veranstaltung (@{$args{veranstaltungen}}) {
 	my $cfg = $veranstaltung->[0];
-	foreach my $fahrer (values %{$veranstaltung->[1]}) {
-	    $cfg->{gewertet}[$fahrer->{wertungsklasse} - 1] = 1
-		if defined $fahrer->{wertungen}[$wertung - 1]{punkte};
+	my $fahrer_nach_startnummer = $veranstaltung->[1];
+
+	foreach my $klasse (@{$cfg->{klassen}}) {
+	    $cfg->{gewertet}[$klasse->{wertungsklasse} - 1] = 1
+		if defined $klasse &&
+		   defined $cfg->{sektionen}[$klasse->{wertungsklasse} - 1] &&
+		   $klasse->{runden} > 0 &&
+		   ($wertung != 1 || !$klasse->{keine_wertung1});
 	}
 	if (exists $cfg->{gewertet}) {
+	    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+		$startende_klassen->{$fahrer->{wertungsklasse}} = 1
+		    if $cfg->{gewertet}[$fahrer->{wertungsklasse} - 1];
+	    }
+
 	    for (my $n = 0; $n < @{$cfg->{gewertet}}; $n++) {
 		$laeufe_pro_klasse->{$n + 1}++
 		    if defined $cfg->{gewertet}[$n];
@@ -287,25 +299,6 @@ sub jahreswertung(@) {
 	my $cfg = $veranstaltung->[0];
 	$punkteteilung++
 	    if $cfg->{punkteteilung};
-    }
-
-    my $zusammenfassung;
-    foreach my $klasse (keys %$laeufe_pro_klasse) {
-	$zusammenfassung->{$klasse} = jahreswertung_zusammenfassung(
-		$klasse, $laeufe_pro_klasse->{$klasse},
-		$args{laeufe_gesamt}, $args{streichresultate});
-    }
-
-    my $gemeinsame_zusammenfassung;
-    foreach my $klasse (keys %$zusammenfassung) {
-	if (defined $gemeinsame_zusammenfassung) {
-	    if ($gemeinsame_zusammenfassung ne $zusammenfassung->{$klasse}) {
-		$gemeinsame_zusammenfassung = undef;
-		last;
-	    }
-	} else {
-	    $gemeinsame_zusammenfassung = $zusammenfassung->{$klasse};
-	}
     }
 
     my $spaltenbreite = 2;
@@ -338,6 +331,25 @@ sub jahreswertung(@) {
     my $letzte_cfg = $args{veranstaltungen}[@{$args{veranstaltungen}} - 1][0];
 
     jahreswertung_berechnen $jahreswertung, $args{laeufe_gesamt}, $args{streichresultate};
+
+    my $zusammenfassung;
+    foreach my $klasse (keys %$jahreswertung) {
+	$zusammenfassung->{$klasse} = jahreswertung_zusammenfassung(
+		$klasse, $laeufe_pro_klasse->{$klasse},
+		$args{laeufe_gesamt}, $args{streichresultate});
+    }
+
+    my $gemeinsame_zusammenfassung;
+    foreach my $klasse (keys %$zusammenfassung) {
+	if (defined $gemeinsame_zusammenfassung) {
+	    if ($gemeinsame_zusammenfassung ne $zusammenfassung->{$klasse}) {
+		$gemeinsame_zusammenfassung = undef;
+		last;
+	    }
+	} else {
+	    $gemeinsame_zusammenfassung = $zusammenfassung->{$klasse};
+	}
+    }
 
     # Wir wollen, dass alle Tabellen gleich breit sind.
     my $namenlaenge = 0;
