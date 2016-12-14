@@ -1120,6 +1120,25 @@ passport.use('local', new LocalStrategy(
       });
   }));
 
+async function register_get_event(connection, id) {
+  var event = await get_event(connection, id);
+  var result = {
+    id: id,
+    title: event.rankings[0].title
+  };
+  ['date', 'registration_ends', 'ranking1_enabled',
+   'type', 'features'].forEach((field) => {
+    result[field] = event[field];
+  });
+  result.classes = [];
+  event.classes.forEach((class_, index) => {
+    if (class_ && class_.rounds && event.zones[index]) {
+      result.classes[index] = class_.name;
+    }
+  });
+  return result;
+}
+
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -1363,6 +1382,13 @@ app.get('/logout', function(req, res, next) {
 
 app.get('/api/event/:id/scores', function(req, res, next) {
   get_event_scores(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/register/event/:id', function(req, res, next) {
+  register_get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
