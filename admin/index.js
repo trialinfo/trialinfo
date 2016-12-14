@@ -78,7 +78,7 @@ async function validate_user(connection, user) {
     throw 'Wrong user or password';
 
   var rows = await connection.queryAsync(`
-    SELECT password FROM users WHERE email = ?`, user.email);
+    SELECT password FROM users WHERE email = ?`, [user.email]);
 
   try {
     var password_hash = rows[0].password;
@@ -135,7 +135,7 @@ async function get_list(connection, table, index, key, key_value, column) {
   return connection.queryAsync(`
     SELECT *
     FROM ` + table + `
-    WHERE ` + key + ` = ?`, key_value)
+    WHERE ` + key + ` = ?`, [key_value])
   .then((row) => {
     var list = [];
     row.forEach((_) => {
@@ -157,14 +157,14 @@ async function get_series(connection, email) {
     FROM series
     JOIN series_all_admins USING (serie)
     WHERE email = ?
-    ORDER BY serie`, email);
+    ORDER BY serie`, [email]);
 }
 
 async function get_serie(connection, serie_id) {
   var series = await connection.queryAsync(`
     SELECT *
     FROM series
-    WHERE serie = ?`, serie_id);
+    WHERE serie = ?`, [serie_id]);
 
   if (series.length != 1)
     throw 'No serie with number ' + JSON.stringify(serie_id) + ' exists';
@@ -176,19 +176,19 @@ async function get_serie(connection, serie_id) {
     FROM series_events
     JOIN events USING (id)
     WHERE serie = ?
-    ORDER BY date, id`, serie_id)
+    ORDER BY date, id`, [serie_id])
   ).map((row) => row.id);
 
   serie.classes = await connection.queryAsync(`
     SELECT ranking_class AS class, events, drop_events
     FROM series_classes
-    WHERE serie = ?`, serie_id);
+    WHERE serie = ?`, [serie_id]);
 
   serie.new_numbers = {};
   (await connection.queryAsync(`
     SELECT id, number, new_number
     FROM new_numbers
-    WHERE serie = ?`, serie_id)
+    WHERE serie = ?`, [serie_id])
   ).forEach((row) => {
     var event = serie.new_numbers[row.id];
     if (!event)
@@ -227,7 +227,7 @@ async function get_events(connection, email) {
     JOIN events_all_admins USING (id)
     LEFT JOIN rankings USING (id)
     WHERE email = ? AND ranking = 1
-    ORDER BY date, title, id`, email);
+    ORDER BY date, title, id`, [email]);
 
   events.forEach((row) => {
     events_hash[row.id] = row;
@@ -263,7 +263,7 @@ function make_revalidate_event(connection, id) {
     (await connection.queryAsync(`
       SELECT version
       FROM events
-      WHERE id = ?`, id)
+      WHERE id = ?`, [id])
     ).forEach((row) => {
       version = row.version;
     });
@@ -286,7 +286,7 @@ async function read_event(connection, id, revalidate) {
   var events = await connection.queryAsync(`
     SELECT *
     FROM events
-    WHERE id = ?`, id);
+    WHERE id = ?`, [id]);
 
   if (events.length != 1)
     throw 'No event with number ' + JSON.stringify(id) + ' exists';
@@ -303,7 +303,7 @@ async function read_event(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT class, zone
     FROM zones
-    WHERE id = ?`, id)
+    WHERE id = ?`, [id])
   ).forEach((row) => {
     var class_ = event.zones[row['class'] - 1];
     if (!class_)
@@ -315,7 +315,7 @@ async function read_event(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT feature
     FROM event_features
-    WHERE id = ?`, id)
+    WHERE id = ?`, [id])
   ).forEach((row) => {
     event.features[row.feature] = true;
   });
@@ -325,7 +325,7 @@ async function read_event(connection, id, revalidate) {
     (await connection.queryAsync(`
       SELECT class, round, zone
       FROM skipped_zones
-      WHERE id = ?`, id)
+      WHERE id = ?`, [id])
     ).forEach((row) => {
       var classes = event.skipped_zones;
       var rounds = classes[row['class']];
@@ -378,7 +378,7 @@ async function get_event(connection, id) {
       SELECT tag, id, title
       FROM events
       JOIN rankings USING(id)
-      WHERE tag = ? AND ranking = 1`, event.base);
+      WHERE tag = ? AND ranking = 1`, [event.base]);
 
     if (bases.length == 1) {
       Object.assign(copy.base, bases[0]);
@@ -388,7 +388,7 @@ async function get_event(connection, id) {
 	FROM riders
 	JOIN event_features USING (id)
 	WHERE id = ? AND start_tomorrow AND feature = 'start_tomorrow'`,
-	copy.base.id);
+	[copy.base.id]);
       copy.base.start_tomorrow = _[0].start_tomorrow;
     }
 
@@ -436,7 +436,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT *
     FROM riders
-    WHERE id = ?`, id)
+    WHERE id = ?`, [id])
   ).forEach((row) => {
     riders[row.number] = row;
 
@@ -457,7 +457,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT number, round, zone, marks
     FROM marks
-    WHERE id = ?`, id)
+    WHERE id = ?`, [id])
   ).forEach((row) => {
     if (riders[row.number]) {
       var marks_per_zone = riders[row.number].marks_per_zone;
@@ -471,7 +471,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT number, round, marks
     FROM rounds
-    WHERE id = ?`, id)
+    WHERE id = ?`, [id])
   ).forEach((row) => {
     if (riders[row.number])
       riders[row.number].marks_per_round[row.round - 1] = row.marks;
@@ -481,7 +481,7 @@ async function read_riders(connection, id, revalidate) {
     SELECT group_number, number
     FROM riders_groups
     WHERE id = ?
-    `, id)
+    `, [id])
   ).forEach((row) => {
     try {
       riders[row.group_number].riders.push(row.number);
@@ -491,7 +491,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT ranking, number, subrank, score
     FROM rider_rankings
-    WHERE id = ?`, id)
+    WHERE id = ?`, [id])
   ).forEach((row) => {
     var rider = riders[row.number];
     if (rider) {
@@ -688,7 +688,7 @@ function make_revalidate_riders(connection, id) {
     (await connection.queryAsync(`
       SELECT number, version
       FROM riders
-      WHERE id = ?`, id)
+      WHERE id = ?`, [id])
     ).forEach((row) => {
       versions[row.number] = row.version;
     });
@@ -1276,6 +1276,8 @@ app.get('/api/event/:id/scores', function(req, res, next) {
  */
 
 app.all('/api/*', auth);
+
+/* Administration */
 
 app.get('/api/events', function(req, res, next) {
   get_events(req.conn, req.user.email)
