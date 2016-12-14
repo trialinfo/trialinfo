@@ -1139,6 +1139,40 @@ async function register_get_event(connection, id) {
   return result;
 }
 
+function register_filter_rider(rider) {
+    var result = {};
+    ['version', 'number', 'class', 'applicant', 'last_name', 'first_name',
+    'street', 'city', 'zip', 'club', 'vehicle', 'date_of_birth', 'phone',
+    'license', 'frame_number', 'registration', 'displacement', 'email',
+    'country', 'province', 'insurance', 'start', 'start_tomorrow']
+    .forEach((field) => {
+      result[field] = rider[field];
+    });
+    return result;
+}
+
+async function register_get_riders(connection, id, tag) {
+  var numbers = await connection.queryAsync(`
+    SELECT number
+    FROM riders
+    WHERE id = ? AND user_tag = ? AND NOT COALESCE(`+'`group`'+`, 0)
+    ORDER BY last_name, first_name, date_of_birth, number`,
+    [id, tag]);
+
+  var riders = [];
+  while(numbers.length) {
+    var number = numbers[0].number;
+    numbers.shift();
+
+    var rider = await get_rider(connection, id, {}, number);
+    if (!Object.keys(rider).length)
+      continue;
+    riders.push(register_filter_rider(rider));
+  }
+
+  return riders;
+}
+
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -1501,6 +1535,13 @@ app.get('/login/', function(req, res, next) {
   if (req.query.redirect)
     params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
   res.render('login', params);
+});
+
+app.get('/api/register/event/:id/riders', function(req, res, next) {
+  register_get_riders(req.conn, req.params.id, req.user.tag)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
 });
 
 app.get('/admin/', function(req, res, next) {
