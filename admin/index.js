@@ -1235,7 +1235,7 @@ app.configure(function() {
   app.use(express.static('htdocs'));
   app.use(express.bodyParser());
   app.use(express.cookieParser((config.session || {}).secret || 'secret'));
-  app.use(express.cookieSession());
+  app.use(express.cookieSession({key: 'trialinfo.session'}));
   app.use(passport.initialize());
   app.use(passport.session());
   app.use('/api', conn(pool));
