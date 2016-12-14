@@ -45,7 +45,9 @@ ALTER TABLE fahrer
 	CHANGE ausfall failure INT DEFAULT 0,
 	CHANGE zusatzpunkte additional_marks INT,
 	CHANGE punkte marks INT,
-	CHANGE rang rank INT;
+	CHANGE rang rank INT,
+	ADD COLUMN user_tag CHAR(16),
+	ADD COLUMN verified BOOLEAN DEFAULT 1;
 
 DROP TABLE IF EXISTS riders_groups;
 ALTER TABLE fahrer_gruppe
@@ -132,7 +134,9 @@ ALTER TABLE veranstaltung
 	DROP COLUMN rand_links,
 	DROP COLUMN rand_oben,
 	DROP COLUMN ergebnislistenbreite,
-	CHANGE sync_erlaubt sync_allowed BOOLEAN;
+	CHANGE sync_erlaubt sync_allowed BOOLEAN,
+	ADD COLUMN registration_ends TIMESTAMP NULL DEFAULT NULL,
+	ADD COLUMN `registration_email` VARCHAR(60) NULL DEFAULT NULL;
 
 DROP TABLE IF EXISTS event_features;
 ALTER TABLE veranstaltung_feature
@@ -199,14 +203,24 @@ DROP TABLE IF EXISTS users;
 ALTER TABLE benutzer
 	RENAME users,
 	CHANGE benutzer `user` INT,
-	CHANGE name email VARCHAR(30) NOT NULL,
-	CHANGE admin super_admin BOOLEAN,
-	ADD COLUMN admin BOOLEAN;
-	-- password VARCHAR(40) NOT NULL,
+	CHANGE name email VARCHAR(60) NOT NULL,
+	ADD secret_expires TIMESTAMP NULL DEFAULT NULL AFTER password,
+	ADD secret CHAR(16) AFTER password,
+	ADD tag CHAR(16) NOT NULL AFTER password,
+	CHANGE admin super_admin BOOLEAN NOT NULL DEFAULT '0',
+	ADD COLUMN admin BOOLEAN NOT NULL DEFAULT '0' after secret_expires;
+	CHANGE password password VARCHAR(40) NULL,
 	-- admin BOOL,
 
 UPDATE users
 	SET admin = 1;
+
+CREATE UNIQUE INDEX email ON users (email);
+
+UPDATE users
+	SET tag = SUBSTRING(SHA1(RAND()), 16)
+	WHERE tag IS NULL;
+CREATE UNIQUE INDEX tag ON users (tag);
 
 DROP TABLE IF EXISTS groups;
 ALTER TABLE gruppe
@@ -281,38 +295,38 @@ DROP VIEW IF EXISTS events_all_admins;
 CREATE VIEW events_all_admins AS
   SELECT DISTINCT id, email, password, 0 AS read_only
   FROM events, users
-  WHERE admin AND super_admin
+  WHERE password IS NOT NULL AND admin AND super_admin
 UNION
   SELECT id, email, password, read_only
   FROM events_admins
   JOIN users USING (`user`)
-  WHERE admin
+  WHERE password IS NOT NULL AND admin
 UNION
   SELECT id, email, password, read_only
   FROM events_groups
   JOIN groups USING (`group`)
   JOIN admins_groups USING (`group`)
   JOIN users USING (`user`)
-  WHERE admin;
+  WHERE password IS NOT NULL AND admin;
 
 DROP VIEW IF EXISTS vareihe_alle_benutzer;
 DROP VIEW IF EXISTS series_all_admins;
 CREATE VIEW series_all_admins AS
   SELECT DISTINCT serie, email, password, 0 AS read_only
   FROM series, users
-  WHERE admin AND super_admin
+  WHERE password IS NOT NULL AND admin AND super_admin
 UNION
   SELECT serie, email, password, read_only
   FROM series_admins
   JOIN users USING (`user`)
-  WHERE admin
+  WHERE password IS NOT NULL AND admin
 UNION
   SELECT serie, email, password, read_only
   FROM series_groups
   JOIN groups USING (`group`)
   JOIN admins_groups USING (`group`)
   JOIN users USING (`user`)
-  WHERE admin;
+  WHERE password IS NOT NULL AND admin;
 
 UPDATE event_features SET feature = 'comment' WHERE feature = 'bemerkung';
 -- email
