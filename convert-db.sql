@@ -199,10 +199,14 @@ DROP TABLE IF EXISTS users;
 ALTER TABLE benutzer
 	RENAME users,
 	CHANGE benutzer `user` INT,
-	CHANGE name username VARCHAR(30) NOT NULL,
-	CHANGE kommentar comment VARCHAR(80);
+	CHANGE name email VARCHAR(30) NOT NULL,
+	CHANGE admin super_admin BOOLEAN,
+	ADD COLUMN admin BOOLEAN;
 	-- password VARCHAR(40) NOT NULL,
 	-- admin BOOL,
+
+UPDATE users
+	SET admin = 1;
 
 DROP TABLE IF EXISTS groups;
 ALTER TABLE gruppe
@@ -210,22 +214,22 @@ ALTER TABLE gruppe
 	CHANGE gruppe `group` INT,
 	CHANGE name groupname VARCHAR(30) NOT NULL;
 
-DROP TABLE IF EXISTS events_users_inherit;
-CREATE TABLE events_users_inherit (
+DROP TABLE IF EXISTS events_admins_inherit;
+CREATE TABLE events_admins_inherit (
 	id INT,
 	`user` INT,
 	read_only BOOL,
 	PRIMARY KEY (`id`,`user`,`read_only`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO events_users_inherit
+INSERT INTO events_admins_inherit
 SELECT id, benutzer AS `user`, nur_lesen AS read_only
 FROM veranstaltung_benutzer
 WHERE vererben;
 
-DROP TABLE IF EXISTS events_users;
+DROP TABLE IF EXISTS events_admins;
 ALTER TABLE veranstaltung_benutzer
-	RENAME events_users,
+	RENAME events_admins,
 	-- id INT,
 	CHANGE benutzer `user` INT,
 	CHANGE nur_lesen read_only BOOL,
@@ -252,9 +256,9 @@ ALTER TABLE veranstaltung_gruppe
 	CHANGE nur_lesen read_only BOOL,
 	DROP vererben;
 
-DROP TABLE IF EXISTS series_users;
+DROP TABLE IF EXISTS series_admins;
 ALTER TABLE vareihe_benutzer
-	RENAME series_users,
+	RENAME series_admins,
 	CHANGE vareihe serie INT,
 	CHANGE benutzer `user` INT,
 	CHANGE nur_lesen read_only BOOL;
@@ -266,45 +270,49 @@ ALTER TABLE vareihe_gruppe
 	CHANGE gruppe `group` INT,
 	CHANGE nur_lesen read_only BOOL;
 
-DROP TABLE IF EXISTS users_groups;
+DROP TABLE IF EXISTS admins_groups;
 ALTER TABLE benutzer_gruppe
-	RENAME users_groups,
+	RENAME admins_groups,
 	CHANGE benutzer `user` INT,
 	CHANGE gruppe `group` INT;
 
 DROP VIEW IF EXISTS veranstaltung_alle_benutzer;
-DROP VIEW IF EXISTS events_all_users;
-CREATE VIEW events_all_users AS
-  SELECT DISTINCT id, username, password, 0 AS read_only
+DROP VIEW IF EXISTS events_all_admins;
+CREATE VIEW events_all_admins AS
+  SELECT DISTINCT id, email, password, 0 AS read_only
   FROM events, users
-  WHERE users.admin
+  WHERE admin AND super_admin
 UNION
-  SELECT id, username, password, read_only
-  FROM events_users
+  SELECT id, email, password, read_only
+  FROM events_admins
   JOIN users USING (`user`)
+  WHERE admin
 UNION
-  SELECT id, username, password, read_only
+  SELECT id, email, password, read_only
   FROM events_groups
   JOIN groups USING (`group`)
-  JOIN users_groups USING (`group`)
-  JOIN users USING (`user`);
+  JOIN admins_groups USING (`group`)
+  JOIN users USING (`user`)
+  WHERE admin;
 
 DROP VIEW IF EXISTS vareihe_alle_benutzer;
-DROP VIEW IF EXISTS series_all_users;
-CREATE VIEW series_all_users AS
-  SELECT DISTINCT serie, username, password, 0 AS read_only
+DROP VIEW IF EXISTS series_all_admins;
+CREATE VIEW series_all_admins AS
+  SELECT DISTINCT serie, email, password, 0 AS read_only
   FROM series, users
-  WHERE users.admin
+  WHERE admin AND super_admin
 UNION
-  SELECT serie, username, password, read_only
-  FROM series_users
+  SELECT serie, email, password, read_only
+  FROM series_admins
   JOIN users USING (`user`)
+  WHERE admin
 UNION
-  SELECT serie, username, password, read_only
+  SELECT serie, email, password, read_only
   FROM series_groups
   JOIN groups USING (`group`)
-  JOIN users_groups USING (`group`)
-  JOIN users USING (`user`);
+  JOIN admins_groups USING (`group`)
+  JOIN users USING (`user`)
+  WHERE admin;
 
 UPDATE event_features SET feature = 'comment' WHERE feature = 'bemerkung';
 -- email

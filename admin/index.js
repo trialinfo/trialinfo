@@ -74,21 +74,21 @@ var pool = mysql.createPool({
 });
 
 async function validate_user(connection, user) {
-  if (!user || !user.name || !user.password)
-    throw 'Wrong username or password';
+  if (!user || !user.email || !user.password)
+    throw 'Wrong user or password';
 
   var rows = await connection.queryAsync(`
-    SELECT password FROM users WHERE username = ?`, user.name);
+    SELECT password FROM users WHERE email = ?`, user.email);
 
   try {
     var password_hash = rows[0].password;
     if (apache_md5(user.password, password_hash) == password_hash)
       return user;
-    console.error('Wrong password for user ' + JSON.stringify(user.name));
+    console.error('Wrong password for user ' + JSON.stringify(user.email));
   } catch(e) {
-    console.error('User ' + JSON.stringify(user.name) + ' does not exist');
+    console.error('User ' + JSON.stringify(user.email) + ' does not exist');
   }
-  throw 'Wrong username or password';
+  throw 'Wrong user or password';
 }
 
 /*
@@ -151,13 +151,13 @@ async function get_list(connection, table, index, key, key_value, column) {
   });
 }
 
-async function get_series(connection, username) {
+async function get_series(connection, email) {
   return connection.queryAsync(`
     SELECT serie, name, abbreviation, closed
     FROM series
-    JOIN series_all_users USING (serie)
-    WHERE username = ?
-    ORDER BY serie`, username);
+    JOIN series_all_admins USING (serie)
+    WHERE email = ?
+    ORDER BY serie`, email);
 }
 
 async function get_serie(connection, serie_id) {
@@ -199,7 +199,7 @@ async function get_serie(connection, serie_id) {
   return serie;
 }
 
-async function get_events(connection, username) {
+async function get_events(connection, email) {
   var ids = await connection.queryAsync(`
     SELECT DISTINCT id
     FROM events
@@ -224,10 +224,10 @@ async function get_events(connection, username) {
   var events = await connection.queryAsync(`
     SELECT DISTINCT id, tag, date, title, enabled
     FROM events
-    JOIN events_all_users USING (id)
+    JOIN events_all_admins USING (id)
     LEFT JOIN rankings USING (id)
-    WHERE username = ? AND ranking = 1
-    ORDER BY date, title, id`, username);
+    WHERE email = ? AND ranking = 1
+    ORDER BY date, title, id`, email);
 
   events.forEach((row) => {
     events_hash[row.id] = row;
@@ -1092,22 +1092,26 @@ async function update_rider(connection, id, number, rider) {
   }
 }
 
-passport.use('local', new LocalStrategy((name, password, done) => {
-  // console.log('LocalStrategy("' + name + '", "' + password + '")');
-  pool.getConnectionAsync()
-    .then((connection) => {
-      validate_user(connection, {name: name, password: password})
-	.then((user) => {
-	  return done(null, user);
-	}).catch(String, (msg) => {
-	  return done(null, false, {message: msg});
-	}).catch((err) => {
-	  return done(err);
-	}).finally(() => {
-	  connection.release();
-	});
-    });
-}));
+passport.use('local', new LocalStrategy(
+  {
+    usernameField: 'email',
+  },
+  (email, password, done) => {
+    // console.log('LocalStrategy("' + email + '", "' + password + '")');
+    pool.getConnectionAsync()
+      .then((connection) => {
+	validate_user(connection, {email: email, password: password})
+	  .then((user) => {
+	    return done(null, user);
+	  }).catch(String, (msg) => {
+	    return done(null, false, {message: msg});
+	  }).catch((err) => {
+	    return done(err);
+	  }).finally(() => {
+	    connection.release();
+	  });
+      });
+  }));
 
 passport.serializeUser(function(user, done) {
   done(null, user);
@@ -1167,16 +1171,16 @@ function auth(req, res, next) {
 function will_read_event(req, res, next) {
   req.conn.queryAsync(`
     SELECT 1
-    FROM events_all_users
-    WHERE id = ? AND username = ?`,
-    [req.params.id, req.user.name])
+    FROM events_all_admins
+    WHERE id = ? AND email = ?`,
+    [req.params.id, req.user.email])
   .then((allowed) => {
     return next();
 
     if (allowed.length == 0)
       return Promise.reject(
 	'No read access to event ' + JSON.stringify(req.params.id) +
-	' for user ' + JSON.stringify(req.user.name));
+	' for user ' + JSON.stringify(req.user.email));
       next();
   }).catch(next);
 }
@@ -1184,16 +1188,16 @@ function will_read_event(req, res, next) {
 function will_write_event(req, res, next) {
   req.conn.queryAsync(`
     SELECT 1
-    FROM events_all_users
-    WHERE id = ? AND username = ? AND NOT read_only`,
-    [req.params.id, req.user.name])
+    FROM events_all_admins
+    WHERE id = ? AND email = ? AND NOT read_only`,
+    [req.params.id, req.user.email])
   .then((allowed) => {
     return next();
 
     if (allowed.length == 0)
       return Promise.reject(
 	'No write access to event ' + JSON.stringify(req.params.id) +
-	' for user ' + JSON.stringify(req.user.name));
+	' for user ' + JSON.stringify(req.user.email));
       next();
   }).catch(next);
 }
@@ -1201,14 +1205,14 @@ function will_write_event(req, res, next) {
 function will_read_serie(req, res, next) {
   req.conn.queryAsync(`
     SELECT 1
-    FROM series_all_users
-    WHERE serie = ? AND username = ?`,
-    [req.params.serie, req.user.name])
+    FROM series_all_admins
+    WHERE serie = ? AND email = ?`,
+    [req.params.serie, req.user.email])
   .then((allowed) => {
     if (allowed.length == 0)
       return Promise.reject(
 	'No read access to serie ' + JSON.stringify(req.params.serie) +
-	' for user ' + JSON.stringify(req.user.name));
+	' for user ' + JSON.stringify(req.user.email));
       next();
   }).catch(next);
 }
@@ -1216,14 +1220,14 @@ function will_read_serie(req, res, next) {
 function will_write_serie(req, res, next) {
   req.conn.queryAsync(`
     SELECT 1
-    FROM series_all_users
-    WHERE serie = ? AND username = ? AND NOT read_only`,
-    [req.params.serie, req.user.name])
+    FROM series_all_admins
+    WHERE serie = ? AND email = ? AND NOT read_only`,
+    [req.params.serie, req.user.email])
   .then((allowed) => {
     if (allowed.length == 0)
       return Promise.reject(
 	'No write access to serie ' + JSON.stringify(req.params.serie) +
-	' for user ' + JSON.stringify(req.user.name));
+	' for user ' + JSON.stringify(req.user.email));
       next();
   }).catch(next);
 }
@@ -1259,6 +1263,7 @@ app.get('/admin/logout', function(req, res, next) {
 /*
  * Freely accessible without authorization:
  */
+
 app.get('/api/event/:id/scores', function(req, res, next) {
   get_event_scores(req.conn, req.params.id)
   .then((result) => {
@@ -1269,17 +1274,18 @@ app.get('/api/event/:id/scores', function(req, res, next) {
 /*
  * All other /api/ routes require authorization:
  */
+
 app.all('/api/*', auth);
 
 app.get('/api/events', function(req, res, next) {
-  get_events(req.conn, req.user.name)
+  get_events(req.conn, req.user.email)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
 app.get('/api/series', function(req, res, next) {
-  get_series(req.conn, req.user.name)
+  get_series(req.conn, req.user.email)
   .then((result) => {
     res.json(result);
   }).catch(next);

@@ -1,8 +1,8 @@
--- MySQL dump 10.16  Distrib 10.1.16-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.16  Distrib 10.1.19-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: trialinfo
+-- Host: localhost    Database: localhost
 -- ------------------------------------------------------
--- Server version	10.1.16-MariaDB
+-- Server version	10.1.19-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,6 +14,20 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `admins_groups`
+--
+
+DROP TABLE IF EXISTS `admins_groups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admins_groups` (
+  `user` int(11) NOT NULL,
+  `group` int(11) NOT NULL,
+  PRIMARY KEY (`user`,`group`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `card_colors`
@@ -45,7 +59,7 @@ CREATE TABLE `classes` (
   `started` tinyint(1) DEFAULT NULL,
   `color` varchar(20) DEFAULT NULL,
   `riding_time` time DEFAULT NULL,
-  `ranking_class` int(11) DEFAULT NULL,
+  `ranking_class` int(11) NOT NULL,
   `no_ranking1` tinyint(1) DEFAULT NULL,
   `non_competing` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`,`class`)
@@ -95,16 +109,46 @@ CREATE TABLE `events` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `events_all_users`
+-- Table structure for table `events_admins`
 --
 
-DROP TABLE IF EXISTS `events_all_users`;
-/*!50001 DROP VIEW IF EXISTS `events_all_users`*/;
+DROP TABLE IF EXISTS `events_admins`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `events_admins` (
+  `id` int(11) NOT NULL DEFAULT '0',
+  `user` int(11) NOT NULL,
+  `read_only` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`,`user`,`read_only`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `events_admins_inherit`
+--
+
+DROP TABLE IF EXISTS `events_admins_inherit`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `events_admins_inherit` (
+  `id` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
+  `read_only` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`,`user`,`read_only`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `events_all_admins`
+--
+
+DROP TABLE IF EXISTS `events_all_admins`;
+/*!50001 DROP VIEW IF EXISTS `events_all_admins`*/;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-/*!50001 CREATE TABLE `events_all_users` (
+/*!50001 CREATE TABLE `events_all_admins` (
   `id` tinyint NOT NULL,
-  `username` tinyint NOT NULL,
+  `email` tinyint NOT NULL,
   `password` tinyint NOT NULL,
   `read_only` tinyint NOT NULL
 ) ENGINE=MyISAM */;
@@ -137,36 +181,6 @@ CREATE TABLE `events_groups_inherit` (
   `group` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`,`group`,`read_only`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `events_users`
---
-
-DROP TABLE IF EXISTS `events_users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `events_users` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `user` int(11) NOT NULL,
-  `read_only` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`,`user`,`read_only`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `events_users_inherit`
---
-
-DROP TABLE IF EXISTS `events_users_inherit`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `events_users_inherit` (
-  `id` int(11) NOT NULL,
-  `user` int(11) NOT NULL,
-  `read_only` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`,`user`,`read_only`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -215,21 +229,6 @@ CREATE TABLE `new_numbers` (
   `number` int(11) NOT NULL,
   `new_number` int(11) DEFAULT NULL,
   PRIMARY KEY (`serie`,`id`,`number`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `ranking_points`
---
-
-DROP TABLE IF EXISTS `ranking_points`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ranking_points` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `rank` int(11) NOT NULL,
-  `points` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -299,7 +298,7 @@ CREATE TABLE `riders` (
   `email` varchar(60) DEFAULT NULL,
   `comment` varchar(150) DEFAULT NULL,
   `country` varchar(15) DEFAULT NULL,
-  `district` varchar(20) DEFAULT NULL,
+  `province` varchar(20) DEFAULT NULL,
   `minding` varchar(8) DEFAULT NULL,
   `start_time` time DEFAULT NULL,
   `finish_time` time DEFAULT NULL,
@@ -336,23 +335,6 @@ CREATE TABLE `riders_groups` (
   `group_number` int(11) NOT NULL,
   `number` int(11) NOT NULL,
   PRIMARY KEY (`id`,`group_number`,`number`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `riders_rankings`
---
-
-DROP TABLE IF EXISTS `riders_rankings`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `riders_rankings` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `number` int(11) NOT NULL,
-  `ranking` int(11) NOT NULL,
-  `subrank` int(11) DEFAULT NULL,
-  `score` double DEFAULT NULL,
-  PRIMARY KEY (`id`,`number`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -407,16 +389,31 @@ CREATE TABLE `series` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `series_all_users`
+-- Table structure for table `series_admins`
 --
 
-DROP TABLE IF EXISTS `series_all_users`;
-/*!50001 DROP VIEW IF EXISTS `series_all_users`*/;
+DROP TABLE IF EXISTS `series_admins`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `series_admins` (
+  `serie` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
+  `read_only` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`serie`,`user`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `series_all_admins`
+--
+
+DROP TABLE IF EXISTS `series_all_admins`;
+/*!50001 DROP VIEW IF EXISTS `series_all_admins`*/;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-/*!50001 CREATE TABLE `series_all_users` (
+/*!50001 CREATE TABLE `series_all_admins` (
   `serie` tinyint NOT NULL,
-  `username` tinyint NOT NULL,
+  `email` tinyint NOT NULL,
   `password` tinyint NOT NULL,
   `read_only` tinyint NOT NULL
 ) ENGINE=MyISAM */;
@@ -468,21 +465,6 @@ CREATE TABLE `series_groups` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `series_users`
---
-
-DROP TABLE IF EXISTS `series_users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `series_users` (
-  `serie` int(11) NOT NULL,
-  `user` int(11) NOT NULL,
-  `read_only` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`serie`,`user`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `skipped_zones`
 --
 
@@ -507,26 +489,11 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
   `user` int(11) NOT NULL,
-  `username` varchar(30) NOT NULL,
+  `email` varchar(254) DEFAULT NULL,
   `password` varchar(40) NOT NULL,
-  `comment` varchar(80) DEFAULT NULL,
-  `admin` tinyint(1) DEFAULT NULL,
+  `admin` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`user`),
-  UNIQUE KEY `benutzer_name` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `users_groups`
---
-
-DROP TABLE IF EXISTS `users_groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `users_groups` (
-  `user` int(11) NOT NULL,
-  `group` int(11) NOT NULL,
-  PRIMARY KEY (`user`,`group`)
+  UNIQUE KEY `email` (`email`),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -546,11 +513,11 @@ CREATE TABLE `zones` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Final view structure for view `events_all_users`
+-- Final view structure for view `events_all_admins`
 --
 
-/*!50001 DROP TABLE IF EXISTS `events_all_users`*/;
-/*!50001 DROP VIEW IF EXISTS `events_all_users`*/;
+/*!50001 DROP TABLE IF EXISTS `events_all_admins`*/;
+/*!50001 DROP VIEW IF EXISTS `events_all_admins`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -558,17 +525,17 @@ CREATE TABLE `zones` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `events_all_users` AS select distinct `events`.`id` AS `id`,`users`.`username` AS `username`,`users`.`password` AS `password`,0 AS `read_only` from (`events` join `users`) where (`users`.`admin` <> 0) union select `events_users`.`id` AS `id`,`users`.`username` AS `username`,`users`.`password` AS `password`,`events_users`.`read_only` AS `read_only` from (`events_users` join `users` on((`events_users`.`user` = `users`.`user`))) union select `events_groups`.`id` AS `id`,`users`.`username` AS `username`,`users`.`password` AS `password`,`events_groups`.`read_only` AS `read_only` from (((`events_groups` join `groups` on((`events_groups`.`group` = `groups`.`group`))) join `users_groups` on((`events_groups`.`group` = `users_groups`.`group`))) join `users` on((`users_groups`.`user` = `users`.`user`))) */;
+/*!50001 VIEW `events_all_admins` AS select distinct `events`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,0 AS `read_only` from (`events` join `users`) where ((`users`.`admin` <> 0) and (`users`.`super_admin` <> 0)) union select `events_admins`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,`events_admins`.`read_only` AS `read_only` from (`events_admins` join `users` on((`events_admins`.`user` = `users`.`user`))) where (`users`.`admin` <> 0) union select `events_groups`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,`events_groups`.`read_only` AS `read_only` from (((`events_groups` join `groups` on((`events_groups`.`group` = `groups`.`group`))) join `admins_groups` on((`events_groups`.`group` = `admins_groups`.`group`))) join `users` on((`admins_groups`.`user` = `users`.`user`))) where (`users`.`admin` <> 0) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
--- Final view structure for view `series_all_users`
+-- Final view structure for view `series_all_admins`
 --
 
-/*!50001 DROP TABLE IF EXISTS `series_all_users`*/;
-/*!50001 DROP VIEW IF EXISTS `series_all_users`*/;
+/*!50001 DROP TABLE IF EXISTS `series_all_admins`*/;
+/*!50001 DROP VIEW IF EXISTS `series_all_admins`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -576,7 +543,7 @@ CREATE TABLE `zones` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `series_all_users` AS select distinct `series`.`serie` AS `serie`,`users`.`username` AS `username`,`users`.`password` AS `password`,0 AS `read_only` from (`series` join `users`) where (`users`.`admin` <> 0) union select `series_users`.`serie` AS `serie`,`users`.`username` AS `username`,`users`.`password` AS `password`,`series_users`.`read_only` AS `read_only` from (`series_users` join `users` on((`series_users`.`user` = `users`.`user`))) union select `series_groups`.`serie` AS `serie`,`users`.`username` AS `username`,`users`.`password` AS `password`,`series_groups`.`read_only` AS `read_only` from (((`series_groups` join `groups` on((`series_groups`.`group` = `groups`.`group`))) join `users_groups` on((`series_groups`.`group` = `users_groups`.`group`))) join `users` on((`users_groups`.`user` = `users`.`user`))) */;
+/*!50001 VIEW `series_all_admins` AS select distinct `series`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,0 AS `read_only` from (`series` join `users`) where ((`users`.`admin` <> 0) and (`users`.`super_admin` <> 0)) union select `series_admins`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,`series_admins`.`read_only` AS `read_only` from (`series_admins` join `users` on((`series_admins`.`user` = `users`.`user`))) where (`users`.`admin` <> 0) union select `series_groups`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,`series_groups`.`read_only` AS `read_only` from (((`series_groups` join `groups` on((`series_groups`.`group` = `groups`.`group`))) join `admins_groups` on((`series_groups`.`group` = `admins_groups`.`group`))) join `users` on((`admins_groups`.`user` = `users`.`user`))) where (`users`.`admin` <> 0) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -590,4 +557,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-08-08 10:31:14
+-- Dump completed on 2016-12-14 15:12:03
