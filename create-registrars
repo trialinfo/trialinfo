@@ -1,0 +1,45 @@
+#! /bin/sh
+
+if [ $# = 0 ]; then
+    echo "Aufruf: $0 {id}"
+    exit 1
+fi
+
+DB=./local-db
+
+function random_tag() {
+    head -c 12 /dev/random | base64
+}
+
+#echo '
+#    DELETE FROM users
+#    WHERE NOT verified;
+#    ' | $DB
+
+emails=$(
+    echo "
+      SELECT DISTINCT email
+      FROM riders
+      WHERE id = $1 AND email IS NOT NULL AND email <> '' AND email NOT IN (SELECT email FROM users);
+    " | $DB -N)
+
+user=$(
+    echo '
+      SELECT COALESCE(MAX(user), 0)+1
+      FROM users;
+    ' | $DB -N)
+
+for email in $emails; do
+    tag=$(random_tag)
+    echo -n "
+      INSERT INTO users (user, email, tag)
+      VALUES ($user, '$email', '$tag');
+    "
+    echo -n "
+      UPDATE riders
+      SET user_tag = '$tag'
+      WHERE email = '$email';
+    "
+    ((user++))
+done \
+| $DB
