@@ -1544,6 +1544,13 @@ app.get('/api/register/event/:id/riders', function(req, res, next) {
   }).catch(next);
 });
 
+app.get('/api/register/event/:id/suggestions', function(req, res, next) {
+  get_event_suggestions(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
 app.get('/admin/', function(req, res, next) {
   if (!(req.user || {}).admin) {
     if (req.user)
