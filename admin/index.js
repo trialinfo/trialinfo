@@ -1177,11 +1177,12 @@ function will_read_event(req, res, next) {
   .then((allowed) => {
     return next();
 
-    if (allowed.length == 0)
+    if (allowed.length == 0) {
       return Promise.reject(
 	'No read access to event ' + JSON.stringify(req.params.id) +
 	' for user ' + JSON.stringify(req.user.email));
-      next();
+    }
+    next();
   }).catch(next);
 }
 
@@ -1194,11 +1195,12 @@ function will_write_event(req, res, next) {
   .then((allowed) => {
     return next();
 
-    if (allowed.length == 0)
+    if (allowed.length == 0) {
       return Promise.reject(
 	'No write access to event ' + JSON.stringify(req.params.id) +
 	' for user ' + JSON.stringify(req.user.email));
-      next();
+    }
+    next();
   }).catch(next);
 }
 
@@ -1209,11 +1211,12 @@ function will_read_serie(req, res, next) {
     WHERE serie = ? AND email = ?`,
     [req.params.serie, req.user.email])
   .then((allowed) => {
-    if (allowed.length == 0)
+    if (allowed.length == 0) {
       return Promise.reject(
 	'No read access to serie ' + JSON.stringify(req.params.serie) +
 	' for user ' + JSON.stringify(req.user.email));
-      next();
+    }
+    next();
   }).catch(next);
 }
 
@@ -1224,11 +1227,12 @@ function will_write_serie(req, res, next) {
     WHERE serie = ? AND email = ? AND NOT read_only`,
     [req.params.serie, req.user.email])
   .then((allowed) => {
-    if (allowed.length == 0)
+    if (allowed.length == 0) {
       return Promise.reject(
 	'No write access to serie ' + JSON.stringify(req.params.serie) +
 	' for user ' + JSON.stringify(req.user.email));
-      next();
+    }
+    next();
   }).catch(next);
 }
 
