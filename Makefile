@@ -16,6 +16,7 @@ DOWNLOAD_FILES = \
 	admin/htdocs/js/angular.min.js \
 	admin/htdocs/js/angular-route.js \
 	admin/htdocs/js/angular-cookies.js \
+	admin/htdocs/js/angular-locale_de-at.js \
 	admin/htdocs/js/json-diff.js \
 	admin/htdocs/js/validate.js \
 
@@ -71,10 +72,16 @@ $(GENERATED_FILES): %: %.in
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
 ANGULAR_VERSION=1.2.32
+
 admin/htdocs/js/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
+
+admin/htdocs/js/angular-locale_de-at.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --fail --silent --location \
+		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
 
 # AngularUI Validate
 admin/htdocs/js/validate.js:
