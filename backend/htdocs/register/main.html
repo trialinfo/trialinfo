@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2016  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html ng-app='application'>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <base href="/register/">
+    <title ng-bind="$root.title">TrialInfo</title>
+    <link rel="stylesheet" type="text/css" href="../admin.css" />
+
+    <script src="../js/angular.js"></script>
+    <script src="../js/angular-locale_de-at.js"></script>
+    <script src="../js/angular-route.js"></script>
+    <script src="../js/angular-cookies.js"></script>
+    <script src="../js/validate.js"></script>
+    <script src="../js/directives.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="event/controller.js"></script>
+    <script>
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'ui.validate']);
+
+      application.directive('isoDate', isoDateDirective);
+      application.directive('numeric', numericDirective);
+
+      application.controller('eventController', eventController);
+
+      application.config([
+        '$routeProvider',
+	function($routeProvider) {
+	  $routeProvider
+	    .when('/event/:id', {
+	      title: 'Registrierung',
+	      controller: 'eventController',
+	      templateUrl: 'event/index.html',
+	      resolve: eventController.resolve
+	    });
+	}]);
+
+      /*
+      application.config([
+        '$httpProvider',
+	function($httpProvider) {
+	  $httpProvider.responseInterceptors.push(
+	    function($location, $q) {
+	      function success(response) {
+		return response;
+	      }
+
+	      function error(response) {
+		if (response.status === 403) {
+		  $window.location.href = '/login';
+		}
+		return $q.reject(response);
+	      }
+
+	      return function(promise) {
+		return promise.then(success, error);
+	      };
+	    }
+	  );
+	}]);
+      */
+
+      application.config([
+	'$locationProvider',
+	function($locationProvider) {
+	  $locationProvider.html5Mode(true);
+	}]);
+
+      application.run([
+	'$rootScope', '$route',
+	function($rootScope, $route) {
+	  $rootScope.context = function(context) {
+	    var title = [context];
+	    if ($route.current.title)
+	      title.push($route.current.title);
+	    $rootScope.title = title.join(' - ');
+	  };
+
+	  $rootScope.$on("$routeChangeSuccess", function() {
+	    $rootScope.title = $route.current.title || '';
+	  });
+	}]);
+    </script>
+  </head>
+  <body ng-view>
+  </body>
+</html>

@@ -25,6 +25,7 @@ var exphbs = require('express-handlebars');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
 var clone = require('clone');
+var exphbs = require('express-handlebars');
 
 /*
  * Authentication
@@ -1407,7 +1408,24 @@ app.post('/change-password', conn(pool), auth, function(req, res, next) {
 app.get('/logout', function(req, res, next) {
   req.logout();
   res.clearCookie('trialinfo.user');
-  res.redirect(303, '/admin/');
+  res.redirect(303, '/');
+});
+
+app.get('/', conn(pool), function(req, res, next) {
+  req.conn.queryAsync(`
+    SELECT id, title
+    FROM events
+    JOIN rankings USING (id)
+    WHERE ranking = 1 AND enabled AND registration_ends > NOW()
+    ORDER BY date, title`)
+  .then((events) => {
+    var params = {
+      events: events
+    };
+    if (req.user)
+      params.email = req.user.email;
+    res.render('index', params);
+  }).catch(next);
 });
 
 /*
@@ -1561,6 +1579,13 @@ app.get('/admin/', function(req, res, next) {
   }
 });
 
+app.get('/register/', function(req, res, next) {
+  if (!req.user)
+    res.redirect(303, '/');
+  else
+    res.sendfile('htdocs/register/main.html');
+});
+
 /*
  * Let Angular handle page-internal routing.  (Static files in /admin/ such as
  * /admin/api.js are already handled by express.static above.)
@@ -1573,6 +1598,14 @@ app.get('/admin/*', function(req, res, next) {
     res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
   res.sendfile('htdocs/admin/main.html');
+});
+
+app.get('/register/*', function(req, res, next) {
+  if (!req.user) {
+    /* Session cookie not defined, so obviously not logged in. */
+    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+  }
+  res.sendfile('htdocs/register/main.html');
 });
 
 if (!config.http && !config.https)
