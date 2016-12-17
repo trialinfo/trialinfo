@@ -1238,11 +1238,16 @@ function will_write_serie(req, res, next) {
 
 app.set('case sensitive routing', true);
 
+if (!config.session)
+  config.session = {};
+if (!config.session.secret)
+  config.session.secret = require('crypto').randomBytes(64).toString('hex');
+
 app.configure(function() {
   app.use(express.logger());
   app.use(express.static('htdocs'));
   app.use(express.bodyParser());
-  app.use(express.cookieParser((config.session || {}).secret || 'secret'));
+  app.use(express.cookieParser(config.session.secret));
   app.use(express.cookieSession({key: 'trialinfo.session'}));
   app.use(passport.initialize());
   app.use(passport.session());
