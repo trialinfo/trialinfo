@@ -26,6 +26,13 @@ var mysql = require('mysql');
 var deepEqual = require('deep-equal');
 var clone = require('clone');
 var exphbs = require('express-handlebars');
+var remaining_time = require('./htdocs/js/remaining-time');
+
+var hbs = exphbs.create({
+  helpers: {
+    remaining_time: remaining_time
+  }
+});
 
 /*
  * Authentication
@@ -1315,7 +1322,7 @@ if (!config.session)
 if (!config.session.secret)
   config.session.secret = require('crypto').randomBytes(64).toString('hex');
 
-app.engine('handlebars', exphbs());
+app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
 app.configure(function() {
@@ -1415,7 +1422,7 @@ app.get('/logout', function(req, res, next) {
 
 app.get('/', conn(pool), function(req, res, next) {
   req.conn.queryAsync(`
-    SELECT id, title
+    SELECT id, title, registration_ends
     FROM events
     JOIN rankings USING (id)
     WHERE ranking = 1 AND enabled AND registration_ends > NOW()
