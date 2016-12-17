@@ -80,12 +80,17 @@ async function validate_user(connection, user) {
     throw 'Wrong user or password';
 
   var rows = await connection.queryAsync(`
-    SELECT password FROM users WHERE email = ?`, [user.email]);
+    SELECT password, tag, admin
+    FROM users
+    WHERE email = ? AND password IS NOT NULL`, [user.email]);
 
   try {
     var password_hash = rows[0].password;
-    if (apache_md5(user.password, password_hash) == password_hash)
+    delete rows[0].password;
+    if (apache_md5(user.password, password_hash) == password_hash) {
+      Object.assign(user, rows[0]);
       return user;
+    }
     console.error('Wrong password for user ' + JSON.stringify(user.email));
   } catch(e) {
     console.error('User ' + JSON.stringify(user.email) + ' does not exist');
@@ -1473,10 +1478,13 @@ app.get('/login/', function(req, res, next) {
 });
 
 app.get('/admin/', function(req, res, next) {
-  if (!req.user)
+  if (!(req.user || {}).admin) {
+    if (req.user)
+      req.logout();
     res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
-  else
+  } else {
     res.sendfile('htdocs/admin/main.html');
+  }
 });
 
 /*
@@ -1484,7 +1492,9 @@ app.get('/admin/', function(req, res, next) {
  * /admin/api.js are already handled by express.static above.)
  */
 app.get('/admin/*', function(req, res, next) {
-  if (!req.user) {
+  if (!(req.user || {}).admin) {
+    if (req.user)
+      req.logout();
     /* Session cookie not defined, so obviously not logged in. */
     res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
