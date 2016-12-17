@@ -17,6 +17,7 @@
 
 "use strict";
 
+var fs = require('fs');
 var Promise = require('bluebird');
 var compression = require('compression');
 var express = require('express');
@@ -1236,6 +1237,17 @@ function will_write_serie(req, res, next) {
   }).catch(next);
 }
 
+function minified_redirect(req, res, next) {
+  var minified = req.url.replace(/.js$/, '.min.js');
+  fs.stat('htdocs' + minified, function(err, stats) {
+    if (!err && stats.isFile()) {
+      req.url = minified;
+      return next('route');
+    }
+    next();
+  });
+}
+
 app.set('case sensitive routing', true);
 
 if (!config.session)
@@ -1244,7 +1256,11 @@ if (!config.session.secret)
   config.session.secret = require('crypto').randomBytes(64).toString('hex');
 
 app.configure(function() {
+  var production = process.env.NODE_ENV == 'production';
+
   app.use(express.logger());
+  if (production)
+    app.get('*.js', minified_redirect);
   app.use(express.static('htdocs'));
   app.use(express.bodyParser());
   app.use(express.cookieParser(config.session.secret));
