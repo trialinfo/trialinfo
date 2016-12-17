@@ -1252,15 +1252,19 @@ app.configure(function() {
   app.use(clientErrorHandler);
 });
 
-app.post('/admin/login',
+app.post('/admin/login', function(req, res, next) {
+  res.clearCookie('trialinfo.user');
   passport.authenticate('local', {
-    successRedirect: '/admin/',
     failureRedirect: '/admin/'
-  })
-);
+  })(req, res, next);
+}, function(req, res, next) {
+  res.cookie('trialinfo.user', JSON.stringify({email: req.user.email}));
+  res.redirect(303, '/admin/');
+});
 
 app.get('/admin/logout', function(req, res, next) {
   req.logout();
+  res.clearCookie('trialinfo.user');
   res.redirect(303, '/admin/');
 });
 

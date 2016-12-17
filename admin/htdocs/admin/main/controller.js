@@ -1,8 +1,10 @@
 'use strict;'
 
 var mainController = [
-  '$scope', '$http', '$location', '$window', 'events', 'series',
-  function ($scope, $http, $location, $window, events, series) {
+  '$scope', '$cookies', '$http', '$location', '$window', 'events', 'series',
+  function ($scope, $cookies, $http, $location, $window, events, series) {
+    $scope.user = JSON.parse($cookies['trialinfo.user'] || '{}');
+
     $scope.SYNC_SOURCE = SYNC_SOURCE;
     $scope.events = events;
     $scope.series = series;
