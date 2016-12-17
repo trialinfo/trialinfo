@@ -12,20 +12,45 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
   <head>
     <title>TrialInfo</title>
     <link rel="stylesheet" type="text/css" href="admin.css" />
+    <script src="js/remaining-time.js"></script>
     <script>
+      function start_timers() {
+	var usec;
+
+	Array.from(document.getElementsByClassName('timer')).forEach(function(timer) {
+	  var timestamp = timer.getAttribute('timestamp');
+	  if (!timestamp)
+	    return;
+	  usec = (new Date(timestamp)).getTime() - Date.now();
+	  var id = timer.getAttribute('for');
+	  var text = document.getElementById(id);
+	  if (usec > 0) {
+	    text.innerHTML = remaining_time(timestamp);
+	  } else {
+	    text.remove();
+	    timer.remove();
+	  }
+	});
+	if (usec)
+	  setTimeout(start_timers, usec % 1000 + 100);
+      }
+
       function logout() {
 	window.location.href = '/logout';
       }
     </script>
   </head>
-  <body>
+  <body onload="start_timers()">
     <h1>TrialInfo</h1>
     <p>
       <a href="admin/">Administration</a>
     </p>
     <p>
       {{#each events}}
-      <a href="register/event/{{id}}">Registrierung für {{title}}</a> (noch {{remaining_time registration_ends}})<br>
+      <span class="timer" timestamp="{{registration_ends}}" for="timer{{id}}">
+        <a href="register/event/{{id}}" >Registrierung für {{title}}</a>
+	(noch <span id="timer{{id}}">{{remaining_time registration_ends}}</span>)<br>
+      </span>
       {{/each}}
     {{#if email}}
     <p>
