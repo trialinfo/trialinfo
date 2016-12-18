@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2016  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="../admin.css" />
+    <title>TrialInfo - Anmeldung</title>
+    <script>
+      function mode(mode, event) {
+	if (event)
+	  event.preventDefault();
+	['login', 'register', 'new-password'].forEach(function(mode) {
+	  Array.from(document.getElementsByClassName(mode.replace('-','_')))
+	    .forEach(function(element) {
+	      element.setAttribute('style', 'display:none');
+	    });
+	});
+	Array.from(document.getElementsByClassName(mode.replace('-','_')))
+	  .forEach(function(element) {
+	    element.setAttribute('style', '');
+	  });
+	form.setAttribute('action', form.getAttribute('action')
+	  .replace(/^[^?]*/, '/' + mode));
+      }
+
+      function loaded() {
+	document.getElementById('nojs').setAttribute('style', 'display:none');
+	document.getElementById('js').setAttribute('style', '');
+	mode('login');
+	document.getElementById('email').focus();
+      }
+    </script>
+
+    <style>
+    table th {
+      text-align:right;
+    }
+    </style>
+  </head>
+  <body onload="loaded()">
+    <div id="nojs">
+      <p>Bitte aktivieren Sie JavaScript, um TrialInfo zu verwenden.</p>
+    </div>
+    <div id="js" style="display:none">
+      <span class="login">
+	<h1>TrialInfo – Anmeldung</h1>
+      </span>
+      <span class="register">
+	<h1>TrialInfo – Neu registrieren</h1>
+      </span>
+      <span class="new_password">
+	<h1>TrialInfo – Kennwort ändern</h1>
+      </span>
+      {{#if error}}
+      <p style="color:red">{{error}}</p>
+      {{/if}}
+      <form id="form" action="/login{{{query}}}" method="post">
+	<table>
+	  <tr class="login register new_password">
+	    <th>E-Mail</th>
+	    <td>
+	      <input type="text" name="email" value="{{email}}" size="50" maxlength="254" id="email">
+	    </td>
+	  </tr>
+	  <tr class="login new_password">
+	    <th>Kennwort</th>
+	    <td>
+	      <input type="password" name="password" size="12">
+	    </td>
+	  </tr>
+	  <tr>
+	    <th></th>
+	    <td>
+	      <button class="login new_password" type="submit">Anmelden</button>
+	      <button class="register" type="submit">E-Mail-Bestätigung senden</button>
+	    </td>
+	  </tr>
+	  <tr>
+	    <th></th>
+	    <td>
+	      <a class="register new_password" href="#" onclick="mode('login',event)">Anmelden</a>
+	      <a class="login new_password" href="#" onclick="mode('register',event)">Neu registrieren</a>
+	      <a class="login register" href="#" onclick="mode('new-password',event)">Kennwort ändern</a>
+	    </td>
+	  </tr>
+	</table>
+      </form>
+    </div>
+  </body>
+</html>

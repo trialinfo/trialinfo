@@ -21,6 +21,7 @@ var fs = require('fs');
 var Promise = require('bluebird');
 var compression = require('compression');
 var express = require('express');
+var exphbs = require('express-handlebars');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
 var clone = require('clone');
@@ -1255,6 +1256,9 @@ if (!config.session)
 if (!config.session.secret)
   config.session.secret = require('crypto').randomBytes(64).toString('hex');
 
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
+
 app.configure(function() {
   var production = process.env.NODE_ENV == 'production';
 
@@ -1273,17 +1277,76 @@ app.configure(function() {
   app.use(clientErrorHandler);
 });
 
-app.post('/admin/login', function(req, res, next) {
-  res.clearCookie('trialinfo.user');
-  passport.authenticate('local', {
-    failureRedirect: '/admin/'
+function login(req, res, next) {
+  passport.authenticate('local', function(err, user) {
+    if (err)
+      return next(err);
+    if (user) {
+      req.logIn(user, function(err) {
+	if (err)
+	  return next(err);
+	res.cookie('trialinfo.user', JSON.stringify({email: user.email}));
+	next();
+      });
+    } else {
+      var params = {
+	email: req.body.email,
+	error: 'Anmeldung fehlgeschlagen.'
+      };
+      if (req.query.redirect)
+	params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
+      res.clearCookie('trialinfo.user');
+      return res.render('login', params);
+    }
   })(req, res, next);
-}, function(req, res, next) {
-  res.cookie('trialinfo.user', JSON.stringify({email: req.user.email}));
-  res.redirect(303, '/admin/');
+}
+
+app.post('/login', login, function(req, res, next) {
+  var url = '/';
+  if (req.query.redirect)
+    url = decodeURIComponent(req.query.redirect);
+  return res.redirect(303, url);
 });
 
-app.get('/admin/logout', function(req, res, next) {
+app.post('/new-password', login, function(req, res, next) {
+  var params = {email: req.user.email};
+  if (req.query.redirect)
+    params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
+  res.render('new-password', params);
+});
+
+app.post('/change-password', conn(pool), auth, function(req, res, next) {
+  var new_password = req.body.password;
+
+  var errors = [];
+  if (new_password.length < 6)
+    errors.push('Kennwort muss mindestens 6 Zeichen lang sein.');
+  if (req.user.email.indexOf(new_password) != -1)
+    errors.push('Kennwort darf nicht in der E-Mail-Adresse enthalten sein.');
+  if (errors.length) {
+    var params = {email: req.user.email};
+    if (req.query.redirect)
+      params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
+    params.error = errors.join(', ');
+    return res.render('new-password', params);
+  }
+
+  var hash = apache_md5(new_password);
+  console.log('>>> ' + req.user.email + ': ' + hash);
+  req.conn.queryAsync(`
+    UPDATE users
+    SET password = ?
+    WHERE email = ?`, [hash, req.user.email])
+  .then(function() {
+    req.user.password = req.body.password;
+    next();
+  }).catch(next);
+}, function(req, res, next) {
+  var params = {redirect: req.query.redirect || '/'};
+  res.render('password-changed', params);
+});
+
+app.get('/logout', function(req, res, next) {
   req.logout();
   res.clearCookie('trialinfo.user');
   res.redirect(303, '/admin/');
@@ -1402,11 +1465,18 @@ app.get('/api/serie/:serie', will_read_serie, function(req, res, next) {
   }).catch(next);
 });
 
+app.get('/login/', function(req, res, next) {
+  var params = {};
+  if (req.query.redirect)
+    params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
+  res.render('login', params);
+});
+
 app.get('/admin/', function(req, res, next) {
-  if (req.user)
-    res.sendfile('htdocs/admin/main.html');
+  if (!req.user)
+    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   else
-    res.sendfile('htdocs/admin/login.html');
+    res.sendfile('htdocs/admin/main.html');
 });
 
 /*
@@ -1416,7 +1486,7 @@ app.get('/admin/', function(req, res, next) {
 app.get('/admin/*', function(req, res, next) {
   if (!req.user) {
     /* Session cookie not defined, so obviously not logged in. */
-    res.redirect(303, '/admin/');
+    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
   res.sendfile('htdocs/admin/main.html');
 });

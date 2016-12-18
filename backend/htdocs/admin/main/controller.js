@@ -45,7 +45,7 @@ var mainController = [
     };
 
     $scope.logout = function() {
-      $window.location.href = '/admin/logout';
+      $window.location.href = '/logout';
     };
   }];
 
