@@ -12,19 +12,18 @@ SYNC_TARGET ?= false
 AUTH_PREFIX ?= $(CURDIR)
 
 DOWNLOAD_FILES = \
-	admin/htdocs/js/angular.js \
-	admin/htdocs/js/angular.min.js \
-	admin/htdocs/js/angular-route.js \
-	admin/htdocs/js/angular-cookies.js \
-	admin/htdocs/js/angular-locale_de-at.js \
-	admin/htdocs/js/json-diff.js \
-	admin/htdocs/js/validate.js \
+	backend/htdocs/js/angular.js \
+	backend/htdocs/js/angular.min.js \
+	backend/htdocs/js/angular-route.js \
+	backend/htdocs/js/angular-cookies.js \
+	backend/htdocs/js/angular-locale_de-at.js \
+	backend/htdocs/js/json-diff.js \
+	backend/htdocs/js/validate.js \
 
 GENERATED_FILES = \
 	cgi-bin/api/.htaccess \
 	cgi-bin/veranstalter/.htaccess \
-	admin/htdocs/admin/help/.htaccess \
-	admin/htdocs/config.js \
+	backend/htdocs/config.js \
 	htdocs/api/.htaccess \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/.htaccess \
@@ -40,10 +39,10 @@ update:
 	@./make-trialinfo-update
 
 install:
-	cd admin && npm install
+	cd backend && npm install
 
 start:
-	cd admin && npm start
+	cd backend && npm start
 
 ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
 SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
@@ -73,23 +72,23 @@ $(GENERATED_FILES): %: %.in
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
 ANGULAR_VERSION=1.2.32
 
-admin/htdocs/js/angular%:
+backend/htdocs/js/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
 
-admin/htdocs/js/angular-locale_de-at.js:
+backend/htdocs/js/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
 
 # AngularUI Validate
-admin/htdocs/js/validate.js:
+backend/htdocs/js/validate.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular-ui/ui-utils/raw/v2.0.0/modules/validate/validate.js
 
-admin/htdocs/js/json-diff.js:
+backend/htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js
