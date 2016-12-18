@@ -1,8 +1,8 @@
 'use strict;'
 
 var eventController = [
-  '$scope', '$cookies', '$window', 'event', 'riders', 'suggestions',
-  function ($scope, $cookies, $window, event, riders, suggestions) {
+  '$scope', '$cookies', '$window', '$timeout', 'event', 'riders', 'suggestions',
+  function ($scope, $cookies, $window, $timeout, event, riders, suggestions) {
     $scope.context('Registrierung für ' + event.title);
     $scope.user = JSON.parse($cookies['trialinfo.user'] || '{}');
 
@@ -95,6 +95,18 @@ var eventController = [
     $scope.logout = function() {
       $window.location.href = '/logout';
     };
+
+    function kick() {
+      var usec = (new Date(event.registration_ends)).getTime() - Date.now();
+      if (usec > 0) {
+        $scope.remaining_time = remaining_time(event.registration_ends);
+        $timeout(kick, usec % 1000 + 100);
+      } else {
+        delete $scope.remaining_time;
+      }
+    }
+    if (event.registration_ends)
+      kick();
   }];
 
 eventController.resolve = {

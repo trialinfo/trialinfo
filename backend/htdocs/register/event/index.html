@@ -1,5 +1,6 @@
 <h1>Registrierung für {{event.title}}</h1>
-<!-- FIXME: Die Restzeit bis zum Registrierende dynamisch anzeigen. -->
+<span ng-if="remaining_time">Noch {{remaining_time}} bis zum Ende der Registrierung.</span>
+<span ng-if="!remaining_time" style="color:red">Für diese Veranstaltung ist keine Registrierung mehr möglich.</span>
 <p>
   <table>
     <tr ng-if="riders.length > 1">
