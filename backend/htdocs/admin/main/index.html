@@ -5,7 +5,7 @@
   </form>
 </p>
 <p>
-  <span ng-repeat="event in events | filter:event_visible"><a href="event/{{event.id}}" ng-style="event.enabled ? undefined : {'text-decoration': 'line-through'}" title="{{event.enabled ? '' : 'Veranstaltung nicht aktiv (siehe Einstellungen).'}}">{{event_name(event)}}</a><br></span>
+  <span ng-repeat="event in events | filter:event_visible"><a href="event/{{event.id}}" strike-through="!event.enabled" title="{{event.enabled ? '' : 'Veranstaltung nicht aktiv (siehe Einstellungen).'}}">{{event_name(event)}}</a><br></span>
 </p>
 <p>
   <button ng-click="new_event()">Neue Veranstaltung</button>

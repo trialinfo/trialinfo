@@ -282,6 +282,17 @@ function nullableDirective() {
   };
 }
 
+function strikeThroughDirective() {
+  return {
+    restrict: 'AC',
+    link: function(scope, element, attr, ctrl) {
+      scope.$watch(attr.strikeThrough, function(value) {
+        element.css('text-decoration', value ? 'line-through' : '');
+      }, true);
+    }
+  };
+}
+
 /* Unter Firefox funktioniert das Attribut autofocus in nachgeladenen Seiten nicht;
    diese Directive korrigiert das.  */
 function autofocusDirective() {

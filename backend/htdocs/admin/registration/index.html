@@ -166,7 +166,7 @@
 	      <td>
 		<span ng-repeat="ranking in features.rankings">
 		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.rankings[ranking - 1]" id="ranking{{ranking}}" accesskey="{{rankings[ranking - 1].accesskey}}">
-		    <label for="ranking{{ranking}}" ng-bind-html="rankings[ranking - 1].label" ng-style="ranking == 1 && no_ranking1 ? {'text-decoration': 'line-through'} : {}" title="{{ranking == 1 && no_ranking1 ? 'Klasse ' + rider.class + ' nimmt an dieser Wertung nicht teil.': ''}}"></label>
+		    <label for="ranking{{ranking}}" ng-bind-html="rankings[ranking - 1].label" strike-through="ranking == 1 && no_ranking1" title="{{ranking == 1 && no_ranking1 ? 'Klasse ' + rider.class + ' nimmt an dieser Wertung nicht teil.': ''}}"></label>
 		</span>
 	      </td>
 	    </tr>
@@ -178,13 +178,13 @@
 		    <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
 		</span>
 		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start" id="start">
-		  <label for="start" accesskey="s" ng-style="!may_start() ? {'text-decoration': 'line-through'} : {}" title="{{!may_start() ? (rider.class == null ? (groups ? 'Gruppe' : 'Fahrer') + ' ist keiner Klasse zugewiesen.' : 'Klasse ' + rider.class + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
+		  <label for="start" accesskey="s" strike-through="!may_start()" title="{{!may_start() ? (rider.class == null ? (groups ? 'Gruppe' : 'Fahrer') + ' ist keiner Klasse zugewiesen.' : 'Klasse ' + rider.class + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
 		<span ng-if="features.start_tomorrow">
 		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow">
 		    <label for="start_tomorrow" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
 		</span>
 		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.non_competing" id="non_competing">
-		  <label for="non_competing" accesskey="a" ng-style="non_competing ? {'text-decoration': 'line-through'} : {}" title="{{non_competing ? 'Klasse ' + rider.class + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
+		  <label for="non_competing" accesskey="a" strike-through="non_competing" title="{{non_competing ? 'Klasse ' + rider.class + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.minder">
@@ -198,7 +198,7 @@
 	<fieldset style="display:inline" ng-if="groups && rider">
 	  <legend>Fahrer in Gruppe</legend>
 	  <span ng-repeat="number in rider.riders">
-	    <a href="" ng-click="remove_member(number)" ng-style="member_starts(number) ? {} : {'text-decoration': 'line-through'}" title="Aus Gruppe entfernen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
+	    <a href="" ng-click="remove_member(number)" strike-through="!member_starts(number)" title="Aus Gruppe entfernen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
 	  </span>
 	</fieldset>
       </form>
@@ -230,7 +230,7 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="number in members_list">
-	      <a href="" ng-click="add_member(number)" ng-style="member_starts(number) ? {} : {'text-decoration': 'line-through'}" title="Zu Gruppe hinzufügen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
+	      <a href="" ng-click="add_member(number)" strike-through="!member_starts(number)" title="Zu Gruppe hinzufügen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
 	    </span>
 	  </p>
 	  <p>
