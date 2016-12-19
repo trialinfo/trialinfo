@@ -178,10 +178,10 @@
 		    <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
 		</span>
 		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start" id="start">
-		  <label for="start" accesskey="s" strike-through="!may_start()" title="{{!may_start() ? (rider.class == null ? (groups ? 'Gruppe' : 'Fahrer') + ' ist keiner Klasse zugewiesen.' : 'Klasse ' + rider.class + ' startet nicht.') : ''}}"><span class="accesskey">S</span>tart</label>
+		  <label for="start" accesskey="s" strike-through="does_not_start()" title="{{does_not_start()}}"><span class="accesskey">S</span>tart</label>
 		<span ng-if="features.start_tomorrow">
 		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow">
-		    <label for="start_tomorrow" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
+		    <label for="start_tomorrow" strike-through="does_not_start()" title="{{does_not_start()}}" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
 		</span>
 		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.non_competing" id="non_competing">
 		  <label for="non_competing" accesskey="a" strike-through="non_competing" title="{{non_competing ? 'Klasse ' + rider.class + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
@@ -252,15 +252,9 @@
 	    <span ng-if="!number_used.number && number_used.next_number">
 	      Nächste freie Startnummer in Klasse: {{number_used.next_number}}<br>
 	    </span>
-	    <span ng-if="rider.start && !may_start()" style="color:red">
-	      <span ng-if="rider.class != null">
-		Für Klasse {{rider.class}} sind keine zu befahrenen Runden und Sektionen<br>
-		ausgewählt, die Klasse startet daher nicht.
-	      </span>
-	      <span ng-if="rider.class == null">
-		Fahrer ist keiner Klasse zugewiesen,<br>
-		und kann daher nicht gewertet werden.
-	      </span>
+	    <span ng-if="rider.start && rider.class != null && !class_may_start(rider.class)" style="color:red">
+	      Für Klasse {{rider.class}} sind keine zu befahrenen Runden und Sektionen<br>
+	      ausgewählt, die Klasse startet daher nicht.
 	    </span>
 	    <span ng-if="event.type.match('^otsv') && is_austria(rider.country)" style="color:red">
 	      Bitte das Feld Staatsangehörigkeit für Österreicher leer lassen.
@@ -324,7 +318,10 @@
 	    </span>
 	  </p>
 	  <p>
-	    <button type="button" ng-disabled="!(modified() && form.$valid) || busy" ng-click="save()" tabindex="-1">Speichern</button>
+	    <button type="button" ng-disabled="!((modified() || (rider && !rider.verified)) && form.$valid) || busy" ng-click="save()" tabindex="-1">
+	      <span ng-if="!rider || rider.verified">Speichern</span>
+	      <span ng-if="rider && !rider.verified">Verifizieren</span>
+	    </button>
 	    <button type="button" ng-disabled="!(modified() || enabled.discard) || busy" ng-click="discard()" tabindex="-1">Verwerfen</button>
 	  </p>
 	  <p>

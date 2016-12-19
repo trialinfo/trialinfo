@@ -39,7 +39,7 @@
       <tr ng-if="event.id">
 	<th align="right"><label for="mtime">Letzte<br>Änderung</label></th>
 	<td>
-	  <input type="text" size="19" maxlength="19" ng-model="event.mtime" iso-timestamp id="mtime" disabled="disabled">
+	  <input type="text" size="16" maxlength="19" ng-model="event.mtime" iso-timestamp id="mtime" disabled="disabled">
 	</td>
       </tr>
       <tr>
@@ -294,6 +294,23 @@
 	  <input type="checkbox" ng-model="features.column_5" id="feature_spalte5er"><label for="feature_spalte5er">Spalte für Fünfer in Punkteverteilung</label><br>
 	</p>
     </fieldset>
+  </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Registrierung</legend>
+    <table>
+      <tr>
+	<th align="right"><label for="registration_ends">Ende der Registrierung</th>
+	<td>
+	  <input type="text" size="16" maxlength="19" ng-model="event.registration_ends" iso-timestamp id="registration_ends" nullable>
+	</td>
+      </tr>
+      <tr>
+	<th align="right"><label for="registration_email">Benachrichtigungs-E-Mail</th>
+	<td>
+	  <input type="text" size="40" maxlength="60" ng-model="event.registration_email" id="registration_email" nullable>
+	</td>
+      </tr>
+    </table>
   </fieldset>
   <p>
     <button type="button" ng-disabled="!(modified() && form.$valid) || busy" ng-click="save()">Speichern</button>

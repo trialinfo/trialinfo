@@ -789,7 +789,7 @@ async function get_riders_list(connection, id) {
     'failure', 'finish_time', 'first_name', 'group', 'insurance', 'last_name',
     'license', 'non_competing', 'number', 'phone', 'province', 'registered',
     'riders', 'rounds', 'start', 'start_time', 'start_tomorrow', 'street',
-    'vehicle', 'zip'].forEach(
+    'vehicle', 'zip', 'verified'].forEach(
       (field) => { r[field] = rider[field]; }
     );
     rider.rankings.forEach((ranking, index) => {

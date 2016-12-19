@@ -178,7 +178,17 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
     return address.join(', ');
   }
 
+  $scope.rider_may_start = function(rider) {
+    return rider.verified && (rider.registered || !features.registered);
+  }
+
   var defined_fields = {
+    verified:
+      { name: 'Verifiziert',
+	heading: 'Verifiziert',
+	expr: "verified ? 'Ja' : ''",
+	style: { 'text-align': 'center' },
+	when: function() { return features.verified; } },
     number:
       { name: 'Startnummer',
 	heading: '<span title="Startnummer">Nr.</span>',
@@ -289,13 +299,13 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
     start:
       { name: 'Start',
 	heading: 'Start',
-	expr: "start ? 'Ja' : ''",
+	expr: "start ? (rider_may_start(rider) ? 'Ja' : '?') : ''",
 	style: { 'text-align': 'center' },
 	when: function() { return features.start; } },
     start_tomorrow:
       { name: 'Start morgen',
 	heading: 'Start morgen',
-	expr: "start_tomorrow ? 'Ja' : ''",
+	expr: "start_tomorrow ? (rider_may_start(rider) ? 'Ja' : '?') : ''",
 	style: { 'text-align': 'center' },
 	when: function() { return features.start_tomorrow; } },
     non_competing:
@@ -372,6 +382,9 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 
   function filter(rider) {
     var show = $scope.show;
+    if (show.verified !== null &&
+	!rider.verified == show.verified)
+      return false;
     if ((rider.group && !show.groups) ||
 	(!rider.group && !show.riders))
       return false;
@@ -410,11 +423,12 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 
     if (show.riding) {
       try {
-	var class_ = event.classes[
-	  event.classes[rider['class'] - 1].ranking_class - 1];
-	if (!rider.start || rider.failure || rider.rounds >= class_.rounds || rider.group)
-	  return false;
+	var ranking_class = event.classes[rider['class'] - 1].ranking_class;
+	var class_ = event.classes[ranking_class - 1];
+	if (!rider.failure && rider.rounds < class_.rounds && !rider.group)
+	  return true;
       } catch(_) { }
+      return false;
     }
     return show.other_classes ?
       show.classes[rider.ranking_class] !== false :
@@ -571,7 +585,7 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
   };
 
   var tristate_optionen = (function() {
-    var fields = ['number', 'registered', 'start', 'start_tomorrow'];
+    var fields = ['number', 'registered', 'start', 'start_tomorrow', 'verified'];
     for (var n = 1; n <= 4; n++)
       fields.push('ranking' + n);
     return fields;
@@ -764,12 +778,13 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
     $scope.fold.settings = !$scope.fold.settings;
   }
 
-  $scope.$watch('show.riders_groups', function() {
-    var riders_groups = $scope.show.riders_groups;
-    $scope.show.riders = riders_groups != 'groups';
-    $scope.show.groups = riders_groups != 'riders';
-    if (!$scope.show.riders)
+  $scope.$watch('show.riders_groups', function(value) {
+    $scope.show.riders = value != 'groups';
+    $scope.show.groups = value != 'riders';
+    if (!$scope.show.riders) {
+      $scope.show.registered = null;
       $scope.show.riding = false;
+    }
     angular.forEach(event.rankings, function(ranking, index) {
       if (!$scope.show.riders && !ranking.riders)
 	$scope.show['ranking' + (index + 1)] = null;
@@ -777,12 +792,16 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	$scope.show['ranking' + (index + 1)] = null;
     });
   });
-  $scope.$watch('show.start', function() {
-    if (!$scope.show.start)
+  $scope.$watch('show.start', function(value) {
+    if (!value)
       $scope.show.riding = false;
   });
-  $scope.$watch('show.riding', function() {
-    if ($scope.show.riding) {
+  $scope.$watch('show.riding', function(value) {
+    if (value) {
+      $scope.show.riders_groups = 'riders';
+      $scope.show.verified = true;
+      if (features.registered)
+        $scope.show.registered = true;
       $scope.show.start = true;
       var current_round;
       angular.forEach($scope.show.fields, function(field) {
@@ -793,9 +812,18 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	$scope.show.fields.push('current_round');
     }
   });
+  $scope.$watch('show.verified', function(value) {
+    if (!value)
+      $scope.show.riding = false;
+  });
+  if (features.registered) {
+    $scope.$watch('show.registered', function(value) {
+      if (!value)
+	$scope.show.riding = false;
+    });
+  }
   $scope.$watch('show', update, true);
-  $scope.$watch('show.fields', function() {
-    var fields = $scope.show.fields;
+  $scope.$watch('show.fields', function(fields) {
     for (var n = 0; n < fields.length - 1; n++)
       if (fields[n] === '')
 	fields.splice(n, 1);
@@ -824,8 +852,8 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	fields.push(field);
     });
 
-    var search = $location.search();
-    angular.forEach({
+    var defaults = {
+      verified: 'yes',
       start: 'yes',
       group_by: 'ranking_class',
       order_by: features.number ? 'number' : 'name',
@@ -837,7 +865,12 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
       'margin-top': '4cm',
       'margin-right': '1cm',
       'margin-bottom': '1cm',
-    }, function(value, key) {
+    };
+    if (features.registered)
+      defaults.registered = 'yes';
+
+    var search = $location.search();
+    angular.forEach(defaults, function(value, key) {
       if (search[key] === undefined)
 	search[key] = value;
     });

@@ -22,6 +22,15 @@
 	      </select>
 	    </td>
 	  </tr>
+	  <tr ng-if="features.verified"><th align="right">Verifiziert</th>
+	    <td>
+	      <select ng-model="show.verified" yes-no-null>
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
 	  <tr ng-if="features.number"><th align="right">Startnummer</th>
 	    <td>
 	      <select ng-model="show.number" yes-no-null title="Fahrer ist eine Startnummer zugeordnet">

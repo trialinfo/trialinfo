@@ -403,12 +403,36 @@ var ridersController = [
     }
     $scope.$watch("rider['class']", next_number);
 
-    $scope.may_start = function() {
+    $scope.class_may_start = function(class_) {
+      return event.zones[event.classes[class_ - 1].ranking_class - 1] &&
+	     event.classes[class_ - 1].rounds;
+    }
+
+    $scope.class_does_not_start = function() {
       var rider = $scope.rider;
-      return !rider ||
-	     rider.group ||
-	     (rider['class'] != null &&
-	      event.zones[event.classes[rider['class'] - 1].ranking_class - 1]);
+      if (!rider || rider.group)
+	return;
+
+      var class_ = rider['class'];
+      if (class_ == null)
+	return ($scope.groups ? 'Gruppe' : 'Fahrer') + ' ist keiner Klasse zugewiesen.';
+      if (!$scope.class_may_start(class_))
+	return 'Klasse ' + rider.class + ' startet nicht.'
+    }
+
+    $scope.does_not_start = function() {
+      var rider = $scope.rider;
+      var reasons = [];
+      var reason = $scope.class_does_not_start();
+      if (reason)
+	reasons.push(reason);
+      if (rider) {
+	if (!rider.verified)
+	  reasons.push(($scope.groups ? 'Gruppe' : 'Fahrer') + ' ist nicht verifiziert.');
+	if ($scope.features.registered && !rider.registered)
+	  reasons.push('Nennungseingang ist nicht markiert.');
+      }
+      return reasons.join(' ');
     }
 
     $scope.osk_license = function(rider) {
