@@ -107,7 +107,7 @@ function format_iso_timestamp($scope, value) {
   return value;
 }
 
-function parse_iso_timestamp(text) {
+function parse_iso_timestamp(scope, text) {
   if (typeof text == 'string' && text == '')
     return null;
   else {
@@ -128,7 +128,7 @@ function isoTimestampDirective() {
     require: 'ngModel',
     link: function(scope, element, attr, ctrl) {
       ctrl.$parsers.push(function(text) {
-	var value = parse_iso_timestamp(text);
+	var value = parse_iso_timestamp(scope, text);
 	ctrl.$setValidity('isoTime', value !== undefined);
 	return value;
       });
