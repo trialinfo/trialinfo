@@ -280,12 +280,12 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	expr: "finish_time | date:'H:mm'",
 	style: { 'text-align': 'center' },
 	when: function() { return features.finish_time; } },
-    registration:
+    registered:
       { name: 'Nennungseingang',
 	heading: 'Nennungseingang',
-	expr: "registration ? 'Ja' : ''",
+	expr: "registered ? 'Ja' : ''",
 	style: { 'text-align': 'center' },
-	when: function() { return features.registration; } },
+	when: function() { return features.registered; } },
     start:
       { name: 'Start',
 	heading: 'Start',
@@ -378,8 +378,8 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
     if (show.number !== null &&
 	(rider.number >= 0) !== show.number)
       return false;
-    if (show.registration !== null &&
-	!rider.registration  == show.registration)
+    if (show.registered !== null &&
+	!rider.registered == show.registered)
       return false;
     if (show.start !== null &&
 	!rider.start == show.start)
@@ -571,7 +571,7 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
   };
 
   var tristate_optionen = (function() {
-    var fields = ['number', 'registration', 'start', 'start_tomorrow'];
+    var fields = ['number', 'registered', 'start', 'start_tomorrow'];
     for (var n = 1; n <= 4; n++)
       fields.push('ranking' + n);
     return fields;
@@ -767,7 +767,7 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
   $scope.$watch('show.riders_groups', function() {
     var riders_groups = $scope.show.riders_groups;
     $scope.show.riders = riders_groups != 'groups';
-    $scope.show.groups = riders_groups != 'rider';
+    $scope.show.groups = riders_groups != 'riders';
     if (!$scope.show.riders)
       $scope.show.riding = false;
     angular.forEach(event.rankings, function(ranking, index) {
