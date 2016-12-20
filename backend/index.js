@@ -1340,22 +1340,24 @@ function login(req, res, next) {
   passport.authenticate('local', function(err, user) {
     if (err)
       return next(err);
-    if (user) {
+    if (!user || (req.query.admin != null && !user.admin)) {
+      var params = {
+	email: req.body.email,
+	error: 'Anmeldung fehlgeschlagen.'
+      };
+      if (user)
+	params.error = 'Benutzer hat keine Administrator-Rechte.';
+      if (req.query.redirect)
+	params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
+      res.clearCookie('trialinfo.user');
+      return res.render('login', params);
+    } else {
       req.logIn(user, function(err) {
 	if (err)
 	  return next(err);
 	res.cookie('trialinfo.user', JSON.stringify({email: user.email}));
 	next();
       });
-    } else {
-      var params = {
-	email: req.body.email,
-	error: 'Anmeldung fehlgeschlagen.'
-      };
-      if (req.query.redirect)
-	params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
-      res.clearCookie('trialinfo.user');
-      return res.render('login', params);
     }
   })(req, res, next);
 }
@@ -1548,10 +1550,19 @@ app.get('/api/serie/:serie', will_read_serie, function(req, res, next) {
   }).catch(next);
 });
 
+function query_string(query) {
+  if (!query)
+    return '';
+  return '?' + Object.keys(query).map(
+    (key) => key + (query[key] != '' ?
+		    ('=' + encodeURIComponent(query[key])) : '')
+  ).join('&');
+}
+
 app.get('/login/', function(req, res, next) {
   var params = {};
-  if (req.query.redirect)
-    params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
+  if (req.query)
+    params.query = query_string(req.query);
   res.render('login', params);
 });
 
@@ -1573,7 +1584,7 @@ app.get('/admin/', function(req, res, next) {
   if (!(req.user || {}).admin) {
     if (req.user)
       req.logout();
-    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+    res.redirect(303, '/login/?admin&redirect=' + encodeURIComponent(req.url));
   } else {
     res.sendfile('htdocs/admin/main.html');
   }
