@@ -1,6 +1,6 @@
 'use strict;'
 
-var registrationController = [
+var ridersController = [
   '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location',
   'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
   function ($scope, $sce, $http, $timeout, $q, $route, $location,
@@ -647,7 +647,7 @@ var registrationController = [
     $scope.$emit('$routeUpdate');
   }];
 
-registrationController.resolveFactory = function (groups) {
+ridersController.resolveFactory = function (groups) {
   return {
     event: [
       '$q', '$http', '$route',
