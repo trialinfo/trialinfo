@@ -116,12 +116,12 @@
 	<tr>
 	  <th>Rang</th>
 	  <th>Punkte</th>
-	<tr ng-repeat="punkte in event.score track by $index">
+	<tr ng-repeat="punkte in event.scores track by $index">
 	  <th>
 	    <span title="{{$last ? 'Ab dem ' : ''}}{{$index + 1}}. Platz">{{$index + 1}}{{$last ? '+' : ''}}</span>
 	  </th>
 	  <td>
-	    <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.score[$index]" style="text-align: center">
+	    <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.scores[$index]" style="text-align: center">
 	  </td>
 	</tr>
       </table>

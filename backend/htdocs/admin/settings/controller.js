@@ -125,7 +125,7 @@ var settingsController = [
 	  features: ['number', 'class', 'last_name', 'first_name',
 		     'start', 'skipped_zones'],
 	  rankings: [{title: 'Neue Veranstaltung'}],
-	  score: [],
+	  scores: [],
 	  equal_marks_resolution: 0,
 	  insurance: 0,
 	  reset: 'registration',
