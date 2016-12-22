@@ -152,12 +152,12 @@
     <tr>
       <th align="right">Start</th>
       <td>
-	<input type="checkbox" ng-model="rider.start" id="start">
+	<input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
 	  <label for="start">
 	    <span ng-if="date">am {{date | date:"fullDate"}}</span>
 	    <span ng-if="!date">am ersten Tag</span></label><br>
 	<span ng-if="features.start_tomorrow">
-	  <input type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow">
+	  <input type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow" ng-disabled="rider.registered">
 	    <label for="start_tomorrow">
 	      <span ng-if="date_tomorrow">am {{date_tomorrow | date:"fullDate"}}</span>
 	      <span ng-if="!date_tomorrow">am zweiten Tag</span></label>

@@ -1152,7 +1152,7 @@ function register_filter_rider(rider) {
     ['version', 'number', 'class', 'applicant', 'last_name', 'first_name',
     'street', 'city', 'zip', 'club', 'vehicle', 'date_of_birth', 'phone',
     'license', 'frame_number', 'registration', 'displacement', 'email',
-    'country', 'province', 'insurance', 'start', 'start_tomorrow']
+    'country', 'province', 'insurance', 'start', 'start_tomorrow', 'registered']
     .forEach((field) => {
       result[field] = rider[field];
     });
