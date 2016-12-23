@@ -6,8 +6,13 @@ var config = {
     database: '<<name>>'
   },
 /*
+  // For debugging, don't specify a from address.  The confirmation URLs will
+  // then be logged to the console instead.
+  from: '<<email>>',
+*/
+/*
   session: {
-    secret: '<<secret>>',
+    secret: '<<secret>>'
   },
 */
 /*
@@ -20,8 +25,13 @@ var config = {
     port: 443,
     key: '<<keyfile>>',
     cert: '<<certfile>>'
-  }
+  },
 */
+/*
+  nodemailer: {
+    // nodemailer options (https://www.npmjs.com/package/nodemailer)
+  }
+ */
 };
 
 module.exports = config;

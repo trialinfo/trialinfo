@@ -17,20 +17,27 @@
 
 "use strict";
 
+require('any-promise/register/bluebird');
+
 var fs = require('fs');
+var fsp = require('fs-promise');
 var Promise = require('bluebird');
 var compression = require('compression');
 var express = require('express');
-var exphbs = require('express-handlebars');
+var express_handlebars = require('express-handlebars');
+var Handlebars = require('handlebars');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
 var clone = require('clone');
-var exphbs = require('express-handlebars');
 var remaining_time = require('./htdocs/js/remaining-time');
+var moment = require('moment');
+var crypto = require('crypto');
+var nodemailer = require('nodemailer');
 
-var hbs = exphbs.create({
+var handlebars = express_handlebars.create({
   helpers: {
-    remaining_time: remaining_time
+    'remaining-time': remaining_time,
+    'json-stringify': JSON.stringify
   }
 });
 
@@ -1181,6 +1188,41 @@ async function register_get_riders(connection, id, tag) {
   return riders;
 }
 
+/* Return a random 16-character string */
+function random_tag() {
+  return crypto.randomBytes(12).toString('base64');
+}
+
+async function create_user_secret(connection, email, create_user) {
+  var secret = random_tag();
+  var expires =
+    moment(new Date(Date.now() + 1000 * 60 * 60 * 24))
+    .format('YYYY-MM-DD HH:mm:ss');
+
+  if (create_user) {
+    try {
+      await connection.queryAsync(`
+	INSERT INTO users (user, email, tag, secret, secret_expires)
+	  SELECT COALESCE(MAX(user), 0) + 1 AS user, ?, ?, ?, ?
+	  FROM users
+      `, [email, random_tag(), secret, expires]);
+    } catch(ex) {
+      if (ex.code == 'ER_DUP_ENTRY')
+	return null;
+      throw e;
+    }
+  } else {
+    var result = await connection.queryAsync(`
+      UPDATE users
+      SET secret = ?, secret_expires = ?
+      WHERE email = ?
+    `, [secret, expires, email]);
+    if (result.affectedRows != 1)
+      return null;
+  }
+  return secret;
+}
+
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -1322,7 +1364,7 @@ if (!config.session)
 if (!config.session.secret)
   config.session.secret = require('crypto').randomBytes(64).toString('hex');
 
-app.engine('handlebars', hbs.engine);
+app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
 app.configure(function() {
@@ -1349,11 +1391,12 @@ function login(req, res, next) {
       return next(err);
     if (!user || (req.query.admin != null && !user.admin)) {
       var params = {
+	mode: 'login',
 	email: req.body.email,
 	error: 'Anmeldung fehlgeschlagen.'
       };
       if (user)
-	params.error = 'Benutzer hat keine Administrator-Rechte.';
+	params.error = 'Benutzer hat keine Administratorrechte.';
       if (req.query.redirect)
 	params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
       res.clearCookie('trialinfo.user');
@@ -1376,42 +1419,181 @@ app.post('/login', login, function(req, res, next) {
   return res.redirect(303, url);
 });
 
-app.post('/new-password', login, function(req, res, next) {
-  var params = {email: req.user.email};
-  if (req.query.redirect)
-    params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
-  res.render('new-password', params);
+async function email_change_password(mode, to, confirmation_url) {
+  var template = await fsp.readFile('email/change-password.handlebars',
+				    {encoding: 'utf-8'});
+  var params = {
+    url: config.url,
+    confirmation_url: new Handlebars.SafeString(confirmation_url)
+  };
+  params[mode] = true;
+  var message = Handlebars.compile(template)(params);
+
+  if (!config.from)
+    return console.log('> ' + confirmation_url);
+
+  var transporter = nodemailer.createTransport(config.nodemailer);
+
+  await transporter.sendMail({
+    date: moment().locale('en').format('ddd, DD MMM YYYY HH:mm:ss ZZ'),
+    from: config.from,
+    to: to,
+    subject: 'TrialInfo - ' +
+      (mode == 'register' ? 'Registrierung bestätigen' : 'Kennwort zurücksetzen'),
+    text: message,
+    headers: {
+      'Auto-Submitted': 'auto-generated',
+      'Content-Type': 'text/plain; charset=utf-8'
+    }
+  });
+  console.log('Confirmation email sent to ' + JSON.stringify(to));
+}
+
+async function register_or_reset(req, res, mode) {
+  var email = req.body.email;
+  var params = {email: email};
+  if (req.query)
+    params.query = query_string(req.query);
+  if (!email.match(/^[^@\s]+@[^@\s]+$/)) {
+    params.mode = mode;
+    params.error = new Handlebars.SafeString(
+      'Die E-Mail-Adresse <em>' +
+      Handlebars.Utils.escapeExpression(email) +
+      '</em> ist nicht gültig.');
+    return res.render('login', params);
+  }
+  var secret = await create_user_secret(req.conn, email, mode == 'register');
+  if (secret) {
+    params.secret = secret;
+    if (req.query.redirect)
+      params.redirect = req.query.redirect;
+    if (!config.url)
+      config.url = req.protocol + '://' + req.headers.host + '/';
+    try {
+      await email_change_password(mode, email,
+	config.url + 'change-password' + query_string(params));
+    } catch (e) {
+      throw e;
+      params.mode = mode;
+      params.error = 'Bestätigungs-E-Mail konnte nicht gesendet werden.';
+      return res.render('login', params);
+    }
+    return res.render('confirmation-sent', params);
+  } else {
+    var error = 'Die E-Mail-Adresse <em>' +
+      Handlebars.Utils.escapeExpression(email) +
+      '</em>';
+    if (mode == 'register') {
+      error += ' ist bereits registriert.<br>Wenn das Ihre E-Mail-Adresse' +
+               ' ist und Sie das Kennwort vergessen haben, können Sie' +
+	       ' das Kennwort zurücksetzen.';
+    } else {
+      error += ' ist nicht registriert.';
+    }
+
+    params.mode = mode;
+    params.error = new Handlebars.SafeString(error);
+    return res.render('login', params);
+  }
+}
+
+app.post('/register', conn(pool), async function(req, res, next) {
+  register_or_reset(req, res, 'register');
 });
 
-app.post('/change-password', conn(pool), auth, function(req, res, next) {
+app.post('/reset', conn(pool), async function(req, res, next) {
+  register_or_reset(req, res, 'reset');
+});
+
+app.get('/change-password', conn(pool), async function(req, res, next) {
+  var email = req.query.email;
+  var params = {email: email};
+  var result = await req.conn.queryAsync(`
+    SELECT secret
+    FROM users
+    WHERE email = ?`, [email]);
+  if (result.length == 0) {
+    params.mode = 'login';
+    params.error = new Handlebars.SafeString(
+      'Die E-Mail-Adresse <em>' +
+      Handlebars.Utils.escapeExpression(email) +
+      '</em> konnte nicht überprüft werden. Bitte versuchen Sie es erneut.');
+    if (req.query)
+      params.query = query_string(req.query);
+    res.render('login', params);
+  } else if (result.length == 1 && result[0].secret != req.query.secret) {
+    params.mode = 'login';
+    params.error = new Handlebars.SafeString(
+      'Der Bestätigungscode für die E-Mail-Adresse <em>' +
+      Handlebars.Utils.escapeExpression(email) +
+      '</em> ist nicht mehr gültig. Bitte versuchen Sie es erneut.');
+    if (req.query)
+      params.query = query_string(req.query);
+    res.render('login', params);
+  } else {
+    var query = {
+      email: email,
+      secret: req.query.secret
+    };
+    if (req.query.redirect)
+      query.redirect = req.query.redirect;
+    params.query = query_string(query);
+    res.render('change-password', params);
+  }
+});
+
+app.post('/change-password', conn(pool), async function(req, res, next) {
+  var secret = req.query.secret;
+  var email = req.query.email;
   var new_password = req.body.password;
 
   var errors = [];
   if (new_password.length < 6)
-    errors.push('Kennwort muss mindestens 6 Zeichen lang sein.');
-  if (req.user.email.indexOf(new_password) != -1)
-    errors.push('Kennwort darf nicht in der E-Mail-Adresse enthalten sein.');
+    errors.push('Das Kennwort muss mindestens 6 Zeichen lang sein.');
+  if (email && email.indexOf(new_password) != -1)
+    errors.push('Das Kennwort darf nicht in der E-Mail-Adresse enthalten sein.');
   if (errors.length) {
-    var params = {email: req.user.email};
+    var query = {
+      email: email,
+      secret: secret
+    };
     if (req.query.redirect)
-      params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
-    params.error = errors.join(', ');
-    return res.render('new-password', params);
+      query.redirect = req.query.redirect;
+    var params = {
+      query: query_string(query),
+      email: email,
+      error: errors.join(' ')
+    };
+    return res.render('change-password', params);
   }
 
-  var hash = apache_md5(new_password);
-  console.log('>>> ' + req.user.email + ': ' + hash);
-  req.conn.queryAsync(`
+  var result = await req.conn.queryAsync(`
     UPDATE users
-    SET password = ?
-    WHERE email = ?`, [hash, req.user.email])
-  .then(function() {
-    req.user.password = req.body.password;
-    next();
-  }).catch(next);
-}, function(req, res, next) {
-  var params = {redirect: req.query.redirect || '/'};
-  res.render('password-changed', params);
+    SET password = ?, secret = NULL, secret_expires = NULL
+    WHERE email = ? AND secret = ? AND secret_expires > NOW()`,
+    [apache_md5(new_password), email, secret]);
+  if (result.affectedRows != 1) {
+    var params = {
+      mode: 'reset',
+      email: email,
+      error: 'Ändern des Kennworts ist fehlgeschlagen. Bitte versuchen Sie es erneut.'
+    }
+    if (req.query.redirect)
+      params.query = query_string({redirect: req.query.redirect});
+    return res.render('login', params);
+  } else {
+    var user = {
+      email: email,
+      password: new_password
+    };
+    req.logIn(user, function(err) {
+      if (err)
+	return next(err);
+      res.cookie('trialinfo.user', JSON.stringify({email: email}));
+      var params = {redirect: req.query.redirect || '/'};
+      res.render('password-changed', params);
+    });
+  }
 });
 
 app.get('/logout', function(req, res, next) {
@@ -1567,7 +1749,9 @@ function query_string(query) {
 }
 
 app.get('/login/', function(req, res, next) {
-  var params = {};
+  var params = {
+    mode: 'login',
+  };
   if (req.query)
     params.query = query_string(req.query);
   res.render('login', params);

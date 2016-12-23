@@ -49,7 +49,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       {{#each events}}
       <span class="timer" timestamp="{{registration_ends}}" for="timer{{id}}">
         <a href="register/event/{{id}}" >Registrierung für {{title}}</a>
-	(noch <span id="timer{{id}}">{{remaining_time registration_ends}}</span>)<br>
+	(noch <span id="timer{{id}}">{{remaining-time registration_ends}}</span>)<br>
       </span>
       {{/each}}
     {{#if email}}
