@@ -24,6 +24,11 @@ var fsp = require('fs-promise');
 var Promise = require('bluebird');
 var compression = require('compression');
 var express = require('express');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var session = require('express-session')
+var cookieSession = require('cookie-session');
 var express_handlebars = require('express-handlebars');
 var Handlebars = require('handlebars');
 var mysql = require('mysql');
@@ -32,6 +37,10 @@ var remaining_time = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
+
+var object_values = require('object.values');
+if (!Object.values)
+  object_values.shim();
 
 var handlebars = express_handlebars.create({
   helpers: {
@@ -1565,7 +1574,13 @@ function query_string(query) {
   ).join('&');
 }
 
+var sendFileOptions = {
+  root: __dirname + '/htdocs/'
+};
+
 app.set('case sensitive routing', true);
+if (app.get('env') != 'production')
+  app.set('json spaces', 2);
 
 if (!config.session)
   config.session = {};
@@ -1575,23 +1590,23 @@ if (!config.session.secret)
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
-app.configure(function() {
-  var production = process.env.NODE_ENV == 'production';
-
-  app.use(express.logger());
-  if (production)
-    app.get('*.js', minified_redirect);
-  app.use(express.static('htdocs'));
-  app.use(express.bodyParser());
-  app.use(express.cookieParser(config.session.secret));
-  app.use(express.cookieSession({key: 'trialinfo.session'}));
-  app.use(passport.initialize());
-  app.use(passport.session());
-  app.use('/api', conn(pool));
-  app.use(compression());
-  app.use(app.router);
-  app.use(clientErrorHandler);
-});
+app.use(logger(app.get('env') == 'production' ? 'common' : 'dev'));
+if (app.get('env') == 'production')
+  app.get('*.js', minified_redirect);
+app.use(express.static('htdocs'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser(/* config.session.secret */));
+app.use(cookieSession({
+  name: 'trialinfo.session',
+  keys: [config.session.secret],
+  httpOnly: false,
+  signed: true}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use('/api', conn(pool));
+app.use(compression());
+app.use(clientErrorHandler);
 
 /*
  * Accessible to anyone:
@@ -1654,7 +1669,7 @@ app.get('/admin/', function(req, res, next) {
       req.logout();
     res.redirect(303, '/login/?admin&redirect=' + encodeURIComponent(req.url));
   } else {
-    res.sendfile('htdocs/admin/main.html');
+    res.sendFile('admin/main.html', sendFileOptions);
   }
 });
 
@@ -1662,7 +1677,7 @@ app.get('/register/', function(req, res, next) {
   if (!req.user)
     res.redirect(303, '/');
   else
-    res.sendfile('htdocs/register/main.html');
+    res.sendFile('register/main.html', sendFileOptions);
 });
 
 /*
@@ -1676,7 +1691,7 @@ app.get('/admin/*', function(req, res, next) {
     /* Session cookie not defined, so obviously not logged in. */
     res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
-  res.sendfile('htdocs/admin/main.html');
+  res.sendFile('admin/main.html', sendFileOptions);
 });
 
 app.get('/register/*', function(req, res, next) {
@@ -1684,7 +1699,7 @@ app.get('/register/*', function(req, res, next) {
     /* Session cookie not defined, so obviously not logged in. */
     res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
-  res.sendfile('htdocs/register/main.html');
+  res.sendFile('register/main.html', sendFileOptions);
 });
 
 /*

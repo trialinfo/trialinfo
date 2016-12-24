@@ -44,6 +44,10 @@ install:
 start:
 	cd backend && npm start
 
+serve:
+	cd backend && npm run build
+	cd backend && npm run serve
+
 ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
 SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
 else
