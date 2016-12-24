@@ -7,20 +7,11 @@ function load_events($scope, $http) {
     });
 }
 
-function features_to_list(features) {
-  var list = [];
-  angular.forEach(features, function(value, key) {
-    if (key != 'rankings' && value)
-      list.push(key);
-  });
-  return list;
-}
-
 function load_event($scope, $http, id) {
   return $http.get('/api/event' + id).
     success(function(event) {
       $scope.event = event;
-      $scope.features = features_from_list(event);
+      $scope.features = event.features;
     });
 }
 

@@ -5,7 +5,7 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
   $scope.$root.context(event.rankings[0].title);
 
   $scope.event = event;
-  var features = features_from_list(event);
+  var features = event.features;
   $scope.features = features;
   $scope.fold = {};
   $scope.show = { fields: [] };

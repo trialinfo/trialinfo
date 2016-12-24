@@ -3,7 +3,7 @@
 function eventScoresController($scope, $sce, $route, $location, $timeout, $http, $q, scores) {
   $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
   $scope.show = { fields: [], classes: [] };
-  var features = features_from_list(scores.event);
+  var features = scores.event.features;
   $scope.features = features;
 
   var old_scores, event;

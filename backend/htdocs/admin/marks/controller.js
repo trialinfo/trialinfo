@@ -6,7 +6,7 @@ var marksController = [
     $scope.$root.context(event.rankings[0].title);
 
     $scope.event = event;
-    $scope.features = features_from_list(event);
+    $scope.features = event.features;
     $scope.starting_classes = starting_classes(event);
 
     function ranking_class(rider) {

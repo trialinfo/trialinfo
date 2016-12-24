@@ -100,10 +100,8 @@ var zonesController = [
 
       /* Wenn die Daten aus dem Trialtool importiert wurden, ist das Feature
 	 skipped_zones nicht gesetzt.  Sobald eine Sektion aus der
-	 Wertung genommen wird, solle s aber auf jeden Fall gesetzt werden! */
-      var features = features_from_list(event);
-      features.skipped_zones = true;
-      event.features = features_to_list(features);
+	 Wertung genommen wird, muss es aber auf jeden Fall gesetzt werden! */
+      event.features.skipped_zones = true;
       $scope.busy = true;
       save_event($http, event.id, event).
 	success(function(event) {

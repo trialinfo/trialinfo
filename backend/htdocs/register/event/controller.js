@@ -13,7 +13,7 @@ var eventController = [
       $scope.date_tomorrow = new Date(
         date.getTime() + 1000 * 60 * 60 * 24);
     }
-    $scope.features = features_from_list(event);
+    $scope.features = event.features;
     $scope.suggestions = suggestions;
 
     $scope.riders = riders;

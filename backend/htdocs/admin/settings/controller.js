@@ -154,7 +154,7 @@ var settingsController = [
       expand_scores(event.scores);
       $scope.event = event;
       $scope.zones = zones_to_bool(event.zones);
-      $scope.features = features_from_list(event);
+      $scope.features = event.features;
       if (!modify) {
 	$scope.old_event = angular.copy(event);
 	$scope.old_zones = angular.copy($scope.zones);
@@ -168,7 +168,7 @@ var settingsController = [
       /* FIXME: Wenn Klasse schon Starter hat, muss sie weiterhin starten. (Verweis auf Starterliste.) */
       var event = angular.copy($scope.event);
       event.zones = zones_from_bool($scope.zones);
-      event.features = features_to_list($scope.features);
+      event.features = $scope.features;
       collapse_scores(event.scores);
       $scope.busy = true;
       var veranstaltung_ist_neu = !event.id;

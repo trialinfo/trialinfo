@@ -388,8 +388,6 @@ async function get_event(connection, id) {
   var event = await read_event(connection, id, revalidate);
   var copy = Object.assign({}, event);
 
-  copy.features = Object.keys(event.features);
-
   if (event.skipped_zones)
     copy.skipped_zones = skipped_zones_list(event.skipped_zones);
 
@@ -878,11 +876,9 @@ async function get_event_scores(connection, id) {
 
   hash.event = {};
   ['equal_marks_resolution', 'mtime', 'four_marks', 'date',
-  'split_score'].forEach(
+  'split_score', 'features'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
-
-  hash.event.features = Object.keys(event.features);
 
   hash.event.classes = [];
   hash.event.zones = [];

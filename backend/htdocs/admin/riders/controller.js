@@ -24,7 +24,12 @@ var ridersController = [
 
     $scope.event = event;
 
-    var features = features_from_list(event);
+    var features = event.features;
+    features.rankings = [];
+    for (var n = 1; n <= event.rankings.length; n++) {
+      if ('ranking' + n in features)
+	features.rankings.push(n);
+    }
     if (groups) {
       /* Folgende Features deaktivieren wir für Gruppen: */
       angular.forEach(['number', 'first_name', 'date_of_birth', 'street',

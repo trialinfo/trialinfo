@@ -6,16 +6,7 @@ var eventController = [
     $scope.$root.context(event.rankings[0].title);
 
     $scope.event = event;
-    $scope.features = features_from_list(event);
-    $scope.rankings = (function() {
-      var rankings = [];
-      angular.forEach(event.features, function(feature) {
-	var match;
-	if ((match = feature.match(/^wertung(\d+)$/)))
-	  rankings.push(+match[1]);
-      });
-      return rankings;
-    })();
+    $scope.features = event.features;
     $scope.fold = {};
 
     $scope.remove = function() {
