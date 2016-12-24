@@ -4,7 +4,8 @@ var eventController = [
   '$scope', '$cookies', '$window', '$timeout', 'event', 'riders', 'suggestions',
   function ($scope, $cookies, $window, $timeout, event, riders, suggestions) {
     $scope.context('Registrierung für ' + event.title);
-    $scope.user = JSON.parse($cookies['trialinfo.user'] || '{}');
+
+    $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
 
     $scope.event = event;
     if (event.date) {

@@ -1383,13 +1383,11 @@ function login(req, res, next) {
 	params.error = 'Benutzer hat keine Administratorrechte.';
       if (req.query.redirect)
 	params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
-      res.clearCookie('trialinfo.user');
       return res.render('login', params);
     } else {
       req.logIn(user, function(err) {
 	if (err)
 	  return next(err);
-	res.cookie('trialinfo.user', JSON.stringify({email: user.email}));
 	next();
       });
     }
@@ -1558,7 +1556,6 @@ async function change_password(req, res, next) {
     req.logIn(user, function(err) {
       if (err)
 	return next(err);
-      res.cookie('trialinfo.user', JSON.stringify({email: email}));
       var params = {redirect: req.query.redirect || '/'};
       res.render('password-changed', params);
     });
@@ -1599,9 +1596,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser(/* config.session.secret */));
 app.use(cookieSession({
   name: 'trialinfo.session',
-  keys: [config.session.secret],
   httpOnly: false,
-  signed: true}));
+  signed: false}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/api', conn(pool));
@@ -1659,7 +1655,6 @@ app.post('/change-password', conn(pool), change_password);
 
 app.get('/logout', function(req, res, next) {
   req.logout();
-  res.clearCookie('trialinfo.user');
   res.redirect(303, '/');
 });
 
