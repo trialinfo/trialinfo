@@ -1273,6 +1273,14 @@ function auth(req, res, next) {
     });
 }
 
+function may_admin(req, res, next) {
+  if (!req.user.admin) {
+    res.status(403);
+    res.json({message: 'Not Authorized'});
+  }
+  next();
+}
+
 function will_read_event(req, res, next) {
   req.conn.queryAsync(`
     SELECT 1
@@ -1352,34 +1360,6 @@ function minified_redirect(req, res, next) {
   });
 }
 
-app.set('case sensitive routing', true);
-
-if (!config.session)
-  config.session = {};
-if (!config.session.secret)
-  config.session.secret = require('crypto').randomBytes(64).toString('hex');
-
-app.engine('handlebars', handlebars.engine);
-app.set('view engine', 'handlebars');
-
-app.configure(function() {
-  var production = process.env.NODE_ENV == 'production';
-
-  app.use(express.logger());
-  if (production)
-    app.get('*.js', minified_redirect);
-  app.use(express.static('htdocs'));
-  app.use(express.bodyParser());
-  app.use(express.cookieParser(config.session.secret));
-  app.use(express.cookieSession({key: 'trialinfo.session'}));
-  app.use(passport.initialize());
-  app.use(passport.session());
-  app.use('/api', conn(pool));
-  app.use(compression());
-  app.use(app.router);
-  app.use(clientErrorHandler);
-});
-
 function login(req, res, next) {
   passport.authenticate('local', function(err, user) {
     if (err)
@@ -1406,13 +1386,6 @@ function login(req, res, next) {
     }
   })(req, res, next);
 }
-
-app.post('/login', login, function(req, res, next) {
-  var url = '/';
-  if (req.query.redirect)
-    url = decodeURIComponent(req.query.redirect);
-  return res.redirect(303, url);
-});
 
 async function email_change_password(mode, to, confirmation_url) {
   var template = await fsp.readFile('email/change-password.handlebars',
@@ -1492,15 +1465,7 @@ async function register_or_reset(req, res, mode) {
   }
 }
 
-app.post('/register', conn(pool), async function(req, res, next) {
-  register_or_reset(req, res, 'register');
-});
-
-app.post('/reset', conn(pool), async function(req, res, next) {
-  register_or_reset(req, res, 'reset');
-});
-
-app.get('/change-password', conn(pool), async function(req, res, next) {
+async function show_change_password(req, res, next) {
   var email = req.query.email;
   var params = {email: email};
   var result = await req.conn.queryAsync(`
@@ -1535,9 +1500,9 @@ app.get('/change-password', conn(pool), async function(req, res, next) {
     params.query = query_string(query);
     res.render('change-password', params);
   }
-});
+}
 
-app.post('/change-password', conn(pool), async function(req, res, next) {
+async function change_password(req, res, next) {
   var secret = req.query.secret;
   var email = req.query.email;
   var new_password = req.body.password;
@@ -1589,13 +1554,48 @@ app.post('/change-password', conn(pool), async function(req, res, next) {
       res.render('password-changed', params);
     });
   }
+}
+
+function query_string(query) {
+  if (!query)
+    return '';
+  return '?' + Object.keys(query).map(
+    (key) => key + (query[key] != '' ?
+		    ('=' + encodeURIComponent(query[key])) : '')
+  ).join('&');
+}
+
+app.set('case sensitive routing', true);
+
+if (!config.session)
+  config.session = {};
+if (!config.session.secret)
+  config.session.secret = require('crypto').randomBytes(64).toString('hex');
+
+app.engine('handlebars', handlebars.engine);
+app.set('view engine', 'handlebars');
+
+app.configure(function() {
+  var production = process.env.NODE_ENV == 'production';
+
+  app.use(express.logger());
+  if (production)
+    app.get('*.js', minified_redirect);
+  app.use(express.static('htdocs'));
+  app.use(express.bodyParser());
+  app.use(express.cookieParser(config.session.secret));
+  app.use(express.cookieSession({key: 'trialinfo.session'}));
+  app.use(passport.initialize());
+  app.use(passport.session());
+  app.use('/api', conn(pool));
+  app.use(compression());
+  app.use(app.router);
+  app.use(clientErrorHandler);
 });
 
-app.get('/logout', function(req, res, next) {
-  req.logout();
-  res.clearCookie('trialinfo.user');
-  res.redirect(303, '/');
-});
+/*
+ * Accessible to anyone:
+ */
 
 app.get('/', conn(pool), function(req, res, next) {
   req.conn.queryAsync(`
@@ -1614,31 +1614,118 @@ app.get('/', conn(pool), function(req, res, next) {
   }).catch(next);
 });
 
+app.get('/login/', function(req, res, next) {
+  var params = {
+    mode: 'login',
+  };
+  if (req.query)
+    params.query = query_string(req.query);
+  res.render('login', params);
+});
+
+app.post('/login', login, function(req, res, next) {
+  var url = '/';
+  if (req.query.redirect)
+    url = decodeURIComponent(req.query.redirect);
+  return res.redirect(303, url);
+});
+
+app.post('/register', conn(pool), async function(req, res, next) {
+  register_or_reset(req, res, 'register');
+});
+
+app.post('/reset', conn(pool), async function(req, res, next) {
+  register_or_reset(req, res, 'reset');
+});
+
+app.get('/change-password', conn(pool), show_change_password);
+
+app.post('/change-password', conn(pool), change_password);
+
+app.get('/logout', function(req, res, next) {
+  req.logout();
+  res.clearCookie('trialinfo.user');
+  res.redirect(303, '/');
+});
+
+app.get('/admin/', function(req, res, next) {
+  if (!(req.user || {}).admin) {
+    if (req.user)
+      req.logout();
+    res.redirect(303, '/login/?admin&redirect=' + encodeURIComponent(req.url));
+  } else {
+    res.sendfile('htdocs/admin/main.html');
+  }
+});
+
+app.get('/register/', function(req, res, next) {
+  if (!req.user)
+    res.redirect(303, '/');
+  else
+    res.sendfile('htdocs/register/main.html');
+});
+
 /*
- * Freely accessible without authorization:
+ * Let Angular handle page-internal routing.  (Static files in /admin/ such as
+ * /admin/api.js are already handled by express.static above.)
+ */
+app.get('/admin/*', function(req, res, next) {
+  if (!(req.user || {}).admin) {
+    if (req.user)
+      req.logout();
+    /* Session cookie not defined, so obviously not logged in. */
+    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+  }
+  res.sendfile('htdocs/admin/main.html');
+});
+
+app.get('/register/*', function(req, res, next) {
+  if (!req.user) {
+    /* Session cookie not defined, so obviously not logged in. */
+    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+  }
+  res.sendfile('htdocs/register/main.html');
+});
+
+/*
+ * Accessible to all registered users:
  */
 
-app.get('/api/event/:id/scores', function(req, res, next) {
+app.all('/api/*', auth);
+
+app.get('/api/event/:id/scores', auth, function(req, res, next) {
   get_event_scores(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
-app.get('/api/register/event/:id', function(req, res, next) {
+app.get('/api/register/event/:id', auth, function(req, res, next) {
   register_get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
+app.get('/api/register/event/:id/riders', function(req, res, next) {
+  register_get_riders(req.conn, req.params.id, req.user.tag)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/register/event/:id/suggestions', function(req, res, next) {
+  get_event_suggestions(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
 /*
- * All other /api/ routes require authorization:
+ * Accessible to admins only:
  */
 
-app.all('/api/*', auth);
-
-/* Administration */
+app.all('/api/*', may_admin);
 
 app.get('/api/events', function(req, res, next) {
   get_events(req.conn, req.user.email)
@@ -1732,77 +1819,6 @@ app.get('/api/serie/:serie', will_read_serie, function(req, res, next) {
   .then((result) => {
     res.json(result);
   }).catch(next);
-});
-
-function query_string(query) {
-  if (!query)
-    return '';
-  return '?' + Object.keys(query).map(
-    (key) => key + (query[key] != '' ?
-		    ('=' + encodeURIComponent(query[key])) : '')
-  ).join('&');
-}
-
-app.get('/login/', function(req, res, next) {
-  var params = {
-    mode: 'login',
-  };
-  if (req.query)
-    params.query = query_string(req.query);
-  res.render('login', params);
-});
-
-app.get('/api/register/event/:id/riders', function(req, res, next) {
-  register_get_riders(req.conn, req.params.id, req.user.tag)
-  .then((result) => {
-    res.json(result);
-  }).catch(next);
-});
-
-app.get('/api/register/event/:id/suggestions', function(req, res, next) {
-  get_event_suggestions(req.conn, req.params.id)
-  .then((result) => {
-    res.json(result);
-  }).catch(next);
-});
-
-app.get('/admin/', function(req, res, next) {
-  if (!(req.user || {}).admin) {
-    if (req.user)
-      req.logout();
-    res.redirect(303, '/login/?admin&redirect=' + encodeURIComponent(req.url));
-  } else {
-    res.sendfile('htdocs/admin/main.html');
-  }
-});
-
-app.get('/register/', function(req, res, next) {
-  if (!req.user)
-    res.redirect(303, '/');
-  else
-    res.sendfile('htdocs/register/main.html');
-});
-
-/*
- * Let Angular handle page-internal routing.  (Static files in /admin/ such as
- * /admin/api.js are already handled by express.static above.)
- */
-app.get('/admin/*', function(req, res, next) {
-  if (!(req.user || {}).admin) {
-    if (req.user)
-      req.logout();
-    /* Session cookie not defined, so obviously not logged in. */
-    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
-  }
-  res.sendfile('htdocs/admin/main.html');
-});
-
-app.get('/register/*', function(req, res, next) {
-  if (!req.user) {
-    /* Session cookie not defined, so obviously not logged in. */
-    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
-  }
-  res.sendfile('htdocs/register/main.html');
 });
 
 if (!config.http && !config.https)
