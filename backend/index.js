@@ -28,7 +28,6 @@ var express_handlebars = require('express-handlebars');
 var Handlebars = require('handlebars');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
-var clone = require('clone');
 var remaining_time = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
@@ -387,7 +386,7 @@ function skipped_zones_list(skipped_zones_hash) {
 async function get_event(connection, id) {
   var revalidate = make_revalidate_event(connection, id);
   var event = await read_event(connection, id, revalidate);
-  var copy = clone(event, false, 1);
+  var copy = Object.assign({}, event);
 
   copy.features = Object.keys(event.features);
 
@@ -605,7 +604,7 @@ async function get_rider(connection, id, params, number, direction) {
   let revalidate = make_revalidate_rider(id, number, rows[0].version);
   var riders = await read_riders(connection, id, revalidate);
 
-  var rider = clone(riders[number], false, 1);
+  var rider = Object.assign({}, riders[number]);
 
   if (rider.group) {
     var group = rider;
@@ -1027,7 +1026,7 @@ async function update(connection, table, keys, map_func, old_values, new_values)
 function working_obj(obj) {
   if (!obj)
     return {};
-  return clone(obj, false, 1);
+  return Object.assign({}, obj);
 }
 
 function flatten_marks_distribution(rider) {
