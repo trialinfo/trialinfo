@@ -877,7 +877,10 @@ async function get_event_scores(connection, id) {
       if (rc != null) {
 	if (!rs[rc])
 	  rs[rc] = [];
-	rs[rc].push(...riders_per_class[class_]);
+	// I'm having trouble getting babel to substitute the spread operator
+	// on node v4.6.1.  Use push.apply instead for now:
+	//rs[rc].push(...riders_per_class[class_]);
+	Array.prototype.push.apply(rs[rc], riders_per_class[class_]);
       }
     });
     return rs;
