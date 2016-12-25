@@ -29,7 +29,7 @@ GENERATED_FILES = \
 	htdocs/.htaccess \
 	htdocs/veranstalter/.htaccess \
 
-all: download generate
+all: generate
 
 download: $(DOWNLOAD_FILES)
 
@@ -38,7 +38,7 @@ generate: $(GENERATED_FILES)
 update:
 	@./make-trialinfo-update
 
-install:
+install: download
 	cd backend && npm install
 
 start:
@@ -123,3 +123,4 @@ update-perl-json-patch:
 
 clean:
 	rm -f $(DOWNLOAD_FILES)
+	rm -rf backend/node_modules
