@@ -144,15 +144,19 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.config([
         '$httpProvider',
 	function($httpProvider) {
-	  $httpProvider.responseInterceptors.push(
-	    function($location, $q) {
+	  $httpProvider.responseInterceptors.push([
+	    '$location', '$window', '$q', '$timeout',
+	    function($location, $window, $q, $timeout) {
 	      function success(response) {
 		return response;
 	      }
 
 	      function error(response) {
 		if (response.status === 403) {
-		  $window.location.href = '/login';
+		  $timeout(function() {
+		    $window.location.href = '/login?redirect=' +
+		      encodeURIComponent('/admin' + $location.url());
+		  });
 		}
 		return $q.reject(response);
 	      }
@@ -160,8 +164,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      return function(promise) {
 		return promise.then(success, error);
 	      };
-	    }
-	  );
+	    }]);
 	}]);
 
       application.config([

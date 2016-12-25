@@ -138,6 +138,15 @@ function http_request($q, request) {
 }
 
 function network_error(data, status) {
+  if (status == 403 /* Forbidden */) {
+    /*
+     * Ignore here: the $httpProvider response interceptor will redirect to the
+     * login page.  The redirection is done in a $timeout as Angular doesn't
+     * like to have its digest cycle interrupted.
+     */
+    return;
+  }
+
   alert(status === 409 ?
 	  'Veränderung der Daten am Server festgestellt.' :
 	(status == 500 ?
