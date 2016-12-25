@@ -167,12 +167,12 @@
   </table>
 </p>
 <p>
-  <button ng-disabled="!modified()" ng-click="save_rider()">Änderungen speichern</button>
-  <button ng-disabled="!modified()" ng-click="reset_rider()">Änderungen verwerfen</button>
+  <button ng-disabled="!modified() || busy" ng-click="save_rider()">Änderungen speichern</button>
+  <button ng-disabled="!(modified() || old_rider == null) || busy" ng-click="reset_rider()">Änderungen verwerfen</button>
 </p>
 <p>
-  <button ng-if="rider.number != null" ng-disabled="modified()" ng-click="new_rider()">Weiteren Fahrer hinzufügen</button>
-  <button ng-if="riders.length > 1" ng-disabled="modified() || !(rider.number > 0)" ng-click="remove_rider()">Fahrer löschen</button>
+  <button ng-if="riders.length > 1 || rider.number != null" ng-disabled="modified() || busy || rider.number == null" ng-click="new_rider()">Weiteren Fahrer hinzufügen</button>
+  <button ng-if="rider.number < 0" ng-disabled="modified() || !(rider.number < 0) || busy" ng-click="remove_rider()">Fahrer löschen</button>
 </p>
 <p>
   <button ng-disabled="modified()" ng-click="logout()" title="Aktueller Benutzer: {{user.email}}">Abmelden</button>

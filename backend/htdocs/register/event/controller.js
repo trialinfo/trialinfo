@@ -1,8 +1,8 @@
 'use strict;'
 
 var eventController = [
-  '$scope', '$cookies', '$window', '$timeout', 'event', 'riders', 'suggestions',
-  function ($scope, $cookies, $window, $timeout, event, riders, suggestions) {
+  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', 'event', 'riders', 'suggestions',
+  function ($routeParams, $scope, $cookies, $window, $timeout, $http, event, riders, suggestions) {
     $scope.context('Registrierung für ' + event.title);
 
     $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
@@ -75,6 +75,27 @@ var eventController = [
     };
 
     $scope.save_rider = function() {
+      if ($scope.busy)
+	return;
+      $scope.busy = true;
+      var rider = $scope.riders[$scope.internal.index];
+      var request;
+      if ($scope.rider.number) {
+	request = $http.put('/api/register/event/' + $routeParams.id + '/rider/' + $scope.rider.number, rider);
+      } else {
+	request = $http.post('/api/register/event/' + $routeParams.id + '/rider', rider);
+      }
+      request.success(function (rider) {
+	$scope.riders[$scope.internal.index] = rider;
+	$scope.rider = rider;
+	$scope.old_rider = angular.copy(rider);
+      }).error(function (error) {
+	$timeout(function() {
+	  alert(JSON.stringify(error));
+	});
+      }).finally(function() {
+	delete $scope.busy;
+      });
     };
 
     $scope.reset_rider = function() {
@@ -87,6 +108,32 @@ var eventController = [
     };
 
     $scope.remove_rider = function() {
+      $timeout(function() {
+	var rider_name = [];
+	if ($scope.rider.first_name)
+	  rider_name.push($scope.rider.first_name);
+	if ($scope.rider.last_name)
+	  rider_name.push($scope.rider.last_name);
+	rider_name = rider_name.join(' ');
+
+	if (confirm('Fahrer ' + $scope.rider_info($scope.rider) + ' wirklich löschen?')) {
+	  if ($scope.busy)
+	    return;
+	  $scope.busy = true;
+	  $http.delete('/api/register/event/' + $routeParams.id + '/rider/' + $scope.rider.number,
+		       {params: {version: $scope.rider.version}})
+	  .success(function (rider) {
+	    $scope.riders.splice($scope.internal.index, 1);
+	    $scope.internal.index = '' + ($scope.internal.index - 1);
+	  }).error(function (error) {
+	    $timeout(function() {
+	      alert(JSON.stringify(error));
+	    });
+	  }).finally(function() {
+	    delete $scope.busy;
+	  });
+	}
+      });
     };
 
     $scope.new_rider = function() {

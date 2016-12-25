@@ -37,6 +37,7 @@ var remaining_time = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
+var clone = require('clone');
 
 var object_values = require('object.values');
 if (!Object.values)
@@ -98,6 +99,14 @@ var pool = mysql.createPool({
   dateStrings: true,
 });
 
+class HTTPError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.name = 'HTTPError';
+    this.status = status;
+  }
+}
+
 async function validate_user(connection, user) {
   if (!user || !user.email || !user.password)
     throw 'Wrong user or password';
@@ -134,10 +143,23 @@ var cache = {
     delete this.saved_events[id];
     this.cached_events[id] = event;
   },
-  update_event: function(id, event) {
-    if (!(id in this.saved_events))
-      this.saved_events[id] = this.cached_events[id];
-    this.cached_events[id] = event;
+  modify_event: function(id) {
+    if (!(id in this.saved_events)) {
+      var event = this.cached_events[id];
+      this.saved_events[id] = event;
+      event = clone(event || {}, false);
+      this.cached_events[id] = event;
+      return event;
+    }
+
+    return this.cached_events[id];
+  },
+  delete_event: function(id) {
+    if (!(id in this.saved_events)) {
+      this.saved_events[id] =
+        this.cached_events[id];
+    }
+    this.cached_events[id] = null;
   },
 
   /*
@@ -152,14 +174,132 @@ var cache = {
     delete this.saved_riders[id];
     this.cached_riders[id] = riders;
   },
-  update_rider: function(id, number, rider) {
-    if (!(id in this.saved_riders))
-      this.saved_riders[id] = {};
-    if (!(number in this.saved_riders[id]))
-      this.saved_riders[id][number] = this.cached_riders[id][number];
-    this.cached_riders[id][number] = rider;
+  get_rider: function(id, number) {
+    return (this.cached_riders[id] || {})[number];
   },
+  modify_rider: function(id, old_number, new_number) {
+    if (!new_number)
+      new_number = old_number;
+
+    if (!this.saved_riders[id])
+      this.saved_riders[id] = {};
+    if (!this.cached_riders[id])
+      this.cached_riders[id] = {};
+
+    if (!(new_number in this.saved_riders[id])) {
+      var rider = this.cached_riders[id][old_number];
+      this.saved_riders[id][new_number] = rider;
+      rider = clone(rider || {}, false);
+      this.cached_riders[id][old_number] = null;
+      this.cached_riders[id][new_number] = rider;
+      return rider;
+    }
+
+    return this.cached_riders[id][new_number];
+  },
+  delete_rider: function(id, number) {
+    if (!this.saved_riders[id])
+      this.saved_riders[id] = {};
+    if (!this.cached_riders[id])
+      this.cached_riders[id] = {};
+
+    if (!(number in this.saved_riders[id])) {
+      this.saved_riders[id][number] =
+        this.cached_riders[id][number];
+    }
+    this.cached_riders[id][number] = null;
+  },
+  set_rider: function(id, number, rider) {
+    if (this.saved_riders[id])
+      delete this.saved_riders[id][number];
+    if (rider) {
+      if (!this.cached_riders[id])
+	this.cached_riders[id] = {};
+      this.cached_riders[id][number] = rider;
+    } else {
+      if (this.cached_riders[id])
+	delete this.cached_riders[id][number];
+    }
+  },
+
+  begin: async function(connection) {
+    // assert(!this.transaction);
+    await connection.queryAsync(`BEGIN`);
+    this.transaction = true;
+  },
+  commit: async function(connection) {
+    try {
+      await commit_world(connection);
+
+      delete this.transaction;
+      await connection.queryAsync(`COMMIT`);
+      this._roll_forward();
+    } catch (exception) {
+      this.rollback(connection);
+      throw exception;
+    }
+  },
+  _roll_forward: function() {
+    Object.keys(this.saved_events).forEach((id) => {
+      if (this.cached_events[id] == null)
+	delete this.cached_events[id];
+      });
+    Object.keys(this.saved_riders).forEach((id) => {
+      Object.keys(this.saved_riders[id]).forEach((number) => {
+	var old_rider = this.saved_riders[id][number];
+	if (this.cached_riders[id][old_rider.number] == null)
+	  delete this.cached_riders[id][old_rider.number];
+      });
+    });
+    this.saved_events = {};
+    this.saved_riders = {};
+  },
+  _roll_back: function() {
+    Object.keys(this.saved_events).forEach((id) => {
+      if (this.saved_events[id])
+	this.cached_events[id] = this.saved_events[id];
+      else
+	delete this.cached_events[id];
+    });
+    this.saved_events = {};
+    Object.keys(this.saved_riders).forEach((id) => {
+      Object.keys(this.saved_riders[id]).forEach((number) => {
+	var old_rider = this.saved_riders[id][number];
+	if (old_rider)
+	  this.cached_riders[id][old_rider.number] = old_rider;
+	else
+	  delete this.cached_riders[id][number];
+      });
+    });
+    this.saved_riders = {};
+  },
+  rollback: async function(connection) {
+    this._roll_back();
+    if (this.transaction) {
+      delete this.transaction;
+      await connection.queryAsync(`ROLLBACK`);
+    }
+  }
 };
+
+async function commit_world(connection) {
+  var ids = Object.keys(cache.saved_riders);
+  for (let id of ids) {
+    let numbers = Object.keys(cache.saved_riders[id]);
+    for (let number of numbers) {
+      let old_rider = cache.saved_riders[id][number];
+      let new_rider = cache.cached_riders[id][number];
+      await update_rider(connection, id, old_rider, new_rider);
+    }
+  }
+
+  ids = Object.keys(cache.saved_events);
+  for (let id of ids) {
+    let old_event = cache.saved_events[id];
+    let new_event = cache.cached_events[id];
+    await update_event(connection, id, old_event, new_event);
+  }
+}
 
 async function get_list(connection, table, index, key, key_value, column) {
   return connection.queryAsync(`
@@ -454,7 +594,15 @@ function make_revalidate_rider(id, number, version) {
   };
 }
 
-async function read_riders(connection, id, revalidate) {
+async function read_riders(connection, id, revalidate, number) {
+  var filters = ['id = ?'];
+  var params = [id];
+  if (number) {
+    filters.push('number = ?');
+    params.push(number);
+  }
+  filters = filters.join(' AND ');
+
   let riders = cache.get_riders(id);
   if (riders && (!revalidate || await revalidate()))
     return riders;
@@ -464,7 +612,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT *
     FROM riders
-    WHERE id = ?`, [id])
+    WHERE ` + filters, params)
   ).forEach((row) => {
     riders[row.number] = row;
 
@@ -485,7 +633,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT number, round, zone, marks
     FROM marks
-    WHERE id = ?`, [id])
+    WHERE ` + filters, params)
   ).forEach((row) => {
     if (riders[row.number]) {
       var marks_per_zone = riders[row.number].marks_per_zone;
@@ -499,7 +647,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT number, round, marks
     FROM rounds
-    WHERE id = ?`, [id])
+    WHERE ` + filters, params)
   ).forEach((row) => {
     if (riders[row.number])
       riders[row.number].marks_per_round[row.round - 1] = row.marks;
@@ -508,8 +656,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT group_number, number
     FROM riders_groups
-    WHERE id = ?
-    `, [id])
+    WHERE ` + filters, params)
   ).forEach((row) => {
     try {
       riders[row.group_number].riders.push(row.number);
@@ -519,7 +666,7 @@ async function read_riders(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT ranking, number, subrank, score
     FROM rider_rankings
-    WHERE id = ?`, [id])
+    WHERE ` + filters, params)
   ).forEach((row) => {
     var rider = riders[row.number];
     if (rider) {
@@ -527,8 +674,18 @@ async function read_riders(connection, id, revalidate) {
     }
   });
 
-  cache.set_riders(id, riders);
+  if (number) {
+    var rider = riders[number];
+    cache.set_rider(id, number, rider);
+  } else {
+    cache.set_riders(id, riders);
+  }
   return riders;
+}
+
+async function read_rider(connection, id, number, revalidate) {
+  var riders = await read_riders(connection, id, revalidate, number);
+  return riders[number];
 }
 
 async function get_event_suggestions(connection, id) {
@@ -556,18 +713,20 @@ async function get_event_suggestions(connection, id) {
   return suggestions;
 }
 
-async function get_rider(connection, id, params, number, direction) {
+async function get_rider(connection, id, number, params, direction) {
   var filters = [`id = ?`];
   var args = [id];
   var order_limit = '';
 
+  if (!params)
+    params = {};
   if (params.start)
     filters.push('start');
   if (direction != null) {
     if (params.active)
       filters.push('(number >= 0 OR start)');
   }
-  if (params.group !== undefined) {
+  if (params.group != null) {
     if (+params.group)
       filters.push('`group`');
     else
@@ -604,14 +763,23 @@ async function get_rider(connection, id, params, number, direction) {
     WHERE ` + filters.join(' AND ') +
     order_limit, args
   );
-  if (rows.length != 1)
-    return {};
+  if (rows.length != 1) {
+    if (!Object.keys(params).length && !direction)
+      throw new HTTPError(404, 'Not Found');
+    return null;
+  }
 
   number = rows[0].number;
   let revalidate = make_revalidate_rider(id, number, rows[0].version);
-  var riders = await read_riders(connection, id, revalidate);
+  return await read_rider(connection, id, number, revalidate);
+}
 
-  var rider = Object.assign({}, riders[number]);
+async function admin_get_rider(connection, id, number, params, direction) {
+  var rider = await get_rider(connection, id, number, params, direction);
+  if (!rider)
+    return {};
+
+  var rider = Object.assign({}, rider);
 
   if (rider.group) {
     var group = rider;
@@ -703,6 +871,50 @@ async function find_riders(connection, id, params) {
 	     strcmp(a.first_name, b.first_name);
     })
     .splice(0, 20);
+}
+
+async function admin_save_rider(connection, id, number, rider, tag, version) {
+  await cache.begin(connection);
+  try {
+    var event = await get_event(connection, id);
+    var old_rider;
+    if (number) {
+      old_rider = await get_rider(connection, id, number);
+    } else {
+      var result = await connection.queryAsync(`
+        SELECT COALESCE(MIN(number), 0) - 1 AS number
+	FROM riders
+	WHERE id = ?`, [id]);
+      number = result[0].number;
+    }
+
+    if (old_rider && version == null)
+      version = old_rider.version;
+    if (rider && version) {
+      if (rider.version != version)
+	throw new HTTPError(409, 'Conflict');
+    }
+
+    if (rider) {
+      if (!old_rider && event.ranking1_enabled)
+	rider.rankings = [{"rank":null, "score":null}];
+      Object.assign(cache.modify_rider(id, number, rider.number), rider);
+    } else {
+      cache.delete_rider(id, number);
+    }
+
+    event = cache.modify_event(id);
+    event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    await cache.commit(connection);
+  } catch (err) {
+    await cache.rollback(connection);
+  }
+
+  if (rider) {
+    rider = cache.get_rider(id, rider.number);
+    return rider;
+  }
 }
 
 function make_revalidate_riders(connection, id) {
@@ -980,61 +1192,74 @@ async function get_event_scores(connection, id) {
   return hash;
 }
 
-async function zip(a, b, func) {
+function zip(a, b, func) {
+  if (!a)
+    a = [];
+  if (!b)
+    b = [];
   var length = Math.max(a.length, b.length);
   for (let index = 0; index < length; index++)
     func(a[index], b[index], index);
 }
 
-function remove_identical_fields(a, b) {
-  Object.keys(a).forEach((key) => {
-    if (a[key] === b[key]) {
-      delete a[key];
-      delete b[key];
-    }
-  });
+async function zipAsync(a, b, func) {
+  if (!a)
+    a = [];
+  if (!b)
+    b = [];
+  var length = Math.max(a.length, b.length);
+  for (let index = 0; index < length; index++)
+    await func(a[index], b[index], index);
 }
 
-async function update(connection, table, keys, map_func, old_values, new_values) {
-  old_values = map_func(old_values);
-  new_values = map_func(new_values);
+async function update(connection, table, keys, nonkeys, old_values, new_values, map_func) {
+  function assign(object) {
+    return function(field) {
+      return connection.escapeId(field) + ' = ' + connection.escape(object[field]);
+    };
+  }
 
-  if (old_values === undefined) {
-    if (new_values === undefined)
+  if (map_func) {
+    old_values = map_func(old_values);
+    new_values = map_func(new_values);
+  }
+
+  var query;
+  if (!old_values) {
+    if (!new_values)
       return false;
 
-    let columns = Object.keys(keys).concat(Object.keys(new_values));
-    let values = Object.values(keys).concat(Object.values(new_values));
-    await connection.queryAsync(
-      'INSERT INTO `' + table + '` (' +
-        columns.map((x) => '`' + x + '`').join(', ') + ') ' +
-      'VALUES (' + values.map((x) => '?').join(', ') + ')',
-      values);
+    let fields = [];
+    Array.prototype.push.apply(fields, Object.keys(keys).map(assign(keys)));
+    Array.prototype.push.apply(fields, nonkeys.map(assign(new_values)));
+
+    query = 'INSERT INTO ' + connection.escapeId(table) +
+	    ' SET ' + fields.join(', ');
   } else {
-    if (new_values === undefined) {
-      await connection.queryAsync(
-        'DELETE FROM `' + table + '` ' +
-	'WHERE ' + Object.keys(keys).map((x) => '`' + x + '` = ?').join(', '),
-	Object.values(keys));
+    if (!new_values) {
+      query =
+        'DELETE FROM ' + connection.escapeId(table) +
+	' WHERE ' + Object.keys(keys).map(assign(keys)).join(' AND ');
     } else {
-      if (old_values === [] && new_values === [])
+      var fields = [];
+      for (let field of nonkeys) {
+	if (old_values[field] != new_values[field]) {
+	  fields.push(connection.escapeId(field) + ' = ' +
+		       connection.escape(new_values[field]));
+	}
+      }
+      if (!fields.length)
 	return false;
 
-      await connection.queryAsync(
-        'UPDATE `' + table + '` SET ' +
-	  Object.keys(new_values).map((x) => '`' + x + '` = ?').join(', ') + ' ' +
-	  'WHERE ' + Object.keys(keys).map((x) => '`' + x + '` = ?').join(', '),
-	  new_values.concat(Object.values(keys)));
+      query =
+        'UPDATE ' + connection.escapeId(table) +
+	' SET ' + fields.join(', ') +
+	' WHERE ' + Object.keys(keys).map(assign(keys)).join(' AND ');
     }
   }
-  /* FIXME: How are database failures handled? */
+  console.log(query);
+  await connection.queryAsync(query);
   return true;
-}
-
-function working_obj(obj) {
-  if (!obj)
-    return {};
-  return Object.assign({}, obj);
 }
 
 function flatten_marks_distribution(rider) {
@@ -1052,72 +1277,292 @@ function flatten_marks_distribution(rider) {
  */
 function rankings_added_or_removed(a, b) {
   var map = (list) => list.map((x) => !!x);
-  return !deepEqual(map(a.rankings), map(b.rankings));
+  return !deepEqual(map(a.rankings || []), map(b.rankings || []));
 }
 
-async function update_rider(connection, id, number, rider) {
+async function __update_rider(connection, id, old_rider, new_rider) {
+  var number = new_rider ? new_rider.number : old_rider.number;
   var changed = false;
-  var riders = cache.get_riders(id);
-  var old_rider = old_riders[number];
 
-  var real_old_rider = old_rider, real_rider = rider;
-  old_rider = working_obj(old_rider);
-  rider = working_obj(rider);
-
-  flatten_marks_distribution(old_rider);
-  flatten_marks_distribution(rider);
-
-  changed = changed || rankings_added_or_removed(old_rider, rider);
-  zip(old_rider.rankings || [], rider.rankings || [],
-    (a, b, index) => {
-      update(connection, 'rider_rankings',
-	{id: id, number: number, ranking: index + 1},
-	(x) => (x ? {subrank: x.rank, score: x.score} : undefined),
-	a, b);
-    });
-  delete rider.rankings;
-  delete old_rider.rankings;
-
-  zip(old_rider.marks_per_zone || [], rider.marks_per_zone || [],
-    (a, b, round_index) => {
-      zip(a, b, (a, b, zone_index) => {
-	update(connection, 'marks',
-	  {id: id, number: number, round: round_index + 1, zone: zone_index + 1},
-	  (x) => (x != null ? {marks: x} : undefined),
-	  a, b) && (changed = true);
-      });
-    });
-  delete rider.marks_per_zone;
-  delete old_rider.marks_per_zone;
-
-  zip(old_rider.marks_per_round || [], rider.marks_per_round || [],
-    (a, b, index) => {
-      update(connection, 'rounds',
-	{id: id, number: number, round: index + 1},
-	(x) => (x != null ? {marks: x} : undefined),
-	a, b) && (changed = true);
-    });
-  delete rider.marks_per_round;
-  delete old_rider.marks_per_round;
-
-  var version = old_rider.version || 0;
-  remove_identical_fields(old_rider, rider);
-  if (changed || Object.keys(old_rider) || Object.keys(rider)) {
-    old_rider.version = version;
-    rider.version = version + 1;
+  if (old_rider && new_rider && old_rider.number != new_rider.number) {
+    for (let table of ['rider_rankings', 'marks', 'rounds']) {
+      var query = 'UPDATE ' + connection.escapeId(table) +
+	' SET number = ' + connection.escape(new_rider.number) +
+	' WHERE id = ' + connection.escape(id) +
+	  ' AND number = ' + connection.escape(old_rider.number);
+      console.log(query);
+      await connection.queryAsync(query);
+    };
   }
 
-  update(connection, 'rider',
-    {id: id, number: number},
-    (x) => x,
-    real_old_rider ? old_rider : undefined,
-    real_rider ? rider : undefined);
+  if (!old_rider)
+    old_rider = {};
+  if (!new_rider)
+    new_rider = {};
 
-  if (real_rider) {
-    /* FIXME: Normalize rider. */
-    riders[number] = rider;
+  changed = changed || rankings_added_or_removed(old_rider, new_rider);
+  zipAsync(old_rider.rankings, new_rider.rankings,
+    async function(a, b, index) {
+      await update(connection, 'rider_rankings',
+	{id: id, number: number, ranking: index + 1},
+	['subrank', 'score'],
+	a, b,
+	(x) => (x ? {subrank: x.rank, score: x.score} : null));
+    });
+
+  zipAsync(old_rider.marks_per_zone, new_rider.marks_per_zone,
+    async function(a, b, round_index) {
+      zipAsync(a, b, async function(a, b, zone_index) {
+	await update(connection, 'marks',
+	  {id: id, number: number, round: round_index + 1, zone: zone_index + 1},
+	  ['marks'],
+	  a, b,
+	  (x) => (x != null ? {marks: x} : null))
+	&& (changed = true);
+      });
+    });
+
+  zipAsync(old_rider.marks_per_round, new_rider.marks_per_round,
+    async function(a, b, index) {
+      await update(connection, 'rounds',
+	{id: id, number: number, round: index + 1},
+	['marks'],
+	a, b,
+	(x) => (x != null ? {marks: x} : null))
+      && (changed = true);
+    });
+
+  return changed;
+}
+
+async function update_rider(connection, id, old_rider, new_rider) {
+  var real_new_rider = new_rider;
+  var changed = false;
+
+  await __update_rider(connection, id, old_rider, new_rider)
+    && (changed = true);
+
+  /* FIXME: Remove fields s0..s5 from table riders and calculate them on
+     demand. Get rid of real_new_rider, flatten_marks_distribution, and the
+     object copying here.  */
+
+  var number;
+  if (old_rider) {
+    number = old_rider.number;
   } else {
-    delete riders[number];
+    number = new_rider.number;
+    delete new_rider.number;
+  }
+
+  if (old_rider) {
+    old_rider = Object.assign({}, old_rider);
+    flatten_marks_distribution(old_rider);
+  }
+
+  if (new_rider) {
+    new_rider = Object.assign({}, new_rider);
+    flatten_marks_distribution(new_rider);
+  }
+
+  var ignore_fields = {
+    rankings: true,
+    marks_per_zone: true,
+    marks_per_round: true,
+    marks_distribution: true,
+    version: true,
+  };
+
+  var nonkeys = Object.keys(new_rider || {}).filter(
+    (field) => !(field in ignore_fields)
+  );
+
+  if (!changed && old_rider && new_rider) {
+    for (let field of nonkeys) {
+      if (old_rider[field] != new_rider[field]) {
+	changed = true;
+	break;
+      }
+    }
+  }
+
+  if (changed && new_rider) {
+    nonkeys.push('version');
+    new_rider.version = old_rider ? old_rider.version + 1 : 1;
+    real_new_rider.version = new_rider.version;
+  }
+
+  await update(connection, 'riders',
+    {id: id, number: number},
+    nonkeys,
+    old_rider, new_rider);
+
+  if (!old_rider && new_rider) {
+    /* Reload from database to get any default values defined there.  */
+    await read_rider(connection, id, new_rider.number, () => {});
+  }
+}
+
+async function __update_event(connection, id, old_event, new_event) {
+  var changed = false;
+
+  if (!old_event)
+    old_event = {};
+  if (!new_event)
+    new_event = {};
+
+  zipAsync(old_event.classes, new_event.classes,
+    async function(a, b, index) {
+      await update(connection, 'classes',
+	{id: id, 'class': index + 1},
+	Object.keys(b),
+	a, b)
+      && (changed = true);
+    });
+
+  zipAsync(old_event.rankings, new_event.rankings,
+    async function(a, b, index) {
+      await update(connection, 'rankings',
+	{id: id, ranking: index + 1},
+	Object.keys(b),
+	a, b)
+      && (changed = true);
+    });
+
+  zipAsync(old_event.card_colors, new_event.card_colors,
+    async function(a, b, index) {
+      await update(connection, 'card_colors',
+	{id: id, round: index + 1},
+	['color'],
+	a, b,
+	(color) => {color: color})
+      && (changed = true);
+    });
+
+  zipAsync(old_event.scores, new_event.scores,
+    async function(a, b, index) {
+      await update(connection, 'scores',
+	{id: id, rank: index + 1},
+	['score'],
+	a, b,
+	(score) => {score: score})
+      && (changed = true);
+    });
+
+  function hash_zones(zones) {
+    return zones.reduce((hash, section) => {
+      hash[section] = true;
+      return hash;
+    }, {});
+  }
+
+  zipAsync(old_event.zones, new_event.zones,
+    async function(a, b, class_index) {
+      var old_zones = hash_zones(a || []);
+      var new_zones = hash_zones(b || []);
+
+      var all_zones = Object.keys(
+        Object.assign({}, old_zones, new_zones)
+      );
+
+      for (let zone of all_zones) {
+	await update(connection, 'zones',
+	  {id: id, 'class': class_index + 1, zone: zone},
+	  [],
+	  zone in old_zones && {}, zone in new_zones && {})
+	&& (changed = true);
+      }
+    });
+
+  zipAsync(old_event.skipped_zones, new_event.skipped_zones,
+    async function(a, b, class_index) {
+      zipAsync(a, b,
+        async function(a, b, round_index) {
+	var old_zones = hash_zones(a || []);
+	var new_zones = hash_zones(b || []);
+
+	var all_zones = Object.keys(
+	  Object.assign({}, old_zones, new_zones)
+	);
+
+	for (let zone of all_zones) {
+	  await update(connection, 'zones',
+	    {id: id, 'class': class_index + 1, round: round_index + 1, zone: zone},
+	    [],
+	    zone in old_zones && {}, zone in new_zones && {})
+	  && (changed = true);
+	}
+      });
+    });
+
+  var old_features = old_event.features || {};
+  var new_features = new_event.features || {};
+
+  var all_features = Object.keys(
+    Object.assign({}, old_features, new_features)
+  );
+
+  for (let feature of all_features) {
+    await update(connection, 'event_features',
+      {id: id, feature: feature},
+      [],
+      feature in old_features && {}, feature in new_features && {})
+    && (changed = true);
+  }
+
+  return changed;
+}
+
+async function update_event(connection, id, old_event, new_event) {
+  var changed = false;
+
+  await __update_event(connection, id, old_event, new_event)
+    && (changed = true);
+
+  var ignore_fields = {
+    base: true,
+    classes: true,
+    rankings: true,
+    card_colors: true,
+    scores: true,
+    zones: true,
+    skipped_zones: true,
+    features: true,
+    mtime: true,
+    version: true
+  };
+
+  var nonkeys = Object.keys(new_event || {}).filter(
+    (field) => !(field in ignore_fields)
+  );
+
+  if (!changed && old_event && new_event) {
+    for (let field of nonkeys) {
+      if (old_event[field] != new_event[field]) {
+	changed = true;
+	break;
+      }
+    }
+  }
+
+  if (new_event) {
+    if (changed) {
+      nonkeys.push('version');
+      new_event.version = old_event ? old_event.version + 1 : 1;
+    }
+
+    /* Don't account for mtime changes in the version.  */
+    if (!(old_event || {}).mtime != new_event.mtime)
+      nonkeys.push('mtime');
+  }
+
+  await update(connection, 'events',
+    {id: id},
+    nonkeys,
+    old_event, new_event);
+
+  if (!old_event && new_event) {
+    /* Reload from database to get any default values defined there.  */
+    await read_event(connection, id, () => {});
   }
 }
 
@@ -1161,20 +1606,43 @@ async function register_get_event(connection, id) {
   return result;
 }
 
+const register_rider_fields = {
+  applicant: true,
+  city: true,
+  'class': true,
+  club: true,
+  country: true,
+  date_of_birth: true,
+  displacement: true,
+  email: true,
+  first_name: true,
+  frame_number: true,
+  insurance: true,
+  last_name: true,
+  license: true,
+  number: true,
+  phone: true,
+  province: true,
+  registered: true,
+  registration: true,
+  start: true,
+  start_tomorrow: true,
+  street: true,
+  vehicle: true,
+  version: true,
+  zip: true,
+};
+
 function register_filter_rider(rider) {
     var result = {};
-    ['version', 'number', 'class', 'applicant', 'last_name', 'first_name',
-    'street', 'city', 'zip', 'club', 'vehicle', 'date_of_birth', 'phone',
-    'license', 'frame_number', 'registration', 'displacement', 'email',
-    'country', 'province', 'insurance', 'start', 'start_tomorrow', 'registered']
-    .forEach((field) => {
+    Object.keys(register_rider_fields).forEach((field) => {
       result[field] = rider[field];
     });
     return result;
 }
 
 async function register_get_riders(connection, id, tag) {
-  var numbers = await connection.queryAsync(`
+  var rows = await connection.queryAsync(`
     SELECT number
     FROM riders
     WHERE id = ? AND user_tag = ? AND NOT COALESCE(`+'`group`'+`, 0)
@@ -1182,13 +1650,8 @@ async function register_get_riders(connection, id, tag) {
     [id, tag]);
 
   var riders = [];
-  while(numbers.length) {
-    var number = numbers[0].number;
-    numbers.shift();
-
-    var rider = await get_rider(connection, id, {}, number);
-    if (!Object.keys(rider).length)
-      continue;
+  for (let row of rows) {
+    var rider = await get_rider(connection, id, row.number);
     riders.push(register_filter_rider(rider));
   }
 
@@ -1238,18 +1701,18 @@ passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 
-var app = express();
-
 function clientErrorHandler(err, req, res, next) {
-  if (!res.headersSent) {
-    if (typeof err === 'string' || err instanceof String) {
-      res.send({error: err});
-      // return next();
-    }
-    res.status(500);
-    res.send({ error: err.message || err });
+  if (res.headersSent)
+    return next(err);
+
+  if (err instanceof HTTPError) {
+    res.status(err.status);
+    return res.send({ error: err.message});
   }
-  next(err);
+
+  console.error(err.stack);
+  res.status(500);
+  res.send({ error: err });
 }
 
 function conn(pool) {
@@ -1565,6 +2028,79 @@ async function change_password(req, res, next) {
   }
 }
 
+async function register_save_rider(connection, id, number, rider, tag, version) {
+  await cache.begin(connection);
+  try {
+    var event = await get_event(connection, id);
+    var old_rider;
+    if (number) {
+      old_rider = await get_rider(connection, id, number);
+      if (old_rider.user_tag != tag)
+	throw new HTTPError(403, 'Forbidden');
+    } else {
+      var result = await connection.queryAsync(`
+        SELECT COALESCE(MIN(number), 0) - 1 AS number
+	FROM riders
+	WHERE id = ?`, [id]);
+      number = result[0].number;
+    }
+
+    if (old_rider && version == null)
+      version = old_rider.version;
+    if (rider && version) {
+      if (rider.version != version)
+	throw new HTTPError(409, 'Conflict');
+    }
+
+    if (rider) {
+      Object.keys(rider).forEach((key) => {
+	if (!register_rider_fields[key])
+	  delete rider[key];
+      });
+      rider.number = +number;
+
+      if (old_rider && old_rider.registered) {
+	delete rider.start;
+	delete rider.start_tomorrow;
+      }
+      delete rider.registered;
+      rider.verified = false;
+      rider.user_tag = tag;
+
+      if (!old_rider && event.ranking1_enabled)
+	rider.rankings = [{"rank":null, "score":null}];
+
+      event = cache.modify_event(id);
+      if (!event.features.verified)
+	event.features.verified = true;
+
+      Object.assign(cache.modify_rider(id, number), rider);
+    } else {
+      if (old_rider && (old_rider.registered || old_rider.number > 0))
+	throw new HTTPError(403, 'Forbidden');
+      cache.delete_rider(id, number);
+    }
+
+    /*
+     * Registration is still open, so we don't need to recompute any rankings
+     * here.
+     */
+
+    event = cache.modify_event(id);
+    event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    await cache.commit(connection);
+  } catch (err) {
+    await cache.rollback(connection);
+    throw err;
+  }
+
+  if (rider) {
+    rider = cache.get_rider(id, rider.number);
+    return register_filter_rider(rider);
+  }
+}
+
 function query_string(query) {
   if (!query)
     return '';
@@ -1577,6 +2113,8 @@ function query_string(query) {
 var sendFileOptions = {
   root: __dirname + '/htdocs/'
 };
+
+var app = express();
 
 app.set('case sensitive routing', true);
 if (app.get('env') != 'production')
@@ -1605,7 +2143,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use('/api', conn(pool));
 app.use(compression());
-app.use(clientErrorHandler);
 
 /*
  * Accessible to anyone:
@@ -1734,6 +2271,36 @@ app.get('/api/register/event/:id/suggestions', function(req, res, next) {
   }).catch(next);
 });
 
+app.post('/api/register/event/:id/rider', async function(req, res, next) {
+  var rider = req.body;
+  try {
+    rider = await register_save_rider(req.conn, req.params.id, null, rider, req.user.tag);
+    res.status(201);
+    res.send(rider);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/register/event/:id/rider/:number', async function(req, res, next) {
+  var rider = req.body;
+  try {
+    rider = await register_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.tag);
+    res.send(rider);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/register/event/:id/rider/:number', async function(req, res, next) {
+  try {
+    await register_save_rider(req.conn, req.params.id, req.params.number, null, req.user.tag, req.query.version);
+    res.send({});
+  } catch (err) {
+    next(err);
+  }
+});
+
 /*
  * Accessible to admins only:
  */
@@ -1769,31 +2336,31 @@ app.get('/api/event/:id/suggestions', will_read_event, function(req, res, next) 
 });
 
 app.get('/api/event/:id/rider/:number', will_read_event, function(req, res, next) {
-  get_rider(req.conn, req.params.id, req.query, req.params.number)
+  admin_get_rider(req.conn, req.params.id, req.params.number, req.query)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 app.get('/api/event/:id/first-rider', will_read_event, function(req, res, next) {
-  get_rider(req.conn, req.params.id, req.query, null, 1)
+  admin_get_rider(req.conn, req.params.id, null, req.query, 1)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 app.get('/api/event/:id/previous-rider/:number', will_read_event, function(req, res, next) {
-  get_rider(req.conn, req.params.id, req.query, req.params.number, -1)
+  admin_get_rider(req.conn, req.params.id, req.params.number, req.query, -1)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 app.get('/api/event/:id/next-rider/:number', will_read_event, function(req, res, next) {
-  get_rider(req.conn, req.params.id, req.query, req.params.number, 1)
+  admin_get_rider(req.conn, req.params.id, req.params.number, req.query, 1)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 app.get('/api/event/:id/last-rider', will_read_event, function(req, res, next) {
-  get_rider(req.conn, req.params.id, req.query, null, -1)
+  admin_get_rider(req.conn, req.params.id, null, req.query, -1)
   .then((result) => {
     res.json(result);
   }).catch(next);
@@ -1804,6 +2371,109 @@ app.get('/api/event/:id/find-riders', will_read_event, function(req, res, next) 
   .then((result) => {
     res.json(result);
   }).catch(next);
+});
+
+app.post('/api/event/:id/rider', will_write_event, async function(req, res, next) {
+  var rider = req.body;
+  try {
+    rider = await admin_save_rider(req.conn, req.params.id, null, rider, req.user.tag);
+    res.status(201);
+    res.send(rider);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
+  var rider = req.body;
+  try {
+    rider = await admin_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.tag);
+    res.send(rider);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
+  try {
+    await admin_save_rider(req.conn, req.params.id, req.params.number, null, req.user.tag, req.query.version);
+    res.send({});
+  } catch (err) {
+    next(err);
+  }
+});
+
+async function check_number(connection, id, query) {
+  var check_result = {};
+  var number;
+  var result;
+
+  if ('number' in query) {
+    result = await connection.queryAsync(`
+      SELECT number, class, last_name, first_name, date_of_birth
+      FROM riders
+      WHERE id = ? AND number = ?`, [id, query.number]);
+    if (result.length == 1) {
+      check_result = result[0];
+      number = check_result.number;
+    }
+  } else if ('class' in query) {
+    result = await connection.queryAsync(`
+      SELECT MIN(number) AS number
+      FROM riders
+      WHERE id = ? AND class = ? AND number >= 0`,
+      [id, query['class']]);
+    number = result[0].number;
+  }
+
+  if (number != null) {
+    /* Query which (ranked) series the event is in: the serie must have a
+       ranking defined and classes assigned.  */
+    result = await connection.queryAsync(`
+      SELECT DISTINCT id
+      FROM series_events
+      JOIN series_classes USING (serie)
+      JOIN series USING (serie)
+      WHERE serie in (
+	  SELECT serie FROM series_events WHERE id = ?
+	) AND ranking IS NOT NULL
+
+      UNION
+
+      SELECT ? AS id`, [id, id]);
+    var events = result.map((row) =>
+      connection.escape(+row.id)).join(', ');
+    // console.log(events);
+
+    /* Find the next unassigned number.  This is done using a left join of the
+       list of defined riders onto itself.  */
+    result = await connection.queryAsync(`
+      SELECT DISTINCT a.next_number AS next_number
+      FROM (
+	SELECT DISTINCT id, number + 1 AS next_number
+	FROM riders
+      ) AS a LEFT JOIN (
+	SELECT DISTINCT id, number AS next_number
+	FROM riders
+      ) AS b USING (id, next_number)
+      WHERE id IN (` + events + `) AND
+	    a.next_number > ? AND b.next_number IS NULL
+      ORDER BY next_number
+      LIMIT 1`,
+      [number]);
+    if (result.length)
+      Object.assign(check_result, result[0]);
+  }
+
+  return check_result;
+}
+
+app.get('/api/event/:id/check-number', will_read_event, async function(req, res, next) {
+  try {
+    res.send(await check_number(req.conn, req.params.id, req.query));
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/api/event/:id/riders', will_read_event, function(req, res, next) {
@@ -1833,6 +2503,8 @@ app.get('/api/serie/:serie', will_read_serie, function(req, res, next) {
     res.json(result);
   }).catch(next);
 });
+
+app.use(clientErrorHandler);
 
 if (!config.http && !config.https)
   config.http = {};

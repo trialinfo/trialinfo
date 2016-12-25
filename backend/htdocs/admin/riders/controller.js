@@ -13,11 +13,11 @@ var ridersController = [
        Gruppenwertung, wenn startende Gruppen in der Wertung sind; wenn in einer
        Wertung niemand startet, ist auch die Art der Wertung nicht definiert. */
 
-    angular.forEach(event.rankings, function(wertung, index) {
-      if ((groups ? wertung.rider : wertung.groups) && wertung.rider != wertung.groups) {
+    angular.forEach(event.rankings, function(ranking, index) {
+      if ((groups ? ranking.rider : ranking.groups) && ranking.rider != ranking.groups) {
 	event.features = event.features.filter(
 	  function(feature) {
-	    return feature != 'wertung' + (index + 1);
+	    return feature != 'ranking' + (index + 1);
 	  });
       }
     });
@@ -255,25 +255,29 @@ var ridersController = [
       if (version === undefined)
 	version = 0;
       var rider = $scope.rider;
-      if (rider.start)
-	rider.nennungseingang = true;
 
-      if ($scope.internal.number != visible_number(rider)) {
-	rider = angular.copy(rider);
+      rider = angular.copy(rider);
+      if ($scope.internal.number != visible_number(rider))
 	rider.number = $scope.internal.number;
-      }
+      rider.verified = true;
 
       /* Nicht gültige Wertungen deaktivieren.  Das umfasst für Fahrer die
 	 Gruppenwertungen, und für Gruppen die Fahrerwertungen. */
       if (rider.start) {
-	angular.forEach(rider.rankings, function(wertung, index) {
-	  if (wertung && !features['wertung' + (index + 1)])
+	angular.forEach(rider.rankings, function(ranking, index) {
+	  if (ranking && !features['ranking' + (index + 1)])
 	    rider.rankings[index] = false;
 	});
       }
 
       $scope.busy = true;
-      save_rider($http, event.id, number, version, rider).
+      var request;
+      if (number)
+	request = $http.put('/api/event/' + event.id + '/rider/' + number, rider);
+      else
+	request = $http.post('/api/event/' + event.id + '/rider', rider);
+
+      request.
 	success(function(fahrer_neu) {
 	  update_hashes(rider, fahrer_neu);
 	  assign_rider(fahrer_neu);
@@ -307,8 +311,9 @@ var ridersController = [
 	'group': groups,
 	'class': null,
 	'number': null,
-	'rankings': [ event.wertung1_markiert ],
-	'versicherung': event.versicherung
+	'rankings': [ event.ranking1_enabled ],
+	'insurance': event.insurance,
+	'verified': true
       };
       if (groups)
 	rider.riders = [];
@@ -349,19 +354,20 @@ var ridersController = [
 	else
 	  number = +number;
       }
+      if (number == '')
+	number = null;
       if (number == null ||
-	  number === $scope.old_rider.number) {
+	  number == $scope.old_rider.number) {
 	$scope.number_used = undefined;
 	return true;
       }
       var params = {
-	id: event.id,
 	number: number
       };
       canceler = $q.defer();
       checker = $q.defer();
-      /* FIXME */
-      $http.get('/api/number', {params: params, timeout: canceler.promise}).
+      $http.get('/api/event/' + event.id + '/check-number',
+		{params: params, timeout: canceler.promise}).
 	success(function(data, status, headers, config) {
 	  if (data.number) {
 	    $scope.number_used = data;
@@ -391,10 +397,10 @@ var ridersController = [
       var rider = $scope.rider;
       if (rider && rider.number == null && rider['class'] != null) {
 	var params = {
-	  id: event.id,
 	  'class': rider['class']
 	};
-	$http.get('/api/number', {params: params, timeout: canceler.promise}).
+	$http.get('/api/event/' + event.id + '/check-number',
+		  {params: params, timeout: canceler.promise}).
 	  success(function(data, status, headers, config) {
 	    if (data.next_number)
 	      $scope.number_used = data;
@@ -407,6 +413,17 @@ var ridersController = [
       }
     }
     $scope.$watch("rider['class']", next_number);
+
+    $scope.$watchCollection("rider.rankings", function(value) {
+      if (value) {
+	while (value.length && !value[value.length - 1])
+	  value.pop();
+	value.forEach(function(v, index) {
+	  if (!v && v != null)
+	    value[index] = null;
+	});
+      }
+    });
 
     $scope.class_may_start = function(class_) {
       return event.zones[event.classes[class_ - 1].ranking_class - 1] &&
@@ -620,8 +637,8 @@ var ridersController = [
       /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
       var accesskeys = 'aknvpmsuäl' + groups ? 'g' : 'f';
       $scope.rankings = [];
-      angular.forEach(features.rankings, function(wertung) {
-	var name = event.rankings[wertung - 1].name || '';
+      angular.forEach(features.rankings, function(ranking) {
+	var name = event.rankings[ranking - 1].name || '';
 	var label = name, accesskey;
 	for (var n = 0; n < name.length; n++) {
 	  var key = name[n].toLowerCase();
@@ -634,7 +651,7 @@ var ridersController = [
 	  }
 	}
 	label = $sce.trustAsHtml(label);
-	$scope.rankings[wertung - 1] = {label: label, accesskey: accesskey};
+	$scope.rankings[ranking - 1] = {label: label, accesskey: accesskey};
       });
     }
 

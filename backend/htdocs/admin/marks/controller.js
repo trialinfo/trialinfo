@@ -295,14 +295,9 @@ var marksController = [
       if ($scope.busy)
 	return;
       /* FIXME: Wenn Start, dann muss die Klasse starten. */
-      var version = 0;
-      var number;
-      if ($scope.old_rider && 'number' in $scope.old_rider) {
-	number = $scope.old_rider.number;
-	version = $scope.old_rider.version;
-      }
       $scope.busy = true;
-      save_rider($http, event.id, number, version, $scope.rider).
+      var rider = $scope.rider;
+      $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider).
 	success(function(rider) {
 	  assign_rider(rider);
 	  set_focus('#search_term', $timeout);

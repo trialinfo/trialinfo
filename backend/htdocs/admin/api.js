@@ -25,17 +25,6 @@ function starting_classes(event) {
   return starting;
 }
 
-function save_rider($http, id, number, version, rider) {
-  var params = {
-    version: version,
-  };
-  params.mtime = Math.floor(new Date().getTime() / 1000);
-  /* FIXME: Should saving a rider without a number be a POST request instead? */
-  return $http.put('/api/event/' + id + '/rider' +
-		   (number !== undefined ? '/' + number : ''),
-		   rider, {params: params});
-}
-
 function save_event($http, id, event) {
   var params = {
     version: event.version,
@@ -44,13 +33,6 @@ function save_event($http, id, event) {
      be a POST request? */
   params.mtime = Math.floor(new Date().getTime() / 1000);
   return $http.put('/api/event/' + id, event, {params: params});
-}
-
-function remove_rider($http, id, number, version) {
-  var params = {
-    version: version
-  };
-  return $http.delete('/api/event/' + id + '/rider' + number, {params: params});
 }
 
 function rider_name(rider, $scope) {
@@ -86,9 +68,11 @@ function set_focus(selector, $timeout) {
 
 function warn_before_unload($scope, modified) {
   var daten_veraendert = 'Die Daten in diesem Formular wurden verändert.';
-  window.onbeforeunload = function() {
-    if (modified())
+  window.onbeforeunload = function(e) {
+    if (modified()) {
+      e.returnValue = daten_veraendert;
       return daten_veraendert;
+    }
   };
   $scope.$on('$locationChangeStart',
     function(event) {
