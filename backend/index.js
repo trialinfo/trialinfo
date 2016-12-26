@@ -1417,7 +1417,7 @@ async function email_change_password(mode, to, confirmation_url) {
     from: config.from,
     to: to,
     subject: 'TrialInfo - ' +
-      (mode == 'register' ? 'Registrierung bestätigen' : 'Kennwort zurücksetzen'),
+      (mode == 'signup' ? 'Anmeldung bestätigen' : 'Kennwort zurücksetzen'),
     text: message,
     headers: {
       'Auto-Submitted': 'auto-generated',
@@ -1427,7 +1427,7 @@ async function email_change_password(mode, to, confirmation_url) {
   console.log('Confirmation email sent to ' + JSON.stringify(to));
 }
 
-async function register_or_reset(req, res, mode) {
+async function signup_or_reset(req, res, mode) {
   var email = req.body.email;
   var params = {email: email};
   if (req.query)
@@ -1440,7 +1440,7 @@ async function register_or_reset(req, res, mode) {
       '</em> ist nicht gültig.');
     return res.render('login', params);
   }
-  var secret = await create_user_secret(req.conn, email, mode == 'register');
+  var secret = await create_user_secret(req.conn, email, mode == 'signup');
   if (secret) {
     params.secret = secret;
     if (req.query.redirect)
@@ -1461,7 +1461,7 @@ async function register_or_reset(req, res, mode) {
     var error = 'Die E-Mail-Adresse <em>' +
       Handlebars.Utils.escapeExpression(email) +
       '</em>';
-    if (mode == 'register') {
+    if (mode == 'signup') {
       error += ' ist bereits registriert.<br>Wenn das Ihre E-Mail-Adresse' +
                ' ist und Sie das Kennwort vergessen haben, können Sie' +
 	       ' das Kennwort zurücksetzen.';
@@ -1644,12 +1644,12 @@ app.post('/login', login, function(req, res, next) {
   return res.redirect(303, url);
 });
 
-app.post('/register', conn(pool), async function(req, res, next) {
-  register_or_reset(req, res, 'register');
+app.post('/signup', conn(pool), async function(req, res, next) {
+  signup_or_reset(req, res, 'signup');
 });
 
 app.post('/reset', conn(pool), async function(req, res, next) {
-  register_or_reset(req, res, 'reset');
+  signup_or_reset(req, res, 'reset');
 });
 
 app.get('/change-password', conn(pool), show_change_password);

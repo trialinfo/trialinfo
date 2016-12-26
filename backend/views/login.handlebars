@@ -16,7 +16,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       function mode(mode, event) {
 	if (event)
 	  event.preventDefault();
-	['login', 'register', 'reset'].forEach(function(mode) {
+	['login', 'signup', 'reset'].forEach(function(mode) {
 	  Array.from(document.getElementsByClassName(mode))
 	    .forEach(function(element) {
 	      element.setAttribute('style', 'display:none');
@@ -52,7 +52,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       <span class="login">
 	<h1>TrialInfo – Anmeldung</h1>
       </span>
-      <span class="register">
+      <span class="signup">
 	<h1>TrialInfo – Neu registrieren</h1>
       </span>
       <span class="reset">
@@ -63,7 +63,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       {{/if}}
       <form id="form" action="/login{{{query}}}" method="post">
 	<table>
-	  <tr class="login register reset">
+	  <tr class="login signup reset">
 	    <th>E-Mail</th>
 	    <td>
 	      <input type="text" name="email" value="{{email}}" size="40" maxlength="60" id="email">
@@ -79,15 +79,15 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    <th></th>
 	    <td>
 	      <button class="login" type="submit">Anmelden</button>
-	      <button class="register reset" type="submit">E-Mail-Bestätigung senden</button>
+	      <button class="signup reset" type="submit">E-Mail-Bestätigung senden</button>
 	    </td>
 	  </tr>
 	  <tr>
 	    <th></th>
 	    <td>
-	      <a class="register reset" href="#" onclick="mode('login',event)">Anmelden</a>
-	      <a class="login reset" href="#" onclick="mode('register',event)">Neu registrieren</a>
-	      <a class="login register" href="#" onclick="mode('reset',event)">Kennwort zurücksetzen</a>
+	      <a class="signup reset" href="#" onclick="mode('login',event)">Anmelden</a>
+	      <a class="login reset" href="#" onclick="mode('signup',event)">Neu registrieren</a>
+	      <a class="login signup" href="#" onclick="mode('reset',event)">Kennwort zurücksetzen</a>
 	    </td>
 	  </tr>
 	</table>
