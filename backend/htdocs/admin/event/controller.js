@@ -9,9 +9,19 @@ var eventController = [
     $scope.features = event.features;
     $scope.fold = {};
 
+    if (event.base) {
+      $http.get('/api/event/' + event.base + '/as-base')
+      .success(function(base) {
+	$scope.base = base;
+      });
+    }
+
     $scope.remove = function() {
       if (confirm('Veranstaltung wirklich löschen?\n\nDie Veranstaltung kann später nicht wiederhergestellt werden.')) {
-	remove_event($http, event.id, event.version).
+	var params = {
+	  version: event.version
+	};
+	$http.delete('/api/event/' + event.id, {params: params}).
 	  success(function() {
 	    $location.path('/');
 	  }).
@@ -25,11 +35,10 @@ var eventController = [
       if (confirm('Veranstaltung wirklich auf ' + what + ' zurücksetzen?\n\n' +
 		  'Diese Änderung kann nicht rückgängig gemacht werden.')) {
 	var params = {
-	  id: event.id,
 	  version: event.version,
 	  reset: reset
 	};
-	$http.post('/api/event/reset', undefined, {params: params}).
+	$http.post('/api/event/' + event.id + '/reset', undefined, {params: params}).
 	  error(network_error);
       }
       $scope.fold.reset = false;

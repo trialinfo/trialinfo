@@ -75,12 +75,12 @@ var ridersController = [
 		 visible_number(rider) == null)
 	  set_focus('#number', $timeout);
 	else if (enabled.rider) {
-	  var felder = ['first_name', 'last_name', 'date_of_birth'];
-	  for (var n = 0; n < felder.length; n++) {
-	    var feld = felder[n];
-	    if ($scope.features[feld] &&
-		(rider[feld] === null || rider[feld] === '')) {
-	      set_focus('#' + feld, $timeout);
+	  var fields = ['first_name', 'last_name', 'date_of_birth'];
+	  for (var n = 0; n < fields.length; n++) {
+	    var field = fields[n];
+	    if ($scope.features[field] &&
+		(rider[field] === null || rider[field] === '')) {
+	      set_focus('#' + field, $timeout);
 	      break;
 	    }
 	  }
@@ -248,12 +248,10 @@ var ridersController = [
 	return;
       var number;
       var version;
-      if ($scope.old_rider) {
+      if ($scope.old_rider.number) {
 	number = $scope.old_rider.number;
 	version = $scope.old_rider.version;
       }
-      if (version === undefined)
-	version = 0;
       var rider = $scope.rider;
 
       rider = angular.copy(rider);
@@ -590,7 +588,7 @@ var ridersController = [
 	      }));
 	    $scope.members_list = found;
 	    if (found.length == 1)
-	      $scope.fahrer_hinzufuegen(found[0]);
+	      $scope.add_member(found[0]);
 	  }).
 	  error(network_error);
       } else {

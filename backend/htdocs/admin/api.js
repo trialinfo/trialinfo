@@ -1,20 +1,5 @@
 'use strict;'
 
-function load_events($scope, $http) {
-  return $http.get('/api/events').
-    success(function(events) {
-      $scope.events = events;
-    });
-}
-
-function load_event($scope, $http, id) {
-  return $http.get('/api/event' + id).
-    success(function(event) {
-      $scope.event = event;
-      $scope.features = event.features;
-    });
-}
-
 function starting_classes(event) {
   var starting = [];
   for (var class_ = 1; class_ <= event.classes.length; class_++) {
@@ -23,16 +8,6 @@ function starting_classes(event) {
       starting[class_ - 1] = true;
   }
   return starting;
-}
-
-function save_event($http, id, event) {
-  var params = {
-    version: event.version,
-  };
-  /* FIXME: Is id null / undefined when we don't have an ID, yet? Should that
-     be a POST request? */
-  params.mtime = Math.floor(new Date().getTime() / 1000);
-  return $http.put('/api/event/' + id, event, {params: params});
 }
 
 function rider_name(rider, $scope) {
@@ -84,28 +59,6 @@ function warn_before_unload($scope, modified) {
   $scope.$on('$destroy', function() {
     window.onbeforeunload = undefined;
   });
-}
-
-function remove_event($http, id, version) {
-  var params = {
-    id: id,
-    version: version
-  };
-  return $http.delete('/api/event', {params: params});
-}
-
-function save_serie($http, serie, daten) {
-  var params = {
-    version: daten.version
-  };
-  return $http.put('/api/serie/' + serie, daten, {params: params});
-}
-
-function remove_serie($http, serie, version) {
-  var params = {
-    version: version
-  };
-  return $http.delete('/api/serie/' + serie, {params: params});
 }
 
 function http_request($q, request) {

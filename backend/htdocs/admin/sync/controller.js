@@ -4,18 +4,18 @@ var syncController = [
     $scope.kill = {};
 
     $scope.zustand = function() {
-      var farbe;
+      var color;
       if ($scope.running) {
 	if ($scope.source_dump && $scope.target_dump &&
 	    !($scope.patch && $scope.patch.length))
-	  farbe = '#27E833';  // "Grün"
+	  color = '#27E833';  // "Green"
 	else
-	  farbe = '#FF7E00';  // "Orange"
+	  color = '#FF7E00';  // "Orange"
       } else
-	farbe = '#FF1700';  // "Rot"
+	color = '#FF1700';  // "Red"
       return $sce.trustAsHtml(
 	/* '<span style="position: absolute; z-index: 1">◻</span>' + */
-	'<span style="color:' + farbe + '">◼</span>');
+	'<span style="color:' + color + '">◼</span>');
       // FIXME: Status auch im Fenstertitel anzeigen?
     };
 

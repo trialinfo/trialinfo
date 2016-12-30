@@ -1,5 +1,5 @@
 {
-  "name": "admin",
+  "name": "trialinfo",
   "version": "0.0.0",
   "description": "New TrialInfo backend replacing the Perl+CGI backend",
   "author": "Andreas Gruenbacher <andreas.gruenbacher@gmail.com>",

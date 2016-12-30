@@ -107,14 +107,14 @@ var serieController = [
     }, true);
 
     function normalize_new_numbers(serie) {
-      angular.forEach(serie.new_numbers, function(aenderungen) {
-	if (!aenderungen.length ||
-	    aenderungen[aenderungen.length - 1].alt !== null)
-	    aenderungen.push({ alt: null, neu: null });
+      angular.forEach(serie.new_numbers, function(new_numbers) {
+	if (!new_numbers.length ||
+	    new_numbers[new_numbers.length - 1].number !== null)
+	    new_numbers.push({ number: null, new_number: null });
 	else {
-	  for (var n = 0; n < aenderungen.length - 1; n++)
-	    if (aenderungen[n].alt == null) {
-	      aenderungen.splice(n, 1);
+	  for (var n = 0; n < new_numbers.length - 1; n++)
+	    if (new_numbers[n].number == null) {
+	      new_numbers.splice(n, 1);
 	      n--;
 	    }
 	}
@@ -126,6 +126,29 @@ var serieController = [
 	normalize_new_numbers($scope.serie);
       } catch (_) {}
     }, true);
+
+    function new_numbers_from_api(new_numbers) {
+      Object.keys(new_numbers).forEach(function(id) {
+	new_numbers[id] = Object.keys(new_numbers[id])
+	  .map(function(number) {
+	    return {
+	      number: number,
+	      new_number: new_numbers[id][number]
+	    };
+	  });
+      });
+    }
+
+    function new_numbers_to_api(new_numbers) {
+      Object.keys(new_numbers).forEach(function(id) {
+	new_numbers[id] = new_numbers[id].reduce(
+	  function(hash, old_new) {
+	    if (old_new.number)
+	      hash[old_new.number] = old_new.new_number;
+	    return hash;
+	  }, {});
+      });
+    }
 
     function assign_serie(serie) {
       if (serie === undefined)
@@ -141,6 +164,7 @@ var serieController = [
 	    ranking: 1
 	  };
 	}
+	new_numbers_from_api(serie.new_numbers);
 	normalize_classes(serie);
 	normalize_events(serie);
 	normalize_new_numbers(serie);
@@ -164,8 +188,14 @@ var serieController = [
       var classes = serie.classes;
       if (classes.length && classes[classes.length - 1]['class'] === null)
 	  classes.pop();
+      new_numbers_to_api(serie.new_numbers);
       $scope.busy = true;
-      save_serie($http, serie.serie, serie).
+      var request;
+      if (serie.serie)
+	request = $http.put('/api/serie/' + serie.serie, serie);
+      else
+	request = $http.post('/api/serie', serie);
+      request.
 	success(function(serie) {
 	  assign_serie(serie);
 	  var path = '/serie/' + serie.serie;
@@ -191,7 +221,10 @@ var serieController = [
 	return;
       if (confirm('Veranstaltungsreihe wirklich löschen?\n\nDie Veranstaltungsreihe kann später nicht wiederhergestellt werden.')) {
 	$scope.busy = true;
-	remove_serie($http, $scope.serie.serie, $scope.serie.version).
+	var params = {};
+	if ($scope.serie.version)
+	  params.version = $scope.serie.version;
+	$http.delete('/api/serie/' + $scope.serie.serie, {params: params}).
 	  success(function() {
 	    $window.history.back();
 	  }).

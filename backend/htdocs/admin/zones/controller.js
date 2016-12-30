@@ -30,12 +30,12 @@ var zonesController = [
 	event = e;
 	$scope.event = event;
 	$scope.old_event = angular.copy(event);
-	$scope.skipped_zones = skipped_zones(event);
+	$scope.skipped_zones = to_form(event);
 	$scope.old_skipped_zones = angular.copy($scope.skipped_zones);
       }
     }
 
-    function skipped_zones(event) {
+    function to_form(event) {
       var skipped_zones = event.skipped_zones;
       var s = [];
       angular.forEach($scope.starting_classes, function(class_) {
@@ -62,7 +62,7 @@ var zonesController = [
       return s;
     }
 
-    function skipped_zones(skipped_zones) {
+    function from_form(skipped_zones) {
       var k = [];
       angular.forEach(skipped_zones, function(zones, index) {
 	var class_ = index + 1;
@@ -96,14 +96,14 @@ var zonesController = [
       if ($scope.busy)
 	return;
       /* FIXME: Wenn Klasse schon Starter hat, muss sie weiterhin starten. (Verweis auf Starterliste.) */
-      event.skipped_zones = skipped_zones($scope.skipped_zones);
+      event.skipped_zones = from_form($scope.skipped_zones);
 
       /* Wenn die Daten aus dem Trialtool importiert wurden, ist das Feature
 	 skipped_zones nicht gesetzt.  Sobald eine Sektion aus der
 	 Wertung genommen wird, muss es aber auf jeden Fall gesetzt werden! */
       event.features.skipped_zones = true;
       $scope.busy = true;
-      save_event($http, event.id, event).
+      $http.put('/api/event/' + event.id, event).
 	success(function(event) {
 	  assign_event(event);
 	}).

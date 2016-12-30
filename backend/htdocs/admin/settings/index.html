@@ -6,22 +6,22 @@
       <tr ng-if="!event.id && events.length">
 	<th align="right"><label for="title">Basierend auf</label></th>
 	<td>
-	  <select ng-model="event.base.id" ng-options="event.id as event_name(event) for event in events | filter:veranstaltung_sichtbar">
+	  <select ng-model="event.base" ng-options="event.tag as event_name(event) for event in events | filter:veranstaltung_sichtbar">
 	    <option value=""></option>
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="!event.id && event.base.id != null">
+      <tr ng-if="!event.id && internal.base">
 	<th align="right"><label for="title">Zurücksetzen auf</label></th>
 	<td>
-	  <select ng-model="event.reset">
+	  <select ng-model="internal.reset">
 	    <option value=""></option>
 	    <option value="start">Start</option>
-	    <option value="registration">Nennbeginn</option>
-	    <option value="initial">Nur Stammdaten</option>
+	    <option value="register">Nennbeginn</option>
+	    <option value="master">Nur Stammdaten</option>
 	  </select>
-	  <span ng-if="event.reset == 'registration' && event.base.start_tomorrow" style="color:red">
-	    {{event.base.start_tomorrow}} Fahrer schon als Starter markiert.</span>
+	  <span ng-if="internal.reset == 'register' && internal.base.start_tomorrow" style="color:red">
+	    {{internal.base.start_tomorrow}} Fahrer schon als Starter markiert.</span>
 	</td>
       </tr>
       <tr>
@@ -158,7 +158,7 @@
 	</td>
 	<td align="center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <select ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].farbe" id="class{{$index + 1}}_farbe" ng-disabled="!class_active[$index + 1]">
+	  <select ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].color" id="class{{$index + 1}}_color" ng-disabled="!class_active[$index + 1]">
 	    <option value=""></option>
 	    <option value="#0000ff">Blau</option>
 	    <option value="#ff0000">Rot</option>

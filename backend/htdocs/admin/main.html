@@ -96,7 +96,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      templateUrl: 'marks/index.html',
 	      resolve: marksController.resolve,
 	      reloadOnSearch: false
-	    }).when('/event/neu/settings', {
+	    }).when('/event/new/settings', {
+	      title: 'Einstellungen',
 	      controller: 'settingsController',
 	      templateUrl: 'settings/index.html',
 	      resolve: settingsController.resolve
@@ -122,7 +123,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      templateUrl: 'list/index.html',
 	      resolve: eventListController.resolve,
 	      reloadOnSearch: false
-	    }).when('/serie/neu', {
+	    }).when('/serie/new', {
 	      controller: 'serieController',
 	      templateUrl: 'serie/index.html',
 	      resolve: serieController.resolve

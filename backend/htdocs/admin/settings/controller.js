@@ -5,6 +5,10 @@ var settingsController = [
   function ($scope, $http, $timeout, $location, event, events) {
     $scope.SYNC_TARGET = SYNC_TARGET;
     $scope.$root.context(event ? event.rankings[0].title : 'Neue Veranstaltung');
+    $scope.internal = {
+      base: null,
+      reset: null
+    };
     min_zones = 8;
 
     assign_event(event);
@@ -116,21 +120,26 @@ var settingsController = [
 	event = $scope.old_event;
       if (event === null) {
 	event = {
-	  version: 0,
 	  type: null,
 	  enabled: true,
 	  classes: [],
 	  card_colors: [],
 	  zones: [],
-	  features: ['number', 'class', 'last_name', 'first_name',
-		     'start', 'skipped_zones'],
+	  features: {
+	    number: true,
+	    'class': true,
+	    last_name: true,
+	    first_name: true,
+	    start: true,
+	    skipped_zones: true
+	  },
 	  rankings: [{title: 'Neue Veranstaltung'}],
 	  scores: [],
 	  equal_marks_resolution: 0,
 	  insurance: 0,
-	  reset: 'registration',
-	  base: { id: null }
 	};
+	$scope.internal.base = null;
+	$scope.internal.reset = null;
       }
       $scope.old_type = event.type;
 
@@ -145,8 +154,8 @@ var settingsController = [
 	if (!event.rankings[ranking - 1])
 	  event.rankings[ranking - 1] = {
 	      title: null,
-	      subtitel: null,
-	      bezeichnung: null,
+	      subtitle: null,
+	      name: null,
 	  };
 
       if (event.date === undefined)
@@ -171,13 +180,22 @@ var settingsController = [
       event.features = $scope.features;
       collapse_scores(event.scores);
       $scope.busy = true;
-      var veranstaltung_ist_neu = !event.id;
-      save_event($http, event.id, event).
+      var event_is_new = !event.id;
+      var request;
+      if (event_is_new) {
+	var params = {};
+	if ($scope.internal.reset)
+	  params.reset = $scope.internal.reset;
+	request = $http.post('/api/event', event, {params: params});
+      } else {
+	request = $http.put('/api/event/' + event.id, event);
+      }
+      request.
 	success(function(event) {
 	  assign_event(event);
 	  var path = '/event/' + event.id;
-	  if (!veranstaltung_ist_neu)
-	    path = path + '/einstellungen';
+	  if (!event_is_new)
+	    path = path + '/settings';
 	  if (path != $location.path()) {
 	    $location.path(path).replace();
 	    /* FIXME: Wie Reload verhindern? */
@@ -215,7 +233,7 @@ var settingsController = [
       //events.reverse();
       $scope.events = events;
 
-      function eindeutiger_titel(title, events) {
+      function unique_title(title, events) {
 	var vergeben = {};
 	var n = 1;
 	angular.forEach(events, function(event) {
@@ -229,29 +247,34 @@ var settingsController = [
 	return title;
       }
 
-      $scope.event.base = { id: null };
-      $scope.$watch('event.base.id', function() {
-	var base = $scope.event.base.id;
-	if (base != null) {
-	  $http.get('/api/event', {'params': {'id': base}}).
+      $scope.$watch('event.base', function(new_v, old_v) {
+	$scope.internal.base = null;
+	$scope.internal.reset = null;
+	var base = $scope.event.base;
+	if (base == null)
+	  return;
+
+	var id = events.find(function(event) {
+	  return event.tag == base;
+	}).id;
+
+	if (id != null) {
+	  $http.get('/api/event/' + id).
 	    success(function(event) {
-	      event.base = {
-		tag: event.tag,
-		id: event.id,
-		title: event.rankings[0].title,
-		anzahl_start_morgen: event.anzahl_start_morgen
-	      };
-	      delete event.anzahl_start_morgen;
 	      delete event.id;
 	      event.rankings[0].title =
-		eindeutiger_titel(event.rankings[0].title,
-				  $scope.events);
+		unique_title(event.rankings[0].title, $scope.events);
 	      delete event.date;
-	      event.dateiname = null;
-	      event.reset = 'nennbeginn';
+	      event.base = base;
 	      assign_event(event, true);
+	      $scope.internal.reset = 'register';
 	    }).
 	    error(network_error);
+
+	  $http.get('/api/event/' + base + '/as-base').
+	    success(function(base) {
+	      $scope.internal.base = base;
+	    });
 	} else
 	  assign_event(null);
       });

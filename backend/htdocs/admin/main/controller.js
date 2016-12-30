@@ -33,15 +33,15 @@ var mainController = [
     $scope.event_name = event_name;
 
     $scope.new_event = function() {
-      $location.path('/event/neu/einstellungen');
+      $location.path('/event/new/settings');
     };
 
     $scope.sync_import_export = function() {
       $location.path('/extern');
     };
 
-    $scope.neu_serie = function() {
-      $location.path('/serie/neu');
+    $scope.new_serie = function() {
+      $location.path('/serie/new');
     };
 
     $scope.logout = function() {

@@ -22,23 +22,25 @@
   </tr>
   <tr>
     <td>
-      <button ng-click="reset('registration')">Nennbeginn</button>
+      <button ng-click="reset('register')">Nennbeginn</button>
     </td>
     <td>
       Löscht zusätzlich <span ng-if="features.registered">Nennungseingang,</span>
       Start<span ng-if="features.start_tomorrow">, Start morgen</span>
-      und das Nenngeld<span ng-if="event.base.start_tomorrow"> und setzt
-      <span ng-if="features.nennungseingang">Nennungseingang und</span> Start bei
-      {{event.base.start_tomorrow}} Fahrern mit Start morgen in
-      {{event.base.title}}</span>.
+      und das Nenngeld<span ng-if="base.start_tomorrow"> und setzt
+      <span ng-if="features.registered">Nennungseingang und</span> Start bei
+      {{base.start_tomorrow}} Fahrern mit
+      <span ng-if="features.registered">Nennungseingang und</span> Start morgen
+      in Veranstaltung <em>{{base.title}}</em></span>.
     </td>
   </tr>
   <tr>
     <td>
-      <button ng-click="reset('initial')">Nur Stammdaten</button>
+      <button ng-click="reset('master')">Nur Stammdaten</button>
     </td>
     <td>
-      Löscht alles außer den Stammdaten der Fahrer, inklusive Startnummern und Lizenznummern.
+      Löscht alles außer den Stammdaten der Fahrer, inklusive
+      Startnummern<span ng-if="features.license"> und Lizenznummern</span>.
     </td>
   </tr>
 </table>

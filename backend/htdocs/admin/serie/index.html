@@ -75,13 +75,13 @@
 	  <tr>
 	    <th align="right">Von</th>
 	    <td ng-repeat="aenderung in serie.new_numbers[event.id] track by $index" align="center">
-	      <input type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.alt" style="text-align:center">
+	      <input type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.number" style="text-align:center">
 	    </td>
 	  </tr>
 	  <tr>
 	    <th align="right">Nach</th>
 	    <td align="center" ng-repeat="aenderung in serie.new_numbers[event.id] track by $index" align="center">
-	      <input type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.neu" style="text-align:center">
+	      <input type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="aenderung.new_number" style="text-align:center">
 	    </td>
 	  </tr>
 	</table>

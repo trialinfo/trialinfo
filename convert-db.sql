@@ -247,7 +247,9 @@ ALTER TABLE veranstaltung_benutzer
 	-- id INT,
 	CHANGE benutzer `user` INT,
 	CHANGE nur_lesen read_only BOOL,
-	DROP vererben;
+	DROP vererben,
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (id, user);
 
 DROP TABLE IF EXISTS events_groups_inherit;
 CREATE TABLE events_groups_inherit (
