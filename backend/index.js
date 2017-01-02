@@ -190,6 +190,11 @@ var cache = {
 
     return this.cached_riders[id][new_number];
   },
+  modify_riders: function(id) {
+    for (let number in this.cached_riders[id])
+      this.modify_rider(id, number);
+    return this.cached_riders[id];
+  },
   delete_rider: function(id, number) {
     if (this.saved_riders[id])
       delete this.saved_riders[id][number];
@@ -526,7 +531,7 @@ async function get_event(connection, id) {
   return await read_event(connection, id, revalidate);
 }
 
-async function admin_extend_event(connection, event) {
+function admin_extend_event(event) {
   var copy = Object.assign({}, event);
 
   if (event.skipped_zones)
@@ -548,7 +553,7 @@ async function admin_extend_event(connection, event) {
 
 async function admin_get_event(connection, id) {
   var event = await get_event(connection, id);
-  return await admin_extend_event(connection, event);
+  return admin_extend_event(event);
 }
 
 function make_revalidate_rider(id, number, version) {
@@ -698,6 +703,8 @@ async function get_rider(connection, id, number, params, direction) {
   if (direction != null) {
     if (params.active)
       filters.push('(number >= 0 OR start)');
+    else
+      filters.push('number >= 0');
   }
   if (params.group != null) {
     if (+params.group)
@@ -956,16 +963,15 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
 }
 
 function event_reset_numbers(riders) {
-  let min_number = Object.keys(riders).reduce(
-    (min, rider) => Math.min(min, rider.number), 0);
+  let min_number = Math.min(0, Math.min.apply(this, Object.keys(riders)));
 
   for (let number in riders) {
     if (number >= 0) {
       min_number--;
       let rider = riders[number];
       rider.number = min_number;
-      riders[min_number] = rider;
       delete riders[number];
+      riders[min_number] = rider;
     }
   }
 }
@@ -1020,31 +1026,55 @@ function reset_event(base_event, base_riders, event, riders, reset) {
   }
 }
 
-async function admin_reset_event(connection, id, reset) {
+async function admin_reset_event(connection, id, reset, email, version) {
+  await cache.begin(connection);
   var event = await get_event(connection, id);
   var riders = await get_riders(connection, id);
   var base_event, base_riders;
+
+  if (version && event.version != version)
+    throw new HTTPError(409, 'Conflict');
 
   if (reset == 'register' && event.base) {
     var result = await connection.queryAsync(`
       SELECT id
       FROM events
-      WHERE tag = ?`, [event.base]);
-    if (result.length == 1) {
-      var base_id = result[0].id;
-      // FIXME: Check permission to read base_event as well!
-      var base_event = await get_event(connection, base_id);
-      if (base_event.features.start_tomorrow)
-	base_riders = await get_riders(connection, base_id);
-    }
+      JOIN events_all_admins USING (id)
+      WHERE tag = ? AND email = ?`, [event.base, email]);
+    if (result.length != 1)
+      throw new HTTPError(404, 'Not Found');
+
+    var base_id = result[0].id;
+    var base_event = await get_event(connection, base_id);
+    if (base_event.features.start_tomorrow)
+      base_riders = await get_riders(connection, base_id);
   }
 
-  reset_event(base_event, base_riders, event, riders, reset);
+  event = cache.modify_event(id);
+  riders = cache.modify_riders(id);
 
-  if (reset == 'master') {
-    await connection.queryAsync(`
-      DELETE FROM new_numbers
-      WHERE id = ?`, [id]);
+  try {
+    if (reset == 'master') {
+      let min_number = Math.min(0, Math.min.apply(this, Object.keys(riders)));
+      for (let number of Object.keys(riders)) {
+	if (number >= 0) {
+	  min_number--;
+	  await rider_change_number(connection, id, number, min_number);
+	}
+      }
+    }
+
+    reset_event(base_event, base_riders, event, riders, reset);
+
+    if (reset == 'master') {
+      await connection.queryAsync(`
+	DELETE FROM new_numbers
+	WHERE id = ?`, [id]);
+    }
+    await cache.commit(connection);
+  } catch (err) {
+    await cache.rollback(connection);
+    throw err;
   }
 }
 
@@ -1183,7 +1213,8 @@ async function admin_save_event(connection, id, event, version, reset, email) {
     await cache.rollback(connection);
     throw err;
   }
-  return event;
+  if (event)
+    return admin_extend_event(event);
 }
 
 async function __update_serie(connection, serie_id, old_serie, new_serie) {
@@ -2104,10 +2135,10 @@ async function create_user_secret(connection, email, create_user) {
 	  SELECT COALESCE(MAX(user), 0) + 1 AS user, ?, ?, ?, ?
 	  FROM users
       `, [email, random_tag(), secret, expires]);
-    } catch(ex) {
-      if (ex.code == 'ER_DUP_ENTRY')
+    } catch(err) {
+      if (err.code == 'ER_DUP_ENTRY')
 	return null;
-      throw e;
+      throw err;
     }
   } else {
     var result = await connection.queryAsync(`
@@ -2337,8 +2368,8 @@ async function signup_or_reset(req, res, mode) {
     try {
       await email_change_password(mode, email,
 	config.url + 'change-password' + query_string(params));
-    } catch (e) {
-      throw e;
+    } catch (err) {
+      throw err;
       params.mode = mode;
       params.error = 'Bestätigungs-E-Mail konnte nicht gesendet werden.';
       return res.render('login', params);
@@ -2592,6 +2623,32 @@ async function check_number(connection, id, query) {
   return check_result;
 }
 
+async function admin_event_get_as_base(connection, tag, email) {
+  var result = await connection.queryAsync(`
+    SELECT title, id, tag
+    FROM events
+    LEFT JOIN rankings USING (id)
+    JOIN events_all_admins USING (id)
+    WHERE tag = ? AND email = ? AND ranking = 1`, [tag, email]);
+  if (result.length == 1) {
+    result = result[0];
+    var id = result.id;
+    var event = await get_event(connection, id);
+    if (event.features.start_tomorrow) {
+      var riders = await get_riders(connection, id);
+      result.start_tomorrow = 0;
+      Object.values(riders).forEach((rider) => {
+	if ((rider.verified || !event.features.verified) &&
+	    (rider.registered || !event.features.registered) &&
+	    rider.start_tomorrow) {
+	  result.start_tomorrow++;
+	}
+      });
+    }
+    return result;
+  }
+}
+
 function query_string(query) {
   if (!query)
     return '';
@@ -2819,32 +2876,6 @@ app.get('/api/event/:id', will_read_event, function(req, res, next) {
   }).catch(next);
 });
 
-async function admin_event_get_as_base(connection, tag, email) {
-  var result = await connection.queryAsync(`
-    SELECT title, id, tag
-    FROM events
-    LEFT JOIN rankings USING (id)
-    JOIN events_all_admins USING (id)
-    WHERE tag = ? AND email = ? AND ranking = 1`, [tag, email]);
-  if (result.length == 1) {
-    result = result[0];
-    var id = result.id;
-    var event = await get_event(connection, id);
-    if (event.features.start_tomorrow) {
-      var riders = await get_riders(connection, id);
-      result.start_tomorrow = 0;
-      Object.values(riders).forEach((rider) => {
-	if ((rider.verified || !event.features.verified) &&
-	    (rider.registered || !event.features.registered) &&
-	    rider.start_tomorrow) {
-	  result.start_tomorrow++;
-	}
-      });
-    }
-    return result;
-  }
-}
-
 app.get('/api/event/:tag/as-base', function(req, res, next) {
   admin_event_get_as_base(req.conn, req.params.tag, req.user.email)
   .then((result) => {
@@ -2906,6 +2937,13 @@ app.post('/api/event/:id/rider', will_write_event, async function(req, res, next
   } catch (err) {
     next(err);
   }
+});
+
+app.post('/api/event/:id/reset', will_write_event, async function(req, res, next) {
+  admin_reset_event(req.conn, req.params.id, req.query.reset, req.user.email, req.query.version)
+  .then(() => {
+    res.json({});
+  }).catch(next);
 });
 
 app.put('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
