@@ -124,6 +124,10 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 	    AllowOverride All
 	    Require all granted
 	</Directory>
+
+	<LocationMatch "^/(|login/?|admin/|register/event/\d+|logout|signup|reset|change-password|api/.*)$">
+	    ProxyPassMatch "http://localhost:3080/$1"
+	</LocationMatch>
     </VirtualHost>
 
 Die Verzeichnisse htdocs/veranstalter/, cgi-bin/veranstalter/, admin/, api/
@@ -139,6 +143,59 @@ Standardmäßig ist der Zugriff auf den Veranstalter-Bereich auf die Gruppe
 Um Benutzer zu definieren, muss eine Datei .htpasswd erzeugt werden (Utility
 "hdpasswd"). Diesen Benutzern müssen dann in der Datei .htgroup die
 entsprechenden Gruppen zugewiesen werden.
+
+
+SELinux
+-------
+
+  $ semanage fcontext -a -t httpd_sys_content_t '/home/agruenba/trialinfo/htdocs(/.*)?'
+  $ restorecon -r /home/agruenba/trialinfo/htdocs
+  $ semanage port -a -t http_port_t -p tcp 3080
+
+
+Systemd
+-------
+
+  /etc/systemd/system/trialinfo-next.service
+  ------------------------------------------
+  [Unit]
+  Description=TrialInfo backend for next.trialinfo.at
+
+  [Service]
+  ExecStart=/usr/bin/node index.js
+  WorkingDirectory=/var/www/next.trialinfo.at/backend/dist
+  StandardOutput=syslog
+  SyslogIdentifier=trialinfo
+  User=trialinfo
+  Group=trialinfo
+  Environment=NODE_ENV=production
+  Environment=TRIALINFO=systemd
+
+
+  /etc/systemd/system/trialinfo-next.socket
+  -----------------------------------------
+  [Socket]
+  ListenStream=3080
+
+  [Install]
+  WantedBy=sockets.target
+
+
+  $ systemctl daemon-reload
+  $ systemctl enable trialinfo-next.socket
+
+
+Git post-receive hook
+---------------------
+
+    export GIT_WORK_TREE=/var/www/next.trialinfo.at
+    git checkout -f
+
+    make -C $GIT_WORK_TREE install
+    make -C $GIT_WORK_TREE build
+
+    sudo /bin/systemctl stop trialinfo-next.service
+    sudo /bin/systemctl restart trialinfo-next.socket
 
 
 Herunterladen und erzeugen diverser Dateien

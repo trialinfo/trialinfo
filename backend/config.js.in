@@ -9,6 +9,7 @@ var config = {
   // For debugging, don't specify a from address.  The confirmation URLs will
   // then be logged to the console instead.
   from: '<<email>>',
+  url: '<<proxy url>>',
 */
 /*
   http: {

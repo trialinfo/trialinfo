@@ -12,21 +12,19 @@ SYNC_TARGET ?= false
 AUTH_PREFIX ?= $(CURDIR)
 
 DOWNLOAD_FILES = \
-	backend/htdocs/js/angular.js \
-	backend/htdocs/js/angular.min.js \
-	backend/htdocs/js/angular-route.js \
-	backend/htdocs/js/angular-cookies.js \
-	backend/htdocs/js/angular-locale_de-at.js \
-	backend/htdocs/js/json-diff.js \
-	backend/htdocs/js/validate.js \
+	htdocs/js/angular.js \
+	htdocs/js/angular.min.js \
+	htdocs/js/angular-route.js \
+	htdocs/js/angular-cookies.js \
+	htdocs/js/angular-locale_de-at.js \
+	htdocs/js/json-diff.js \
+	htdocs/js/validate.js \
 
 GENERATED_FILES = \
 	cgi-bin/api/.htaccess \
 	cgi-bin/veranstalter/.htaccess \
-	backend/htdocs/config.js \
-	htdocs/api/.htaccess \
+	htdocs/js/config.js \
 	htdocs/ergebnisse/.htaccess \
-	htdocs/.htaccess \
 	htdocs/veranstalter/.htaccess \
 
 all: generate
@@ -44,8 +42,10 @@ install: download
 start:
 	cd backend && npm start
 
-serve:
+build:
 	cd backend && npm run build
+
+serve: build
 	cd backend && npm run serve
 
 ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
@@ -76,23 +76,23 @@ $(GENERATED_FILES): %: %.in
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
 ANGULAR_VERSION=1.2.32
 
-backend/htdocs/js/angular%:
+htdocs/js/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
 
-backend/htdocs/js/angular-locale_de-at.js:
+htdocs/js/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
 
 # AngularUI Validate
-backend/htdocs/js/validate.js:
+htdocs/js/validate.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular-ui/ui-utils/raw/v2.0.0/modules/validate/validate.js
 
-backend/htdocs/js/json-diff.js:
+htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js

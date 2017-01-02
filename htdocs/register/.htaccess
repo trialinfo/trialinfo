@@ -1,0 +1,13 @@
+Options +FollowSymLinks
+
+RewriteEngine On
+RewriteBase /register/
+
+# Don't rewrite files
+##RewriteCond %{REQUEST_FILENAME} -f [OR]
+##RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Rewrite everything else to index.html to allow html5 state links
+RewriteRule ^ index.html [L]

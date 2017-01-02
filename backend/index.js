@@ -109,7 +109,7 @@ class HTTPError extends Error {
 
 async function validate_user(connection, user) {
   if (!user || !user.email || !user.password)
-    throw 'Wrong user or password';
+    throw 'Wrong email or password';
 
   var rows = await connection.queryAsync(`
     SELECT password, tag, admin
@@ -127,7 +127,7 @@ async function validate_user(connection, user) {
   } catch(e) {
     console.error('User ' + JSON.stringify(user.email) + ' does not exist');
   }
-  throw 'Wrong user or password';
+  throw 'Wrong email or password';
 }
 
 /*
@@ -2348,10 +2348,10 @@ async function email_change_password(mode, to, confirmation_url) {
 async function signup_or_reset(req, res, mode) {
   var email = req.body.email;
   var params = {email: email};
-  if (req.query)
-    params.query = query_string(req.query);
   if (!email.match(/^[^@\s]+@[^@\s]+$/)) {
     params.mode = mode;
+    if (req.query)
+      params.query = query_string(req.query);
     params.error = new Handlebars.SafeString(
       'Die E-Mail-Adresse <em>' +
       Handlebars.Utils.escapeExpression(email) +
@@ -2371,9 +2371,13 @@ async function signup_or_reset(req, res, mode) {
     } catch (err) {
       throw err;
       params.mode = mode;
+      if (req.query)
+	params.query = query_string(req.query);
       params.error = 'Bestätigungs-E-Mail konnte nicht gesendet werden.';
       return res.render('login', params);
     }
+    if (req.query)
+      params.query = query_string(req.query);
     return res.render('confirmation-sent', params);
   } else {
     var error = 'Die E-Mail-Adresse <em>' +
@@ -2388,6 +2392,8 @@ async function signup_or_reset(req, res, mode) {
     }
 
     params.mode = mode;
+    if (req.query)
+      params.query = query_string(req.query);
     params.error = new Handlebars.SafeString(error);
     return res.render('login', params);
   }
@@ -2679,7 +2685,6 @@ app.set('view engine', 'hbs');
 app.use(logger(app.get('env') == 'production' ? 'common' : 'dev'));
 if (app.get('env') == 'production')
   app.get('*.js', minified_redirect);
-app.use(express.static('htdocs'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser(/* config.session.secret */));
@@ -2746,21 +2751,21 @@ app.get('/logout', function(req, res, next) {
   res.redirect(303, '/');
 });
 
-app.get('/admin/', function(req, res, next) {
-  if (!(req.user || {}).admin) {
-    if (req.user)
-      req.logout();
-    res.redirect(303, '/login/?admin&redirect=' + encodeURIComponent(req.url));
-  } else {
-    res.sendFile('admin/main.html', sendFileOptions);
-  }
+app.get('/admin/', conn(pool), async function(req, res, next) {
+  try {
+    var user = await validate_user(req.conn, req.user);
+    if (user.admin)
+      return next();
+  } catch(err) {}
+  res.redirect(303, '/login/?admin&redirect=' + encodeURIComponent(req.url));
 });
 
-app.get('/register/', function(req, res, next) {
-  if (!req.user)
-    res.redirect(303, '/');
-  else
-    res.sendFile('register/main.html', sendFileOptions);
+app.get('/register/event/:id', conn(pool), async function(req, res, next) {
+  try {
+    var user = await validate_user(req.conn, req.user);
+    return next();
+  } catch(err) {}
+  res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
 });
 
 /*
@@ -2772,17 +2777,27 @@ app.get('/admin/*', function(req, res, next) {
     if (req.user)
       req.logout();
     /* Session cookie not defined, so obviously not logged in. */
-    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+    return res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
-  res.sendFile('admin/main.html', sendFileOptions);
+  next();
 });
 
 app.get('/register/*', function(req, res, next) {
   if (!req.user) {
     /* Session cookie not defined, so obviously not logged in. */
-    res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+    return res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
   }
-  res.sendFile('register/main.html', sendFileOptions);
+  next();
+});
+
+app.use(express.static('htdocs'));
+
+app.get('/admin/*', function(req, res, next) {
+  res.sendFile('admin/index.html', sendFileOptions);
+});
+
+app.get('/register/*', function(req, res, next) {
+  res.sendFile('register/index.html', sendFileOptions);
 });
 
 /*
@@ -3066,21 +3081,30 @@ app.use(clientErrorHandler);
 if (!config.http && !config.https)
   config.http = {};
 
-if (config.http) {
+if (process.env.TRIALINFO == 'systemd') {
+  require('autoquit');
+  require('systemd');
   var http = require('http');
-  var port = config.http.port || 80;
-  http.createServer(app).listen(port);
-}
+  var server = http.createServer(app);
+  server.autoQuit({timeout: 300 });
+  server.listen('systemd');
+} else {
+  if (config.http) {
+    var http = require('http');
+    var port = config.http.port || 80;
+    http.createServer(app).listen(port);
+  }
 
-if (config.https) {
-  var fs = require('fs');
-  var https = require('https');
-  var options = {
-    key: fs.readFileSync(config.https.key),
-    cert: fs.readFileSync(config.https.cert)
-  };
-  var port = config.https.port || 443;
-  https.createServer(options, app).listen(port);
+  if (config.https) {
+    var fs = require('fs');
+    var https = require('https');
+    var options = {
+      key: fs.readFileSync(config.https.key),
+      cert: fs.readFileSync(config.https.cert)
+    };
+    var port = config.https.port || 443;
+    https.createServer(options, app).listen(port);
+  }
 }
 
 /* ex:set shiftwidth=2: */
