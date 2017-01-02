@@ -2316,7 +2316,7 @@ function login(req, res, next) {
 }
 
 async function email_change_password(mode, to, confirmation_url) {
-  var template = await fsp.readFile('email/change-password.handlebars',
+  var template = await fsp.readFile('email/change-password.hbs',
 				    {encoding: 'utf-8'});
   var params = {
     url: config.url,
@@ -2673,8 +2673,8 @@ if (!config.session)
 if (!config.session.secret)
   config.session.secret = require('crypto').randomBytes(64).toString('hex');
 
-app.engine('handlebars', handlebars.engine);
-app.set('view engine', 'handlebars');
+app.engine('hbs', handlebars.engine);
+app.set('view engine', 'hbs');
 
 app.use(logger(app.get('env') == 'production' ? 'common' : 'dev'));
 if (app.get('env') == 'production')
