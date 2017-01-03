@@ -704,7 +704,7 @@ async function get_rider(connection, id, number, params, direction) {
     if (params.active)
       filters.push('(number >= 0 OR start)');
     else
-      filters.push('number >= 0');
+      filters.push('(number >= 0 OR `group`)');
   }
   if (params.group != null) {
     if (+params.group)
