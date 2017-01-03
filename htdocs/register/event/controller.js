@@ -3,7 +3,7 @@
 var eventController = [
   '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', 'event', 'riders', 'suggestions',
   function ($routeParams, $scope, $cookies, $window, $timeout, $http, event, riders, suggestions) {
-    $scope.context('Registrierung für ' + event.title);
+    $scope.context('Voranmeldung für ' + event.title);
 
     $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
 

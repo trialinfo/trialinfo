@@ -33,7 +33,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       function loaded() {
 	document.getElementById('nojs').setAttribute('style', 'display:none');
 	document.getElementById('js').setAttribute('style', '');
-	mode({{{json-stringify mode}}});
+	mode($!{JSON.stringify(data.mode)});
 	document.getElementById('email').focus();
       }
     </script>
@@ -58,15 +58,13 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       <span class="reset">
 	<h1>TrialInfo – Kennwort zurücksetzen</h1>
       </span>
-      {{#if error}}
-      <p style="color:red">{{{error}}}</p>
-      {{/if}}
-      <form id="form" action="/login{{{query}}}" method="post">
+      <p style="color:red" if(data.error)>$!{data.error}</p>
+      <form id="form" action="/login$!{data.query}" method="post">
 	<table>
 	  <tr class="login signup reset">
 	    <th>E-Mail</th>
 	    <td>
-	      <input type="text" name="email" value="{{email}}" size="40" maxlength="60" id="email">
+	      <input type="text" name="email" value="${data.email}" size="40" maxlength="60" id="email">
 	    </td>
 	  </tr>
 	  <tr class="login">
@@ -84,7 +82,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	  </tr>
 	  <tr>
 	    <th></th>
-	    <td>
+	    <td marko-preserve-whitespace>
 	      <a class="signup reset" href="#" onclick="mode('login',event)">Anmelden</a>
 	      <a class="login reset" href="#" onclick="mode('signup',event)">Neu registrieren</a>
 	      <a class="login signup" href="#" onclick="mode('reset',event)">Kennwort zurücksetzen</a>

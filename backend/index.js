@@ -20,7 +20,6 @@
 require('any-promise/register/bluebird');
 
 var fs = require('fs');
-var fsp = require('fs-promise');
 var Promise = require('bluebird');
 var compression = require('compression');
 var express = require('express');
@@ -29,8 +28,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session')
 var cookieSession = require('cookie-session');
-var express_handlebars = require('express-handlebars');
-var Handlebars = require('handlebars');
+require('marko/express'); //enable res.marko 
+var html_escape = require('html-escape');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
 var remaining_time = require('./htdocs/js/remaining-time');
@@ -39,16 +38,23 @@ var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var clone = require('clone');
 
+require('marko/node-require').install();
+
+var views = {
+  'index': require('./views/index.marko'),
+  'login': require('./views/login.marko'),
+  'change-password': require('./views/change-password.marko'),
+  'confirmation-sent': require('./views/confirmation-sent.marko'),
+  'password-changed': require('./views/password-changed.marko')
+};
+
+var emails = {
+  'change-password': require('./emails/change-password.marko')
+};
+
 var object_values = require('object.values');
 if (!Object.values)
   object_values.shim();
-
-var handlebars = express_handlebars.create({
-  helpers: {
-    'remaining-time': remaining_time,
-    'json-stringify': JSON.stringify
-  }
-});
 
 /*
  * Authentication
@@ -2315,7 +2321,7 @@ function login(req, res, next) {
 	params.error = 'Benutzer hat keine Administratorrechte.';
       if (req.query.redirect)
 	params.query = '?redirect=' + encodeURIComponent(req.query.redirect);
-      return res.render('login', params);
+      return res.marko(views['login'], params);
     } else {
       req.logIn(user, function(err) {
 	if (err)
@@ -2327,14 +2333,12 @@ function login(req, res, next) {
 }
 
 async function email_change_password(mode, to, confirmation_url) {
-  var template = await fsp.readFile('email/change-password.hbs',
-				    {encoding: 'utf-8'});
   var params = {
     url: config.url,
-    confirmation_url: new Handlebars.SafeString(confirmation_url)
+    confirmation_url: confirmation_url
   };
   params[mode] = true;
-  var message = Handlebars.compile(template)(params);
+  var message = emails['change-password'].renderToString(params).trim();
 
   if (!config.from)
     return console.log('> ' + confirmation_url);
@@ -2363,11 +2367,11 @@ async function signup_or_reset(req, res, mode) {
     params.mode = mode;
     if (req.query)
       params.query = query_string(req.query);
-    params.error = new Handlebars.SafeString(
+    params.error =
       'Die E-Mail-Adresse <em>' +
-      Handlebars.Utils.escapeExpression(email) +
-      '</em> ist nicht gültig.');
-    return res.render('login', params);
+      html_escape(email) +
+      '</em> ist nicht gültig.';
+    return res.marko(views['login'], params);
   }
   var secret = await create_user_secret(req.conn, email, mode == 'signup');
   if (secret) {
@@ -2380,19 +2384,19 @@ async function signup_or_reset(req, res, mode) {
       await email_change_password(mode, email,
 	config.url + 'change-password' + query_string(params));
     } catch (err) {
-      throw err;
+      console.log(err.stack);
       params.mode = mode;
       if (req.query)
 	params.query = query_string(req.query);
       params.error = 'Bestätigungs-E-Mail konnte nicht gesendet werden.';
-      return res.render('login', params);
+      return res.marko(views['login'], params);
     }
     if (req.query)
       params.query = query_string(req.query);
-    return res.render('confirmation-sent', params);
+    return res.marko(views['confirmation-sent'], params);
   } else {
     var error = 'Die E-Mail-Adresse <em>' +
-      Handlebars.Utils.escapeExpression(email) +
+      html_escape(email) +
       '</em>';
     if (mode == 'signup') {
       error += ' ist bereits registriert.<br>Wenn das Ihre E-Mail-Adresse' +
@@ -2405,8 +2409,8 @@ async function signup_or_reset(req, res, mode) {
     params.mode = mode;
     if (req.query)
       params.query = query_string(req.query);
-    params.error = new Handlebars.SafeString(error);
-    return res.render('login', params);
+    params.error = error;
+    return res.marko(views['login'], params);
   }
 }
 
@@ -2419,22 +2423,22 @@ async function show_change_password(req, res, next) {
     WHERE email = ?`, [email]);
   if (result.length == 0) {
     params.mode = 'login';
-    params.error = new Handlebars.SafeString(
+    params.error =
       'Die E-Mail-Adresse <em>' +
-      Handlebars.Utils.escapeExpression(email) +
-      '</em> konnte nicht überprüft werden. Bitte versuchen Sie es erneut.');
+      html_escape(email) +
+      '</em> konnte nicht überprüft werden. Bitte versuchen Sie es erneut.';
     if (req.query)
       params.query = query_string(req.query);
-    res.render('login', params);
+    res.marko(views['login'], params);
   } else if (result.length == 1 && result[0].secret != req.query.secret) {
     params.mode = 'login';
-    params.error = new Handlebars.SafeString(
+    params.error =
       'Der Bestätigungscode für die E-Mail-Adresse <em>' +
-      Handlebars.Utils.escapeExpression(email) +
-      '</em> ist nicht mehr gültig. Bitte versuchen Sie es erneut.');
+      html_escape(email) +
+      '</em> ist nicht mehr gültig. Bitte versuchen Sie es erneut.';
     if (req.query)
       params.query = query_string(req.query);
-    res.render('login', params);
+    res.marko(views['login'], params);
   } else {
     var query = {
       email: email,
@@ -2443,7 +2447,7 @@ async function show_change_password(req, res, next) {
     if (req.query.redirect)
       query.redirect = req.query.redirect;
     params.query = query_string(query);
-    res.render('change-password', params);
+    res.marko(views['change-password'], params);
   }
 }
 
@@ -2469,7 +2473,7 @@ async function change_password(req, res, next) {
       email: email,
       error: errors.join(' ')
     };
-    return res.render('change-password', params);
+    return res.marko(views['change-password'], params);
   }
 
   var result = await req.conn.queryAsync(`
@@ -2485,7 +2489,7 @@ async function change_password(req, res, next) {
     }
     if (req.query.redirect)
       params.query = query_string({redirect: req.query.redirect});
-    return res.render('login', params);
+    return res.marko(views['login'], params);
   } else {
     var user = {
       email: email,
@@ -2495,7 +2499,7 @@ async function change_password(req, res, next) {
       if (err)
 	return next(err);
       var params = {redirect: req.query.redirect || '/'};
-      res.render('password-changed', params);
+      res.marko(views['password-changed'], params);
     });
   }
 }
@@ -2666,6 +2670,77 @@ async function admin_event_get_as_base(connection, tag, email) {
   }
 }
 
+async function index(req, res, next) {
+  let now = Date.now();
+  try {
+    var events = await req.conn.queryAsync(`
+      SELECT id, date, title, registration_ends
+      FROM events
+      JOIN rankings USING (id)
+      WHERE ranking = 1 AND enabled`);
+    events.map((event) => {
+      if (event.registration_ends &&
+	  new Date(event.registration_ends).getTime() < now)
+	event.registration_ends = null;
+    });
+    events = events.reduce((hash, event) => {
+      event.series = {};
+      hash[event.id] = event;
+      return hash;
+    }, {});
+
+    var series = await req.conn.queryAsync(`
+      SELECT serie, name, abbreviation
+      FROM series`);
+    series = series.reduce((hash, serie) => {
+      serie.events = {};
+      hash[serie.serie] = serie;
+      return hash;
+    }, {});
+
+    (await req.conn.queryAsync(`
+      SELECT serie, id
+      FROM series_events`))
+    .forEach((se) => {
+      let event = events[se.id];
+      let serie = series[se.serie];
+      if (event && serie) {
+	event.series[se.serie] = serie;
+	serie.events[se.id] = event;
+      }
+    });
+
+    let params = {
+      events: function(serie_id, hash) {
+	let serie = series[serie_id];
+	return Object.values(serie.events || {})
+	  .sort((a, b) =>
+	    (new Date(a.date).getTime() - new Date(b.date).getTime()) ||
+	    (a.title || '').localeCompare(b.title || ''));
+      },
+      abbreviations: function(series, ignore) {
+	var abbreviations =
+	  Object.values(series)
+	  .reduce((list, serie) => {
+	    if (serie.abbreviation &&
+	        (ignore || []).indexOf(serie.serie) == -1)
+	      list.push(serie.abbreviation);
+	    return list;
+	  }, [])
+	  .sort((a, b) => a.localeCompare(b));
+	if (abbreviations.length)
+	  return '(' + abbreviations.join(', ') + ')';
+      },
+      remaining_time: remaining_time
+    };
+    if (req.user)
+      params.email = req.user.email;
+    res.marko(views['index'], params);
+  } catch (err) {
+    next(err);
+  }
+}
+
 function query_string(query) {
   if (!query)
     return '';
@@ -2690,9 +2765,6 @@ if (!config.session)
 if (!config.session.secret)
   config.session.secret = require('crypto').randomBytes(64).toString('hex');
 
-app.engine('hbs', handlebars.engine);
-app.set('view engine', 'hbs');
-
 app.use(logger(app.get('env') == 'production' ? production_log_format : 'dev'));
 if (app.get('env') == 'production')
   app.get('*.js', minified_redirect);
@@ -2712,22 +2784,7 @@ app.use(compression());
  * Accessible to anyone:
  */
 
-app.get('/', conn(pool), function(req, res, next) {
-  req.conn.queryAsync(`
-    SELECT id, title, registration_ends
-    FROM events
-    JOIN rankings USING (id)
-    WHERE ranking = 1 AND enabled AND registration_ends > NOW()
-    ORDER BY date, title`)
-  .then((events) => {
-    var params = {
-      events: events
-    };
-    if (req.user)
-      params.email = req.user.email;
-    res.render('index', params);
-  }).catch(next);
-});
+app.get('/', conn(pool), index);
 
 app.get('/login/', function(req, res, next) {
   var params = {
@@ -2735,7 +2792,7 @@ app.get('/login/', function(req, res, next) {
   };
   if (req.query)
     params.query = query_string(req.query);
-  res.render('login', params);
+  res.marko(views['login'], params);
 });
 
 app.post('/login', login, function(req, res, next) {

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2017  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html>
+  <head>
+    <title>ÖTSV Veranstaltungen 2016</title>
+    <link rel="stylesheet" type="text/css" href="admin.css" />
+    <script src="js/remaining-time.js"></script>
+    <script>
+      function start_timers() {
+	var usec;
+
+	Array.from(document.getElementsByClassName('timer')).forEach(function(timer) {
+	  var timestamp = timer.getAttribute('timestamp');
+	  if (!timestamp)
+	    return;
+	  usec = (new Date(timestamp)).getTime() - Date.now();
+	  var id = timer.getAttribute('for');
+	  var text = document.getElementById(id);
+	  if (usec > 0) {
+	    text.innerHTML = remaining_time(timestamp);
+	  } else {
+	    text.remove();
+	    timer.remove();
+	  }
+	});
+	if (usec)
+	  setTimeout(start_timers, usec % 1000 + 100);
+      }
+
+      function logout() {
+	window.location.href = '/logout';
+      }
+    </script>
+
+    <macro show_serie(serie, ignore)>
+    <p>
+      <for(event in data.events(serie))>
+	<if(event.registration_ends)>
+	  <span class="timer" timestamp="${event.registration_ends}" for="timer${event.id}">
+	    <span style="color:red">${event.title} ${data.abbreviations(event.series, ignore=ignore)}</span><br>
+	    &emsp;<a href="register/event/${event.id}" >Jetzt voranmelden</a>
+	    (noch <span id="timer${event.id}">${data.remaining_time(event.registration_ends)}</span>)<br>
+	  </span>
+	</if>
+	<else>
+	  <a href="ergebnisse/tageswertung.shtml?id=${event.id}">${event.title}</a> ${data.abbreviations(event.series, ignore=ignore)}<br>
+	</else>
+      </for>
+    </p>
+    </macro>
+
+  </head>
+  <body onload="start_timers()">
+    <h1>ÖTSV Veranstaltungen 2016</h1>
+    <h2>ÖTSV Cup und OSK Staatsmeisterschaft</h2>
+    <show_serie serie=25 ignore=[24]/>
+    <p>
+      <a href="ergebnisse/jahreswertung.shtml?vareihe=25&spalte=lbl&spalte=fahrzeug">ÖTSV Cup Gesamt</a><br>
+      <a href="ergebnisse/jahreswertung.shtml?vareihe=26&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft Gesamt</a><br>
+    </p>
+    <h2>ÖTSV Kids e-Cup</h2>
+    <show_serie serie=29 ignore=[24,29]/>
+    <p>
+      <a href="ergebnisse/jahreswertung.shtml?vareihe=29&spalte=lbl">Gesamt</a><br>
+    </p>
+    <h2>ÖTSV Bike Trial Cup</h2>
+    <show_serie serie=27 ignore=[24,27]/>
+    <p>
+      <a href="ergebnisse/jahreswertung.shtml?vareihe=27&spalte=lbl">Gesamt</a><br>
+    </p>
+    <h2>A-Cup</h2>
+    <p>
+      <a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a>
+    </p>
+    <h2>Sonstiges</h2>
+    <p>
+      <a href="ergebnisse/statistik.shtml?vareihe=24&kuerzel">Punktestatistiken</a><br>
+    </p>
+    <p if(data.email)>
+      <button onclick="logout()" title="Aktueller Benutzer: ${data.email}">Abmelden</button>
+    </p>
+  </body>
+</html>
