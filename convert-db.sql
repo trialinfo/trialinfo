@@ -208,8 +208,8 @@ ALTER TABLE benutzer
 	ADD secret CHAR(16) AFTER password,
 	ADD tag CHAR(16) NOT NULL AFTER password,
 	CHANGE admin super_admin BOOLEAN NOT NULL DEFAULT '0',
-	ADD COLUMN admin BOOLEAN NOT NULL DEFAULT '0' after secret_expires;
-	CHANGE password password VARCHAR(40) NULL,
+	ADD COLUMN admin BOOLEAN NOT NULL DEFAULT '0' after secret_expires,
+	CHANGE password password VARCHAR(40) NULL;
 	-- admin BOOL,
 
 UPDATE users
@@ -218,8 +218,8 @@ UPDATE users
 CREATE UNIQUE INDEX email ON users (email);
 
 UPDATE users
-	SET tag = SUBSTRING(SHA1(RAND()), 16)
-	WHERE tag IS NULL;
+	SET tag = SUBSTRING(TO_BASE64(SHA1(RAND())), 16)
+	WHERE tag IS NULL OR tag = '';
 CREATE UNIQUE INDEX tag ON users (tag);
 
 DROP TABLE IF EXISTS groups;

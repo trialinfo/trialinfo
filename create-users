@@ -11,11 +11,6 @@ function random_tag() {
     head -c 12 /dev/random | base64
 }
 
-#echo '
-#    DELETE FROM users
-#    WHERE NOT verified;
-#    ' | $DB
-
 emails=$(
     echo "
       SELECT DISTINCT email
