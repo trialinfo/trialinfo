@@ -6,7 +6,7 @@
       <tr ng-if="!event.id && events.length">
 	<th align="right"><label for="title">Basierend auf</label></th>
 	<td>
-	  <select ng-model="event.base" ng-options="event.tag as event_name(event) for event in events | filter:veranstaltung_sichtbar">
+	  <select ng-model="event.base" ng-options="event.tag as event_name(event) for event in events | filter:event_visible">
 	    <option value=""></option>
 	  </select>
 	</td>

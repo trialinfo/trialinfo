@@ -111,8 +111,8 @@ var settingsController = [
     }
 
     $scope.event_name = event_name;
-    $scope.veranstaltung_sichtbar = function(event) {
-      return !event.abgeschlossen;
+    $scope.event_visible = function(event) {
+      return !event.closed;
     };
 
     function assign_event(event, modify) {
