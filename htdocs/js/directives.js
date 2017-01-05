@@ -112,12 +112,18 @@ function parse_iso_timestamp(scope, text) {
     return null;
   else {
     var split = text.split(/ /);
-    if (split.length == 2) {
+    if (split.length >= 1) {
       split[0] = parse_iso_date(scope, split[0]);
-      split[1] = parse_iso_time(scope, split[1]);
-      if (split[0] !== undefined && split[1] !== undefined)
-	return split[0] + ' ' + split[1];
+      if (split[0] === undefined)
+	return undefined;
     }
+    if (split.length == 2) {
+      split[1] = parse_iso_time(scope, split[1]);
+      if (split[1] === undefined)
+	return undefined;
+    }
+    if (split.length <= 2)
+      return split.join(' ');
   }
 }
 
