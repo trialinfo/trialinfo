@@ -57,6 +57,17 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
 /*
+ * Logging
+ */
+
+logger.token('email', function (req, res) {
+  return (req.user || {}).email || '-';
+});
+
+var production_log_format =
+  ':email ":method :url HTTP/:http-version" :status :res[content-length] :response-time ms ":user-agent"';
+
+/*
  * Apache htpasswd MD5 hashes
  */
 var apache_md5 = require('apache-md5');
@@ -2682,7 +2693,7 @@ if (!config.session.secret)
 app.engine('hbs', handlebars.engine);
 app.set('view engine', 'hbs');
 
-app.use(logger(app.get('env') == 'production' ? 'common' : 'dev'));
+app.use(logger(app.get('env') == 'production' ? production_log_format : 'dev'));
 if (app.get('env') == 'production')
   app.get('*.js', minified_redirect);
 app.use(bodyParser.json());
