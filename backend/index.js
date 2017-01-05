@@ -1117,7 +1117,7 @@ async function inherit_from_event(connection, id, base_tag, reset, email) {
     SELECT serie, ?
     FROM series_events
     JOIN series_all_admins USING (serie)
-    WHERE id = ? AND email = ?  AND NOT read_only`,
+    WHERE id = ? AND email = ? AND NOT read_only`,
     [id, base_id, email]);
 
   await connection.queryAsync(`
@@ -1150,7 +1150,7 @@ async function delete_event(connection, id) {
 		     'zones', 'skipped_zones', 'event_features',
 		     'events_admins', 'events_admins_inherit', 'events_groups',
 		     'events_groups_inherit', 'riders', 'riders_groups',
-		     'rider_rankings', 'marks', 'rounds']) {
+		     'rider_rankings', 'marks', 'rounds', 'series_events']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     console.log(query + ';');
@@ -1187,7 +1187,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       if (!old_event) {
 	event.tag = random_tag();
 	if (event.base) {
-	  await inherit_from_event(connection, id, event.base, reset);
+	  await inherit_from_event(connection, id, event.base, reset, email);
 	}
 
 	await connection.queryAsync(`
