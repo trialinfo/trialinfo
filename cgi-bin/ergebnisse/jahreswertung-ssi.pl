@@ -52,9 +52,9 @@ my $sth;
 print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
-    SELECT bezeichnung, abgeschlossen
-    FROM vareihe
-    WHERE vareihe = ?
+    SELECT name, closed
+    FROM series
+    WHERE serie = ?
 });
 $sth->execute($vareihe);
 if (my @row = $sth->fetchrow_array) {
@@ -67,13 +67,13 @@ if (my @row = $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT id, datum, wertung, titel, subtitel, mtime, punkteteilung
-    FROM wertung
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN vareihe USING (vareihe, wertung)
-    JOIN veranstaltung USING (id)
-    WHERE aktiv AND vareihe = ?
-    ORDER BY datum
+    SELECT id, date, ranking, title, subtitle, mtime, split_score
+    FROM rankings
+    JOIN series_events USING (id)
+    JOIN series USING (serie, ranking)
+    JOIN events USING (id)
+    WHERE enabled AND serie = ?
+    ORDER BY date
 });
 $sth->execute($vareihe);
 my $veranstaltungen;
@@ -106,12 +106,12 @@ if ($letzte_id) {
     my $features;
     $sth = $dbh->prepare(q{
 	SELECT feature
-	FROM veranstaltung_feature
+	FROM event_features
 	WHERE id = ?
     });
     $sth->execute($letzte_id);
     while (my @row = $sth->fetchrow_array) {
-	$features->{$row[0]} = 1;
+	$features->{$features_map->{$row[0]}} = 1;
     }
 
     foreach my $spalte ($q->param('spalte')) {
@@ -125,22 +125,24 @@ if ($letzte_id) {
 	push @spalten, $spalte;
     }
 
-    @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
+    @db_spalten =
+      map { "$spalten_map->{$_} AS $_" }
+	map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, klasse, startnummer,
-	   vorname, nachname,
-	   wertungspunkte, wertungsrang
+    SELECT id, class AS klasse, number AS startnummer,
+	   first_name AS vorname, last_name AS nachname,
+	   score AS wertungspunkte, subrank AS wertungsrang
     } . ( @db_spalten ? ", " . join(", ", @db_spalten) : "") . q{
-    FROM fahrer_wertung
-    JOIN fahrer USING (id, startnummer)
-    JOIN klasse USING (id, klasse)
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN vareihe USING (vareihe, wertung)
-    JOIN vareihe_klasse USING (vareihe, wertungsklasse)
-    JOIN veranstaltung USING (id)
-    WHERE aktiv AND vareihe_veranstaltung.vareihe = ?
+    FROM rider_rankings
+    JOIN riders USING (id, number)
+    JOIN classes USING (id, class)
+    JOIN series_events USING (id)
+    JOIN series USING (serie, ranking)
+    JOIN series_classes USING (serie, ranking_class)
+    JOIN events USING (id)
+    WHERE enabled AND series_events.serie = ?
 });
 $sth->execute($vareihe);
 while (my $fahrer = $sth->fetchrow_hashref) {
@@ -159,12 +161,12 @@ while (my $fahrer = $sth->fetchrow_hashref) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, startnummer, neue_startnummer
-    FROM vareihe_veranstaltung
-    /* JOIN vareihe USING (vareihe) */
-    JOIN neue_startnummer USING (vareihe, id)
-    JOIN veranstaltung USING (id)
-    WHERE aktiv AND vareihe = ?
+    SELECT id, `number`, new_number
+    FROM series_events
+    /* JOIN series USING (serie) */
+    JOIN new_numbers USING (serie, id)
+    JOIN events USING (id)
+    WHERE enabled AND serie = ?
 });
 $sth->execute($vareihe);
 while (my @row = $sth->fetchrow_array) {
@@ -173,11 +175,11 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, klasse, wertungsklasse, runden, keine_wertung1
-    FROM klasse
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN vareihe_klasse USING (wertungsklasse, vareihe)
-    WHERE vareihe = ?
+    SELECT id, class AS klasse, ranking_class AS wertungsklasse, rounds AS runden, no_ranking1 AS keine_wertung1
+    FROM classes
+    JOIN series_events USING (id)
+    JOIN series_classes USING (ranking_class, serie)
+    WHERE serie = ?
 });
 $sth->execute($vareihe);
 while (my $row = $sth->fetchrow_hashref) {
@@ -190,12 +192,12 @@ while (my $row = $sth->fetchrow_hashref) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT id, klasse, sektion
-    FROM sektion
-    JOIN klasse USING (id, klasse)
-    JOIN vareihe_veranstaltung USING (id)
-    JOIN vareihe_klasse USING (wertungsklasse, vareihe)
-    WHERE vareihe = ?
+    SELECT id, class, zone
+    FROM zones
+    JOIN classes USING (id, class)
+    JOIN series_events USING (id)
+    JOIN series_classes USING (ranking_class, serie)
+    WHERE serie = ?
 });
 $sth->execute($vareihe);
 while (my @row = $sth->fetchrow_array) {
@@ -221,10 +223,10 @@ $veranstaltungen = [ map { exists $veranstaltungen->{$_} ?
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, bezeichnung, farbe, laeufe, streichresultate
-    FROM klasse
-    JOIN vareihe_klasse USING (wertungsklasse)
-    WHERE vareihe = ? AND id = ?
+    SELECT class, name, color, events, drop_events
+    FROM classes
+    JOIN series_classes USING (ranking_class)
+    WHERE serie = ? AND id = ?
 });
 $sth->execute($vareihe, $letzte_cfg->{id});
 while (my @row = $sth->fetchrow_array) {
@@ -239,9 +241,9 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT bezeichnung
-    FROM wertung
-    WHERE id = ? AND wertung = ?
+    SELECT name
+    FROM rankings
+    WHERE id = ? AND ranking = ?
 });
 $sth->execute($letzte_cfg->{id}, $wertung);
 if (my @row = $sth->fetchrow_array) {

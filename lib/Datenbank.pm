@@ -30,7 +30,8 @@ require Exporter;
 	     veranstaltung_wertungen_aus_datenbank
 	     vareihe_aus_datenbank vareihen_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
-	     equal fixup_arrayref fixup_hashref);
+	     equal fixup_arrayref fixup_hashref
+	     $features_map $spalten_map);
 use strict;
 
 # Vergleicht zwei Werte als Strings, wobei undef == undef.
@@ -724,5 +725,52 @@ sub trace_sql($$$) {
 	},
      };
 }
+
+our $features_map = {
+  comment => 'bemerkung',
+  email => 'email',
+  vehicle => 'fahrzeug',
+  date_of_birth => 'geburtsdatum',
+  displacement => 'hubraum',
+  class => 'klasse',
+  country => 'land',
+  license => 'lizenznummer',
+  last_name => 'nachname',
+  entry_fee => 'nenngeld',
+  new_numbers => 'neue_startnummer',
+  zip => 'plz',
+  start => 'start',
+  number => 'startnummer',
+  street => 'strasse',
+  first_name => 'vorname',
+  ranking1 => 'wertung1',
+  city => 'wohnort',
+  club => 'club',
+  phone => 'telefon',
+  start_time => 'startzeit',
+  finish_time => 'zielzeit',
+  applicant => 'bewerber',
+  registration => 'kennzeichen',
+  frame_number => 'rahmennummer',
+  insurance => 'versicherung',
+  ranking2 => 'wertung2',
+  ranking3 => 'wertung3',
+  ranking4 => 'wertung4',
+  province => 'bundesland',
+  start_tomorrow => 'start_morgen',
+  registered => 'registriert',
+  skipped_zones => 'sektion_aus_wertung',
+  verified => 'verifiziert',
+};
+
+our $spalten_map = {
+  club => 'club',
+  fahrzeug => 'vehicle',
+  lizenznummer => 'license',
+  bewerber => 'applicant',
+  geburtsdatum => 'date_of_birth',
+  bundesland => 'province',
+  land => 'country',
+};
 
 1;

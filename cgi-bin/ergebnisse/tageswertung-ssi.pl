@@ -37,7 +37,6 @@ trace_sql $dbh, 2, \*STDERR
 
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
-my $vareihe = $q->param('vareihe');
 my $wertung = $q->param('wertung') || 1;
 my @klassen = $q->param('klasse');
 
@@ -52,38 +51,14 @@ my $nach_relevanz = 1;  # Rundenergebnis und Statistik ausgrauen, wenn für Erge
 
 print "Content-type: text/html; charset=utf-8\n\n";
 
-if (defined $vareihe) {
-    $sth = $dbh->prepare(q{
-	SELECT id, vareihe.bezeichnung, wertung, titel, datum, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
-	FROM wertung
-	JOIN vareihe_veranstaltung USING (id)
-	JOIN vareihe USING (vareihe, wertung)
-	JOIN veranstaltung USING (id)
-	WHERE id = ? AND vareihe = ?
-    });
-    $sth->execute($id, $vareihe);
-} elsif (defined $id) {
-    $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, datum, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
-	FROM wertung
-	JOIN veranstaltung USING (id)
-	WHERE id = ? AND wertung = ?
-    });
-    $sth->execute($id, $wertung);
-} else {
-    $sth = $dbh->prepare(q{
-	SELECT id, NULL, wertung, titel, datum, mtime,
-	       wertungsmodus, vierpunktewertung, punkteteilung
-	FROM wertung
-	JOIN veranstaltung USING (id)
-	WHERE wertung = ?
-        ORDER BY datum DESC
-	LIMIT 1
-    });
-    $sth->execute($wertung);
-}
+$sth = $dbh->prepare(q{
+    SELECT id, NULL, ranking, title, date, mtime,
+	   equal_marks_resolution, four_marks, split_score
+    FROM rankings
+    JOIN events USING (id)
+    WHERE id = ? AND ranking = ?
+});
+$sth->execute($id, $wertung);
 if (my @row = $sth->fetchrow_array) {
     $id = $row[0];
     $bezeichnung = $row[1];
@@ -104,12 +79,12 @@ unless (defined $cfg) {
 my $features;
 $sth = $dbh->prepare(q{
     SELECT feature
-    FROM veranstaltung_feature
+    FROM event_features
     WHERE id = ?
 });
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
-    $features->{$row[0]} = 1;
+    $features->{$features_map->{$row[0]}} = 1;
 }
 
 my @spalten;
@@ -123,26 +98,21 @@ foreach my $spalte ($q->param('spalte')) {
     }
     push @spalten, $spalte;
 }
-my @db_spalten = map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
+my @db_spalten =
+    map { "$spalten_map->{$_} AS $_" }
+        map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
-if (defined $vareihe) {
-    $sth = $dbh->prepare(q{
-	SELECT klasse, runden, bezeichnung, farbe, wertungsklasse, ausser_konkurrenz
-	FROM klasse
-	JOIN vareihe_klasse USING (wertungsklasse)
-	WHERE id = ? AND vareihe = ?
-	ORDER BY klasse
-    });
-    $sth->execute($id, $vareihe);
-} else {
-    $sth = $dbh->prepare(q{
-	SELECT klasse, runden, bezeichnung, farbe, wertungsklasse, ausser_konkurrenz
-	FROM klasse
-	WHERE id = ?
-	ORDER BY klasse
-    });
-    $sth->execute($id);
-}
+print STDERR join(@db_spalten, ', '), "\n";
+
+$sth = $dbh->prepare(q{
+    SELECT class AS klasse, rounds AS runden, name AS bezeichnung,
+	   color AS farbe, ranking_class AS wertungsklasse,
+	   non_competing AS ausser_konkurrenz
+    FROM classes
+    WHERE id = ?
+    ORDER BY class
+});
+$sth->execute($id);
 while (my $row = $sth->fetchrow_hashref) {
     my $klasse = $row->{klasse};
     delete $row->{klasse};
@@ -152,18 +122,16 @@ while (my $row = $sth->fetchrow_hashref) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, } . ($wertung == 1 ? "rang" : "wertungsrang AS rang") . ", " . q{
-	   startnummer, nachname, vorname, zusatzpunkte,
+    SELECT class AS klasse, } . ($wertung == 1 ? "rank AS rang" : "subrank AS rang") . ", " . q{
+	   number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
 	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
-	   s0, s1, s2, s3, s4, s5, punkte, wertungspunkte, fahrer.runden AS
-	   runden, ausser_konkurrenz, ausfall, start
-    FROM fahrer} . (defined $vareihe ? q{
-    JOIN klasse USING (id, klasse)
-    JOIN vareihe_klasse USING (wertungsklasse)} : "") . "\n" .
+	   s0, s1, s2, s3, s4, s5, marks AS punkte, score AS wertungspunkte, riders.rounds AS
+	   runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start
+    FROM riders} . "\n" .
     ($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
-    q{(SELECT * FROM fahrer_wertung WHERE wertung = ?) AS fahrer_wertung USING (id, startnummer)
-    WHERE start AND id = ?} . (defined $vareihe ? " AND vareihe = ?" : ""));
-$sth->execute($wertung, $id, defined $vareihe ? $vareihe : ());
+    q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
+    WHERE start AND id = ?});
+$sth->execute($wertung, $id);
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n <= 5; $n++) {
 	$fahrer->{punkteverteilung}[$n] = $fahrer->{"s$n"};
@@ -176,26 +144,13 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     $fahrer_nach_startnummer->{$startnummer} = $fahrer;
 }
 
-if (defined $vareihe) {
-    $sth = $dbh->prepare(q{
-	SELECT startnummer, runde, runde.punkte
-	FROM runde
-	JOIN fahrer USING (id, startnummer)
-	JOIN klasse USING (id, klasse)
-	JOIN vareihe_veranstaltung USING (id)
-	JOIN vareihe_klasse USING (vareihe, wertungsklasse)
-	WHERE id = ? and vareihe = ?
-    });
-    $sth->execute($id, $vareihe);
-} else {
-    $sth = $dbh->prepare(q{
-	SELECT startnummer, runde, runde.punkte
-	FROM runde
-	JOIN fahrer USING (id, startnummer)
-	WHERE id = ?
-    });
-    $sth->execute($id);
-}
+$sth = $dbh->prepare(q{
+    SELECT number, `round`, rounds.marks
+    FROM rounds
+    JOIN riders USING (id, number)
+    WHERE id = ?
+});
+$sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
     my $fahrer = $fahrer_nach_startnummer->{$row[0]};
     $fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
@@ -203,10 +158,10 @@ while (my @row = $sth->fetchrow_array) {
 
 if ($alle_punkte) {
     $sth = $dbh->prepare(q{
-	SELECT klasse, sektion
-	FROM sektion
+	SELECT class, zone
+	FROM zones
 	WHERE id = ?
-	ORDER BY sektion
+	ORDER BY zone
     });
     $sth->execute($id);
     my $sektionen;
@@ -215,25 +170,13 @@ if ($alle_punkte) {
     }
     $cfg->{sektionen} = $sektionen;
 
-    if (defined $vareihe) {
-	$sth = $dbh->prepare(q{
-	    SELECT startnummer, runde, sektion, punkte.punkte
-	    FROM vareihe_klasse
-	    JOIN klasse USING (wertungsklasse)
-	    JOIN fahrer USING (id, klasse)
-	    JOIN punkte USING (id, startnummer)
-	    WHERE id = ? AND vareihe = ?
-	});
-	$sth->execute($id, $vareihe);
-    } else {
-	$sth = $dbh->prepare(q{
-	    SELECT startnummer, runde, sektion, punkte.punkte
-	    FROM fahrer
-	    JOIN punkte USING (id, startnummer)
-	    WHERE id = ?
-	});
-	$sth->execute($id);
-    }
+    $sth = $dbh->prepare(q{
+	SELECT number, `round`, zone, marks.marks
+	FROM riders
+	JOIN marks USING (id, number)
+	WHERE id = ?
+    });
+    $sth->execute($id);
     while (my @row = $sth->fetchrow_array) {
 	$fahrer_nach_startnummer->{$row[0]}
 				  {punkte_pro_sektion}
@@ -242,9 +185,6 @@ if ($alle_punkte) {
 	    if exists $fahrer_nach_startnummer->{$row[0]};
     }
 }
-
-#use Data::Dumper;
-#print Dumper($cfg, $fahrer_nach_startnummer);
 
 doc_h1 "$bezeichnung"
     if defined $bezeichnung;

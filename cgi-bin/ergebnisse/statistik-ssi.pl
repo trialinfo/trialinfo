@@ -103,39 +103,39 @@ unless (defined $id) {
     #doc_h2 "Punktestatistiken";
     if ($vareihe) {
 	$sth = $dbh->prepare(q{
-	    SELECT id, titel,
-		   GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
-	    FROM vareihe_veranstaltung
-	    JOIN veranstaltung USING (id)
-	    JOIN wertung USING (id)
+	    SELECT id, title,
+		   GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ')
+	    FROM series_events
+	    JOIN events USING (id)
+	    JOIN rankings USING (id)
 	    LEFT JOIN (
-		SELECT DISTINCT id, vareihe.kuerzel
-		FROM vareihe_veranstaltung
-		JOIN vareihe USING (vareihe)
-		JOIN vareihe_klasse USING (vareihe)
-		JOIN klasse USING (id, wertungsklasse)
-		WHERE klasse.gestartet) AS _ USING (id)
-	    WHERE aktiv AND vareihe = ? AND wertung = ?
+		SELECT DISTINCT id, series.abbreviation
+		FROM series_events
+		JOIN series USING (serie)
+		JOIN series_classes USING (serie)
+		JOIN classes USING (id, ranking_class)
+		WHERE classes.started) AS _ USING (id)
+	    WHERE enabled AND serie = ? AND ranking = ?
 	    GROUP BY id
-	    ORDER BY datum
+	    ORDER BY date
 	});
 	$sth->execute($vareihe, $wertung);
     } else {
 	$sth = $dbh->prepare(q{
-	    SELECT id, titel,
-		   GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
-	    FROM veranstaltung
-	    JOIN wertung USING (id)
+	    SELECT id, title,
+		   GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ')
+	    FROM events
+	    JOIN rankings USING (id)
 	    LEFT JOIN (
-		SELECT DISTINCT id, vareihe.kuerzel
-		FROM vareihe_veranstaltung
-		JOIN vareihe USING (vareihe)
-		JOIN vareihe_klasse USING (vareihe)
-		JOIN klasse USING (id, wertungsklasse)
-		WHERE klasse.gestartet) AS _ USING (id)
-	    WHERE aktiv AND wertung = ?
+		SELECT DISTINCT id, series.abbreviation
+		FROM series_events
+		JOIN series USING (serie)
+		JOIN series_classes USING (serie)
+		JOIN classes USING (id, ranking_class)
+		WHERE classes.started) AS _ USING (id)
+	    WHERE enabled AND ranking = ?
 	    GROUP BY id
-	    ORDER BY datum
+	    ORDER BY date
 	});
 	$sth->execute($wertung);
     }
@@ -152,10 +152,10 @@ unless (defined $id) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT titel, vierpunktewertung
-    FROM veranstaltung
-    JOIN wertung USING (id)
-    WHERE id = ? AND wertung = ?
+    SELECT title, four_marks
+    FROM events
+    JOIN rankings USING (id)
+    WHERE id = ? AND ranking = ?
 });
 $sth->execute($id, $wertung);
 if (my @row = $sth->fetchrow_array) {
@@ -167,13 +167,13 @@ if (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT wertungsklasse AS klasse, sektion, punkte.punkte
-    FROM punkte
-    JOIN fahrer USING (id, startnummer)
-    JOIN klasse USING (id, klasse)
-    JOIN (SELECT id, klasse AS wertungsklasse, sektion FROM sektion) AS sektion USING (id, wertungsklasse, sektion)
-    LEFT JOIN sektion_aus_wertung USING (id, runde, klasse, sektion)
-    WHERE id = ? AND punkte.punkte <= 5 AND sektion_aus_wertung.sektion IS NULL
+    SELECT ranking_class, zone, marks.marks
+    FROM marks
+    JOIN riders USING (id, number)
+    JOIN classes USING (id, class)
+    JOIN (SELECT id, class AS ranking_class, zone FROM zones) AS zones USING (id, ranking_class, zone)
+    LEFT JOIN skipped_zones USING (id, `round`, class, zone)
+    WHERE id = ? AND marks.marks <= 5 AND skipped_zones.zone IS NULL
 });
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
@@ -182,8 +182,8 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT klasse, bezeichnung
-    FROM klasse
+    SELECT class, name
+    FROM classes
     WHERE id = ?
 });
 $sth->execute($id);
