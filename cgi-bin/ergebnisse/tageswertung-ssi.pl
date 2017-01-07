@@ -130,7 +130,7 @@ $sth = $dbh->prepare(q{
     FROM riders} . "\n" .
     ($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
     q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
-    WHERE start AND id = ?});
+    WHERE id = ?});
 $sth->execute($wertung, $id);
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n <= 5; $n++) {

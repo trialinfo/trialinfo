@@ -92,6 +92,7 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 /*
  * Local things
  */
+var compute = require('./lib/compute.js');
 String.prototype.latinize = require('./lib/latinize');
 var config = require('./config.js');
 
@@ -205,7 +206,7 @@ var cache = {
       return rider;
     }
 
-    return this.cached_riders[id][new_number];
+    return this.cached_riders[id][number];
   },
   modify_riders: function(id) {
     for (let number in this.cached_riders[id])
@@ -262,7 +263,8 @@ var cache = {
     this.saved_events = {};
     Object.keys(this.saved_riders).forEach((id) => {
       Object.keys(this.saved_riders[id]).forEach((number) => {
-	if (this.saved_riders[id][number])
+	let old_rider = this.saved_riders[id][number];
+	if (old_rider)
 	  this.cached_riders[id][number] = old_rider;
 	else
 	  delete this.cached_riders[id][number];
@@ -286,7 +288,9 @@ async function commit_world(connection) {
     for (let number of numbers) {
       let old_rider = cache.saved_riders[id][number];
       let new_rider = cache.cached_riders[id][number];
-      await update_rider(connection, id, number, old_rider, new_rider);
+      if (!deepEqual(old_rider, new_rider))
+        await update_rider(connection, id, number,
+			   old_rider, new_rider);
     }
   }
 
@@ -548,7 +552,7 @@ async function get_event(connection, id) {
   return await read_event(connection, id, revalidate);
 }
 
-function admin_extend_event(event) {
+function admin_event_to_api(event) {
   var copy = Object.assign({}, event);
 
   if (event.skipped_zones)
@@ -568,9 +572,14 @@ function admin_extend_event(event) {
   return copy;
 }
 
+function admin_event_from_api(event) {
+  if (event)
+    event.skipped_zones = skipped_zones_hash(event.skipped_zones || []);
+}
+
 async function admin_get_event(connection, id) {
   var event = await get_event(connection, id);
-  return admin_extend_event(event);
+  return admin_event_to_api(event);
 }
 
 function make_revalidate_rider(id, number, version) {
@@ -771,15 +780,10 @@ async function get_rider(connection, id, number, params, direction) {
   return await read_rider(connection, id, number, revalidate);
 }
 
-async function admin_get_rider(connection, id, number, params, direction) {
-  let rider = await get_rider(connection, id, number, params, direction);
-  if (!rider)
-    return {};
-
+async function admin_rider_to_api(rider, event) {
   rider = Object.assign({}, rider);
 
   if (rider.group) {
-    var event = await get_event(connection, id);
     var group = rider;
     var classes = {};
     for (let number of group.riders) {
@@ -803,6 +807,26 @@ async function admin_get_rider(connection, id, number, params, direction) {
   rider.rankings = rider_rankings;
 
   return rider;
+}
+
+function admin_rider_from_api(rider) {
+  if (rider) {
+    if (rider.rankings) {
+      rider.rankings = rider.rankings.map(
+        (ranking) => ranking ? {rank: null, score: null} : null
+      );
+    }
+  }
+  return rider;
+}
+
+async function admin_get_rider(connection, id, number, params, direction) {
+  let rider = await get_rider(connection, id, number, params, direction);
+  if (!rider)
+    return {};
+
+  let event = await get_event(connection, id);
+  return await admin_rider_to_api(rider, event);
 }
 
 function strcmp(a, b) {
@@ -927,21 +951,29 @@ async function rider_change_number(connection, id, old_number, new_number) {
 }
 
 async function admin_save_rider(connection, id, number, rider, tag, version) {
+  rider = admin_rider_from_api(rider);
+
   await cache.begin(connection);
   try {
     var event = await get_event(connection, id);
+    var riders = await get_riders(connection, id);
     var old_rider;
-    if (number) {
+    if (number != null) {
       old_rider = await get_rider(connection, id, number);
-    } else if (rider.number != null) {
-      number = rider.number;
+      if (rider && rider.number === undefined)
+	rider.number = number;
     } else {
+      if (rider.marks_per_zone === undefined)
+	rider.marks_per_zone = [];
+    }
+    if (rider && rider.number == null) {
       var result = await connection.queryAsync(`
         SELECT COALESCE(MIN(number), 0) - 1 AS number
 	FROM riders
 	WHERE id = ?`, [id]);
-      number = result[0].number;
-      rider.number = number;
+      rider.number = result[0].number;
+      if (number == null)
+	number = rider.number;
     }
 
     if (rider && version == null)
@@ -957,7 +989,7 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
     }
 
     if (rider) {
-      if (!rider.rankings && !old_rider && event.ranking1_enabled)
+      if (!old_rider && !rider.rankings && event.ranking1_enabled)
 	rider.rankings = [{"rank":null, "score":null}];
       rider = Object.assign(cache.modify_rider(id, number), rider);
     } else {
@@ -967,16 +999,21 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
+    riders = cache.modify_riders(id);
+    compute(riders, event);
+
     await cache.commit(connection);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
       rider = await read_rider(connection, id, number, () => {});
     }
+
+    if (rider)
+      return await admin_rider_to_api(rider, event);
   } catch (err) {
     await cache.rollback(connection);
     throw err;
   }
-  return rider;
 }
 
 function event_reset_numbers(riders) {
@@ -1177,8 +1214,7 @@ async function delete_event(connection, id) {
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
-  if (event)
-    event.skipped_zones = skipped_zones_hash(event.skipped_zones || []);
+  admin_event_from_api(event);
 
   await cache.begin(connection);
   try {
@@ -1217,6 +1253,10 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       }
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
+
+      await get_riders(connection, id);
+      let riders = cache.modify_riders(id);
+      compute(riders, event);
     } else {
       await delete_event(connection, id);
     }
@@ -1226,12 +1266,13 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       /* Reload from database to get any default values defined there.  */
       event = await read_event(connection, id, () => {});
     }
+
+    if (event)
+      return admin_event_to_api(event);
   } catch (err) {
     await cache.rollback(connection);
     throw err;
   }
-  if (event)
-    return admin_extend_event(event);
 }
 
 async function __update_serie(connection, serie_id, old_serie, new_serie) {
@@ -1709,9 +1750,11 @@ async function zipHashAsync(a, b, func) {
 }
 
 async function update(connection, table, keys, nonkeys, old_values, new_values, map_func) {
-  function assign(object) {
+  function assign(object, old_object) {
     return function(field) {
-      return connection.escapeId(field) + ' = ' + connection.escape(object[field]);
+      return connection.escapeId(field) + ' = ' +
+	     (old_object ? '/* ' + connection.escape(old_object[field]) + ' */ ' : '') +
+	     connection.escape(object[field]);
     };
   }
 
@@ -1740,7 +1783,7 @@ async function update(connection, table, keys, nonkeys, old_values, new_values, 
       var fields = [];
       for (let field of nonkeys) {
 	if (old_values[field] != new_values[field]) {
-	  fields.push(assign(new_values)(field));
+	  fields.push(assign(new_values, old_values)(field));
 	}
       }
       if (!fields.length)
@@ -2384,7 +2427,7 @@ async function signup_or_reset(req, res, mode) {
       await email_change_password(mode, email,
 	config.url + 'change-password' + query_string(params));
     } catch (err) {
-      console.log(err.stack);
+      console.error(err.stack);
       params.mode = mode;
       if (req.query)
 	params.query = query_string(req.query);
@@ -2509,7 +2552,7 @@ async function register_save_rider(connection, id, number, rider, tag, version) 
   try {
     var event = await get_event(connection, id);
     var old_rider;
-    if (number) {
+    if (number != null) {
       old_rider = await get_rider(connection, id, number);
       if (old_rider.user_tag != tag)
 	throw new HTTPError(403, 'Forbidden');

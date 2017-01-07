@@ -97,7 +97,7 @@ sub wertungspunkte($$) {
 	}
     }
     my $prec = 2; # Maximale Nachkommastellen
-    return sprintf("$vorzeichen%.*g", log10($wertungspunkte) + 1 + $prec, $wertungspunkte);
+    return sprintf("$vorzeichen%.*g", log10($wertungspunkte || 1) + 1 + $prec, $wertungspunkte);
 }
 
 1;

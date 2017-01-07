@@ -95,7 +95,7 @@ htdocs/js/validate.js:
 htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
-		https://github.com/andreas-gruenbacher/json-diff/raw/master/json-diff.js
+		https://github.com/trialinfo/json-diff/raw/master/json-diff.js
 
 update-perl-json-pointer:
 	@set -xe; \
