@@ -48,6 +48,9 @@ build:
 serve: build
 	cd backend && npm run serve
 
+profile: build
+	cd backend && npm run profile
+
 ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
 SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
 else
