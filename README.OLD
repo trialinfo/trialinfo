@@ -95,6 +95,14 @@ Die anfängliche Datenbankstruktur lässt sich danach mit "db-sync
 		 --create-tables
 
 
+  /etc/my.cnf.d/server.cnf
+  ------------------------
+  Add STRICT_TRANS_TABLES to sql_mode:
+
+  [server]
+  sql_mode=STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+
+
 Web Server
 ----------
 
@@ -148,23 +156,34 @@ entsprechenden Gruppen zugewiesen werden.
 SELinux
 -------
 
-  $ semanage fcontext -a -t httpd_sys_content_t '/home/agruenba/trialinfo/htdocs(/.*)?'
+  $ semanage fcontext -a -t httpd_sys_content_t '/home/agruenba/trialinfo/htdocs'(/.*)?'
   $ restorecon -r /home/agruenba/trialinfo/htdocs
   $ semanage port -a -t http_port_t -p tcp 3080
+
+  Wenn die Daten in einem Home Directory liegen, lässt sich SELinux nicht
+  leicht so konfigurieren, dass die CGI-Scripts funktionieren.  Sonst sollte
+  folgendes klappen:
+
+  $ semanage fcontext -a -t httpd_sys_script_exec_t '/home/agruenba/trialinfo/cgi-bin(/.*)?'
+  $ restorecon -r /home/agruenba/trialinfo/cgi-bin
+
+  So kann man selbst erstellte File Context-Regeln anzeigen:
+
+  $ semanage fcontext -l -C
 
 
 Systemd
 -------
 
-  /etc/systemd/system/trialinfo-next.service
+  /etc/systemd/system/trialinfo.service
   ------------------------------------------
   [Unit]
-  Description=TrialInfo backend for next.trialinfo.at
+  Description=TrialInfo
 
   [Service]
   ExecStart=/usr/bin/node index.js
-  WorkingDirectory=/var/www/next.trialinfo.at/backend/dist
-  StandardOutput=syslog
+  WorkingDirectory=/var/www/trialinfo/backend/dist
+  StandardOutput=journal
   SyslogIdentifier=trialinfo
   User=trialinfo
   Group=trialinfo
@@ -172,7 +191,7 @@ Systemd
   Environment=TRIALINFO=systemd
 
 
-  /etc/systemd/system/trialinfo-next.socket
+  /etc/systemd/system/trialinfo.socket
   -----------------------------------------
   [Socket]
   ListenStream=3080
@@ -182,20 +201,22 @@ Systemd
 
 
   $ systemctl daemon-reload
-  $ systemctl enable trialinfo-next.socket
+  $ systemctl enable trialinfo.socket
 
+  $ journalctl -u trialinfo
+  $ journalctl -f -u trialinfo
 
 Git post-receive hook
 ---------------------
 
-    export GIT_WORK_TREE=/var/www/next.trialinfo.at
+    export GIT_WORK_TREE=/var/www/trialinfo
     git checkout -f
 
     make -C $GIT_WORK_TREE install
     make -C $GIT_WORK_TREE build
 
-    sudo /bin/systemctl stop trialinfo-next.service
-    sudo /bin/systemctl restart trialinfo-next.socket
+    sudo /bin/systemctl stop trialinfo.service
+    sudo /bin/systemctl restart trialinfo.socket
 
 
 Herunterladen und erzeugen diverser Dateien
@@ -205,6 +226,7 @@ Um einige Dateien wie Angular.js herunterzuladen und passende .htaccess-Dateien
 zu erzeugen, kann Make verwendet werden:
 
   $ make
+  $ make install
 
 
 Apache-Module

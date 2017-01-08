@@ -14,19 +14,20 @@
 <p>TrialInfo ist ein Auswertungssystem für Motorrad- und
 Fahrrad-Trial-Wettbewerbe, das alle wesentlichen Schritte zur Verwaltung von
 Veranstaltungen und Veranstaltungsreihen unterstützt (Fahrer, Gruppen,
-Punktevergabe, Fahrerlisten, Auswertungen).</p>
+Punktevergabe, Fahrerlisten, Auswertungen, etc.).</p>
 
 <p>Das System ist über einen Web-Browser bedienbar.  Verschiedene Seiten der
 Applikation können in mehreren Tabs oder Fenstern geöffnet werden, zwischen
-denen gewechselt wird.  Eine Verwendung von mehreren Geräten aus ist ebenfalls
-möglich.  Es wird erkannt, wenn versucht wird, die selben Daten von mehreren
-Stellen aus gleichzeitig zu ändern.</p>
+denen gewechselt werden kann.  Eine Verwendung von mehreren Eingabegeräten ist
+ebenfalls möglich.  Wenn versucht wird, die selben Daten von mehreren
+Eingabegeräten aus gleichzeitig verändert werden, wird das erkannt und
+verhindert.</p>
 
 <h2>Grundsätzliche Abläufe</h2>
 
 <p>Die erste Veranstaltung einer Veranstaltungsreihe enthält zunächst
 Fahrer-Stammdaten ohne zugeordnete Startnummern.  Im Laufe der Nennung für
-diese Veranstaltung werden diesen bestehenden Fahrern Startnummern zugewiesen,
+die Veranstaltung werden diesen bestehenden Fahrern Startnummern zugewiesen,
 und es werden weitere Fahrer mit Startnummern angelegt.  Bei allen Startern
 wird im Fahrer-Nennformular das <em>Start</em>-Häkchen gesetzt.</p>
 
@@ -34,24 +35,24 @@ wird im Fahrer-Nennformular das <em>Start</em>-Häkchen gesetzt.</p>
 Punkte der Fahrer erfasst.  Der aktuelle Zwischenstand kann jederzeit überprüft
 werden; üblich ist die fortlaufende Anzeige auf einem weiteren Monitor.
 Genauso kann der Zwischenstand über das Internet abgerufen werden, falls die
-Daten im Hintergrund ins Internet übertragen werden.  Auch das ist üblich,
-sofern am Ort der Veranstaltung eine Internet-Verbindung möglich ist.  Am Ende
-der Punktevergabe sind keine besonderen Schritte notwendig; das Endergebnis ist
+Daten im Hintergrund ins Internet übertragen werden.  Auch das ist üblich, wenn
+es am Ort der Veranstaltung eine Internet-Verbindung gibt.  Am Ende der
+Punktevergabe sind keine besonderen Schritte notwendig; das Endergebnis ist
 sofort verfügbar.</p>
 
 <p>Die nächste Veranstaltung der Veranstaltungsreihe wird basierend auf der
 ersten Veranstaltung angelegt.  Dabei werden die <em>Start</em>-Häkchen aller
-Fahrer automatisch zurückgesetzt, nicht jedoch die vergebenen Startnummern.
-Die Startnummer eines Fahrers bleibt also die gesamte Veranstaltungsreihe
-hindurch gleich.  Im Laufe der Nennung werden weiteren bestehenden Fahrern
-Startnummern zugewiesen, es werden weitere Fahrer angelegt, und bei allen
-Startern wird wieder das <em>Start</em>-Häkchen gesetzt.  Die Punktevergabe
-erfolgt wie bei der ersten Veranstaltung.</p>
+Fahrer automatisch zurückgesetzt, nicht jedoch die bereits vergebenen
+Startnummern.  Die Startnummer eines Fahrers bleibt also die gesamte
+Veranstaltungsreihe hindurch gleich.  Im Laufe der Nennung werden weitere
+Fahrer angelegt und weitere Startnummern zugewiesen, und bei allen Startern
+wird wieder das <em>Start</em>-Häkchen gesetzt.  Die Punktevergabe erfolgt wie
+bei der ersten Veranstaltung.</p>
 
 <p>Zu Beginn einer neuen Veranstaltungsreihe wir die erste Veranstaltung auf
 Basis der letzten vorhergehenden Veranstaltung angelegt.  Die Fahrerdaten
-werden auf die Stammdaten zurückgesetzt, es werden also auch alle Startnummern
-zurückgesetzt.</p>
+werden dabei auf die Stammdaten zurückgesetzt, es werden also auch alle
+Startnummern gelöscht.</p>
 
 <h3>Selbständige Registrierung</h3>
 
@@ -490,13 +491,13 @@ Veranstaltungsverwaltung wechselt.</p>
 <h3>Datei-Import</h3>
 
 <p>Veranstaltungen von TrialInfo vom TrialTool importieren.  Hier wählt man das
-Format und die Datei (*.tra für TrialInfo) oder die Dateien (*.cfg und *.dat
-für das TrialTool-Format) aus und startet dann den Import.</p>
+Format und die Datei (*.ti für TrialInfo) oder die Dateien (*.cfg und *.dat für
+das TrialTool-Format) aus und startet dann den Import.</p>
 
 <h3>Datei-Export</h3>
 
 <p>Die Daten einer Veranstaltungen auf Dateien exportieren. Neben dem Format
-für TrialInfo selbst (*.tra) wird auch das TrialTool-Format unterstützt (*.cfg
+für TrialInfo selbst (*.ti) wird auch das TrialTool-Format unterstützt (*.cfg
 und *.dat). Nach der Auswahl der Veranstaltung und des Formats wird die Datei
 oder werden die Dateien als Verknüpfungen angezeigt; die Verknüpfungen
 speichert man dann.</p>
