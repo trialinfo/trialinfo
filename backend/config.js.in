@@ -28,6 +28,9 @@ var config = {
     // nodemailer options (https://www.npmjs.com/package/nodemailer)
   }
  */
+/*
+ log_sql: false
+ */
 };
 
 module.exports = config;

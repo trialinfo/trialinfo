@@ -19,6 +19,7 @@
 
 require('any-promise/register/bluebird');
 
+var config = require('./config.js');
 var fs = require('fs');
 var Promise = require('bluebird');
 var compression = require('compression');
@@ -73,6 +74,11 @@ logger.token('email', function (req, res) {
 var production_log_format =
   ':email ":method :url HTTP/:http-version" :status :res[content-length] :response-time ms ":user-agent"';
 
+function log_sql(sql) {
+  if (config.log_sql)
+    console.log(sql + ';');
+}
+
 /*
  * Apache htpasswd MD5 hashes
  */
@@ -94,7 +100,6 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
  */
 var compute = require('./lib/compute.js');
 String.prototype.latinize = require('./lib/latinize');
-var config = require('./config.js');
 
 /*
  * mysql: type cast TINYINT(1) to bool
@@ -902,18 +907,18 @@ async function delete_rider(connection, id, number) {
   let query;
 
   for (let table of ['riders', 'riders_groups', 'rider_rankings', 'marks',
-		     'rounds']) {
+		     'rounds', 'new_numbers']) {
     query = 'DELETE FROM ' + connection.escapeId(table) +
 	    ' WHERE id = ' + connection.escape(id) +
 	      ' AND number = ' + connection.escape(number);
-    console.log(query + ';');
+    log_sql(query);
     await connection.queryAsync(query);
   }
 
   query = 'DELETE FROM riders_groups' +
 	  ' WHERE id = ' + connection.escape(id) +
 	    ' AND group_number = ' + connection.escape(number);
-  console.log(query + ';');
+  log_sql(query);
   await connection.queryAsync(query);
   cache.delete_rider(id, number);
 }
@@ -927,7 +932,7 @@ async function rider_change_number(connection, id, old_number, new_number) {
 	    ' SET number = ' + connection.escape(new_number) +
 	    ' WHERE id = ' + connection.escape(id) +
 	      ' AND number = ' + connection.escape(old_number);
-    console.log(query + ';');
+    log_sql(query);
     await connection.queryAsync(query);
   }
 
@@ -935,7 +940,7 @@ async function rider_change_number(connection, id, old_number, new_number) {
 	  ' SET group_number = ' + connection.escape(new_number) +
 	  ' WHERE id = ' + connection.escape(id) +
 	    ' AND group_number = ' + connection.escape(old_number);
-  console.log(query + ';');
+  log_sql(query);
   await connection.queryAsync(query);
 
   for (let riders of [cache.saved_riders[id], cache.cached_riders[id]]) {
@@ -1204,10 +1209,11 @@ async function delete_event(connection, id) {
 		     'zones', 'skipped_zones', 'event_features',
 		     'events_admins', 'events_admins_inherit', 'events_groups',
 		     'events_groups_inherit', 'riders', 'riders_groups',
-		     'rider_rankings', 'marks', 'rounds', 'series_events']) {
+		     'rider_rankings', 'marks', 'rounds', 'series_events',
+		     'new_numbers']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
-    console.log(query + ';');
+    log_sql(query);
     await connection.queryAsync(query);
   }
   cache.delete_event(id);
@@ -1221,6 +1227,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
     var old_event;
     if (id) {
       old_event = await get_event(connection, id);
+      await get_riders(connection, id);
     } else {
       var result = await connection.queryAsync(`
         SELECT COALESCE(MAX(id), 0) + 1 AS id
@@ -1254,7 +1261,6 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
 
-      await get_riders(connection, id);
       let riders = cache.modify_riders(id);
       compute(riders, event);
     } else {
@@ -1415,7 +1421,7 @@ async function admin_save_serie(connection, serie_id, serie, version, email) {
 	let query =
 	  'DELETE FROM ' + connection.escapeId(table) +
 	  ' WHERE serie = ' + connection.escape(serie_id);
-	console.log(query + ';');
+	log_sql(query);
 	await connection.queryAsync(query);
       }
     }
@@ -1795,7 +1801,7 @@ async function update(connection, table, keys, nonkeys, old_values, new_values, 
 	' WHERE ' + Object.keys(keys).map(assign(keys)).join(' AND ');
     }
   }
-  console.log(query + ';');
+  log_sql(query);
   await connection.queryAsync(query);
   return true;
 }
