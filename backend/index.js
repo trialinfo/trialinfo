@@ -2634,11 +2634,41 @@ async function check_number(connection, id, query) {
   var number;
   var result;
 
+  /* Find out which (ranked) series the event is in: the serie must have a
+     ranking defined and classes assigned.  */
+  result = await connection.queryAsync(`
+    SELECT DISTINCT id
+    FROM events
+    JOIN series_events USING (id)
+    JOIN series_classes USING (serie)
+    JOIN series USING (serie)
+    WHERE enabled AND serie in (
+	SELECT serie FROM series_events WHERE id = ?
+      ) AND ranking IS NOT NULL
+
+    UNION
+
+    SELECT ? AS id`, [id, id]);
+  var events = result.map((row) =>
+    connection.escape(+row.id)).join(', ');
+
   if ('number' in query) {
     result = await connection.queryAsync(`
       SELECT number, class, last_name, first_name, date_of_birth
       FROM riders
       WHERE id = ? AND number = ?`, [id, query.number]);
+
+    if (result.length == 0) {
+      result = await connection.queryAsync(`
+	SELECT id, title, number, class, last_name, first_name, date_of_birth
+	FROM events
+	JOIN rankings USING (id)
+	JOIN riders USING (id)
+	WHERE number = ? AND id IN (` + events + `) AND ranking = 1
+	ORDER BY date DESC
+	LIMIT 1`, [query.number]);
+    }
+
     if (result.length == 1) {
       check_result = result[0];
       number = check_result.number;
@@ -2653,36 +2683,20 @@ async function check_number(connection, id, query) {
   }
 
   if (number != null) {
-    /* Query which (ranked) series the event is in: the serie must have a
-       ranking defined and classes assigned.  */
-    result = await connection.queryAsync(`
-      SELECT DISTINCT id
-      FROM series_events
-      JOIN series_classes USING (serie)
-      JOIN series USING (serie)
-      WHERE serie in (
-	  SELECT serie FROM series_events WHERE id = ?
-	) AND ranking IS NOT NULL
-
-      UNION
-
-      SELECT ? AS id`, [id, id]);
-    var events = result.map((row) =>
-      connection.escape(+row.id)).join(', ');
-
     /* Find the next unassigned number.  This is done using a left join of the
        list of defined riders onto itself.  */
     result = await connection.queryAsync(`
       SELECT DISTINCT a.next_number AS next_number
       FROM (
-	SELECT DISTINCT id, number + 1 AS next_number
+	SELECT DISTINCT number + 1 AS next_number
 	FROM riders
+	WHERE id IN (` + events + `)
       ) AS a LEFT JOIN (
-	SELECT DISTINCT id, number AS next_number
+	SELECT DISTINCT number AS next_number
 	FROM riders
-      ) AS b USING (id, next_number)
-      WHERE id IN (` + events + `) AND
-	    a.next_number > ? AND b.next_number IS NULL
+	WHERE id IN (` + events + `)
+      ) AS b USING (next_number)
+      WHERE a.next_number > ? AND b.next_number IS NULL
       ORDER BY next_number
       LIMIT 1`,
       [number]);
