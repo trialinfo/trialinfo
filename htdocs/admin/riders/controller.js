@@ -149,8 +149,6 @@ var ridersController = [
       var params = {
 	group: +groups
       };
-      if (!groups)
-	params.active = 1;
       load_rider($http.get('/api/event/' + event.id + '/first-rider',
 			   {params: params}));
     };
@@ -159,8 +157,6 @@ var ridersController = [
       var params = {
 	group: +groups
       };
-      if (!groups)
-	params.active = 1;
       if ($scope.rider && $scope.rider.number != null)
         load_rider($http.get('/api/event/' + event.id + '/previous-rider/' + $scope.rider.number,
 		   {params: params}));
@@ -170,8 +166,6 @@ var ridersController = [
       var params = {
 	group: +groups
       };
-      if (!groups)
-	params.active = 1;
       if ($scope.rider && $scope.rider.number != null)
         load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number,
 		   {params: params}));
@@ -181,8 +175,6 @@ var ridersController = [
       var params = {
 	group: +groups
       };
-      if (!groups)
-	params.active = 1;
       load_rider($http.get('/api/event/' + event.id + '/last-rider',
 			   {params: params}));
     };

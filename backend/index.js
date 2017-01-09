@@ -722,20 +722,24 @@ async function get_event_suggestions(connection, id) {
   return suggestions;
 }
 
-async function get_rider(connection, id, number, params, direction) {
+async function get_rider(connection, id, number, params, direction, event) {
   var filters = [`id = ?`];
   var args = [id];
   var order_limit = '';
 
   if (!params)
     params = {};
-  if (params.start)
-    filters.push('start');
-  if (direction != null) {
-    if (params.active)
-      filters.push('(number >= 0 OR start)');
+  if (params.start) {
+    if (event && event.features.registered)
+      filters.push('(registered AND start)');
     else
-      filters.push('(number >= 0 OR `group`)');
+      filters.push('start');
+  }
+  if (direction != null) {
+    if (event && event.features.registered)
+      filters.push('(number >= 0 OR (registered AND start) OR `group`)');
+    else
+      filters.push('(number >= 0 OR start OR `group`)');
   }
   if (params.group != null) {
     if (+params.group)
@@ -826,11 +830,11 @@ function admin_rider_from_api(rider) {
 }
 
 async function admin_get_rider(connection, id, number, params, direction) {
-  let rider = await get_rider(connection, id, number, params, direction);
+  let event = await get_event(connection, id);
+  let rider = await get_rider(connection, id, number, params, direction, event);
   if (!rider)
     return {};
 
-  let event = await get_event(connection, id);
   return await admin_rider_to_api(rider, event);
 }
 
