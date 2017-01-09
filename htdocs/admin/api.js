@@ -164,3 +164,33 @@ function generic_compare(v1, v2) {
   } else
     return t1 < t2 ? -1 : 1;
 }
+
+function class_may_start(class_, event) {
+  return event.zones[event.classes[class_ - 1].ranking_class - 1] &&
+	 event.classes[class_ - 1].rounds;
+}
+
+function rider_does_not_start(rider, event) {
+  function class_does_not_start(rider, event) {
+    if (!rider || rider.group)
+      return;
+
+    var class_ = rider['class'];
+    if (class_ == null)
+      return 'Fahrer ist keiner Klasse zugewiesen.';
+    if (!class_may_start(class_, event))
+      return 'Klasse ' + rider.class + ' startet nicht.'
+  }
+
+  var reasons = [];
+  var reason = class_does_not_start(rider, event);
+  if (reason)
+    reasons.push(reason);
+  if (rider) {
+    if (!rider.verified)
+      reasons.push((rider.group ? 'Gruppe' : 'Fahrer') + ' ist nicht verifiziert.');
+    if (event.features.registered && !rider.registered)
+      reasons.push('Nennungseingang ist nicht markiert.');
+  }
+  return reasons.join(' ');
+}

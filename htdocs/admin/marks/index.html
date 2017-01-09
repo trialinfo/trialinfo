@@ -27,14 +27,14 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" align="center">
-		    <input ng-if="!skipped_zones[ranking_class - 1][runde - 1][zone - 1]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[runde - 1][zone - 1]" ng-disabled="!rider_starts() || rider.group" punkte id="marks_{{runde}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(runde, $index)">
+		    <input ng-if="!skipped_zones[ranking_class - 1][runde - 1][zone - 1]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[runde - 1][zone - 1]" ng-disabled="!rider.start || rider_does_not_start()" punkte id="marks_{{runde}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(runde, $index)">
 		  </td>
 		  <td align="right" style="font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{runde}}">{{rider.marks_per_round[runde - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
-	      <p ng-if="rider && !rider_starts()" style="color: red">
+	      <p ng-if="rider.start && rider.class != null && !class_may_start(rider.class)" style="color: red">
 		Für Klasse {{ranking_class}} sind keine zu befahrenen Runden und Sektionen<br>
 		ausgewählt, die Klasse startet daher nicht.
 	      </p>
@@ -45,7 +45,7 @@
 	      <tr>
 		<th align="right"><label for="additional_marks" accesskey="p">Zusatz<span class="accesskey">p</span>unkte</label></th>
 		<td>
-		  <input ng-disabled="!rider_starts()" type="text" numeric size="3" min="-999" max="999" ng-model="rider.additional_marks" id="additional_marks">
+		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" numeric size="3" min="-999" max="999" ng-model="rider.additional_marks" id="additional_marks">
 		</td>
 	      </tr>
 	      <tr>
@@ -68,7 +68,7 @@
 	      <tr>
 		<th align="right"><label for="failure" accesskey="a"><span class="accesskey">A</span>usfall</label></th>
 		<td>
-		  <select ng-disabled="!rider_starts()" ng-model="rider.failure" numeric id="failure">
+		  <select ng-disabled="!rider.start || rider_does_not_start()" ng-model="rider.failure" numeric id="failure">
 		    <option value="0"></option>
 		    <option value="3">Ausgefallen</option>
 		    <option value="4">Nicht gewertet</option>
@@ -80,7 +80,7 @@
 	      <tr>
 		<th align="right"><label for="tie_break" accesskey="t">S<span class="accesskey">t</span>echen</label></th>
 		<td>
-		  <select ng-disabled="!rider_starts()" ng-model="rider.tie_break" numeric id="tie_break">
+		  <select ng-disabled="!rider.start || rider_does_not_start()" ng-model="rider.tie_break" numeric id="tie_break">
 		    <option value="0"></option>
 		    <option value="1">1. Platz</option>
 		    <option value="2">2. Platz</option>
@@ -95,10 +95,15 @@
 		  </select>
 		</td>
 	      </tr>
-	      <tr ng-if="rider && !old_rider.start && starting_classes[ranking_class - 1]">
+	      <tr ng-if="rider && (!old_rider.start || (features.registered && !old_rider.registered)) && starting_classes[ranking_class - 1]">
 		<th align="right">Teilnahme</th>
 		<td>
-		  <input type="checkbox" ng-model="rider.start" id="start"><label for="start" accesskey="s"><span class="accesskey">S</span>tart</label>
+		  <span ng-if="features.registered">
+		    <input type="checkbox" ng-model="rider.registered" id="registered">
+		      <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
+		  </span>
+		  <input type="checkbox" ng-model="rider.start" id="start">
+		    <label for="start" strike-through="rider_does_not_start()" title="{{rider_does_not_start()}}" accesskey="s"><span class="accesskey">S</span>tart</label>
 		</td>
 	      </tr>
 	    </table>

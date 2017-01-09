@@ -47,15 +47,6 @@ var marksController = [
       }
     }
 
-    $scope.rider_starts = function() {
-      try {
-	var rider = $scope.rider;
-	return rider.start &&
-	       (rider.group ||
-		$scope.starting_classes[ranking_class(rider) - 1]);
-      } catch (_) {}
-    };
-
     // Einzelpunkte auffüllen, sonst funktioniert der Vergleich zwischen
     // old_rider und rider nicht.
     function fill_marks_per_zone(rider) {
@@ -212,7 +203,7 @@ var marksController = [
 
     $scope.card_color = function() {
       var rider = $scope.rider;
-      if ($scope.rider_starts() && !rider.failure) {
+      if (rider && !($scope.rider_does_not_start() || rider.failure)) {
 	var round = $scope.current_round(rider);
 	if (round)
 	  return event.card_colors[round - 1];
@@ -282,6 +273,14 @@ var marksController = [
 	  rider.marks_distribution = [null, null, null, null, null, null];
 	}
       }
+    }
+
+    $scope.class_may_start = function(class_) {
+      return class_may_start(class_, event);
+    }
+
+    $scope.rider_does_not_start = function() {
+      return rider_does_not_start($scope.rider, event);
     }
 
     $scope.$watch('rider.marks_per_zone', function() {

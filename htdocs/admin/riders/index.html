@@ -178,10 +178,10 @@
 		    <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
 		</span>
 		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start" id="start">
-		  <label for="start" accesskey="s" strike-through="does_not_start()" title="{{does_not_start()}}"><span class="accesskey">S</span>tart</label>
+		  <label for="start" accesskey="s" strike-through="rider_does_not_start()" title="{{rider_does_not_start()}}"><span class="accesskey">S</span>tart</label>
 		<span ng-if="features.start_tomorrow">
 		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow">
-		    <label for="start_tomorrow" strike-through="does_not_start()" title="{{does_not_start()}}" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
+		    <label for="start_tomorrow" strike-through="rider_does_not_start()" title="{{rider_does_not_start()}}" accesskey="m">Start <span class="accesskey">m</span>orgen</label>
 		</span>
 		<input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.non_competing" id="non_competing">
 		  <label for="non_competing" accesskey="a" strike-through="non_competing" title="{{non_competing ? 'Klasse ' + rider.class + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
