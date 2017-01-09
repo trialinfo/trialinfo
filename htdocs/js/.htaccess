@@ -1,0 +1,6 @@
+Options SymLinksIfOwnerMatch
+RewriteEngine On
+
+RewriteCond %{REQUEST_URI} ^(/js/.+)\.js$
+RewriteCond %{DOCUMENT_ROOT}%1.min.js -f
+RewriteRule .+ %1.min.js [L]
