@@ -134,7 +134,7 @@ ALTER TABLE veranstaltung
 	DROP COLUMN rand_links,
 	DROP COLUMN rand_oben,
 	DROP COLUMN ergebnislistenbreite,
-	CHANGE sync_erlaubt sync_allowed BOOLEAN,
+	DROP COLUMN sync_erlaubt,
 	ADD COLUMN registration_ends TIMESTAMP NULL DEFAULT NULL,
 	ADD COLUMN `registration_email` VARCHAR(60) NULL DEFAULT NULL;
 

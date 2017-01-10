@@ -103,7 +103,6 @@ CREATE TABLE `events` (
   `score_234` tinyint(1) DEFAULT NULL,
   `ranking1_enabled` tinyint(1) DEFAULT NULL,
   `insurance` int(11) DEFAULT NULL,
-  `sync_allowed` tinyint(1) DEFAULT NULL,
   `registration_ends` timestamp NULL DEFAULT NULL,
   `registration_email` varchar(60) DEFAULT NULL,
   PRIMARY KEY (`id`)
