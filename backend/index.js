@@ -37,7 +37,6 @@ var remaining_time = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
-var clone = require('clone');
 
 require('marko/node-require').install();
 
@@ -135,7 +134,7 @@ async function validate_user(connection, user) {
     throw 'Wrong email or password';
 
   var rows = await connection.queryAsync(`
-    SELECT password, tag, admin
+    SELECT email, password, tag, admin
     FROM users
     WHERE email = ? AND password IS NOT NULL`, [user.email]);
 
@@ -170,7 +169,7 @@ var cache = {
     if (!(id in this.saved_events)) {
       var event = this.cached_events[id];
       this.saved_events[id] = event;
-      event = clone(event || {}, false);
+      event = Object.assign({}, event);
       this.cached_events[id] = event;
       return event;
     }
@@ -206,7 +205,7 @@ var cache = {
     if (!(number in this.saved_riders[id])) {
       var rider = this.cached_riders[id][number];
       this.saved_riders[id][number] = rider;
-      rider = clone(rider || {}, false);
+      rider = Object.assign({}, rider);
       this.cached_riders[id][number] = rider;
       return rider;
     }
@@ -293,9 +292,8 @@ async function commit_world(connection) {
     for (let number of numbers) {
       let old_rider = cache.saved_riders[id][number];
       let new_rider = cache.cached_riders[id][number];
-      if (!deepEqual(old_rider, new_rider))
-        await update_rider(connection, id, number,
-			   old_rider, new_rider);
+      await update_rider(connection, id, number,
+			 old_rider, new_rider);
     }
   }
 
@@ -789,7 +787,7 @@ async function get_rider(connection, id, number, params, direction, event) {
   return await read_rider(connection, id, number, revalidate);
 }
 
-async function admin_rider_to_api(rider, event) {
+async function admin_rider_to_api(connection, id, rider, event) {
   rider = Object.assign({}, rider);
 
   if (rider.group) {
@@ -835,7 +833,7 @@ async function admin_get_rider(connection, id, number, params, direction) {
   if (!rider)
     return {};
 
-  return await admin_rider_to_api(rider, event);
+  return await admin_rider_to_api(connection, id, rider, event);
 }
 
 function strcmp(a, b) {
@@ -965,7 +963,7 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
   await cache.begin(connection);
   try {
     var event = await get_event(connection, id);
-    var riders = await get_riders(connection, id);
+    await get_riders(connection, id);
     var old_rider;
     if (number != null) {
       old_rider = await get_rider(connection, id, number);
@@ -1008,8 +1006,7 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    riders = cache.modify_riders(id);
-    compute(riders, event);
+    compute(cache, id, event);
 
     await cache.commit(connection);
     if (!old_rider) {
@@ -1018,7 +1015,7 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
     }
 
     if (rider)
-      return await admin_rider_to_api(rider, event);
+      return await admin_rider_to_api(connection, id, rider, event);
   } catch (err) {
     await cache.rollback(connection);
     throw err;
@@ -1053,10 +1050,9 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.marks_per_round = [];
       rider.marks_distribution = [];
       rider.rank = null;
-      rider.rankings.forEach((ranking) => {
-	ranking.rank = null;
-	ranking.score = null;
-      });
+      rider.rankings = rider.rankings.map(
+        (ranking) => ranking && {rank: null, score: null}
+      );
     });
     event.skipped_zones = [];
   }
@@ -1150,8 +1146,12 @@ async function inherit_from_event(connection, id, base_tag, reset, email) {
     throw new HTTPError(404, 'Not Found');
   var base_id = result[0].id;
 
-  var event = clone(await get_event(connection, base_id), false);
-  var riders = clone(await get_riders(connection, base_id), false);
+  var event = Object.assign({}, await get_event(connection, base_id));
+  var riders = Object.values(await get_riders(connection, base_id)).reduce(
+    (riders, rider) => {
+      riders[rider.number] = Object.assign({}, rider);
+      return riders;
+    }, {});
 
   event.base = base_tag;
   if (reset)
@@ -1265,8 +1265,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
 
-      let riders = cache.modify_riders(id);
-      compute(riders, event);
+      compute(cache, id, event);
     } else {
       await delete_event(connection, id);
     }
