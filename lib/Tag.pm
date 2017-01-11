@@ -16,6 +16,7 @@
 # <http://www.gnu.org/licenses/>.
 
 package Tag;
+use MIME::Base64;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -23,14 +24,14 @@ require Exporter;
 use strict;
 
 sub random_tag($) {
-    my ($bytes) = @_;
-    my $tag;
+    my ($chars) = @_;
+    my $bytes = $chars * 3 / 4;
+    my $random;
 
     open my $fh, '<', '/dev/urandom'
 	or die "/dev/urandom: $!\n";
-    (read $fh, $tag, $bytes) == $bytes
+    (read $fh, $random, $bytes) == $bytes
 	or die "/dev/urandom: $!\n";
-    $tag =~ s/(.)/sprintf("%02x",ord($1))/egs;
 
-    return $tag;
+    return encode_base64($random);
 }
