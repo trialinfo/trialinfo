@@ -7,6 +7,9 @@ var eventController = [
 
     $scope.event = event;
     $scope.features = event.features;
+    $scope.internal = {
+      format: 'trialinfo'
+    };
     $scope.fold = {};
 
     if (event.base) {
@@ -15,6 +18,17 @@ var eventController = [
 	$scope.base = base;
       });
     }
+
+    $scope.encodeURIComponent = encodeURIComponent;
+
+    $scope.filename = function() {
+      if (event.rankings[0].title)
+        return event.rankings[0].title.replace(/[:\/\\]/g, '');
+      else if (event.date)
+        return 'Trial ' + event.date;
+      else
+        return 'Trial';
+    };
 
     $scope.remove = function() {
       if (confirm('Veranstaltung wirklich löschen?\n\nDie Veranstaltung kann später nicht wiederhergestellt werden.')) {
@@ -42,7 +56,7 @@ var eventController = [
 	  error(network_error);
       }
       $scope.fold.reset = false;
-    }
+    };
   }];
 
 eventController.resolve = {

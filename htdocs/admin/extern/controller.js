@@ -7,7 +7,7 @@ var externController = [
     $scope.SYNC_SOURCE = SYNC_SOURCE;
     $scope.events = events;
     $scope.einstellungen = {
-      operation: $scope.SYNC_SOURCE ? 'sync' : 'export-file',
+      operation: 'import-file',
       format: 'trial-auswertung',
       timeout: 30,
       url: 'https://otsv.trialinfo.at'

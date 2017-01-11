@@ -9,7 +9,6 @@
 	    <option value="import-remote" ng-if="SYNC_SOURCE">Server-Import</option>
 	    <option value="sync" ng-if="SYNC_SOURCE">Synchronisieren</option>
 	    <option value="import-file">Datei-Import</option>
-	    <option value="export-file">Datei-Export</option>
 	  </select>
 	</td>
       </tr>
@@ -20,7 +19,7 @@
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="einstellungen.operation == 'export-file' || einstellungen.operation == 'import-file'">
+      <tr ng-if="einstellungen.operation == 'import-file'">
 	<th align="right"><label for="format">Format</label></th>
 	<td>
 	  <select ng-model="einstellungen.format" id="format" ng-disabled="busy">
@@ -108,23 +107,6 @@
 	<th align="right"></th>
 	<td>
 	  <button ng-click="import_file()" ng-disabled="busy || !form.$valid">Importieren</button>
-	</td>
-      </tr>
-    </tbody>
-    <tbody ng-if="einstellungen.operation == 'export-file' && einstellungen.format == 'trial-auswertung'">
-      <tr>
-	<th align="right"></th>
-	<td>
-	  <a href="/api/event/export?id={{einstellungen.event.id}}&name={{dateiname(einstellungen.event)}}.tra">{{dateiname(einstellungen.event)}}.tra</a><br>
-	</td>
-      </tr>
-    </tbody>
-    <tbody ng-if="einstellungen.operation == 'export-file' && einstellungen.format == 'trialtool'">
-      <tr>
-	<th align="right"></th>
-	<td>
-	  <a href="/api/trialtool/cfg?id={{einstellungen.event.id}}&name={{dateiname(einstellungen.event)}}.cfg">{{dateiname(einstellungen.event)}}.cfg</a><br>
-	  <a href="/api/trialtool/dat?id={{einstellungen.event.id}}&name={{dateiname(einstellungen.event)}}.dat">{{dateiname(einstellungen.event)}}.dat</a>
 	</td>
       </tr>
     </tbody>

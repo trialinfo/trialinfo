@@ -9,6 +9,26 @@
 <a href="event/{{event.id}}/settings">Einstellungen</a><br>
 <a href="event/{{event.id}}/zones">Sektionen aus der Wertung</a><br>
 <br>
+<a ng-if="!fold.export" href="" ng-click="$parent.fold.export = true">↓ Export</a>
+<a ng-if="fold.export" href="" ng-click="$parent.fold.export = false">↑ Export</a><br>
+<div ng-if="fold.export">
+<table>
+  <tr>
+    <th>Format</th>
+    <td>
+      <select ng-model="internal.format">
+	<option value="trialinfo">TrialInfo</option>
+      </select>
+    </td>
+  </tr>
+  <tr ng-if="internal.format='trialinfo'">
+    <th>Datei</th>
+    <td>
+      <a href="/api/event/{{event.tag}}/export?filename={{encodeURIComponent(filename())}}.ti" ng-click="$parent.fold.export = false">{{filename()}}.ti</a>
+    </td>
+  </tr>
+</table>
+</div>
 <a ng-if="!fold.reset" href="" ng-click="$parent.fold.reset = true">↓ Zurücksetzen</a>
 <a ng-if="fold.reset" href="" ng-click="$parent.fold.reset = false">↑ Zurücksetzen</a><br>
 <table ng-if="fold.reset">

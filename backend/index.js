@@ -37,6 +37,7 @@ var remaining_time = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
+var zlib = require('zlib');
 
 require('marko/node-require').install();
 
@@ -345,7 +346,7 @@ async function get_serie(connection, serie_id) {
     WHERE serie = ?`, [serie_id]);
 
   if (series.length != 1)
-    throw 'No serie with number ' + JSON.stringify(serie_id) + ' exists';
+    throw new HTTPError(404, 'Not Found');
 
   var serie = series[0];
 
@@ -1086,6 +1087,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
     Object.values(riders).forEach((rider) => {
       rider.license = null;
     });
+    event.base = null;
   }
 }
 
@@ -2061,7 +2063,6 @@ async function update_event(connection, id, old_event, new_event) {
 
   var ignore_fields = {
     id: true,
-    base: true,
     classes: true,
     rankings: true,
     card_colors: true,
@@ -2844,6 +2845,86 @@ async function index(req, res, next) {
   }
 }
 
+function basename(event) {
+  if (event.rankings[0].title)
+    return event.rankings[0].title.replace(/[:\/\\]/g, '');
+  else if (event.date)
+    return 'Trial ' + event.date;
+  else
+    return 'Trial';
+}
+
+async function admin_export_event(connection, id, email) {
+  let event = await get_event(connection, id);
+  let riders = await get_riders(connection, id);
+
+  let series = await connection.queryAsync(`
+    SELECT serie
+    FROM series
+    JOIN series_events USING (serie)
+    JOIN series_all_admins USING (serie)
+    WHERE id = ? AND email = ?
+  `, [id, email]);
+
+  for (let index in series) {
+    let serie_id = series[index].serie;
+    let serie = await get_serie(connection, serie_id);
+    delete serie.serie;
+    delete serie.version;
+    delete serie.events;
+    var new_numbers = serie.new_numbers[id];
+    delete serie.new_numbers;
+    if (new_numbers)
+      serie.new_numbers = new_numbers;
+    series[index] = serie;
+  }
+
+  let base = event.base;
+  delete event.base;
+  event.bases = [];
+  if (base) {
+    let bases = (await connection.queryAsync(`
+      SELECT tag, base
+      FROM events
+      JOIN events_all_admins USING (id)
+      WHERE base IS NOT NULL AND email = ?`, [email])
+    ).reduce((hash, event) => {
+      hash[event.tag] = event.base;
+      return hash;
+    }, {});
+
+    event.bases.push(base);
+    while (bases[base]) {
+      base = bases[base];
+      event.bases.push(base);
+    }
+  }
+
+  event = Object.assign({}, event);
+  delete event.id;
+  delete event.version;
+
+  riders = Object.values(riders).reduce(
+    (riders, rider) => {
+      rider = Object.assign({}, rider);
+      delete rider.version;
+      riders[rider.number] = rider;
+      return riders;
+  }, {});
+
+  let data = JSON.stringify({
+    format: 'TrialInfo 1',
+    event: event,
+    riders: riders,
+    series: series
+  });
+
+  return {
+    filename: basename(event) + '.ti',
+    data: zlib.gzipSync(data, {level: 9})
+  };
+}
+
 function query_string(query) {
   if (!query)
     return '';
@@ -3059,6 +3140,17 @@ app.get('/api/event/:id', will_read_event, function(req, res, next) {
   admin_get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
+  admin_export_event(req.conn, req.params.id, req.user.email)
+  .then((result) => {
+    res.type('application/octet-stream');
+    res.setHeader('Content-Disposition',
+		  "attachment; filename*=UTF-8''" +
+		  encodeURIComponent(req.query.filename || result.filename));
+    res.send(result.data);
   }).catch(next);
 });
 
