@@ -1151,6 +1151,42 @@ async function admin_reset_event(connection, id, reset, email, version) {
   }
 }
 
+async function inherit_rights_from_event(connection, id, base_id) {
+  await connection.queryAsync(`
+    INSERT INTO events_admins (id, user, read_only)
+    SELECT ?, user, read_only
+    FROM events_admins_inherit
+    WHERE id = ?`, [id, base_id]);
+
+  await connection.queryAsync(`
+    INSERT INTO events_admins_inherit (id, user, read_only)
+    SELECT ?, user, read_only
+    FROM events_admins_inherit
+    WHERE id = ?`, [id, base_id]);
+
+  await connection.queryAsync(`
+    INSERT INTO events_groups (id, `+'`group`'+`, read_only)
+    SELECT ?, `+'`group`'+`, read_only
+    FROM events_groups_inherit
+    WHERE id = ?`, [id, base_id]);
+
+  await connection.queryAsync(`
+    INSERT INTO events_groups_inherit (id, `+'`group`'+`, read_only)
+    SELECT ?, `+'`group`'+`, read_only
+    FROM events_groups_inherit
+    WHERE id = ?`, [id, base_id]);
+}
+
+async function add_event_write_access(connection, id, email) {
+	await connection.queryAsync(`
+	  INSERT INTO events_admins (id, user, read_only)
+	  SELECT ?, user, 0
+	  FROM users
+	  WHERE email = ?
+	  ON DUPLICATE KEY UPDATE read_only = 0`,
+	  [id, email]);
+}
+
 async function inherit_from_event(connection, id, base_tag, reset, email) {
   let result = await connection.queryAsync(`
     SELECT id
@@ -1185,7 +1221,7 @@ async function inherit_from_event(connection, id, base_tag, reset, email) {
       SELECT serie, ?, number, new_number
       FROM new_numbers
       JOIN series_all_admins USING (serie)
-      WHERE id = ? AND email = ? AND NOT read_only`,
+      WHERE id = ? AND email = ? AND NOT COALESCE(read_only, 0)`,
       [id, base_id, email]);
   }
 
@@ -1194,32 +1230,10 @@ async function inherit_from_event(connection, id, base_tag, reset, email) {
     SELECT serie, ?
     FROM series_events
     JOIN series_all_admins USING (serie)
-    WHERE id = ? AND email = ? AND NOT read_only`,
+    WHERE id = ? AND email = ? AND NOT COALESCE(read_only, 0)`,
     [id, base_id, email]);
 
-  await connection.queryAsync(`
-    INSERT INTO events_admins (id, user, read_only)
-    SELECT ?, user, read_only
-    FROM events_admins_inherit
-    WHERE id = ?`, [id, base_id]);
-
-  await connection.queryAsync(`
-    INSERT INTO events_admins_inherit (id, user, read_only)
-    SELECT ?, user, read_only
-    FROM events_admins_inherit
-    WHERE id = ?`, [id, base_id]);
-
-  await connection.queryAsync(`
-    INSERT INTO events_groups (id, `+'`group`'+`, read_only)
-    SELECT ?, `+'`group`'+`, read_only
-    FROM events_groups_inherit
-    WHERE id = ?`, [id, base_id]);
-
-  await connection.queryAsync(`
-    INSERT INTO events_groups_inherit (id, `+'`group`'+`, read_only)
-    SELECT ?, `+'`group`'+`, read_only
-    FROM events_groups_inherit
-    WHERE id = ?`, [id, base_id]);
+  await inherit_rights_from_event(connection, id, base_id);
 }
 
 async function delete_event(connection, id) {
@@ -1268,14 +1282,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	if (event.base) {
 	  await inherit_from_event(connection, id, event.base, reset, email);
 	}
-
-	await connection.queryAsync(`
-	  INSERT INTO events_admins (id, user, read_only)
-	  SELECT ?, user, 0
-	  FROM users
-	  WHERE email = ?
-	  ON DUPLICATE KEY UPDATE read_only = 0`,
-	  [id, email]);
+	await add_event_write_access(connection, id, email);
       }
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
@@ -1400,58 +1407,63 @@ async function update_serie(connection, serie_id, old_serie, new_serie) {
     old_serie, new_serie);
 }
 
+async function save_serie(connection, serie_id, serie, version, email) {
+  var old_serie;
+  if (serie_id) {
+    old_serie = await get_serie(connection, serie_id);
+  } else {
+    var result = await connection.queryAsync(`
+      SELECT COALESCE(MAX(serie), 0) + 1 AS serie
+      FROM series`);
+    serie_id = result[0].serie;
+  }
+
+  if (old_serie && version == null)
+    version = old_serie.version;
+  if (serie && version) {
+    if (serie.version != version)
+      throw new HTTPError(409, 'Conflict');
+  }
+
+  if (serie) {
+    if (!old_serie) {
+      if (!serie.tag)
+        serie.tag = random_tag();
+
+      await connection.queryAsync(`
+	INSERT INTO series_admins (serie, user, read_only)
+	SELECT ?, user, 0
+	FROM users
+	WHERE email = ?
+	ON DUPLICATE KEY UPDATE read_only = 0`,
+	[serie_id, email]);
+    }
+    await update_serie(connection, serie_id, old_serie, serie);
+    return serie_id;
+  } else {
+    for (let table of ['series', 'series_classes', 'series_events',
+		       'series_admins', 'series_groups']) {
+      let query =
+	'DELETE FROM ' + connection.escapeId(table) +
+	' WHERE serie = ' + connection.escape(serie_id);
+      log_sql(query);
+      await connection.queryAsync(query);
+    }
+  }
+}
+
 async function admin_save_serie(connection, serie_id, serie, version, email) {
   await connection.queryAsync('BEGIN');
   try {
-    var old_serie;
-    if (serie_id) {
-      old_serie = await get_serie(connection, serie_id);
-    } else {
-      var result = await connection.queryAsync(`
-        SELECT COALESCE(MAX(serie), 0) + 1 AS serie
-	FROM series`);
-      serie_id = result[0].serie;
-    }
-
-    if (old_serie && version == null)
-      version = old_serie.version;
-    if (serie && version) {
-      if (serie.version != version)
-	throw new HTTPError(409, 'Conflict');
-    }
-
-    if (serie) {
-      if (!old_serie) {
-	serie.tag = random_tag();
-
-	await connection.queryAsync(`
-	  INSERT INTO series_admins (serie, user, read_only)
-	  SELECT ?, user, 0
-	  FROM users
-	  WHERE email = ?
-	  ON DUPLICATE KEY UPDATE read_only = 0`,
-	  [serie_id, email]);
-      }
-      await update_serie(connection, serie_id, old_serie, serie);
-    } else {
-      for (let table of ['series', 'series_classes', 'series_events',
-			 'series_admins', 'series_groups']) {
-	let query =
-	  'DELETE FROM ' + connection.escapeId(table) +
-	  ' WHERE serie = ' + connection.escape(serie_id);
-	log_sql(query);
-	await connection.queryAsync(query);
-      }
-    }
-
+    serie_id = await save_serie(connection, serie_id, serie, version, email);
     await connection.queryAsync('COMMIT');
+
+    if (serie_id != null)
+      return await get_serie(connection, serie_id);
   } catch (err) {
     await connection.queryAsync('ROLLBACK');
     throw err;
   }
-
-  if (serie)
-    return await get_serie(connection, serie_id);
 }
 
 function make_revalidate_riders(connection, id) {
@@ -2912,17 +2924,138 @@ async function admin_export_event(connection, id, email) {
       return riders;
   }, {});
 
-  let data = JSON.stringify({
+  let data = {
     format: 'TrialInfo 1',
     event: event,
     riders: riders,
     series: series
-  });
+  };
 
   return {
     filename: basename(event) + '.ti',
-    data: zlib.gzipSync(data, {level: 9})
+    data: zlib.gzipSync(JSON.stringify(data), {level: 9})
   };
+}
+
+/*
+async function title_of_copy(connection, event) {
+  let result = connection.queryAsync(`
+    SELECT character_maximum_length AS length
+    FROM information_schema.columns
+    WHERE table_schema = Database() AND table_name = 'rankings' AND column_name = 'title'`);
+
+  let title = event.rankings[0].title;
+  var match = title.match(/(.*) \(Kopie(?: (\d+))?\)?$/);
+  if (match)
+    title = match[1] + '(Kopie ' + ((match[2] || 1) + 1) + ')';
+  else
+    title = title + ' (Kopie)';
+
+  return title.substr(0, result[0].length);
+}
+*/
+
+async function admin_import_event(connection, data, email) {
+  data = JSON.parse(zlib.gunzipSync(Buffer.from(data, 'base64')));
+
+  if (data.format != 'TrialInfo 1')
+    throw new HTTPError(415, 'Unsupported Media Type');
+
+  await cache.begin(connection);
+  try {
+    let result;
+
+    let event = data.event;
+    result = await connection.queryAsync(`
+      SELECT id
+      FROM events
+      WHERE tag = ?`, [event.tag]);
+    if (result.length) {
+      event.tag = random_tag();
+      event.rankings[0].title += ' (Kopie)';
+      // event.rankings[0].title = await title_of_copy(connection, event);
+    }
+
+    result = await connection.queryAsync(`
+      SELECT COALESCE(MAX(id), 0) + 1 AS id
+      FROM events`);
+    let id = result[0].id;
+
+    let bases = event.bases;
+    delete event.bases;
+    if (bases.length)
+      event.base = bases[0];
+    Object.assign(cache.modify_event(id), event);
+
+    result = await connection.queryAsync(`
+      SELECT id, tag
+      FROM events`);
+    let bases_hash = result.reduce((bases_hash, event) => {
+      bases_hash[event.tag] = event.id;
+      return bases_hash;
+    }, {});
+
+    for (let base of bases) {
+      let base_id = bases_hash[base];
+      if (base_id) {
+	await inherit_rights_from_event(connection, id, base_id);
+	break;
+      }
+    }
+
+    await add_event_write_access(connection, id, email);
+
+    Object.values(data.riders).forEach((rider) => {
+      Object.assign(cache.modify_rider(id, rider.number), rider);
+    });
+
+    result = await connection.queryAsync(`
+      SELECT series.serie, series.tag AS tag, read_only
+      FROM series
+      LEFT JOIN (
+        SELECT serie, COALESCE(read_only, 0) AS read_only
+	FROM series_all_admins
+	WHERE email = ?) AS _ USING (serie)`, [email]);
+    let existing_series = result.reduce((existing_series, serie) => {
+      existing_series[serie.tag] = {
+	serie: serie.serie,
+	writable: serie.read_only === 0
+      };
+      return existing_series;
+    }, {});
+
+    for (let serie of data.series) {
+      let existing_serie = existing_series[serie.tag];
+      if (existing_serie && existing_serie.writable) {
+	await connection.queryAsync(`
+	  INSERT INTO series_events (serie, id)
+	  VALUES (?, ?)`, [existing_serie.serie, id]);
+	for (let number in serie.new_numbers) {
+	  await connection.queryAsync(`
+	    INSERT INTO new_numbers (serie, id, number, new_number)
+	    VALUES (?, ?, ?, ?)`,
+	    [existing_serie.serie, id, number, serie.new_numbers[number]]);
+	}
+      } else {
+	if (existing_series[serie.tag]) {
+	  delete serie.tag;
+	  serie.name += ' (Kopie)';
+	}
+	serie.events = [id];
+	let new_numbers = serie.new_numbers;
+	serie.new_numbers = {};
+	if (new_numbers)
+	  serie.new_numbers[id] = new_numbers;
+	let serie_id = await save_serie(connection, null, serie, null, email);
+      }
+    }
+
+    await cache.commit(connection);
+    return {id: id};
+  } catch (err) {
+    await cache.rollback(connection);
+    throw err;
+  }
 }
 
 function query_string(query) {
@@ -3151,6 +3284,13 @@ app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
 		  "attachment; filename*=UTF-8''" +
 		  encodeURIComponent(req.query.filename || result.filename));
     res.send(result.data);
+  }).catch(next);
+});
+
+app.post('/api/event/import', function(req, res, next) {
+  admin_import_event(req.conn, req.body.data, req.user.email)
+  .then((result) => {
+    res.json(result);
   }).catch(next);
 });
 

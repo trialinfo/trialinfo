@@ -1,30 +1,30 @@
 'use strict;'
 
-var externController = [
+var importController = [
   '$scope', '$http', '$location', '$q', 'events',
   function ($scope, $http, $location, $q, events) {
     $scope.$root.context((SYNC_SOURCE ? 'Synchronisieren, ' : '') + 'Import und Export');
     $scope.SYNC_SOURCE = SYNC_SOURCE;
     $scope.events = events;
-    $scope.einstellungen = {
+    $scope.settings = {
       operation: 'import-file',
-      format: 'trial-auswertung',
+      format: 'trialinfo',
       timeout: 30,
       url: 'https://otsv.trialinfo.at'
     };
     try {
-      $scope.einstellungen.event = events[events.length - 1];
+      $scope.settings.event = events[events.length - 1];
     } catch(_) { }
     $scope.remote = {};
 
     $scope.import_file = function() {
-      if ($scope.einstellungen.format == 'trial-auswertung') {
-	var tra_datei = document.getElementById('tra_datei');
-	if (tra_datei && tra_datei.files[0]) {
+      if ($scope.settings.format == 'trialinfo') {
+	var filename = document.getElementById('filename');
+	if (filename && filename.files[0]) {
 	  var reader = new FileReader();
 	  reader.onloadend = function(e) {
 	    var data = e.target.result;
-	    $http.post('/api/event/import', window.btoa(data)).
+	    $http.post('/api/event/import', { data: window.btoa(data) }).
 	      success(function(result) {
 		if (result.id != null)
 		  $location.path('/event/' + result.id).replace();
@@ -35,10 +35,10 @@ var externController = [
 	      });
 	  };
 	  $scope.busy = true;
-	  reader.readAsBinaryString(tra_datei.files[0]);
+	  reader.readAsBinaryString(filename.files[0]);
 	}
       }
-      if ($scope.einstellungen.format == 'trialtool') {
+      if ($scope.settings.format == 'trialtool') {
 	var cfg_datei = document.getElementById('cfg_datei');
 	var dat_datei = document.getElementById('dat_datei');
 	if (cfg_datei && cfg_datei.files[0] && dat_datei && dat_datei.files[0]) {
@@ -92,10 +92,10 @@ var externController = [
 
     $scope.synchronize = function() {
       var args = {
-	title: $scope.einstellungen.event.title,
-	tag: $scope.einstellungen.event.tag,
-	url: $scope.einstellungen.url,
-	timeout: $scope.einstellungen.timeout * 1000
+	title: $scope.settings.event.title,
+	tag: $scope.settings.event.tag,
+	url: $scope.settings.url,
+	timeout: $scope.settings.timeout * 1000
       };
       $scope.$root.$broadcast('sync', args);
     }
@@ -104,7 +104,7 @@ var externController = [
     $scope.get_veranstaltungen = function() {
       $scope.busy = true;
       cancel_remote = $q.defer();
-      $http.get($scope.einstellungen.url + '/api/events',
+      $http.get($scope.settings.url + '/api/events',
 		{timeout: cancel_remote.promise, withCredentials: true}).
 	success(function(events) {
 	  $scope.remote.events = events;
@@ -119,7 +119,7 @@ var externController = [
 	});
     };
 
-    $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
+    // $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
 
     $scope.$watch('remote.event', function() {
       var exists = false;
@@ -138,7 +138,7 @@ var externController = [
       if (cancel_remote)
 	cancel_remote.resolve();
       cancel_remote = $q.defer();
-      $http.get($scope.einstellungen.url + '/api/event/export',
+      $http.get($scope.settings.url + '/api/event/export',
 		{params: {tag: tag}, timeout: cancel_remote.promise, withCredentials: true, responseType: 'arraybuffer'}).
 	success(function(data) {
 	  var params;
@@ -172,7 +172,7 @@ var externController = [
 	});
     };
 
-    $scope.$watch('einstellungen.url', function() {
+    $scope.$watch('settings.url', function() {
       $scope.liste_abgerufen = false;
     });
 
@@ -182,7 +182,7 @@ var externController = [
     });
   }];
 
-externController.resolve = {
+importController.resolve = {
   events: [
     '$q', '$http',
     function($q, $http) {

@@ -1,39 +1,39 @@
-<h1><span ng-if="SYNC_SOURCE">Synchronisieren,</span> Import und Export</h1>
+<h1>Import</h1>
 <form name="form">
   <table>
     <tbody>
       <tr>
 	<th align="right"><label for="operation">Aktion</label></th>
 	<td>
-	  <select ng-model="einstellungen.operation" id="operation" ng-disabled="busy">
+	  <select ng-model="settings.operation" id="operation" ng-disabled="busy">
 	    <option value="import-remote" ng-if="SYNC_SOURCE">Server-Import</option>
 	    <option value="sync" ng-if="SYNC_SOURCE">Synchronisieren</option>
 	    <option value="import-file">Datei-Import</option>
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="einstellungen.operation != 'import-remote' && einstellungen.operation != 'import-file'">
+      <tr ng-if="settings.operation != 'import-remote' && settings.operation != 'import-file'">
 	<th align="right"><label for="tag">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="einstellungen.event" ng-options="event as veranstaltung_bezeichnung(event) for event in events" id="tag">
+	  <select ng-model="settings.event" ng-options="event as veranstaltung_bezeichnung(event) for event in events" id="tag">
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="einstellungen.operation == 'import-file'">
+      <tr ng-if="settings.operation == 'import-file'">
 	<th align="right"><label for="format">Format</label></th>
 	<td>
-	  <select ng-model="einstellungen.format" id="format" ng-disabled="busy">
-	    <option value="trial-auswertung">TrialInfo</option>
+	  <select ng-model="settings.format" id="format" ng-disabled="busy">
+	    <option value="trialinfo">TrialInfo</option>
 	    <option value="trialtool">TrialTool</option>
 	  </select>
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'import-remote'">
+    <tbody ng-if="settings.operation == 'import-remote'">
       <tr>
 	<th align="right"><label for="url">Quelladresse</label></th>
 	<td>
-	  <input type="text" size="30" ng-model="einstellungen.url" id="url" required ng-disabled="busy"> <button ng-click="get_veranstaltungen()" ng-disabled="busy">Liste abrufen</button>
+	  <input type="text" size="30" ng-model="settings.url" id="url" required ng-disabled="busy"> <button ng-click="get_veranstaltungen()" ng-disabled="busy">Liste abrufen</button>
 	</td>
       </tr>
       <tr>
@@ -56,17 +56,17 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'sync'">
+    <tbody ng-if="settings.operation == 'sync'">
       <tr>
 	<th align="right"><label for="url">Zieladresse</label></th>
 	<td>
-	  <input type="text" size="30" ng-model="einstellungen.url" id="url" required>
+	  <input type="text" size="30" ng-model="settings.url" id="url" required>
 	</td>
       </tr>
       <tr>
 	<th align="right"><label for="timeout">Intervall</label></th>
 	<td>
-	  <input type="text" numeric min="1" max="600" size="3" ng-model="einstellungen.timeout" id="timeout" style="text-align:center" required> Sekunden
+	  <input type="text" numeric min="1" max="600" size="3" ng-model="settings.timeout" id="timeout" style="text-align:center" required> Sekunden
 	</td>
       </tr>
       <tr>
@@ -76,11 +76,11 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'import-file' && einstellungen.format == 'trial-auswertung'">
+    <tbody ng-if="settings.operation == 'import-file' && settings.format == 'trialinfo'">
       <tr>
-	<th align="right"><label for="tra_datei">tra-Datei</label></th>
+	<th align="right"><label for="filename">tra-Datei</label></th>
 	<td>
-	  <input type="file" id="tra_datei" ng-disabled="busy" ng-model="einstellungen.tra_datei">
+	  <input type="file" id="filename" ng-disabled="busy" ng-model="settings.filename">
 	</td>
       </tr>
       <tr>
@@ -90,17 +90,17 @@
 	</td>
       </tr>
     </tbody>
-    <tbody ng-if="einstellungen.operation == 'import-file' && einstellungen.format == 'trialtool'">
+    <tbody ng-if="settings.operation == 'import-file' && settings.format == 'trialtool'">
       <tr>
 	<th align="right"><label for="cfg_datei">cfg-Datei</label></th>
 	<td>
-	  <input type="file" id="cfg_datei" ng-disabled="busy" ng-model="einstellungen.cfg_datei">
+	  <input type="file" id="cfg_datei" ng-disabled="busy" ng-model="settings.cfg_datei">
 	</td>
       </tr>
       <tr>
 	<th align="right"><label for="dat_datei">dat-Datei</label></th>
 	<td>
-	  <input type="file" id="dat_datei" ng-disabled="busy" ng-model="einstellungen.dat_datei">
+	  <input type="file" id="dat_datei" ng-disabled="busy" ng-model="settings.dat_datei">
 	</td>
       </tr>
       <tr>

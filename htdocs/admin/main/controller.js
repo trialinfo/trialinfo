@@ -36,8 +36,8 @@ var mainController = [
       $location.path('/event/new/settings');
     };
 
-    $scope.sync_import_export = function() {
-      $location.path('/extern');
+    $scope.import = function() {
+      $location.path('/import');
     };
 
     $scope.new_serie = function() {

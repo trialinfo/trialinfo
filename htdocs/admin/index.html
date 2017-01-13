@@ -32,7 +32,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="scores/controller.js"></script>
     <script src="list/controller.js"></script>
     <script src="serie/controller.js"></script>
-    <script src="extern/controller.js"></script>
+    <script src="import/controller.js"></script>
     <script src="sync/controller.js"></script>
     <script src="../js/config.js"></script>
     <script>
@@ -61,7 +61,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.controller('eventScoresController', eventScoresController);
       application.controller('eventListController', eventListController);
       application.controller('serieController', serieController);
-      application.controller('externController', externController);
+      application.controller('importController', importController);
       application.controller('syncController', syncController);
 
       application.config([
@@ -131,10 +131,10 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      controller: 'serieController',
 	      templateUrl: 'serie/index.html',
 	      resolve: serieController.resolve
-	    }).when('/extern', {
-	      controller: 'externController',
-	      templateUrl: 'extern/index.html',
-	      resolve: externController.resolve
+	    }).when('/import', {
+	      controller: 'importController',
+	      templateUrl: 'import/index.html',
+	      resolve: importController.resolve
 	    }).when('/help', {
 	      templateUrl: 'help/index.html',
 	    }).otherwise({
