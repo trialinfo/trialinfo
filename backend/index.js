@@ -1085,6 +1085,22 @@ function reset_event(base_event, base_riders, event, riders, reset) {
   }
 }
 
+async function event_tag_to_id(connection, tag, email) {
+  let result = await connection.queryAsync(`
+    SELECT id, events_all_admins.email AS email
+    FROM (
+      SELECT id, ? as email from events
+    ) AS _
+    LEFT JOIN events_all_admins USING (id, email)
+    WHERE tag = ?`,
+    [email, tag]);
+  if (result.length != 1)
+    return new HTTPError(404, 'Not Found');
+  if (result[0].email == null)
+    return new HTTPError(403, 'Forbidden');
+  return result[0].id;
+}
+
 async function admin_reset_event(connection, id, reset, email, version) {
   await cache.begin(connection);
   var event = await get_event(connection, id);
@@ -1095,15 +1111,7 @@ async function admin_reset_event(connection, id, reset, email, version) {
     throw new HTTPError(409, 'Conflict');
 
   if (reset == 'register' && event.base) {
-    var result = await connection.queryAsync(`
-      SELECT id
-      FROM events
-      JOIN events_all_admins USING (id)
-      WHERE tag = ? AND email = ?`, [event.base, email]);
-    if (result.length != 1)
-      throw new HTTPError(404, 'Not Found');
-
-    var base_id = result[0].id;
+    var base_id = await event_tag_to_id(connection, event.base, email);
     var base_event = await get_event(connection, base_id);
     if (base_event.features.start_tomorrow)
       base_riders = await get_riders(connection, base_id);
@@ -2286,64 +2294,88 @@ function may_admin(req, res, next) {
 
 function will_read_event(req, res, next) {
   req.conn.queryAsync(`
-    SELECT 1
-    FROM events_all_admins
-    WHERE id = ? AND email = ?`,
-    [req.params.id, req.user.email])
-  .then((allowed) => {
-    if (allowed.length == 0) {
-      return Promise.reject(
-	'No read access to event ' + JSON.stringify(req.params.id) +
-	' for user ' + JSON.stringify(req.user.email));
-    }
+    SELECT DISTINCT id, events_all_admins.email
+    FROM (
+      SELECT id, ? AS email
+      FROM events
+      WHERE id = ? OR tag = ?
+    ) AS events
+    LEFT JOIN events_all_admins USING (id, email)`,
+    [req.user.email, req.params.id, req.params.tag])
+  .then((result) => {
+    if (result.length != 1)
+      return Promise.reject(new HTTPError(404, 'Not Found'));
+    if (result[0].email == null)
+      return Promise.reject(new HTTPError(403, 'Forbidden'));
+    req.params.id = result[0].id;
     next();
   }).catch(next);
 }
 
 function will_write_event(req, res, next) {
   req.conn.queryAsync(`
-    SELECT 1
-    FROM events_all_admins
-    WHERE id = ? AND email = ? AND NOT read_only`,
-    [req.params.id, req.user.email])
-  .then((allowed) => {
-    if (allowed.length == 0) {
-      return Promise.reject(
-	'No write access to event ' + JSON.stringify(req.params.id) +
-	' for user ' + JSON.stringify(req.user.email));
-    }
+    SELECT DISTINCT id, events_all_admins.email
+    FROM (
+      SELECT id, ? AS email
+      FROM events
+      WHERE id = ? OR tag = ?
+    ) AS events
+    LEFT JOIN (
+      SELECT id, email
+      FROM events_all_admins
+      WHERE NOT COALESCE(read_only, 0)
+    ) AS events_all_admins USING (id, email)`,
+    [req.user.email, req.params.id, req.params.tag])
+  .then((result) => {
+    if (result.length != 1)
+      return Promise.reject(new HTTPError(404, 'Not Found'));
+    if (result[0].email == null)
+      return Promise.reject(new HTTPError(403, 'Forbidden'));
+    req.params.id = result[0].id;
     next();
   }).catch(next);
 }
 
 function will_read_serie(req, res, next) {
   req.conn.queryAsync(`
-    SELECT 1
-    FROM series_all_admins
-    WHERE serie = ? AND email = ?`,
-    [req.params.serie, req.user.email])
-  .then((allowed) => {
-    if (allowed.length == 0) {
-      return Promise.reject(
-	'No read access to serie ' + JSON.stringify(req.params.serie) +
-	' for user ' + JSON.stringify(req.user.email));
-    }
+    SELECT DISTINCT serie, series_all_admins.email
+    FROM (
+      SELECT serie, ? AS email
+      FROM series
+      WHERE serie = ? OR tag = ?
+    ) AS series
+    LEFT JOIN series_all_admins USING (serie, email)`,
+    [req.user.email, req.params.serie, req.params.tag])
+  .then((result) => {
+    if (result.length != 1)
+      return Promise.reject(new HTTPError(404, 'Not Found'));
+    if (result[0].email == null)
+      return Promise.reject(new HTTPError(403, 'Forbidden'));
+    req.params.serie = result[0].serie;
     next();
   }).catch(next);
 }
 
 function will_write_serie(req, res, next) {
   req.conn.queryAsync(`
-    SELECT 1
-    FROM series_all_admins
-    WHERE serie = ? AND email = ? AND NOT read_only`,
-    [req.params.serie, req.user.email])
-  .then((allowed) => {
-    if (allowed.length == 0) {
-      return Promise.reject(
-	'No write access to serie ' + JSON.stringify(req.params.serie) +
-	' for user ' + JSON.stringify(req.user.email));
-    }
+    SELECT DISTINCT serie, series_all_admins.email
+    FROM (
+      SELECT serie, ? AS email
+      FROM series
+      WHERE serie = ? OR tag = ?
+    ) AS series
+    LEFT JOIN (
+      SELECT serie, email
+      FROM series_all_admins
+      WHERE NOT COALESCE(read_only, 0)
+    ) AS series_all_admins USING (serie, email)`,
+    [req.user.email, req.params.serie, req.params.tag])
+  .then((result) => {
+    if (result.length != 1)
+      return Promise.reject(new HTTPError(404, 'Not Found'));
+    if (result[0].email == null)
+      return Promise.reject(new HTTPError(403, 'Forbidden'));
+    req.params.serie = result[0].serie;
     next();
   }).catch(next);
 }
