@@ -9,7 +9,6 @@ HAVE_WEASYPRINT ?= true
 SSI_LEGACY_EXPR_PARSER ?= true
 SYNC_SOURCE ?= true
 SYNC_TARGET ?= false
-AUTH_PREFIX ?= $(CURDIR)
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
@@ -21,8 +20,6 @@ DOWNLOAD_FILES = \
 	htdocs/js/validate.js \
 
 GENERATED_FILES = \
-	cgi-bin/api/.htaccess \
-	cgi-bin/veranstalter/.htaccess \
 	htdocs/js/config.js \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/veranstalter/.htaccess \
@@ -58,8 +55,7 @@ SSI_LEGACY_EXPR_PARSER=-e '/^@SSI_LEGACY_EXPR_PARSER@$$/d'
 endif
 
 generate_web_file = \
-	$(SED) -e 's:@AUTH_PREFIX@:$(AUTH_PREFIX):g' \
-	       -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT):g' \
+	$(SED) -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT):g' \
 	       -e 's:@SYNC_SOURCE@:$(SYNC_SOURCE):g' \
 	       -e 's:@SYNC_TARGET@:$(SYNC_TARGET):g' \
 	       $(SSI_LEGACY_EXPR_PARSER)
