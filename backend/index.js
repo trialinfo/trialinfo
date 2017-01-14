@@ -217,6 +217,10 @@ var cache = {
       this.modify_rider(id, number);
     return this.cached_riders[id];
   },
+  delete_riders: function(id) {
+    delete this.saved_riders[id];
+    delete this.cached_riders[id];
+  },
   delete_rider: function(id, number) {
     if (this.saved_riders[id])
       delete this.saved_riders[id][number];
@@ -1229,6 +1233,7 @@ async function delete_event(connection, id) {
     await connection.queryAsync(query);
   }
   cache.delete_event(id);
+  cache.delete_riders(id);
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
