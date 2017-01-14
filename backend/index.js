@@ -2856,16 +2856,7 @@ async function index(req, res, next) {
   }
 }
 
-function basename(event) {
-  if (event.rankings[0].title)
-    return event.rankings[0].title.replace(/[:\/\\]/g, '');
-  else if (event.date)
-    return 'Trial ' + event.date;
-  else
-    return 'Trial';
-}
-
-async function admin_export_event(connection, id, email) {
+async function export_event(connection, id, email) {
   let event = await get_event(connection, id);
   let riders = await get_riders(connection, id);
 
@@ -2923,15 +2914,27 @@ async function admin_export_event(connection, id, email) {
       return riders;
   }, {});
 
-  let data = {
+  return {
     format: 'TrialInfo 1',
     event: event,
     riders: riders,
     series: series
   };
+}
 
+function basename(event) {
+  if (event.rankings[0].title)
+    return event.rankings[0].title.replace(/[:\/\\]/g, '');
+  else if (event.date)
+    return 'Trial ' + event.date;
+  else
+    return 'Trial';
+}
+
+async function admin_export_event(connection, id, email) {
+  let data = await export_event(connection, id, email);
   return {
-    filename: basename(event) + '.ti',
+    filename: basename(data.event) + '.ti',
     data: zlib.gzipSync(JSON.stringify(data), {level: 9})
   };
 }
@@ -3055,6 +3058,13 @@ async function admin_import_event(connection, data, email) {
     await cache.rollback(connection);
     throw err;
   }
+}
+
+async function admin_dump_event(connection, id, email) {
+  let data = await export_event(connection, id, email);
+  delete data.event.bases;
+  delete data.series;
+  return data;
 }
 
 function query_string(query) {
@@ -3283,6 +3293,13 @@ app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
 		  "attachment; filename*=UTF-8''" +
 		  encodeURIComponent(req.query.filename || result.filename));
     res.send(result.data);
+  }).catch(next);
+});
+
+app.get('/api/event/:tag/dump', will_read_event, function(req, res, next) {
+  admin_dump_event(req.conn, req.params.id, req.user.email)
+  .then((result) => {
+    res.json(result);
   }).catch(next);
 });
 
