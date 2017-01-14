@@ -73,7 +73,7 @@ var syncController = [
 	}).
 	error(function(data, status) {
 	  // console.log(name + ' ' +
-	  // 	    ($scope.running ? 'failed' : 'cancelled'));
+	  //	    ($scope.running ? 'failed' : 'cancelled'));
 	  delete $scope.kill[name];
 	  next.reject([data, status]);
 	});
@@ -94,16 +94,17 @@ var syncController = [
       $scope.patch = json_diff($scope.target_dump, $scope.source_dump);
       if ($scope.patch.length) {
 	// $scope.patch.unshift({op: 'test', path: '/event/fahrer_version',
-	// 			    value: data0.event.fahrer_version });
-	$scope.patch.unshift({op: 'test', path: '/event/version',
-			      value: $scope.target_dump.event.version });
-	$scope.patch.unshift({op: 'test', path: '/format',
-			      value: $scope.target_dump.format });
+	//			    value: data0.event.fahrer_version });
+	//$scope.patch.unshift({op: 'test', path: '/event/version',
+	//		      value: $scope.target_dump.event.version });
+	//$scope.patch.unshift({op: 'test', path: '/format',
+	//		      value: $scope.target_dump.format });
 
 	var cancel = $q.defer();
 	var request =
-	  $http.post($scope.url + '/api/event/patch', $scope.patch,
-		     {params: {tag: $scope.zu_tag}, timeout: cancel.promise, withCredentials: true});
+	  $http.post($scope.url + '/api/event/' + $scope.to_tag + '/patch',
+		     {patch: $scope.patch},
+		     {timeout: cancel.promise, withCredentials: true});
 	return make_request('patch request', request, cancel).
 	  then(function() {
 	    $scope.target_dump = $scope.source_dump;
@@ -126,12 +127,12 @@ var syncController = [
       delete $scope.source_dump;
       var cancel = $q.defer();
       var source_request =
-	$http.get('/api/event/dump',
-		  {params: {tag: $scope.von_tag}, timeout: cancel.promise});
+	$http.get('/api/event/' + $scope.from_tag + '/dump',
+		  {timeout: cancel.promise});
       return make_request('source request', source_request, cancel).
 	then(function(dump) {
 	  $scope.source_dump = dump;
-	  $scope.title = dump.event.wertungen[0].title;
+	  $scope.title = dump.event.rankings[0].title;
 	  delete $scope.source_error;
 	  sync().
 	    then(function() {
@@ -148,32 +149,39 @@ var syncController = [
       delete $scope.target_dump;
       var cancel = $q.defer();
       var target_request =
-	$http.get($scope.url + '/api/event/dump',
-		  {params: {tag: $scope.zu_tag}, timeout: cancel.promise, withCredentials: true});
+	$http.get($scope.url + '/api/event/' + $scope.to_tag + '/dump',
+		  {timeout: cancel.promise, withCredentials: true});
       return make_request('target request', target_request, cancel).
 	then(function(dump) {
 	  if (dump.format) {
 	    delete $scope.target_error;
 	    $scope.target_dump = dump;
 	    make_source_request();
-	  } else if (kein_import) {
-	    $scope.target_error = url_fehler($scope.url, 'Veranstaltung ' + $scope.zu_tag + ' existiert nicht');
-	    $scope.stop();
 	  } else {
+	    $scope.target_error = 'Fehlerhafte Antwort vom Server';
+	    $scope.stop();
+	  }
+	}, function(result) {
+	  if (kein_import) {
+	    $scope.target_error = url_fehler($scope.url, 'Veranstaltung ' + $scope.to_tag + ' existiert nicht');
+	    $scope.stop();
+	    return;
+	  }
+
+	  if (result[1] == 404) {
 	    var cancel = $q.defer();
 	    var export_request =
-	      $http.get('/api/event/export',
-			{params: {tag: $scope.von_tag},
-			 timeout: cancel.promise,
+	      $http.get('/api/event/' + $scope.from_tag + '/export',
+			{timeout: cancel.promise,
 			 responseType: 'arraybuffer'});
 	    make_request('export request', export_request, cancel).
 	      then(function(data) {
 		var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
 		var cancel = $q.defer();
 		var import_request =
-		  $http.post($scope.url + '/api/event/import', enc,
-			     {params: {tag: $scope.zu_tag},
-			      timeout: cancel.promise,
+		  $http.post($scope.url + '/api/event/import',
+			     {data: enc},
+			     {timeout: cancel.promise,
 			      withCredentials: true});
 		  make_request('import request', import_request, cancel).
 		    then(function() {
@@ -186,21 +194,17 @@ var syncController = [
 		$scope.source_error = url_fehler('', 'Export fehlgeschlagen');
 		$scope.stop();
 	      });
+	  } else {
+	    $scope.target_error = url_fehler($scope.url, result[0].error);
+	    later('target timeout', make_target_request, $scope.timeout);
 	  }
-	}, function(result) {
-	  $scope.target_error = url_fehler($scope.url, result[0].error);
-	  later('target timeout', make_target_request, $scope.timeout);
 	});
     }
 
     $scope.$on('sync', function(event, args) {
       $scope.stop();
       angular.extend($scope, args);
-      $scope.von_tag = $scope.zu_tag = $scope.tag;
-
-      // Debugging:
-      // $scope.url = '';
-      // $scope.zu_tag = 'synctestsynctest';
+      $scope.from_tag = $scope.to_tag = $scope.tag;
 
       $scope.visible = true;
       $scope.start();

@@ -9,25 +9,52 @@
 <a href="event/{{event.id}}/settings">Einstellungen</a><br>
 <a href="event/{{event.id}}/zones">Sektionen aus der Wertung</a><br>
 <br>
-<a ng-if="!fold.export" href="" ng-click="$parent.fold.export = true">↓ Export</a>
-<a ng-if="fold.export" href="" ng-click="$parent.fold.export = false">↑ Export</a><br>
+<a ng-if="!fold.export" href="" ng-click="$parent.fold.export = true">↓ <span ng-if="SYNC_SOURCE">Synchronisieren und</span> Export</a>
+<a ng-if="fold.export" href="" ng-click="$parent.fold.export = false">↑ <span ng-if="SYNC_SOURCE">Synchronisieren und</span> Export</a><br>
 <div ng-if="fold.export">
-<table>
-  <tr>
-    <th>Format</th>
-    <td>
-      <select ng-model="internal.format">
-	<option value="trialinfo">TrialInfo</option>
-      </select>
-    </td>
-  </tr>
-  <tr ng-if="internal.format='trialinfo'">
-    <th>Datei</th>
-    <td>
-      <a href="/api/event/{{event.tag}}/export?filename={{encodeURIComponent(filename())}}.ti" ng-click="$parent.fold.export = false">{{filename()}}.ti</a>
-    </td>
-  </tr>
-</table>
+<form name="form">
+  <table>
+    <tbody>
+      <tr>
+	<th>Aktion</th>
+	<td>
+	  <select ng-model="settings.action">
+	    <option value="sync" ng-if="SYNC_SOURCE">Synchronsieren</option>
+	    <option value="trialinfo-export">Export (TrialInfo)</option>
+	  </select>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="settings.action == 'sync'">
+      <tr>
+	<th>Zieladresse</th>
+	<td>
+	  <input type="text" size="30" ng-model="settings.url" id="url" required>
+	</td>
+      </tr>
+      <tr>
+	<th>Intervall</th>
+	<td>
+	  <input type="text" numeric min="1" max="600" size="3" ng-model="settings.timeout" id="timeout" style="text-align:center" required> Sekunden
+	</td>
+      </tr>
+      <tr>
+	<th></th>
+	<td>
+	  <button ng-click="synchronize(); $parent.fold.export = false" ng-disabled="!form.$valid">Synchronisieren (zum Server)</button>
+	</td>
+      </tr>
+    </tbody>
+    <tbody ng-if="settings.action == 'trialinfo-export'">
+      <tr>
+	<th>Datei</th>
+	<td>
+	  <a href="/api/event/{{event.tag}}/export?filename={{encodeURIComponent(filename())}}.ti" ng-click="$parent.fold.export = false">{{filename()}}.ti</a>
+	</td>
+      </tr>
+    </tbody>
+  </table>
+</form>
 </div>
 <a ng-if="!fold.reset" href="" ng-click="$parent.fold.reset = true">↓ Zurücksetzen</a>
 <a ng-if="fold.reset" href="" ng-click="$parent.fold.reset = false">↑ Zurücksetzen</a><br>

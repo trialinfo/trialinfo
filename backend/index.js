@@ -38,6 +38,8 @@ var moment = require('moment');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var zlib = require('zlib');
+var clone = require('clone');
+var jsonpatch = require('json-patch');
 
 require('marko/node-require').install();
 
@@ -565,17 +567,6 @@ function admin_event_to_api(event) {
 
   if (event.skipped_zones)
     copy.skipped_zones = skipped_zones_list(event.skipped_zones);
-
-  /*
-   * NOTE: A list of bases (event.bases) is useful in the TrialInfo file
-   * format so that we can inherit rights from the closest base that exists
-   * in the database, it doesn't help the web frontend, though.  Omit here.
-   */
-
-  /*
-   * NOTE: In the TrialInfo file format, we also want event.series, a list of
-   * series the event is a part of.
-   */
 
   return copy;
 }
@@ -1178,13 +1169,23 @@ async function inherit_rights_from_event(connection, id, base_id) {
 }
 
 async function add_event_write_access(connection, id, email) {
-	await connection.queryAsync(`
-	  INSERT INTO events_admins (id, user, read_only)
-	  SELECT ?, user, 0
-	  FROM users
-	  WHERE email = ?
-	  ON DUPLICATE KEY UPDATE read_only = 0`,
-	  [id, email]);
+  await connection.queryAsync(`
+    INSERT INTO events_admins (id, user, read_only)
+    SELECT ?, user, 0
+    FROM users
+    WHERE email = ?
+    ON DUPLICATE KEY UPDATE read_only = 0`,
+    [id, email]);
+}
+
+async function add_serie_write_access(connection, serie, email) {
+  await connection.queryAsync(`
+    INSERT INTO series_admins (serie, user, read_only)
+    SELECT ?, user, 0
+    FROM users
+    WHERE email = ?
+    ON DUPLICATE KEY UPDATE read_only = 0`,
+    [serie, email]);
 }
 
 async function inherit_from_event(connection, id, base_tag, reset, email) {
@@ -1430,13 +1431,8 @@ async function save_serie(connection, serie_id, serie, version, email) {
       if (!serie.tag)
         serie.tag = random_tag();
 
-      await connection.queryAsync(`
-	INSERT INTO series_admins (serie, user, read_only)
-	SELECT ?, user, 0
-	FROM users
-	WHERE email = ?
-	ON DUPLICATE KEY UPDATE read_only = 0`,
-	[serie_id, email]);
+      if (email)
+	await add_serie_write_access(connection, serie_id, email);
     }
     await update_serie(connection, serie_id, old_serie, serie);
     return serie_id;
@@ -2881,6 +2877,7 @@ async function export_event(connection, id, email) {
     series[index] = serie;
   }
 
+  event = Object.assign({}, event);
   let base = event.base;
   delete event.base;
   event.bases = [];
@@ -2902,7 +2899,6 @@ async function export_event(connection, id, email) {
     }
   }
 
-  event = Object.assign({}, event);
   delete event.id;
   delete event.version;
 
@@ -2957,98 +2953,117 @@ async function title_of_copy(connection, event) {
 }
 */
 
-async function admin_import_event(connection, data, email) {
-  data = JSON.parse(zlib.gunzipSync(Buffer.from(data, 'base64')));
-
+async function import_event(connection, existing_id, data, email) {
   if (data.format != 'TrialInfo 1')
     throw new HTTPError(415, 'Unsupported Media Type');
 
   await cache.begin(connection);
   try {
-    let result;
-
     let event = data.event;
-    result = await connection.queryAsync(`
-      SELECT id
-      FROM events
-      WHERE tag = ?`, [event.tag]);
-    if (result.length) {
-      event.tag = random_tag();
-      event.rankings[0].title += ' (Kopie)';
-      // event.rankings[0].title = await title_of_copy(connection, event);
+    let result;
+    let id;
+
+    if (existing_id) {
+      id = existing_id;
+    } else {
+      result = await connection.queryAsync(`
+	SELECT id
+	FROM events
+	WHERE tag = ?`, [event.tag]);
+      if (result.length) {
+	event.tag = random_tag();
+	event.rankings[0].title += ' (Kopie)';
+	// event.rankings[0].title = await title_of_copy(connection, event);
+      }
+
+      result = await connection.queryAsync(`
+	SELECT COALESCE(MAX(id), 0) + 1 AS id
+	FROM events`);
+      id = result[0].id;
+
+      await add_event_write_access(connection, id, email);
     }
 
-    result = await connection.queryAsync(`
-      SELECT COALESCE(MAX(id), 0) + 1 AS id
-      FROM events`);
-    let id = result[0].id;
+    if (event.bases) {
+      let bases = event.bases;
+      delete event.bases;
+      event.base = bases.length ? bases[0] : null;
 
-    let bases = event.bases;
-    delete event.bases;
-    if (bases.length)
-      event.base = bases[0];
-    Object.assign(cache.modify_event(id), event);
+      if (!existing_id) {
+	result = await connection.queryAsync(`
+	  SELECT id, tag
+	  FROM events`);
+	let bases_hash = result.reduce((bases_hash, event) => {
+	  bases_hash[event.tag] = event.id;
+	  return bases_hash;
+	}, {});
 
-    result = await connection.queryAsync(`
-      SELECT id, tag
-      FROM events`);
-    let bases_hash = result.reduce((bases_hash, event) => {
-      bases_hash[event.tag] = event.id;
-      return bases_hash;
-    }, {});
-
-    for (let base of bases) {
-      let base_id = bases_hash[base];
-      if (base_id) {
-	await inherit_rights_from_event(connection, id, base_id);
-	break;
+	for (let base of bases) {
+	  let base_id = bases_hash[base];
+	  if (base_id) {
+	    await inherit_rights_from_event(connection, id, base_id);
+	    break;
+	  }
+	}
       }
     }
 
-    await add_event_write_access(connection, id, email);
+    if (existing_id) {
+      await get_event(connection, id);
+      await get_riders(connection, id);
+
+      for (let number in cache.saved_riders[id]) {
+	if (!data.riders[number])
+	  cache.delete_rider(id, number);
+      }
+    }
+
+    Object.assign(cache.modify_event(id), event);
 
     Object.values(data.riders).forEach((rider) => {
       Object.assign(cache.modify_rider(id, rider.number), rider);
     });
 
-    result = await connection.queryAsync(`
-      SELECT series.serie, series.tag AS tag, read_only
-      FROM series
-      LEFT JOIN (
-        SELECT serie, COALESCE(read_only, 0) AS read_only
-	FROM series_all_admins
-	WHERE email = ?) AS _ USING (serie)`, [email]);
-    let existing_series = result.reduce((existing_series, serie) => {
-      existing_series[serie.tag] = {
-	serie: serie.serie,
-	writable: serie.read_only === 0
-      };
-      return existing_series;
-    }, {});
+    if (!existing_id && data.series) {
+      result = await connection.queryAsync(`
+	SELECT series.serie, series.tag AS tag, read_only
+	FROM series
+	LEFT JOIN (
+	  SELECT serie, COALESCE(read_only, 0) AS read_only
+	  FROM series_all_admins
+	  WHERE email = ?) AS _ USING (serie)`, [email]);
+      let existing_series = result.reduce((existing_series, serie) => {
+	existing_series[serie.tag] = {
+	  serie: serie.serie,
+	  writable: serie.read_only === 0
+	};
+	return existing_series;
+      }, {});
 
-    for (let serie of data.series) {
-      let existing_serie = existing_series[serie.tag];
-      if (existing_serie && existing_serie.writable) {
-	await connection.queryAsync(`
-	  INSERT INTO series_events (serie, id)
-	  VALUES (?, ?)`, [existing_serie.serie, id]);
-	for (let number in serie.new_numbers) {
+      for (let serie of data.series) {
+	let existing_serie = existing_series[serie.tag];
+	if (existing_serie && existing_serie.writable) {
 	  await connection.queryAsync(`
-	    INSERT INTO new_numbers (serie, id, number, new_number)
-	    VALUES (?, ?, ?, ?)`,
-	    [existing_serie.serie, id, number, serie.new_numbers[number]]);
+	    INSERT INTO series_events (serie, id)
+	    VALUES (?, ?)`, [existing_serie.serie, id]);
+	  for (let number in serie.new_numbers) {
+	    await connection.queryAsync(`
+	      INSERT INTO new_numbers (serie, id, number, new_number)
+	      VALUES (?, ?, ?, ?)`,
+	      [existing_serie.serie, id, number, serie.new_numbers[number]]);
+	  }
+	} else {
+	  if (existing_series[serie.tag]) {
+	    delete serie.tag;
+	    serie.name += ' (Kopie)';
+	  }
+	  serie.events = [id];
+	  let new_numbers = serie.new_numbers;
+	  serie.new_numbers = {};
+	  if (new_numbers)
+	    serie.new_numbers[id] = new_numbers;
+	  let serie_id = await save_serie(connection, null, serie, null, email);
 	}
-      } else {
-	if (existing_series[serie.tag]) {
-	  delete serie.tag;
-	  serie.name += ' (Kopie)';
-	}
-	serie.events = [id];
-	let new_numbers = serie.new_numbers;
-	serie.new_numbers = {};
-	if (new_numbers)
-	  serie.new_numbers[id] = new_numbers;
-	let serie_id = await save_serie(connection, null, serie, null, email);
       }
     }
 
@@ -3060,11 +3075,29 @@ async function admin_import_event(connection, data, email) {
   }
 }
 
+async function admin_import_event(connection, existing_id, data, email) {
+  data = JSON.parse(zlib.gunzipSync(Buffer.from(data, 'base64')));
+  return await import_event(connection, existing_id, data, email);
+}
+
 async function admin_dump_event(connection, id, email) {
   let data = await export_event(connection, id, email);
   delete data.event.bases;
   delete data.series;
   return data;
+}
+
+async function admin_patch_event(connection, id, patch, email) {
+  let event0 = await export_event(connection, id, email);
+  let event1 = clone(event0, false);
+  console.log('Patch: ' + JSON.stringify(patch));
+  try {
+    jsonpatch.apply(event1, patch);
+  } catch (err) {
+    console.error('Patch ' + JSON.stringify(patch) + ': ' + err);
+    throw new HTTPError(409, 'Conflict');
+  }
+  await import_event(connection, id, event1, email);
 }
 
 function query_string(query) {
@@ -3094,7 +3127,7 @@ if (!config.session.secret)
 app.use(logger(app.get('env') == 'production' ? production_log_format : 'dev'));
 if (app.get('env') == 'production')
   app.get('*.js', minified_redirect);
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '5mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser(/* config.session.secret */));
 app.use(cookieSession({
@@ -3103,12 +3136,26 @@ app.use(cookieSession({
   signed: false}));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/api', conn(pool));
 app.use(compression());
 
 /*
  * Accessible to anyone:
  */
+
+
+app.use(function(req, res, next) {
+  let origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+    // res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  if (req.method != 'OPTIONS')
+    return next();
+  res.end();
+});
 
 app.get('/', conn(pool), index);
 
@@ -3198,6 +3245,7 @@ app.get('/register/*', function(req, res, next) {
  * Accessible to all registered users:
  */
 
+app.use('/api', conn(pool));
 app.all('/api/*', auth);
 
 app.get('/api/event/:id/scores', auth, function(req, res, next) {
@@ -3296,6 +3344,13 @@ app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
   }).catch(next);
 });
 
+app.post('/api/event/import', function(req, res, next) {
+  admin_import_event(req.conn, null, req.body.data, req.user.email)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
 app.get('/api/event/:tag/dump', will_read_event, function(req, res, next) {
   admin_dump_event(req.conn, req.params.id, req.user.email)
   .then((result) => {
@@ -3303,10 +3358,10 @@ app.get('/api/event/:tag/dump', will_read_event, function(req, res, next) {
   }).catch(next);
 });
 
-app.post('/api/event/import', function(req, res, next) {
-  admin_import_event(req.conn, req.body.data, req.user.email)
+app.post('/api/event/:tag/patch', will_write_event, function(req, res, next) {
+  admin_patch_event(req.conn, req.params.id, req.body.patch, req.user.email)
   .then((result) => {
-    res.json(result);
+    res.json({});
   }).catch(next);
 });
 

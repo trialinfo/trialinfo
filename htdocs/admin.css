@@ -3,6 +3,8 @@
 font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
 }
 
+table th { text-align:right; }
+
 body { background-color:white; }
 
 span.accesskey { text-decoration:underline; }

@@ -154,10 +154,24 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 
 	      function error(response) {
 		if (response.status === 403) {
-		  $timeout(function() {
-		    $window.location.href = '/login?redirect=' +
-		      encodeURIComponent('/admin' + $location.url());
-		  });
+		  if (response.config.url.match('^/')) {
+		    /* Request is "local". */
+		    $timeout(function() {
+		      $window.location.href = '/login?redirect=' +
+			encodeURIComponent('/admin' + $location.url());
+		    });
+		  } else {
+		    /* Request is "remote" (sync or server import). */
+		    var match = response.config.url.match('^(.+?://.+?)/');
+		    if (match) {
+		      $timeout(function() {
+			$window.location.href =
+			  match[1] + '/login?redirect=' +
+			  encodeURIComponent($window.location.origin +
+					     '/admin' + $location.url());
+		      });
+		    }
+		  }
 		}
 		return $q.reject(response);
 	      }

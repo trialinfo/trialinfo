@@ -5,10 +5,14 @@ var eventController = [
   function ($scope, $location, $http, event) {
     $scope.$root.context(event.rankings[0].title);
 
+    $scope.SYNC_SOURCE = SYNC_SOURCE;
+
     $scope.event = event;
     $scope.features = event.features;
-    $scope.internal = {
-      format: 'trialinfo'
+    $scope.settings = {
+      action: SYNC_SOURCE ? 'sync' : 'trialinfo-export',
+      url: 'https://next.trialinfo.at',
+      timeout: 30
     };
     $scope.fold = {};
 
@@ -29,6 +33,16 @@ var eventController = [
       else
         return 'Trial';
     };
+
+    $scope.synchronize = function() {
+      var args = {
+	title: event.title,
+	tag: event.tag,
+	url: $scope.settings.url,
+	timeout: $scope.settings.timeout * 1000
+      };
+      $scope.$root.$broadcast('sync', args);
+    }
 
     $scope.remove = function() {
       if (confirm('Veranstaltung wirklich löschen?\n\nDie Veranstaltung kann später nicht wiederhergestellt werden.')) {
