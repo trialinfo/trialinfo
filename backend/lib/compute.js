@@ -86,10 +86,6 @@ function compute(cache, id, event) {
       if (rider.group)
 	return;
 
-      rider.marks_per_round = [];
-      rider.marks_distribution = [];
-      rider.marks = null;
-
       let last_started_round, last_completed_round;
 
       if (rider.start && rider.ranking_class) {
@@ -167,9 +163,6 @@ function compute(cache, id, event) {
 	return;
 
       group.marks_per_zone = [];
-      group.marks_per_round = [];
-      group.marks_distribution = [];
-      group.marks = null;
 
       if (group.start) {
 	group.riders.forEach((number) => {
@@ -295,7 +288,7 @@ function compute(cache, id, event) {
     let previous_rider;
     riders_in_class.forEach((rider) => {
       ranks[rider.number] =
-        (previous_rider && rank_order(previous_rider, rider) == 0) ?
+        (previous_rider && !rank_order(previous_rider, rider)) ?
 	  ranks[previous_rider.number] : rank;
       previous_rider = rider;
       rank++;
@@ -378,7 +371,11 @@ function compute(cache, id, event) {
       ),
       non_competing: cached_rider.non_competing ||
 		     (event.classes[class_ - 1] || {}).non_competing,
-      marks_per_zone: cached_rider.marks_per_zone
+      failure: cached_rider.failure,
+      marks_per_zone: cached_rider.marks_per_zone,
+      marks_per_round: [],
+      marks_distribution: [],
+      marks: null
     };
     return riders;
   }, {});
@@ -428,16 +425,21 @@ function compute(cache, id, event) {
   }
 
   Object.values(riders).forEach((rider) => {
-    let cached_rider = cached_riders[rider.number];
-    if (rider.marks != cached_rider.marks ||
-        !deepEqual(rider.marks_per_round, cached_rider.marks_per_round) ||
-	!deepEqual(rider.marks_distribution, cached_rider.marks_distribution) ||
-	!deepEqual(rider.rankings, cached_rider.rankings) ||
-	(rider.group && !deepEqual(rider.marks_per_zone, cached_rider.marks_per_zone))) {
-      delete rider.ranking_class;
-      delete rider.zones_todo;
-      Object.assign(cache.modify_rider(id, rider.number), rider);
-    }
+    let number = rider.number;
+    let cached_rider = cached_riders[number];
+
+    if (rider.marks != cached_rider.marks)
+      cache.modify_rider(id, number).marks = rider.marks;
+    if (rider.rank != cached_rider.rank)
+      cache.modify_rider(id, number).rank = rider.rank;
+    if (!deepEqual(rider.marks_per_round, cached_rider.marks_per_round))
+      cache.modify_rider(id, number).marks_per_round = rider.marks_per_round;
+    if (!deepEqual(rider.marks_distribution, cached_rider.marks_distribution))
+      cache.modify_rider(id, number).marks_distribution = rider.marks_distribution;
+    if (!deepEqual(rider.rankings, cached_rider.rankings))
+      cache.modify_rider(id, number).rankings = rider.rankings;
+    if (rider.group && !deepEqual(rider.marks_per_zone, cached_rider.marks_per_zone))
+      cache.modify_rider(id, number).marks_per_zone = rider.marks_per_zone;
   });
 }
 
