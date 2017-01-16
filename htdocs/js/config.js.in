@@ -1,3 +1,4 @@
-var HAVE_WEASYPRINT = @HAVE_WEASYPRINT@;
-var SYNC_SOURCE = @SYNC_SOURCE@;
-var SYNC_TARGET = @SYNC_TARGET@;
+var HAVE_WEASYPRINT = true;
+var SYNC_SOURCE = true;
+var SYNC_REMOTE_URL = 'https://www.trialinfo.at';
+var TRIALTOOL = false;

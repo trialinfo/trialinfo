@@ -3,7 +3,6 @@
 var settingsController = [
   '$scope', '$http', '$timeout', '$location', 'event', 'events',
   function ($scope, $http, $timeout, $location, event, events) {
-    $scope.SYNC_TARGET = SYNC_TARGET;
     $scope.$root.context(event ? event.rankings[0].title : 'Neue Veranstaltung');
     $scope.internal = {
       base: null,

@@ -11,7 +11,7 @@ var eventController = [
     $scope.features = event.features;
     $scope.settings = {
       action: SYNC_SOURCE ? 'sync' : 'trialinfo-export',
-      url: 'https://next.trialinfo.at',
+      url: SYNC_REMOTE_URL,
       timeout: 30
     };
     $scope.fold = {};

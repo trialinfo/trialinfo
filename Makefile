@@ -3,12 +3,7 @@ MAKEFLAGS = --no-print-directory
 CURL = curl
 SED = sed
 
--include CONFIG
-
-HAVE_WEASYPRINT ?= true
 SSI_LEGACY_EXPR_PARSER ?= true
-SYNC_SOURCE ?= true
-SYNC_TARGET ?= false
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
@@ -20,7 +15,6 @@ DOWNLOAD_FILES = \
 	htdocs/js/validate.js \
 
 GENERATED_FILES = \
-	htdocs/js/config.js \
 	htdocs/ergebnisse/.htaccess \
 	htdocs/veranstalter/.htaccess \
 
@@ -55,10 +49,7 @@ SSI_LEGACY_EXPR_PARSER=-e '/^@SSI_LEGACY_EXPR_PARSER@$$/d'
 endif
 
 generate_web_file = \
-	$(SED) -e 's:@HAVE_WEASYPRINT@:$(HAVE_WEASYPRINT):g' \
-	       -e 's:@SYNC_SOURCE@:$(SYNC_SOURCE):g' \
-	       -e 's:@SYNC_TARGET@:$(SYNC_TARGET):g' \
-	       $(SSI_LEGACY_EXPR_PARSER)
+	$(SED) $(SSI_LEGACY_EXPR_PARSER)
 
 .PHONY: $(GENERATED_FILES)
 $(GENERATED_FILES): %: %.in

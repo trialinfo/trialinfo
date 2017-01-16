@@ -7,7 +7,6 @@
 	<td>
 	  <select ng-model="settings.operation" id="operation" ng-disabled="busy">
 	    <option value="import-remote" ng-if="SYNC_SOURCE">Server-Import</option>
-	    <option value="sync" ng-if="SYNC_SOURCE">Synchronisieren</option>
 	    <option value="import-file">Datei-Import</option>
 	  </select>
 	</td>
@@ -19,7 +18,7 @@
 	  </select>
 	</td>
       </tr>
-      <tr ng-if="settings.operation == 'import-file'">
+      <tr ng-if="settings.operation == 'import-file' && TRIALTOOL">
 	<th align="right"><label for="format">Format</label></th>
 	<td>
 	  <select ng-model="settings.format" id="format" ng-disabled="busy">
@@ -33,13 +32,13 @@
       <tr>
 	<th align="right"><label for="url">Quelladresse</label></th>
 	<td>
-	  <input type="text" size="30" ng-model="settings.url" id="url" required ng-disabled="busy"> <button ng-click="get_veranstaltungen()" ng-disabled="busy">Liste abrufen</button>
+	  <input type="text" size="30" ng-model="settings.url" id="url" required ng-disabled="busy"> <button ng-click="get_events()" ng-disabled="busy">Liste abrufen</button>
 	</td>
       </tr>
       <tr>
 	<th align="right"><label for="tag">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="remote.event" ng-options="event as veranstaltung_bezeichnung(event) for event in remote.events" ng-disabled="busy || !liste_abgerufen" id="tag">
+	  <select ng-model="remote.event" ng-options="event as event_name(event) for event in remote.events | filter:event_visible" ng-disabled="busy || !remote.events" id="tag">
 	  </select>
 	</td>
       </tr>
@@ -52,33 +51,13 @@
       <tr>
 	<th align="right"><label for="url"></label></th>
 	<td>
-	  <button ng-click="import_remote()" ng-disabled="!(liste_abgerufen && remote.event) || busy">Importieren (vom Server)</button>
-	</td>
-      </tr>
-    </tbody>
-    <tbody ng-if="settings.operation == 'sync'">
-      <tr>
-	<th align="right"><label for="url">Zieladresse</label></th>
-	<td>
-	  <input type="text" size="30" ng-model="settings.url" id="url" required>
-	</td>
-      </tr>
-      <tr>
-	<th align="right"><label for="timeout">Intervall</label></th>
-	<td>
-	  <input type="text" numeric min="1" max="600" size="3" ng-model="settings.timeout" id="timeout" style="text-align:center" required> Sekunden
-	</td>
-      </tr>
-      <tr>
-	<th align="right"></th>
-	<td>
-	  <button ng-click="synchronize()" ng-disabled="!form.$valid">Synchronisieren (zum Server)</button>
+	  <button ng-click="import_remote()" ng-disabled="!(remote.events && remote.event) || busy">Importieren (vom Server)</button>
 	</td>
       </tr>
     </tbody>
     <tbody ng-if="settings.operation == 'import-file' && settings.format == 'trialinfo'">
       <tr>
-	<th align="right"><label for="filename">tra-Datei</label></th>
+	<th align="right"><label for="filename">ti-Datei</label></th>
 	<td>
 	  <input type="file" id="filename" ng-disabled="busy" ng-model="settings.filename">
 	</td>

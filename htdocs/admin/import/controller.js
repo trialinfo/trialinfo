@@ -3,14 +3,14 @@
 var importController = [
   '$scope', '$http', '$location', '$q', 'events',
   function ($scope, $http, $location, $q, events) {
-    $scope.$root.context((SYNC_SOURCE ? 'Synchronisieren, ' : '') + 'Import und Export');
     $scope.SYNC_SOURCE = SYNC_SOURCE;
+    $scope.TRIALTOOL = TRIALTOOL;
     $scope.events = events;
     $scope.settings = {
-      operation: 'import-file',
+      operation: SYNC_SOURCE ? 'import-remote' : 'import-file',
       format: 'trialinfo',
       timeout: 30,
-      url: 'https://otsv.trialinfo.at'
+      url: SYNC_REMOTE_URL,
     };
     try {
       $scope.settings.event = events[events.length - 1];
@@ -90,18 +90,8 @@ var importController = [
 	return 'Trial';
     };
 
-    $scope.synchronize = function() {
-      var args = {
-	title: $scope.settings.event.title,
-	tag: $scope.settings.event.tag,
-	url: $scope.settings.url,
-	timeout: $scope.settings.timeout * 1000
-      };
-      $scope.$root.$broadcast('sync', args);
-    }
-
     var cancel_remote;
-    $scope.get_veranstaltungen = function() {
+    $scope.get_events = function() {
       $scope.busy = true;
       cancel_remote = $q.defer();
       $http.get($scope.settings.url + '/api/events',
@@ -110,7 +100,6 @@ var importController = [
 	  $scope.remote.events = events;
 	  $scope.remote.event =
 	    events.length ? events[events.length - 1] : null;
-	  $scope.liste_abgerufen = true;
 	}).
 	error(network_error).
 	finally(function() {
@@ -119,7 +108,10 @@ var importController = [
 	});
     };
 
-    // $scope.veranstaltung_bezeichnung = veranstaltung_bezeichnung;
+    $scope.event_name = event_name;
+    $scope.event_visible = function(event) {
+      return !event.closed;
+    };
 
     $scope.$watch('remote.event', function() {
       var exists = false;
@@ -173,7 +165,7 @@ var importController = [
     };
 
     $scope.$watch('settings.url', function() {
-      $scope.liste_abgerufen = false;
+      delete $scope.remote.events;
     });
 
     $scope.$on('$destroy', function() {
