@@ -676,13 +676,13 @@ async function read_riders(connection, id, revalidate, number) {
   });
 
   (await connection.queryAsync(`
-    SELECT ranking, number, subrank, score
+    SELECT ranking, number, rank, score
     FROM rider_rankings
     WHERE ` + filters)
   ).forEach((row) => {
     var rider = riders[row.number];
     if (rider) {
-      rider.rankings[row.ranking - 1] = {rank: row.subrank, score: row.score};
+      rider.rankings[row.ranking - 1] = {rank: row.rank, score: row.score};
     }
   });
 
@@ -1867,9 +1867,8 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
     async function(a, b, index) {
       await update(connection, 'rider_rankings',
 	{id: id, number: number, ranking: index + 1},
-	['subrank', 'score'],
-	a, b,
-	(x) => (x ? {subrank: x.rank, score: x.score} : null));
+	['rank', 'score'],
+	a, b);
     });
 
   await zipAsync(old_rider.marks_per_zone, new_rider.marks_per_zone,

@@ -62,7 +62,7 @@ ALTER TABLE fahrer_wertung
 	-- id INT,
 	CHANGE startnummer number INT,
 	CHANGE wertung ranking INT,
-	CHANGE wertungsrang subrank INT,
+	CHANGE wertungsrang rank INT,
 	CHANGE wertungspunkte score REAL;
 
 DROP TABLE IF EXISTS classes;

@@ -122,7 +122,7 @@ while (my $row = $sth->fetchrow_hashref) {
 }
 
 $sth = $dbh->prepare(q{
-    SELECT class AS klasse, } . ($wertung == 1 ? "rank AS rang" : "subrank AS rang") . ", " . q{
+    SELECT class AS klasse, } . ($wertung == 1 ? "riders.rank AS rang" : "rider_rankings.rank AS rang") . ", " . q{
 	   number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
 	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
 	   s0, s1, s2, s3, s4, s5, marks AS punkte, score AS wertungspunkte, riders.rounds AS

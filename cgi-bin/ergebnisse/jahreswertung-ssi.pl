@@ -133,7 +133,7 @@ if ($letzte_id) {
 $sth = $dbh->prepare(q{
     SELECT id, class AS klasse, number AS startnummer,
 	   first_name AS vorname, last_name AS nachname,
-	   score AS wertungspunkte, subrank AS wertungsrang
+	   score AS wertungspunkte, rider_rankings.rank AS wertungsrang
     } . ( @db_spalten ? ", " . join(", ", @db_spalten) : "") . q{
     FROM rider_rankings
     JOIN riders USING (id, number)

@@ -261,7 +261,7 @@ CREATE TABLE `rider_rankings` (
   `id` int(11) NOT NULL DEFAULT '0',
   `number` int(11) NOT NULL,
   `ranking` int(11) NOT NULL,
-  `subrank` int(11) DEFAULT NULL,
+  `rank` int(11) DEFAULT NULL,
   `score` double DEFAULT NULL,
   PRIMARY KEY (`id`,`number`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
