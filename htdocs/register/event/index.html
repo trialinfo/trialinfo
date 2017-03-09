@@ -77,6 +77,12 @@
 	<input type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
       </td>
     </tr>
+    <tr ng-if="features.emergency_phone">
+      <th align="right"><label for="emergency_phone">Notfall-Telefon</label></th>
+      <td>
+	<input type="text" size="20" maxlength="20" ng-model="rider.emergency_phone" id="emergency_phone" title="Kontakt für Notfälle während der Veranstaltung">
+      </td>
+    </tr>
     <tr ng-if="features.date_of_birth">
       <th align="right"><label for="date_of_birth">Geburtsdatum</label></th>
       <td>

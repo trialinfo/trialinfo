@@ -272,6 +272,12 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	expr: "phone",
 	style: { 'text-align': 'left' },
 	when: function() { return features.phone; } },
+    emergency_phone:
+      { name: 'Notfall-Telefon',
+	heading: 'Notfall-Telefon',
+	expr: "emergency_phone",
+	style: { 'text-align': 'left' },
+	when: function() { return features.emergency_phone; } },
     email:
       { name: 'E-Mail',
 	heading: 'E-Mail',

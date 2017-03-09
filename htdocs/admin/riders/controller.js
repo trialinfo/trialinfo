@@ -33,7 +33,7 @@ var ridersController = [
     if (groups) {
       /* Folgende Features deaktivieren wir für Gruppen: */
       angular.forEach(['number', 'first_name', 'date_of_birth', 'street',
-		       'zip', 'city', 'phone', 'license', 'vehicle',
+		       'zip', 'city', 'phone', 'emergency_phone', 'license', 'vehicle',
 		       'displacement', 'email', 'registration', 'frame_number'], function(feature) {
 	delete features[feature];
       });

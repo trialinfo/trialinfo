@@ -71,10 +71,20 @@
 		</datalist>
 	      </td>
 	    </tr>
-	    <tr ng-if="features.phone">
-	      <th align="right"><label for="phone">Telefon</label></th>
+	    <tr ng-if="features.phone || features.emergency_phone">
+	      <th align="right">
+	        <label ng-if="features.phone && !features.emergency_phone" for="phone">Telefon</label>
+	        <label ng-if="!features.phone && features.emergency_phone" for="emergency_phone">Notfall-Telefon</label>
+	        <label ng-if="features.phone && features.emergency_phone" for="phone">Telefon (Notfall)</label>
+	      </th>
 	      <td>
-		<input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
+		<input ng-if="features.phone" ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
+		<span ng-if="!features.phone && features.emergency_phone">
+		  <input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
+		</span>
+		<span ng-if="features.phone && features.emergency_phone">
+		  (<input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.emergency_phone" id="emergency_phone">)
+		</span>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.date_of_birth">

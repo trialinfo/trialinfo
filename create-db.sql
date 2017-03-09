@@ -292,6 +292,7 @@ CREATE TABLE `riders` (
   `vehicle` varchar(30) DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `emergency_phone` varchar(20) DEFAULT NULL,
   `license` varchar(20) DEFAULT NULL,
   `frame_number` varchar(20) DEFAULT NULL,
   `registration` varchar(15) DEFAULT NULL,
