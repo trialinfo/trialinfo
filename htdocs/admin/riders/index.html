@@ -99,6 +99,12 @@
 		<input ng-disabled="!enabled.rider" type="text" size="20" maxlength="20" ng-model="rider.license" id="license">
 	      </td>
 	    </tr>
+	    <tr ng-if="features.guardian && guardian_visible(rider)">
+	      <th align="right"><label for="guardian" title="Gesetzlicher Vertreter">Ges. Vertreter</th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="40" maxlength="50" ng-model="rider.guardian" id="guardian">
+	      </td>
+	    </tr>
 	    <tr ng-if="features.club">
 	      <th align="right"><label for="club">Club</label></th>
 	      <td>

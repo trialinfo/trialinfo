@@ -285,6 +285,7 @@ CREATE TABLE `riders` (
   `entry_fee` varchar(10) DEFAULT NULL,
   `last_name` varchar(30) DEFAULT NULL,
   `first_name` varchar(30) DEFAULT NULL,
+  `guardian` varchar(50) DEFAULT NULL,
   `street` varchar(30) DEFAULT NULL,
   `city` varchar(40) DEFAULT NULL,
   `zip` varchar(5) DEFAULT NULL,

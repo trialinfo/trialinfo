@@ -206,6 +206,12 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	heading: 'Name',
 	expr: "join(' ', last_name, first_name)",
 	style: { 'text-align': 'left' } },
+    guardian:
+      { name: 'Ges. Vertreter',
+	heading: '<span title="Gesetzlicher Vertreter">Ges. Vertreter</span>',
+	expr: "guardian",
+	style: { 'text-align': 'left' },
+	when: function() { return features.guardian; } },
     date_of_birth:
       { name: 'Geburtsdatum',
 	heading: 'Geburtsdatum',

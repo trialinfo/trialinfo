@@ -32,7 +32,7 @@ var ridersController = [
     }
     if (groups) {
       /* Folgende Features deaktivieren wir für Gruppen: */
-      angular.forEach(['number', 'first_name', 'date_of_birth', 'street',
+      angular.forEach(['number', 'first_name', 'guardian', 'date_of_birth', 'street',
 		       'zip', 'city', 'phone', 'emergency_phone', 'license', 'vehicle',
 		       'displacement', 'email', 'registration', 'frame_number'], function(feature) {
 	delete features[feature];
@@ -203,6 +203,10 @@ var ridersController = [
       return !(angular.equals($scope.old_rider, $scope.rider) &&
 	       visible_number($scope.old_rider) == $scope.internal.number);
     };
+
+    $scope.guardian_visible = function(rider) {
+      return guardian_visible(rider, event);
+    }
 
     $scope.$watch('rider.date_of_birth', function(date_of_birth) {
       var match;

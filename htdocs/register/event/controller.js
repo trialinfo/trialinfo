@@ -70,6 +70,10 @@ var eventController = [
       return info.join(' ');
     };
 
+    $scope.guardian_visible = function(rider) {
+      return guardian_visible(rider, event);
+    }
+
     $scope.modified = function() {
       return !angular.equals($scope.old_rider, $scope.rider);
     };

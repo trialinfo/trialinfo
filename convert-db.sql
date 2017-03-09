@@ -11,6 +11,7 @@ ALTER TABLE fahrer
 	CHANGE nenngeld entry_fee VARCHAR(10),
 	CHANGE nachname last_name VARCHAR(30),
 	CHANGE vorname first_name VARCHAR(30),
+	ADD COLUMN guardian varchar(40) DEFAULT NULL AFTER first_name,
 	CHANGE strasse street VARCHAR(30),
 	CHANGE wohnort city VARCHAR(40),
 	CHANGE plz zip VARCHAR(5),
