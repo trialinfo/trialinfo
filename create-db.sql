@@ -300,6 +300,7 @@ CREATE TABLE `riders` (
   `displacement` varchar(10) DEFAULT NULL,
   `email` varchar(60) DEFAULT NULL,
   `comment` varchar(150) DEFAULT NULL,
+  `rider_comment` varchar(150) DEFAULT NULL,
   `country` varchar(15) DEFAULT NULL,
   `province` varchar(20) DEFAULT NULL,
   `minding` varchar(8) DEFAULT NULL,

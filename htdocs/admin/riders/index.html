@@ -177,6 +177,12 @@
 		<textarea ng-disabled="!enabled.rider" rows="2" cols="70" maxlength="150" ng-model="rider.comment" id="comment"></textarea>
 	      </td>
 	    </tr>
+	    <tr ng-if="features.rider_comment && (old_rider.rider_comment || rider.rider_comment)">
+	      <th align="right"><label for="rider_comment">Fahrer-<br>Bemerkungen</label></th>
+	      <td>
+		<textarea ng-disabled="!enabled.rider" rows="2" cols="70" maxlength="150" ng-model="rider.rider_comment" id="rider_comment"></textarea>
+	      </td>
+	    </tr>
 	    <tr ng-if="features.rankings">
 	      <th align="right"><label for="ranking{{features.rankings[0]}}">Wertungen</label></th>
 	      <td>

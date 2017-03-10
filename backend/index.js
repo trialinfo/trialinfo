@@ -2174,6 +2174,7 @@ const register_rider_fields = {
   province: true,
   registered: true,
   registration: true,
+  rider_comment: true,
   start: true,
   start_tomorrow: true,
   street: true,

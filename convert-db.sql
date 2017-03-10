@@ -26,6 +26,7 @@ ALTER TABLE fahrer
 	CHANGE hubraum displacement VARCHAR(10),
 	-- email VARCHAR(60),
 	CHANGE bemerkung `comment` VARCHAR(150),
+	ADD COLUMN rider_comment varchar(150) DEFAULT NULL AFTER comment,
 	CHANGE land country VARCHAR(15),
 	CHANGE bundesland province VARCHAR(20),
 	CHANGE helfer_nummer minding VARCHAR(8),
