@@ -215,12 +215,7 @@ var ridersController = [
       date_of_birth = new Date(match[1], match[2] - 1, match[3]);
       var year_of_birth = new Date(match[1], 0, 1);
 
-      var now;
-      if (event.date &&
-	  (match = event.date.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
-	now = new Date(match[1], match[2] - 1, match[3]);
-      else
-	now = new Date();
+      var now = date_of_event(event);
 
       var age = new Date();
       age.setTime(now - date_of_birth);
