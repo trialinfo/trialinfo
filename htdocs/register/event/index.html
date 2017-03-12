@@ -55,20 +55,51 @@
     </tr>
     <tr ng-if="features.country">
       <th align="right"><label for="country">Land</label></th>
-      <td>
+      <td ng-if="!otsv_event()">
 	<input type="text" size="15" maxlength="15" ng-model="rider.country" id="country" list="country_list">
 	<datalist id="country_list">
 	  <option ng-repeat="country in suggestions.country" value="{{country}}">
 	</datalist>
       </td>
+      <td ng-if="otsv_event()">
+	<select ng-model="rider.country">
+	  <option value="-"></option>
+	  <option value="D">Deutschland (D)</option>
+	  <option value="GB">Großbritannien (GB)</option>
+	  <option value="I">Italien (I)</option>
+	  <option value="NL">Niederlande (NL)</option>
+	  <option value="">Österreich (A)</option>
+	  <option value="POL">Polen (PL)</option>
+	  <option value="CH">Schweiz (CH)</option>
+	  <option value="SK">Slowakei (SK)</option>
+	  <option value="SLO">Slowenien (SLO)</option>
+	  <option value="E">Spanien (E)</option>
+	  <option value="CZ">Tschechien (CZ)</option>
+	  <option value="H">Ungarn (H)</option>
+	</select>
+      </td>
     </tr>
     <tr ng-if="features.province">
       <th align="right"><label for="province">Bundesland</label></th>
-      <td>
+      <td ng-if="!otsv_event()">
 	<input type="text" size="15" maxlength="20" ng-model="rider.province" list="province_list">
 	<datalist id="province_list">
 	  <option ng-repeat="province in suggestions.province" value="{{province}}">
 	</datalist>
+      </td>
+      <td ng-if="otsv_event()">
+	<select ng-model="rider.province">
+	  <option value=""></option>
+	  <option value="B">Burgenland</option>
+	  <option value="K">Kärnten</option>
+	  <option value="NÖ">Niederösterreich</option>
+	  <option value="OÖ">Oberösterreich</option>
+	  <option value="S">Salzburg</option>
+	  <option value="ST">Steiermark</option>
+	  <option value="T">Tirol</option>
+	  <option value="V">Vorarlberg</option>
+	  <option value="W">Wien</option>
+	</select>
       </td>
     </tr>
     <tr ng-if="features.phone">
@@ -95,7 +126,7 @@
 	<input type="text" size="40" maxlength="50" ng-model="rider.guardian" id="guardian">
       </td>
     </tr>
-    <tr ng-if="features.license">
+    <tr ng-if="features.license && license_visible(rider)">
       <th align="right"><label for="license">Lizenznummer</label></th>
       <td>
 	<input type="text" size="20" maxlength="20" ng-model="rider.license" id="license">

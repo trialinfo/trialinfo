@@ -74,6 +74,16 @@ var eventController = [
       return guardian_visible(rider, event);
     }
 
+    $scope.license_visible = function(rider) {
+      return event.type == null ||
+	     !event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/) ||
+             (rider['class'] >= 11 && rider['class'] <= 13);
+    }
+
+    $scope.otsv_event = function() {
+      return event.type != null && !!event.type.match(/^otsv/);
+    }
+
     $scope.modified = function() {
       return !angular.equals($scope.old_rider, $scope.rider);
     };
