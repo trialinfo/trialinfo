@@ -52,6 +52,10 @@ ALTER TABLE fahrer
 	ADD COLUMN user_tag CHAR(16),
 	ADD COLUMN verified BOOLEAN DEFAULT 1;
 
+UPDATE riders
+	SET country = NULL
+	WHERE country = '';
+
 DROP TABLE IF EXISTS riders_groups;
 ALTER TABLE fahrer_gruppe
 	RENAME riders_groups,

@@ -2169,6 +2169,7 @@ const register_rider_fields = {
   insurance: true,
   last_name: true,
   license: true,
+  non_competing: true,
   number: true,
   phone: true,
   province: true,
@@ -2188,6 +2189,9 @@ function register_filter_rider(rider) {
     Object.keys(register_rider_fields).forEach((field) => {
       result[field] = rider[field];
     });
+    result.rankings = rider.rankings.map(
+      (ranking) => !!ranking
+    );
     return result;
 }
 
@@ -2633,16 +2637,23 @@ async function register_save_rider(connection, id, number, rider, tag, version) 
       });
       rider.number = +number;
 
-      if (old_rider && old_rider.registered) {
-	delete rider.start;
-	delete rider.start_tomorrow;
+      if (old_rider) {
+	if (old_rider.number)
+	  delete rider['class'];
+	if (old_rider.registered) {
+	  delete rider.start;
+	  delete rider.start_tomorrow;
+	}
+      } else {
+	if (event.ranking1_enabled)
+	  rider.rankings = [{"rank":null, "score":null}];
       }
+
+      delete rider.non_competing;
+      delete rider.rankings;
       delete rider.registered;
       rider.verified = false;
       rider.user_tag = tag;
-
-      if (!old_rider && event.ranking1_enabled)
-	rider.rankings = [{"rank":null, "score":null}];
 
       event = cache.modify_event(id);
       if (!event.features.verified)

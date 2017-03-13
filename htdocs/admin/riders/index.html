@@ -56,7 +56,7 @@
 	    <tr ng-if="features.country">
 	      <th align="right"><label for="country">Staatsangehörigkeit</label></th>
 	      <td>
-		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="15" ng-model="rider.country" id="country" list="country_list">
+		<input ng-disabled="!enabled.rider" type="text" nullable size="15" maxlength="15" ng-model="rider.country" id="country" list="country_list">
 		<datalist id="country_list">
 		  <option ng-repeat="country in suggestions.country" value="{{country}}">
 		</datalist>

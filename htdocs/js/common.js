@@ -15,7 +15,8 @@ function date_of_event(event) {
 function guardian_visible(rider, event) {
   var match;
 
-  if (rider.date_of_birth == null ||
+  if (!rider ||
+      rider.date_of_birth == null ||
       !(match = rider.date_of_birth.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
     return false;
 
