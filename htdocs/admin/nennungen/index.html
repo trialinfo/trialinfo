@@ -322,6 +322,36 @@
 		</span>
 	      </span>
 	    </span>
+	    <span ng-if="veranstaltung.art == 'otsv-ecup2017'" style="color:red">
+	      <span ng-if="!fahrer.ausser_konkurrenz">
+		<span ng-if="fahrer.geburtsdatum">
+		  <span ng-if="fahrer.klasse == 1 && jahrgang_alter > 6">
+		    Fahrer ist vor Jahrgang {{jahrgang(6)}} geboren<br>und muss in einer höheren Klasse starten.
+		  </span>
+		  <span ng-if="(fahrer.klasse == 2 || fahrer.klasse == 3) && jahrgang_alter < 7">
+		    Fahrer ist nach Jahrgang {{jahrgang(7)}} geboren<br>und muss in einer niedrigeren Klasse starten.
+		  </span>
+		  <span ng-if="(fahrer.klasse == 2 || fahrer.klasse == 3) && jahrgang_alter > 8">
+		    Fahrer ist vor Jahrgang {{jahrgang(8)}} geboren<br>und muss in einer höheren Klasse starten.
+		  </span>
+		  <span ng-if="fahrer.klasse == 4 && jahrgang_alter < 9">
+		    Fahrer ist nach Jahrgang {{jahrgang(9)}} geboren<br>und muss in einer niedrigeren Klasse starten.
+		  </span>
+		  <span ng-if="fahrer.klasse == 5 && jahrgang_alter < 10">
+		    Fahrer ist nach Jahrgang {{jahrgang(10)}} geboren<br>und muss in einer niedrigeren Klasse starten.
+		  </span>
+		  <span ng-if="fahrer.klasse == 5 && jahrgang_alter > 13">
+		    Fahrer ist vor Jahrgang {{jahrgang(13)}} geboren<br>und muss in einer höheren Klasse starten.
+		  </span>
+		  <span ng-if="fahrer.klasse == 6 && jahrgang_alter < 13">
+		    Fahrer ist nach Jahrgang {{jahrgang(13)}} geboren<br>und muss in einer niedrigeren Klasse starten.
+		  </span>
+		  <span ng-if="fahrer.klasse == 6 && jahrgang_alter > 15">
+		    Fahrer ist vor Jahrgang {{jahrgang(15)}} geboren<br>und muss in einer höheren Klasse starten.
+		  </span>
+		</span>
+	      </span>
+	    </span>
 	  </p>
 	  <p>
 	    <button type="button" ng-disabled="!(geaendert() && form.$valid) || busy" ng-click="speichern()" tabindex="-1">Speichern</button>
