@@ -2835,7 +2835,7 @@ async function index(req, res, next) {
 
     let params = {
       events: function(serie_id, hash) {
-	let serie = series[serie_id];
+	let serie = series[serie_id] || {};
 	return Object.values(serie.events || {})
 	  .sort((a, b) =>
 	    (new Date(a.date).getTime() - new Date(b.date).getTime()) ||
