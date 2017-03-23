@@ -225,7 +225,7 @@ UPDATE users
 CREATE UNIQUE INDEX email ON users (email);
 
 UPDATE users
-	SET tag = SUBSTRING(TO_BASE64(SHA1(RAND())), 16)
+	SET tag = SUBSTRING(TO_BASE64(SHA1(RAND())), 1, 16)
 	WHERE tag IS NULL OR tag = '';
 CREATE UNIQUE INDEX tag ON users (tag);
 
