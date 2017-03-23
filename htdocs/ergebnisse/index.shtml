@@ -2,42 +2,35 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>ÖTSV Veranstaltungsergebnisse 2016</title>
+<title>ÖTSV Veranstaltungsergebnisse 2017</title>
 <link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+<style>
+a { text-decoration:none }
+</style>
 <link rel="icon" type="image/icon" href="/favicon.ico" />
 </head>
 <body>
-<h1>ÖTSV Veranstaltungsergebnisse 2016</h1>
+<h1>ÖTSV Veranstaltungsergebnisse 2017</h1>
 
-<h2>ÖTSV Cup und OSK Staatsmeisterschaft</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=25&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=24" -->
-<p>
-<a href="jahreswertung.shtml?vareihe=25&spalte=lbl&spalte=fahrzeug">ÖTSV Cup Gesamt</a><br>
-<a href="jahreswertung.shtml?vareihe=26&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft Gesamt</a><br>
-</p>
+<h2><a href="jahreswertung.shtml?vareihe=32&spalte=lbl&spalte=fahrzeug">ÖTSV Cup</a> und <a href="jahreswertung.shtml?vareihe=35&spalte=lbl&spalte=fahrzeug">Jugendcup</a>, <a href="jahreswertung.shtml?vareihe=33&spalte=lbl&spalte=fahrzeug">AMF Staatsmeisterschaft</a></h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=32&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=31" -->
 
-<h2>ÖTSV Kids e-Cup</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=29spalte=lbl&spalte=fahrzeug&kuerzel&nicht=24&nicht=29" -->
-<p>
-<a href="jahreswertung.shtml?vareihe=29&spalte=lbl">Gesamt</a><br>
-</p>
+<h2><a href="jahreswertung.shtml?vareihe=30&spalte=lbl">ÖTSV Kids e-Cup</a></h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=30&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=30&nicht=31" -->
 
-<h2>ÖTSV Bike Trial Cup</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=27&spalte=lbl&kuerzel&nicht=24&nicht=27" -->
-<p>
-<a href="jahreswertung.shtml?vareihe=27&spalte=lbl">Gesamt</a>
-</p>
+<h2><a href="jahreswertung.shtml?vareihe=34&spalte=lbl">ÖTSV Bike Trial Cup</a></h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=34&spalte=lbl&kuerzel&nicht=31&nicht=34" -->
 
-<h2>A-Cup</h2>
-<p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
+<h2><a href="http://www.a-trial.info/a-cup/">A-Cup</a></h2>
 
 <h2>Sonstiges</h2>
 <p>
 <a href="statistik.shtml?vareihe=24&kuerzel">Punktestatistiken</a><br>
-<a href="2015.shtml">Ergebnisse 2015</a><br>
-<a href="2014.shtml">Ergebnisse 2014</a><br>
-<a href="2013.shtml">Ergebnisse 2013</a><br>
-<a href="2012.shtml">Ergebnisse 2012</a>
+Ergebnisse <a href="2016.shtml">2016,</a>
+<a href="2015.shtml">2015,</a>
+<a href="2014.shtml">2014,</a>
+<a href="2013.shtml">2013,</a>
+<a href="2012.shtml">2012</a>
 </p>
 <p>
 © Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
