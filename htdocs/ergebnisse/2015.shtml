@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>ÖTSV Veranstaltungsergebnisse 2015</title>
+<link rel="stylesheet" type="text/css" href="../ergebnisse.css" />
+<link rel="icon" type="image/icon" href="/favicon.ico" />
+</head>
+<body>
+<h1>ÖTSV Veranstaltungsergebnisse 2015</h1>
+
+<h2>Veranstaltungen</h2>
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=16&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=16" -->
+
+<h2>Jahreswertungen</h2>
+<p>
+<a href="jahreswertung.shtml?vareihe=17&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2015</a><br>
+<a href="jahreswertung.shtml?vareihe=18&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2015</a><br>
+<a href="jahreswertung.shtml?vareihe=20">ÖTSV Kids e-Cup 2015</a>
+<br>
+<a href="jahreswertung.shtml?vareihe=19">ÖTSV Bike Trial Cup 2015</a><br>
+</p>
+<p>
+
+<h2>Sonstiges</h2>
+<p>
+<a href="statistik.shtml?vareihe=16&kuerzel">Punktestatistiken</a>
+</p>
+<p>
+© Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+</p>
+</body>
+</html>
