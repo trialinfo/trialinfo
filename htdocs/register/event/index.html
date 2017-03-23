@@ -55,8 +55,8 @@
       <tr ng-if="features.country">
 	<th align="right"><label for="country">Land</label></th>
 	<td>
-	  <span ng-if="otsv_event()">
-	    <select ng-if="otsv_event() && internal.country != null" ng-model="internal.country" nullable ng-options="country.codes[0] as country.name for country in countries">
+	  <span ng-if="otsv_event() && internal.country != null">
+	    <select ng-model="internal.country" nullable ng-options="country.code as country.name for country in countries" id="country">
 	    </select>
 	  </span>
 	  <span ng-if="!otsv_event() || internal.country == null">

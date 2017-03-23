@@ -214,32 +214,24 @@ var eventController = [
       otsv_check_class();
     });
 
-    $scope.countries = [
-      {name: 'Deutschland', codes: ['D', 'DE', 'DEU']},
-      {name: 'Frankreich', codes: ['F', 'FR', 'FRA']},
-      {name: 'Großbritannien', codes: ['GB', 'GBR']},
-      {name: 'Italien', codes: ['I', 'IT', 'ITA']},
-      {name: 'Kroation', codes: ['HR', 'HRV']},
-      {name: 'Niederlande', codes: ['NL', 'NLD']},
-      {name: 'Österreich', codes: ['A', 'AT', 'AUT', 'Ö']},
-      {name: 'Polen', codes: ['PL', 'POL']},
-      {name: 'Schweiz', codes: ['CH', 'CHE']},
-      {name: 'Slowakei', codes: ['SK', 'SVK']},
-      {name: 'Slowenien', codes: ['SI', 'SVN']},
-      {name: 'Spanien', codes: ['E', 'ES', 'ESP']},
-      {name: 'Tschechien', codes: ['CZ', 'CZE']},
-      {name: 'Ungarn', codes: ['H', 'HU', 'HUN']},
-      {name: 'Anderes Land', codes: [null]},
-    ];
+    $scope.countries = countries.map(function(country) {
+      return {
+	name: country.name /* + ' (' + country.codes[0] + ')' */,
+	code: country.codes[0]
+      };
+    });
+    $scope.countries.push({
+      name: 'Anderes Land',
+      code: null
+    });
 
-    var countries = {};
-    $scope.countries.forEach(function(country) {
+    var country_codes = {};
+    countries.forEach(function(country) {
       if (country.codes[0]) {
-	countries[country.name.toLocaleUpperCase()] = country.codes[0];
+	country_codes[country.name.toLocaleUpperCase()] = country.codes[0];
 	country.codes.forEach(function(code) {
-	  countries[code] = country.codes[0];
+	  country_codes[code] = country.codes[0];
 	});
-	country.name = country.name + ' (' + country.codes[0] + ')';
       }
     });
 
@@ -248,6 +240,8 @@ var eventController = [
 	$scope.rider.country = country;
 	if (country != 'A')
 	  $scope.rider.province = null;
+	if (country == null)
+	  set_focus('#country', $timeout);
       }
     });
 
@@ -255,13 +249,13 @@ var eventController = [
       if (!$scope.otsv_event())
 	return;
 
-      var country = $scope.rider.country;
-      if (country != null) {
-	country = country.toLocaleUpperCase();
-	if (countries[country]) {
-	  country = countries[country];
-	  if ($scope.internal.country != country)
-	    $scope.internal.country = country;
+      var country_code = $scope.rider.country;
+      if (country_code != null) {
+	country_code = country_code.toLocaleUpperCase();
+	if (country_codes[country_code]) {
+	  country_code = country_codes[country_code];
+	  if ($scope.internal.country != country_code)
+	    $scope.internal.country = country_code;
 	}
       }
     };

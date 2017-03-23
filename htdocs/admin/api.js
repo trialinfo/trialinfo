@@ -33,14 +33,6 @@ function rider_info(rider, $scope) {
   return infos.join('\n');
 }
 
-function set_focus(selector, $timeout) {
-  $timeout(function() {
-    var element = document.querySelector(selector);
-    element.focus();
-    element.select();
-  });
-}
-
 function warn_before_unload($scope, modified) {
   var daten_veraendert = 'Die Daten in diesem Formular wurden verändert.';
   window.onbeforeunload = function(e) {

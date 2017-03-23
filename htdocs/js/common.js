@@ -28,3 +28,28 @@ function guardian_visible(rider, event) {
   age = age.getFullYear() - 1970;
   return age < 18;
 }
+
+function set_focus(selector, $timeout) {
+  $timeout(function() {
+    var element = document.querySelector(selector);
+    element.focus();
+    element.select();
+  });
+}
+
+var countries = [
+  {name: 'Deutschland', codes: ['D', 'DE', 'DEU']},
+  {name: 'Frankreich', codes: ['F', 'FR', 'FRA']},
+  {name: 'Großbritannien', codes: ['GB', 'GBR']},
+  {name: 'Italien', codes: ['I', 'IT', 'ITA']},
+  {name: 'Kroation', codes: ['HR', 'HRV']},
+  {name: 'Niederlande', codes: ['NL', 'NLD']},
+  {name: 'Österreich', codes: ['A', 'AT', 'AUT', 'Ö']},
+  {name: 'Polen', codes: ['PL', 'POL']},
+  {name: 'Schweiz', codes: ['CH', 'CHE']},
+  {name: 'Slowakei', codes: ['SK', 'SVK']},
+  {name: 'Slowenien', codes: ['SI', 'SVN']},
+  {name: 'Spanien', codes: ['E', 'ES', 'ESP']},
+  {name: 'Tschechien', codes: ['CZ', 'CZE']},
+  {name: 'Ungarn', codes: ['H', 'HU', 'HUN']},
+];
