@@ -2822,8 +2822,10 @@ async function index(req, res, next) {
     }, {});
 
     (await req.conn.queryAsync(`
-      SELECT serie, id
-      FROM series_events`))
+      SELECT DISTINCT serie, id
+      FROM series_events
+      JOIN series_classes USING (serie)
+      JOIN classes USING (id, ranking_class)`))
     .forEach((se) => {
       let event = events[se.id];
       let serie = series[se.serie];
