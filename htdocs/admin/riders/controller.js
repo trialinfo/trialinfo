@@ -637,12 +637,71 @@ var ridersController = [
 
     warn_before_unload($scope, $scope.modified);
 
-    $scope.$watch("rider['class']", function() {
-      var rider = $scope.rider;
-      $scope.no_ranking1 = rider && rider['class'] &&
-	event.classes[rider['class'] - 1].no_ranking1;
-      $scope.non_competing = rider && rider['class'] &&
-	event.classes[rider['class'] - 1].non_competing;
+    $scope.$watch("rider.class", function(class_) {
+      $scope.no_ranking1 = class_ &&
+	event.classes[class_ - 1].no_ranking1;
+      $scope.non_competing = class_ &&
+	event.classes[class_ - 1].non_competing;
+
+      delete $scope.min_age;
+      delete $scope.max_age;
+      delete $scope.min_age_year;
+      delete $scope.max_age_year;
+
+      if (event.type != null) {
+	if (event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
+	  if (class_ == 3 || class_ == 5) {
+	    $scope.max_age_year = 44;
+	  } else if (class_ == 4 || class_ == 6) {
+	    $scope.min_age_year = 45;
+	  } else if (class_ == 11) {
+	    $scope.min_age = 14;
+	  } else if (class_ == 12) {
+	    $scope.min_age = 12;
+	    $scope.max_age_year = 17;
+	  } else if (class_ == 13) {
+	    $scope.min_age = 10;
+	    $scope.max_age_year = 15;
+	  }
+	} else if (event.type.match(/^otsv-ecup2017/)) {
+	  if (class_ == 1) {
+	    $scope.max_age_year = 6;
+	  } else if (class_ == 2 || class_ == 3) {
+	    $scope.min_age_year = 7;
+	    $scope.max_age_year = 8;
+	  } else if (class_ == 4) {
+	    $scope.min_age_year = 9;
+	  } else if (class_ == 5) {
+	    $scope.min_age_year = 10;
+	    $scope.max_age_year = 13;
+	  } else if (class_ == 6) {
+	    $scope.min_age_year = 13;
+	    $scope.max_age_year = 15;
+	  }
+	}
+      }
+    });
+
+    $scope.$watch('rider.date_of_birth', function(date_of_birth) {
+      var match;
+      if (date_of_birth == null ||
+	  !(match = date_of_birth.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+	delete $scope.age;
+	delete $scope.age_year;
+	return;
+      }
+      date_of_birth = new Date(match[1], match[2] - 1, match[3]);
+      var year_of_birth = new Date(match[1], 0, 1);
+
+      var now = date_of_event(event);
+
+      var age = new Date();
+      age.setTime(now - date_of_birth);
+      $scope.age = age.getFullYear() - 1970;
+
+      var age_year = new Date();
+      age_year.setTime(now - year_of_birth);
+      $scope.age_year = age_year.getFullYear() - 1970 - 1;
     });
 
     $scope.$on('$routeUpdate', function() {

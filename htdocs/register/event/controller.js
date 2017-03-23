@@ -111,8 +111,6 @@ var eventController = [
 
     function otsv_check_class() {
       var rider = $scope.rider;
-      delete $scope.min_age;
-      delete $scope.max_age_year;
 
       if (event.type != null &&
 	  event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
@@ -129,16 +127,6 @@ var eventController = [
 	disable_class(5, $scope.age_year && $scope.age_year >= 45);
 	disable_class(6, $scope.age_year && $scope.age_year < 45);
 
-	if (rider.class == 11) {
-	  $scope.min_age = 14;
-	} else if (rider.class == 12) {
-	  $scope.min_age = 12;
-	  $scope.max_age_year = 17;
-	} else if (rider.class == 13) {
-	  $scope.min_age = 10;
-	  $scope.max_age_year = 15;
-	}
-
 	disable_class(11, $scope.age && $scope.age < 14);
 	disable_class(12, ($scope.age && $scope.age < 12) ||
 			  ($scope.age_year && $scope.age_year > 17));
@@ -148,6 +136,10 @@ var eventController = [
 
       $scope.form.$setValidity('min-age',
 	!$scope.min_age || $scope.age >= $scope.min_age);
+      $scope.form.$setValidity('max-age',
+	!$scope.max_age || $scope.age <= $scope.max_age);
+      $scope.form.$setValidity('min-age-year',
+	!$scope.min_age_year || $scope.age_year >= $scope.min_age_year);
       $scope.form.$setValidity('max-age-year',
 	!$scope.max_age_year || $scope.age_year <= $scope.max_age_year);
     }
@@ -181,6 +173,44 @@ var eventController = [
     }
 
     $scope.$watch('rider.class', function(class_) {
+      delete $scope.min_age;
+      delete $scope.max_age;
+      delete $scope.min_age_year;
+      delete $scope.max_age_year;
+
+      if (event.type != null) {
+	if (event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
+	  if (class_ == 3 || class_ == 5) {
+	    $scope.max_age_year = 44;
+	  } else if (class_ == 4 || class_ == 6) {
+	    $scope.min_age_year = 45;
+	  } else if (class_ == 11) {
+	    $scope.min_age = 14;
+	  } else if (class_ == 12) {
+	    $scope.min_age = 12;
+	    $scope.max_age_year = 17;
+	  } else if (class_ == 13) {
+	    $scope.min_age = 10;
+	    $scope.max_age_year = 15;
+	  }
+	} else if (event.type.match(/^otsv-ecup2017/)) {
+	  if (class_ == 1) {
+            $scope.max_age_year = 6;
+          } else if (class_ == 2 || class_ == 3) {
+            $scope.min_age_year = 7;
+            $scope.max_age_year = 8;
+          } else if (class_ == 4) {
+            $scope.min_age_year = 9;
+          } else if (class_ == 5) {
+            $scope.min_age_year = 10;
+            $scope.max_age_year = 13;
+          } else if (class_ == 6) {
+            $scope.min_age_year = 13;
+            $scope.max_age_year = 15;
+          }
+	}
+      }
+
       otsv_check_class();
     });
 

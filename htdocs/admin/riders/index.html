@@ -255,115 +255,53 @@
 	      <a href="" ng-click="add_member(number)" strike-through="!member_starts(number)" title="Zu Gruppe hinzufügen{{member_starts(number) ? '' : ' (Fahrer startet nicht)'}}">{{member_name(number)}}</a><br>
 	    </span>
 	  </p>
-	  <p>
-	    <span style="color:red" ng-if="error">{{error}}<br></span>
+	  <p style="color:red">
+	    <span ng-if="error">{{error}}</span>
 	    <!-- if (!(rider && rider.start && starting_classes[rider.class - 1])) ... -->
 	    <span ng-if="number_used.number">
-	      <span ng-if="number_used.id" style="color:green">
+	      <span ng-if="number_used.id" style="color:green;display:block">
 		Vorsicht, Startnummer war bereits in Verwendung:<br>
 		{{number_used.title}}<br>
-		{{number_used.last_name}} {{number_used.first_name}}<br>
-		<!-- Nächste freie Startnummer: {{number_used.next_number}}<br> -->
+		{{number_used.last_name}} {{number_used.first_name}}
 	      </span>
-	      <span ng-if="!number_used.id" style="color:red">
+	      <span ng-if="!number_used.id" style="display:block">
 		Startnummer belegt:<br>
 		{{number_used.last_name}} {{number_used.first_name}}<br>
-		Nächste freie Startnummer: {{number_used.next_number}}<br>
+		Nächste freie Startnummer: {{number_used.next_number}}
 	      </span>
 	    </span>
-	    <span ng-if="!number_used.number && number_used.next_number">
-	      Nächste freie Startnummer in Klasse: {{number_used.next_number}}<br>
+	    <span ng-if="!number_used.number && number_used.next_number" style="display:block">
+	      Nächste freie Startnummer in Klasse: {{number_used.next_number}}
 	    </span>
-	    <span ng-if="rider.start && rider.class != null && !class_may_start(rider.class)" style="color:red">
+	    <span ng-if="rider.start && rider.class != null && !class_may_start(rider.class)" style="display:block">
 	      Für Klasse {{rider.class}} sind keine zu befahrenen Runden und Sektionen<br>
 	      ausgewählt, die Klasse startet daher nicht.
 	    </span>
-	    <span ng-if="event.type.match('^otsv') && is_austria(rider.country)" style="color:red">
+	    <span ng-if="event.type.match('^otsv') && is_austria(rider.country)" style="display:block">
 	      Bitte das Feld Staatsangehörigkeit für Österreicher leer lassen.
 	    </span>
-	    <span ng-if="event.type == 'otsv2014' || event.type == 'otsv+osk2014' || event.type == 'otsv2016' || event.type == 'otsv+osk2016'" style="color:red">
-	      <span ng-if="!rider.non_competing">
-		<span ng-if="rider.date_of_birth">
-		  <span ng-if="(rider.class == 3 || rider.class == 5) && age_year >= 45">
-		    Fahrer ist vor Jahrgang {{year_for_age(44)}} geboren<br>und muss stattdessen in Klasse {{rider.class + 1}} starten.
-		  </span>
-		  <span ng-if="(rider.class == 4 || rider.class == 6) && age_year < 45">
-		    Fahrer ist nach Jahrgang {{year_for_age(45)}} geboren<br>und muss stattdessen in Klasse {{rider.class - 1}} starten.
-		  </span>
-		  <span ng-if="rider.class == 11 && age < 14">
-		    Fahrer ist unter 14 Jahre alt<br>und darf in Klasse 11 noch nicht starten.
-		  </span>
-		  <span ng-if="rider.class == 12">
-		    <span ng-if="age < 12">
-		      Fahrer ist unter 12 Jahre alt<br>und darf in Klasse 12 noch nicht starten.
-		    </span>
-		    <span ng-if="age_year >= 18">
-		      Fahrer ist vor Jahrgang {{year_for_age(17)}} geboren<br>und darf in Klasse 12 nicht mehr starten.
-		    </span>
-		  </span>
-		  <span ng-if="rider.class == 13">
-		    <span ng-if="age < 10">
-		      Fahrer ist unter 10 Jahre alt<br>und darf in Klasse 13 noch nicht starten.
-		    </span>
-		    <span ng-if="age_year >= 16">
-		      Fahrer ist vor Jahrgang {{year_for_age(15)}} geboren<br>und darf in Klasse 13 nicht mehr starten.
-		    </span>
-		  </span>
+	    <span ng-if="!rider.non_competing">
+	      <span ng-if="age && age_year">
+		<span ng-if="min_age && age < min_age" style="display:block">
+		  Fahrer ist unter {{min_age}} Jahre alt<br>und darf in Klasse {{rider.class}} noch nicht starten.
 		</span>
+		<span ng-if="max_age && age > max_age" style="display:block">
+		  Fahrer ist über {{max_age}} Jahre alt<br>und darf in Klasse {{rider.class}} nicht mehr starten.
+		</span>
+		<span ng-if="min_age_year && age_year < min_age_year" style="display:block">
+		  Fahrer ist nach Jahrgang {{year_for_age(min_age_year)}} geboren<br>und darf in Klasse {{rider.class}} noch nicht starten.
+		</span>
+		<span ng-if="max_age_year && age_year > max_age_year" style="display:block">
+		  Fahrer ist vor Jahrgang {{year_for_age(max_age_year)}} geboren<br>und darf in Klasse {{rider.class}} nicht mehr starten.
+		</span>
+	      </span>
+	      <span ng-if="event.type != null && event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)'">
 		<span ng-if="rider.class >= 11 && rider.class <= 13">
-		  <span ng-if="!rider.license">
+		  <span ng-if="!rider.license" style="display:block">
 		    Bitte die Lizenznummer eintragen.
 		  </span>
-		  <span ng-if="rider.license && !osk_license(rider) && rider_in_ranking1(rider)">
+		  <span ng-if="rider.license && !osk_license(rider) && rider_in_ranking1(rider)" style="display:block">
 		    Fahrer hat keine OSK-Lizenznummer (IJM / JM / JMJ)<br>und darf an der Jahreswertung nicht teilnehmen.
-		  </span>
-		</span>
-	      </span>
-	    </span>
-	    <span ng-if="event.type == 'otsv-ecup2015'" style="color:red">
-	      <span ng-if="!rider.non_competing">
-		<span ng-if="rider.date_of_birth">
-		  <span ng-if="rider.class == 1 && age_year > 6">
-		    Fahrer ist vor Jahrgang {{year_for_age(6)}} geboren<br>und muss in einer höheren Klasse starten.
-		  </span>
-		  <span ng-if="(rider.class == 2 || rider.class == 3) && age_year < 7" style="color:green">
-		    Fahrer ist nach Jahrgang {{year_for_age(7)}} geboren<br>und darf auch in einer niedrigeren Klasse starten.
-		  </span>
-		  <span ng-if="(rider.class == 2 || rider.class == 3) && age_year > 8">
-		    Fahrer ist vor Jahrgang {{year_for_age(8)}} geboren<br>und muss in einer höheren Klasse starten.
-		  </span>
-		  <span ng-if="(rider.class == 4 || rider.class == 5) && age_year < 9" style="color:green">
-		    Fahrer ist nach Jahrgang {{year_for_age(9)}} geboren<br>und darf auch in einer niedrigeren Klasse starten.
-		  </span>
-		</span>
-	      </span>
-	    </span>
-	    <span ng-if="event.type == 'otsv-ecup2017'" style="color:red">
-	      <span ng-if="!rider.non_competing">
-		<span ng-if="rider.date_of_birth">
-		  <span ng-if="rider.class == 1 && age_year > 6">
-		    Fahrer ist vor Jahrgang {{year_for_age(6)}} geboren<br>und muss in einer höheren Klasse starten.
-		  </span>
-		  <span ng-if="(rider.class == 2 || rider.class == 3) && age_year < 7">
-		    Fahrer ist nach Jahrgang {{year_for_age(7)}} geboren<br>und muss in einer niedrigeren Klasse starten.
-		  </span>
-		  <span ng-if="(rider.class == 2 || rider.class == 3) && age_year > 8">
-		    Fahrer ist vor Jahrgang {{year_for_age(8)}} geboren<br>und muss in einer höheren Klasse starten.
-		  </span>
-		  <span ng-if="rider.class == 4 && age_year < 9">
-		    Fahrer ist nach Jahrgang {{year_for_age(9)}} geboren<br>und muss in einer niedrigeren Klasse starten.
-		  </span>
-		  <span ng-if="rider.class == 5 && age_year < 10">
-		    Fahrer ist nach Jahrgang {{year_for_age(10)}} geboren<br>und muss in einer niedrigeren Klasse starten.
-		  </span>
-		  <span ng-if="rider.class == 5 && age_year > 13">
-		    Fahrer ist vor Jahrgang {{year_for_age(13)}} geboren<br>und muss in einer höheren Klasse starten.
-		  </span>
-		  <span ng-if="rider.class == 6 && age_year < 13">
-		    Fahrer ist nach Jahrgang {{year_for_age(13)}} geboren<br>und muss in einer niedrigeren Klasse starten.
-		  </span>
-		  <span ng-if="rider.class == 6 && age_year > 15">
-		    Fahrer ist vor Jahrgang {{year_for_age(15)}} geboren<br>und muss in einer höheren Klasse starten.
 		  </span>
 		</span>
 	      </span>
