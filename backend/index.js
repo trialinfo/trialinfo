@@ -338,7 +338,7 @@ async function get_series(connection, email) {
     FROM series
     JOIN series_all_admins USING (serie)
     WHERE email = ?
-    ORDER BY serie`, [email]);
+    ORDER BY name`, [email]);
 }
 
 async function get_serie(connection, serie_id) {
