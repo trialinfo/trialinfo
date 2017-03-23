@@ -115,17 +115,30 @@ var eventController = [
       if (event.type != null &&
 	  event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
 	if ($scope.age_year >= 45) {
-	  if (rider.class == 3 || rider.class == 5)
-	    rider.class++;
+	  if (rider.class == 3)
+	    rider.class = 4;
 	} else {
-	  if (rider.class == 4 || rider.class == 6)
-	    rider.class--;
+	  if (rider.class == 4)
+	    rider.class = 3;
+	}
+
+	if ($scope.age_year >= 45) {
+	  if (rider.class == 5 || rider.class == 9)
+	    rider.class = 6;
+	} else if ($scope.age_year >= 12) {
+	    if (rider.class == 6 || rider.class == 9)
+	      rider.class = 5;
+	} else {
+	  if (rider.class == 5 || rider.class == 6)
+	    rider.class = 9;
 	}
 
 	disable_class(3, $scope.age_year && $scope.age_year >= 45);
 	disable_class(4, $scope.age_year && $scope.age_year < 45);
 	disable_class(5, $scope.age_year && $scope.age_year >= 45);
 	disable_class(6, $scope.age_year && $scope.age_year < 45);
+
+	disable_class(9, $scope.age_year && $scope.age_year >= 12);
 
 	disable_class(11, $scope.age && $scope.age < 14);
 	disable_class(12, ($scope.age && $scope.age < 12) ||
@@ -180,10 +193,15 @@ var eventController = [
 
       if (event.type != null) {
 	if (event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
-	  if (class_ == 3 || class_ == 5) {
+	  if (class_ == 3) {
+	    $scope.max_age_year = 44;
+	  } else if (class_ == 5) {
+	    $scope.min_age_year = 12;
 	    $scope.max_age_year = 44;
 	  } else if (class_ == 4 || class_ == 6) {
 	    $scope.min_age_year = 45;
+	  } else if (class_ == 9) {
+	    $scope.max_age_year = 11;
 	  } else if (class_ == 11) {
 	    $scope.min_age = 14;
 	  } else if (class_ == 12) {
