@@ -36,9 +36,9 @@ my $vareihe = $q->param('vareihe');
 print "Content-type: text/html; charset=utf-8\n\n";
 
 my $sth = $dbh->prepare(q{
-    SELECT bezeichnung
-    FROM vareihe
-    WHERE vareihe = ?
+    SELECT name
+    FROM series
+    WHERE serie = ?
 });
 $sth->execute($vareihe);
 if (my @row = $sth->fetchrow_array) {

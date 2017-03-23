@@ -43,10 +43,10 @@ my $url = $q->param('url') // 'tageswertung.shtml';
 print "Content-type: text/html; charset=utf-8\n\n";
 
 my $sth = $dbh->prepare(q{
-    SELECT bezeichnung, wertung, COUNT(wertungsklasse) AS klassen
-    FROM vareihe
-    LEFT JOIN vareihe_klasse USING (vareihe)
-    WHERE vareihe = ?
+    SELECT name, ranking, COUNT(ranking_class) AS classes
+    FROM series
+    LEFT JOIN series_classes USING (serie)
+    WHERE serie = ?
 });
 $sth->execute($vareihe);
 if (my @row = $sth->fetchrow_array) {
@@ -54,40 +54,40 @@ if (my @row = $sth->fetchrow_array) {
     $wertung //= 1;
     #doc_h1 $bezeichnung;
     my $sth2 = $dbh->prepare(q{
-	SELECT id, titel,
-	       GROUP_CONCAT(kuerzel ORDER BY kuerzel SEPARATOR ', ') AS kuerzel
-	FROM vareihe_veranstaltung
-	JOIN wertung USING (id)
-	JOIN veranstaltung USING (id)} .
+	SELECT id, title,
+	       GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ') AS abbreviation
+	FROM series_events
+	JOIN rankings USING (id)
+	JOIN events USING (id)} .
 	($klassen ? q{
 	  JOIN (
-	    SELECT DISTINCT id, vareihe
-	    FROM vareihe_klasse JOIN klasse USING (wertungsklasse)
-	  ) AS _1 USING (vareihe, id)
+	    SELECT DISTINCT id, serie
+	    FROM series_classes JOIN classes USING (ranking_class)
+	  ) AS _1 USING (serie, id)
 	} : q{}) . q{
 	LEFT JOIN (
-	    SELECT id, kuerzel FROM (
-		SELECT DISTINCT id, vareihe, kuerzel
-		FROM vareihe_veranstaltung
-		JOIN vareihe USING (vareihe)
-		WHERE vareihe NOT IN (
-		  SELECT vareihe from vareihe_klasse
+	    SELECT id, abbreviation FROM (
+		SELECT DISTINCT id, serie, abbreviation
+		FROM series_events
+		JOIN series USING (serie)
+		WHERE serie NOT IN (
+		  SELECT serie FROM series_classes
 		)
 
 		UNION
 
-		SELECT DISTINCT id, vareihe, kuerzel
-		FROM vareihe_veranstaltung
-		JOIN vareihe USING (vareihe)
-		JOIN vareihe_klasse USING (vareihe)
-		JOIN klasse USING (id, wertungsklasse)
+		SELECT DISTINCT id, serie, abbreviation
+		FROM series_events
+		JOIN series USING (serie)
+		JOIN series_classes USING (serie)
+		JOIN classes USING (id, ranking_class)
 	    ) AS _3} .
 	    (@nicht ? q{
-	    WHERE vareihe NOT IN (} . join(', ', map { '?' } @nicht) . q{)} : q{}) .
+	    WHERE serie NOT IN (} . join(', ', map { '?' } @nicht) . q{)} : q{}) .
 	q{) AS _4 USING (id)
-	WHERE aktiv AND vareihe = ? AND wertung = ?
+	WHERE enabled AND serie = ? AND ranking = ?
 	GROUP BY id
-	ORDER BY datum;
+	ORDER BY date;
     });
     $sth2->execute(@nicht, $vareihe, $wertung);
     print "<p>\n";
