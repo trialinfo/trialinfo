@@ -242,7 +242,7 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in rider_list">
-	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider, this)}}">{{rider_name(rider)}}</a><br>
+	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
 	    </span>
 	    <span ng-if="rider_list != null && rider_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
 	  </p>

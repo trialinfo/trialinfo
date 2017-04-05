@@ -328,7 +328,10 @@ var ridersController = [
     $scope.rider_name = function(rider) {
       return rider_name(rider, $scope);
     };
-    $scope.rider_info = rider_info;
+
+    $scope.rider_info = function(rider) {
+      return rider_info(rider, $scope);
+    }
 
     var canceler;
     $scope.number_valid = function(number) {
@@ -436,7 +439,7 @@ var ridersController = [
     };
 
     $scope.remove = function() {
-      if (confirm((groups ? 'Gruppe' : 'Fahrer') + ' ' + rider_name($scope.rider, $scope) + ' wirklich löschen?')) {
+      if (confirm((groups ? 'Gruppe' : 'Fahrer') + ' ' + $scope.rider_name($scope.rider) + ' wirklich löschen?')) {
 	var old_rider = $scope.old_rider;
 	var number = old_rider.number;
 	var version = old_rider.version;

@@ -127,7 +127,7 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in riders_list">
-	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider, this)}}">{{rider_name(rider, this)}}</a><br>
+	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
 	    </span>
 	    <span ng-if="riders_list != null && riders_list.length == 0">Keine Fahrer gefunden.</span>
 	  </p>

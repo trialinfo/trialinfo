@@ -1,239 +1,264 @@
 <h1>Voranmeldung für {{event.title}}</h1>
-<span ng-if="remaining_time">Noch {{remaining_time}} bis zum Ende der Voranmeldung.</span>
-<span ng-if="!remaining_time" style="color:red">Für diese Veranstaltung ist keine Voranmeldung mehr möglich.</span>
-  <form novalidate name="form">
-  <p>
-    <table>
-      <tr ng-if="riders.length > 1">
-	<th align="right"><label for="class">Fahrer</label></th>
-	<td>
-	  <select ng-disabled="modified()" ng-model="internal.index" ng-options="'' + idx as rider_info(rider) for (idx, rider) in riders" tabindex="-1">
-	  </select>
-	</td>
-      </tr>
-      <tr ng-if="rider.non_competing">
-	<th align="right"></th>
-	<td>
-	  <em>Start außer Konkurrenz.</em>
-	</td>
-      </tr>
-      <tr ng-if="rider.number >= 0">
-	<th align="right"><label for="number">Startnummer</label></th>
-	<td>
-	  <input type="text" disabled numeric size="3" maxlength="5" min="1" max="99999" ng-model="rider.number" name="number" id="number">
-	</td>
-      </tr>
-      <tr ng-if="features.first_name">
-	<th align="right"><label for="first_name">Vorname</label></th>
-	<td>
-	  <input type="text" size="30" maxlength="30" ng-model="rider.first_name" required id="first_name">
-	</td>
-      </tr>
-      <tr ng-if="features.last_name">
-	<th align="right"><label for="last_name">Nachname</label></th>
-	<td>
-	  <input type="text" size="30" maxlength="30" ng-model="rider.last_name" required id="last_name">
-	</td>
-      </tr>
-      <tr ng-if="features.street">
-	<th align="right"><label for="street">Straße</label></th>
-	<td>
-	  <input type="text" size="30" maxlength="30" ng-model="rider.street" required id="street">
-	</td>
-      </tr>
-      <tr ng-if="features.zip || features.city">
-	<th align="right"><span ng-if="features.zip"><label for="zip">PLZ </span><span ng-if="features.city">Wohnort</label></th>
-	<td>
-	  <span ng-if="features.zip">
-	    <input type="text" size="5" maxlength="5" ng-model="rider.zip" required id="zip">
-	  </span>
-	  <span ng-if="features.city">
-	    <input type="text" size="25" maxlength="40" ng-model="rider.city" required>
-	  </span>
-	</td>
-      </tr>
-      <tr ng-if="features.country">
-	<th align="right"><label for="country">Land</label></th>
-	<td>
-	  <span ng-if="otsv_event() && internal.country != null">
-	    <select ng-model="internal.country" nullable ng-options="country.code as country.name for country in countries" id="country">
-	    </select>
-	  </span>
-	  <span ng-if="!otsv_event() || internal.country == null">
-	    <input type="text" nullable required size="15" maxlength="15" ng-model="rider.country" ng-blur="blur_country()" id="country" list="country_list">
-	    <datalist id="country_list">
-	      <option ng-repeat="country in suggestions.country" value="{{country}}">
+<p style="color:gray">
+  <span ng-if="remaining_time">Noch {{remaining_time}} bis zum Ende der Voranmeldung.</span>
+  <span ng-if="!remaining_time" style="color:red">Für diese Veranstaltung ist keine Voranmeldung mehr möglich.</span>
+</p>
+<form novalidate name="form">
+  <div ng-if="!rider">
+    <p ng-repeat="rider in riders">
+      {{rider_info(rider)}}
+      <span ng-if="rider.start || rider.start_tomorrow">
+	ist derzeit für den Start am
+	<span ng-if="rider.start">
+	  <span ng-if="date">{{date | date:"fullDate"}}</span>
+	  <span ng-if="!date">ersten Tag</span>
+	</span>
+	<span ng-if="rider.start && rider.start_tomorrow">
+	  und
+	</span>
+	<span ng-if="rider.start_tomorrow">
+	  <span ng-if="date_tomorrow">{{date_tomorrow | date:"fullDate"}}</span>
+	  <span ng-if="!date_tomorrow">zweiten Tag</span></label>
+	</span>
+	vorangemeldet.
+      </span>
+      <span ng-if="!rider.start && !rider.start_tomorrow">
+	ist derzeit nicht vorangemeldet.
+      </span>
+      <br>
+      <button ng-click="change_rider($index)">Ändern</button>
+    </p>
+    <p>
+      <button ng-click="new_rider()">Weiteren Fahrer hinzufügen</button>
+    </p>
+    <p>
+      <button ng-click="logout()" title="Aktueller Benutzer: {{user.email}}">Abmelden</button>
+    </p>
+  </div>
+  <div ng-if="rider">
+      <table>
+	<tr ng-if="rider.number >= 0">
+	  <th align="right"><label for="number">Startnummer</label></th>
+	  <td>
+	    <input type="text" disabled numeric size="3" maxlength="5" min="1" max="99999" ng-model="rider.number" name="number" id="number">
+	  </td>
+	</tr>
+	<tr ng-if="features.first_name">
+	  <th align="right"><label for="first_name">Vorname</label></th>
+	  <td>
+	    <input type="text" size="30" maxlength="30" ng-model="rider.first_name" required name="first_name" id="first_name"><span ng-if="required_error(form.first_name)" style="color:red">*</span>
+	  </td>
+	</tr>
+	<tr ng-if="features.last_name">
+	  <th align="right"><label for="last_name">Nachname</label></th>
+	  <td>
+	    <input type="text" size="30" maxlength="30" ng-model="rider.last_name" required name="last_name" id="last_name"><span ng-if="required_error(form.last_name)" style="color:red">*</span>
+	  </td>
+	</tr>
+	<tr ng-if="features.street">
+	  <th align="right"><label for="street">Straße</label></th>
+	  <td>
+	    <input type="text" size="30" maxlength="30" ng-model="rider.street" required name="street" id="street"><span ng-if="required_error(form.street)" style="color:red">*</span>
+	  </td>
+	</tr>
+	<tr ng-if="features.zip || features.city">
+	  <th align="right"><span ng-if="features.zip"><label for="zip">PLZ </span><span ng-if="features.city">Wohnort</label></th>
+	  <td>
+	    <span ng-if="features.zip">
+	      <input type="text" size="5" maxlength="5" ng-model="rider.zip" required name="zip" id="zip"><span ng-if="required_error(form.zip)" style="color:red">*</span>
+	    </span>
+	    <span ng-if="features.city">
+	      <input type="text" size="25" maxlength="40" ng-model="rider.city" required name="city"><span ng-if="required_error(form.city)" style="color:red">*</span>
+	    </span>
+	  </td>
+	</tr>
+	<tr ng-if="features.country">
+	  <th align="right"><label for="country">Land</label></th>
+	  <td>
+	    <span ng-if="otsv_event() && internal.country != null">
+	      <select ng-model="internal.country" nullable ng-options="country.code as country.name for country in countries" name="country" id="country">
+	      </select>
+	    </span>
+	    <span ng-if="!otsv_event() || internal.country == null">
+	      <input type="text" nullable required size="15" maxlength="15" ng-model="rider.country" ng-blur="blur_country()" name="country" id="country" list="country_list"><span ng-if="required_error(form.country)" style="color:red">*</span>
+	      <datalist id="country_list">
+		<option ng-repeat="country in suggestions.country" value="{{country}}">
+	      </datalist>
+	    </span>
+	  </td>
+	</tr>
+	<tr ng-if="features.province && (!otsv_event() || rider.country == 'A')">
+	  <th align="right"><label for="province">Bundesland</label></th>
+	  <td ng-if="!otsv_event()">
+	    <input type="text" nullable size="15" maxlength="20" ng-model="rider.province" list="province_list">
+	    <datalist id="province_list">
+	      <option ng-repeat="province in suggestions.province" value="{{province}}">
 	    </datalist>
-	  </span>
-	</td>
-      </tr>
-      <tr ng-if="features.province && (!otsv_event() || rider.country == 'A')">
-	<th align="right"><label for="province">Bundesland</label></th>
-	<td ng-if="!otsv_event()">
-	  <input type="text" nullable size="15" maxlength="20" ng-model="rider.province" list="province_list">
-	  <datalist id="province_list">
-	    <option ng-repeat="province in suggestions.province" value="{{province}}">
-	  </datalist>
-	</td>
-	<td ng-if="otsv_event() && rider.country == 'A'">
-	  <select ng-model="rider.province" nullable>
-	    <option value=""></option>
-	    <option value="B">Burgenland</option>
-	    <option value="K">Kärnten</option>
-	    <option value="NÖ">Niederösterreich</option>
-	    <option value="OÖ">Oberösterreich</option>
-	    <option value="S">Salzburg</option>
-	    <option value="ST">Steiermark</option>
-	    <option value="T">Tirol</option>
-	    <option value="V">Vorarlberg</option>
-	    <option value="W">Wien</option>
-	  </select>
-	</td>
-      </tr>
-      <tr ng-if="features.phone">
-	<th align="right"><label for="phone">Telefon</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
-	</td>
-      </tr>
-      <tr ng-if="features.emergency_phone">
-	<th align="right"><label for="emergency_phone">Notfall-Telefon</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="20" ng-model="rider.emergency_phone" id="emergency_phone" title="Kontakt für Notfälle während der Veranstaltung">
-	</td>
-      </tr>
-      <tr ng-if="features.date_of_birth">
-	<th align="right"><label for="date_of_birth">Geburtsdatum</label></th>
-	<td>
-	  <input type="text" size="10" maxlength="10" ng-model="rider.date_of_birth" required iso-date name="date_of_birth" id="date_of_birth">
-	</td>
-      </tr>
-      <tr ng-if="features.guardian && guardian_visible(rider)">
-	<th align="right"><label for="guardian">Gesetzlicher Vertreter</th>
-	<td>
-	  <input type="text" size="40" maxlength="50" ng-model="rider.guardian" required id="guardian">
-	</td>
-      </tr>
-      <tr ng-if="features.license && license_visible(rider)">
-	<th align="right"><label for="license">Lizenznummer</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="20" ng-model="rider.license" required id="license">
-	</td>
-      </tr>
-      <tr ng-if="features.club">
-	<th align="right"><label for="club">Club</label></th>
-	<td>
-	  <input type="text" size="25" maxlength="40" ng-model="rider.club" id="club" list="club_list">
-	  <datalist id="club_list">
-	    <option ng-repeat="club in suggestions.club" value="{{club}}">
-	  </datalist>
-	</td>
-      </tr>
-      <tr ng-if="features.applicant">
-	<th align="right"><label for="applicant">Bewerber</label></th>
-	<td>
-	  <input type="text" size="40" maxlength="40" ng-model="rider.applicant" id="applicant">
-	</td>
-      </tr>
-      <tr ng-if="features.vehicle">
-	<th align="right"><label for="vehicle">Fahrzeug</label></th>
-	<td>
-	  <input type="text" size="15" maxlength="30" ng-model="rider.vehicle" id="vehicle" list="vehicle_list">
-	  <datalist id="vehicle_list">
-	    <option ng-repeat="vehicle in suggestions.vehicle" value="{{vehicle}}">
-	  </datalist>
-	</td>
-      </tr>
-      <tr ng-if="features.frame_number">
-	<th align="right"><label for="frame_number">Rahmennummer</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="20" ng-model="rider.frame_number" id="frame_number">
-	</td>
-      </tr>
-      <tr ng-if="features.registration">
-	<th align="right"><label for="registration">Pol. Kennzeichen</label></th>
-	<td>
-	  <input type="text" size="15" maxlength="15" ng-model="rider.registration" id="registration">
-	</td>
-      </tr>
-      <tr ng-if="features.displacement">
-	<th align="right"><label for="displacement">Hubraum</label></th>
-	<td>
-	  <input type="text" size="10" maxlength="10" ng-model="rider.displacement" id="displacement">
-	</td>
-      </tr>
-      <tr ng-if="features.insurance">
-	<th align="right"><label for="insurance">Versicherung</label></th>
-	<td>
-	  <select ng-model="rider.insurance" numeric id="insurance">
-	    <option value=""></option>
-	    <option value="1">ADAC-Versicherung</option>
-	    <option value="2">DMV-Versicherung</option>
-	    <option value="3">KFZ-Versicherung</option>
-	    <option value="4">Tagesversicherung</option>
-	  </select>
-	</td>
-      </tr>
-      <tr ng-if="features.email && (riders.length > 1 || rider.email != user.email)">
-	<th align="right"><label for="email">E-Mail</label></th>
-	<td>
-	  <input type="text" size="40" maxlength="60" ng-model="rider.email" id="email">
-	</td>
-      </tr>
-      <tr ng-if="features.class">
-	<th align="right"><label for="class">Klasse</label></th>
-	<td>
-	  <select ng-model="rider.class" required ng-options="class.class as class.class + ': ' + class.name for class in defined_classes()">
-	    <option value=""></option>
-	  </select>
-	  <span ng-if="age && age_year" style="color:red">
-	    <span ng-if="min_age && age < min_age" style="display:block">
-	      <em>Fahrer ist unter {{min_age}} Jahre alt, und darf in Klasse {{rider.class}} noch nicht starten.</em>
+	  </td>
+	  <td ng-if="otsv_event() && rider.country == 'A'">
+	    <select ng-model="rider.province" nullable>
+	      <option value=""></option>
+	      <option value="B">Burgenland</option>
+	      <option value="K">Kärnten</option>
+	      <option value="NÖ">Niederösterreich</option>
+	      <option value="OÖ">Oberösterreich</option>
+	      <option value="S">Salzburg</option>
+	      <option value="ST">Steiermark</option>
+	      <option value="T">Tirol</option>
+	      <option value="V">Vorarlberg</option>
+	      <option value="W">Wien</option>
+	    </select>
+	  </td>
+	</tr>
+	<tr ng-if="features.phone">
+	  <th align="right"><label for="phone"><span ng-if="features.emergency_phone">Fahrer-</span>Telefon</label></th>
+	  <td>
+	    <input type="text" size="20" maxlength="20" ng-model="rider.phone" id="phone">
+	  </td>
+	</tr>
+	<tr ng-if="features.emergency_phone">
+	  <th align="right"><label for="emergency_phone">Notfall-Telefon</label></th>
+	  <td>
+	    <input type="text" size="20" maxlength="20" ng-model="rider.emergency_phone" id="emergency_phone" title="Kontakt für Notfälle während der Veranstaltung">
+	  </td>
+	</tr>
+	<tr ng-if="features.date_of_birth">
+	  <th align="right"><label for="date_of_birth">Geburtsdatum</label></th>
+	  <td>
+	    <input type="text" size="10" maxlength="10" ng-model="rider.date_of_birth" required iso-date name="date_of_birth" id="date_of_birth"><span ng-if="required_error(form.date_of_birth)" style="color:red">*</span>
+	  </td>
+	</tr>
+	<tr ng-if="features.guardian && guardian_visible(rider)">
+	  <th align="right"><label for="guardian">Gesetzlicher Vertreter</th>
+	  <td>
+	    <input type="text" size="40" maxlength="50" ng-model="rider.guardian" required name="guardian" id="guardian"><span ng-if="required_error(form.guardian)" style="color:red">*</span>
+	  </td>
+	</tr>
+	<tr ng-if="features.license && license_visible(rider)">
+	  <th align="right"><label for="license">Lizenznummer</label></th>
+	  <td>
+	    <input type="text" size="20" maxlength="20" ng-model="rider.license" required name="license" id="license"><span ng-if="required_error(form.license)" style="color:red">*</span>
+	  </td>
+	</tr>
+	<tr ng-if="features.club">
+	  <th align="right"><label for="club">Club</label></th>
+	  <td>
+	    <input type="text" size="25" maxlength="40" ng-model="rider.club" id="club" list="club_list">
+	    <datalist id="club_list">
+	      <option ng-repeat="club in suggestions.club" value="{{club}}">
+	    </datalist>
+	  </td>
+	</tr>
+	<tr ng-if="features.applicant">
+	  <th align="right"><label for="applicant">Bewerber</label></th>
+	  <td>
+	    <input type="text" size="40" maxlength="40" ng-model="rider.applicant" id="applicant">
+	  </td>
+	</tr>
+	<tr ng-if="features.vehicle">
+	  <th align="right"><label for="vehicle">Fahrzeug</label></th>
+	  <td>
+	    <input type="text" size="15" maxlength="30" ng-model="rider.vehicle" id="vehicle" list="vehicle_list">
+	    <datalist id="vehicle_list">
+	      <option ng-repeat="vehicle in suggestions.vehicle" value="{{vehicle}}">
+	    </datalist>
+	  </td>
+	</tr>
+	<tr ng-if="features.frame_number">
+	  <th align="right"><label for="frame_number">Rahmennummer</label></th>
+	  <td>
+	    <input type="text" size="20" maxlength="20" ng-model="rider.frame_number" id="frame_number">
+	  </td>
+	</tr>
+	<tr ng-if="features.registration">
+	  <th align="right"><label for="registration">Pol. Kennzeichen</label></th>
+	  <td>
+	    <input type="text" size="15" maxlength="15" ng-model="rider.registration" id="registration">
+	  </td>
+	</tr>
+	<tr ng-if="features.displacement">
+	  <th align="right"><label for="displacement">Hubraum</label></th>
+	  <td>
+	    <input type="text" size="10" maxlength="10" ng-model="rider.displacement" id="displacement">
+	  </td>
+	</tr>
+	<tr ng-if="features.insurance">
+	  <th align="right"><label for="insurance">Versicherung</label></th>
+	  <td>
+	    <select ng-model="rider.insurance" numeric id="insurance">
+	      <option value=""></option>
+	      <option value="1">ADAC-Versicherung</option>
+	      <option value="2">DMV-Versicherung</option>
+	      <option value="3">KFZ-Versicherung</option>
+	      <option value="4">Tagesversicherung</option>
+	    </select>
+	  </td>
+	</tr>
+	<tr ng-if="features.email && rider.email != user.email">
+	  <th align="right"><label for="email">E-Mail</label></th>
+	  <td>
+	    <input type="text" size="40" maxlength="60" ng-model="rider.email" id="email">
+	  </td>
+	</tr>
+	<tr ng-if="features.class">
+	  <th align="right"><label for="class">Klasse</label></th>
+	  <td>
+	    <select ng-model="rider.class" ng-disabled="rider.number > 0" required ng-options="class.class as class.class + ': ' + class.name for class in defined_classes()" name="class">
+	      <option value=""></option>
+	    </select><span ng-if="required_error(form.class)" style="color:red">*</span>
+	    <span ng-if="age && age_year" style="color:red">
+	      <span ng-if="min_age && age < min_age" style="display:block">
+		<em>Fahrer ist unter {{min_age}} Jahre alt, und darf in Klasse {{rider.class}} noch nicht starten.</em>
+	      </span>
+	      <span ng-if="max_age && age > max_age" style="display:block">
+		<em>Fahrer ist über {{min_age}} Jahre alt, und darf in Klasse {{rider.class}} nicht mehr starten.</em>
+	      </span>
+	      <span ng-if="min_age_year && age_year < min_age_year" style="display:block">
+		<em>Fahrer ist nach Jahrgang {{year_for_age(min_age_year)}} geboren, und darf in Klasse {{rider.class}} noch nicht starten.</em>
+	      </span>
+	      <span ng-if="max_age_year && age_year > max_age_year" style="display:block">
+		<em>Fahrer ist vor Jahrgang {{year_for_age(max_age_year)}} geboren, und darf in Klasse {{rider.class}} nicht mehr starten.</em>
+	      </span>
 	    </span>
-	    <span ng-if="max_age && age > max_age" style="display:block">
-	      <em>Fahrer ist über {{min_age}} Jahre alt, und darf in Klasse {{rider.class}} nicht mehr starten.</em>
+	  </td>
+	</tr>
+	<tr ng-if="rider.non_competing">
+	  <th align="right"></th>
+	  <td>
+	    <em>Start außer Konkurrenz.</em>
+	  </td>
+	</tr>
+	<tr>
+	  <th align="right">Start</th>
+	  <td>
+	    <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
+	      <label for="start">
+		<span ng-if="date">am {{date | date:"fullDate"}}</span>
+		<span ng-if="!date">am ersten Tag</span></label><br>
+	    <span ng-if="features.start_tomorrow">
+	      <input type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow" ng-disabled="rider.registered">
+		<label for="start_tomorrow">
+		  <span ng-if="date_tomorrow">am {{date_tomorrow | date:"fullDate"}}</span>
+		  <span ng-if="!date_tomorrow">am zweiten Tag</span></label>
 	    </span>
-	    <span ng-if="min_age_year && age_year < min_age_year" style="display:block">
-	      <em>Fahrer ist nach Jahrgang {{year_for_age(min_age_year)}} geboren, und darf in Klasse {{rider.class}} noch nicht starten.</em>
-	    </span>
-	    <span ng-if="max_age_year && age_year > max_age_year" style="display:block">
-	      <em>Fahrer ist vor Jahrgang {{year_for_age(max_age_year)}} geboren, und darf in Klasse {{rider.class}} nicht mehr starten.</em>
-	    </span>
-	  </span>
-	</td>
-      </tr>
-      <tr>
-	<th align="right">Start</th>
-	<td>
-	  <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
-	    <label for="start">
-	      <span ng-if="date">am {{date | date:"fullDate"}}</span>
-	      <span ng-if="!date">am ersten Tag</span></label><br>
-	  <span ng-if="features.start_tomorrow">
-	    <input type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow" ng-disabled="rider.registered">
-	      <label for="start_tomorrow">
-		<span ng-if="date_tomorrow">am {{date_tomorrow | date:"fullDate"}}</span>
-		<span ng-if="!date_tomorrow">am zweiten Tag</span></label>
-	  </span>
-	</td>
-      </tr>
-      <tr ng-if="features.rider_comment">
-	<th align="right"><label for="rider_comment">Anmerkungen<br>und Wünsche</label></th>
-	<td>
-	  <textarea rows="2" cols="70" maxlength="150" ng-model="rider.rider_comment" id="rider_comment"></textarea>
-	</td>
-      </tr>
-    </table>
-  </p>
-  <p>
-    <button ng-disabled="form.$invalid || !modified() || busy" ng-click="save_rider()">Änderungen speichern</button>
-    <button ng-disabled="!(modified() || old_rider == null) || busy" ng-click="reset_rider()">Änderungen verwerfen</button>
-  </p>
-  <p>
-    <button ng-if="riders.length > 1 || rider.number != null" ng-disabled="modified() || busy || rider.number == null" ng-click="new_rider()">Weiteren Fahrer hinzufügen</button>
-    <button ng-if="rider.number < 0" ng-disabled="modified() || !(rider.number < 0) || busy" ng-click="remove_rider()">Fahrer löschen</button>
-  </p>
-  <p>
-    <button ng-disabled="modified()" ng-click="logout()" title="Aktueller Benutzer: {{user.email}}">Abmelden</button>
-  </p>
+	  </td>
+	</tr>
+	<tr ng-if="features.rider_comment">
+	  <th align="right"><label for="rider_comment">Anmerkungen<br>und Wünsche</label></th>
+	  <td>
+	    <textarea rows="2" cols="70" maxlength="150" ng-model="rider.rider_comment" id="rider_comment"></textarea>
+	  </td>
+	</tr>
+      </table>
+      <p ng-if="form.$invalid" style="color:red">
+        * Eingabe erforderlich
+      </p>
+      <p>
+	<button ng-disabled="form.$invalid || !modified() || busy" ng-click="save_rider()">Speichern</button>
+	<button ng-disabled="busy" ng-click="reset_rider()"><span ng-if="modified()">Verwerfen</span><span ng-if="!modified()">Zurück</span></button>
+      </p>
+      <p>
+	<button ng-if="rider.number < 0" ng-disabled="modified() || !(rider.number < 0) || busy" ng-click="remove_rider()">Fahrer löschen</button>
+      </p>
+  </div>
 </form>

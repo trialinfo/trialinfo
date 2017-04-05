@@ -2164,6 +2164,7 @@ const register_rider_fields = {
   date_of_birth: true,
   displacement: true,
   email: true,
+  emergency_phone: true,
   first_name: true,
   frame_number: true,
   insurance: true,

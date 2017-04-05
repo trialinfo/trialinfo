@@ -20,9 +20,6 @@ var eventController = [
     $scope.riders = riders;
     $scope.internal = {};
 
-    $scope.$watch('internal.index', switch_rider);
-    $scope.internal.index = '0';
-
     /* FIXME: In Angular = 1.4, use ng-values="... disable when ..." instead of
      * filtering classes here! */
 
@@ -45,45 +42,20 @@ var eventController = [
       };
     }();
 
-    function switch_rider(new_index, old_index) {
-      if (new_index < 0)
-	new_index = 0;
-      if ($scope.riders.length > 1 &&
-	  $scope.riders[old_index].number == null) {
-	$scope.riders.splice(old_index, 1);
-	if (new_index > old_index)
-	  new_index--;
-      }
-      if (new_index != $scope.internal.index)
-	$scope.internal.index = '' + new_index;
-
-      var rider = riders[new_index];
+    $scope.change_rider = function(index) {
+      var rider = riders[index];
       if (!rider) {
 	rider = {
 	  country: 'A',
 	  email: $scope.user.email,
 	};
-	riders[new_index] = rider;
       }
 
-      $scope.rider = rider;
-      $scope.old_rider = angular.copy(rider);
+      $scope.old_rider = rider;
+      $scope.rider = angular.copy(rider);
+      $scope.internal.index = index;
       $scope.blur_country();
     }
-
-    $scope.rider_info = function(rider) {
-      var info = [], name = [];
-      if (rider.first_name)
-	name.push(rider.first_name);
-      if (rider.last_name)
-	name.push(rider.last_name);
-      name = name.join(' ');
-      if (name)
-	info.push(name);
-      if (rider.number && rider.number >= 0)
-	info.push('(' + rider.number + ')');
-      return info.join(' ');
-    };
 
     $scope.guardian_visible = function(rider) {
       return guardian_visible(rider, event);
@@ -112,25 +84,30 @@ var eventController = [
     function otsv_check_class() {
       var rider = $scope.rider;
 
+      if (rider == null)
+	return;
+
       if (event.type != null &&
 	  event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
-	if ($scope.age_year >= 45) {
-	  if (rider.class == 3)
-	    rider.class = 4;
-	} else {
-	  if (rider.class == 4)
-	    rider.class = 3;
-	}
+	if ($scope.age_year) {
+	  if ($scope.age_year >= 45) {
+	    if (rider.class == 3)
+	      rider.class = 4;
+	  } else {
+	    if (rider.class == 4)
+	      rider.class = 3;
+	  }
 
-	if ($scope.age_year >= 45) {
-	  if (rider.class == 5 || rider.class == 9)
-	    rider.class = 6;
-	} else if ($scope.age_year >= 12) {
-	    if (rider.class == 6 || rider.class == 9)
-	      rider.class = 5;
-	} else {
-	  if (rider.class == 5 || rider.class == 6)
-	    rider.class = 9;
+	  if ($scope.age_year >= 45) {
+	    if (rider.class == 5 || rider.class == 9)
+	      rider.class = 6;
+	  } else if ($scope.age_year >= 12) {
+	      if (rider.class == 6 || rider.class == 9)
+		rider.class = 5;
+	  } else {
+	    if (rider.class == 5 || rider.class == 6)
+	      rider.class = 9;
+	  }
 	}
 
 	disable_class(3, $scope.age_year && $scope.age_year >= 45);
@@ -254,10 +231,15 @@ var eventController = [
     });
 
     $scope.$watch('internal.country', function(country) {
-      if ($scope.rider.country != country) {
-	$scope.rider.country = country;
+      var rider = $scope.rider;
+
+      if (rider == null)
+	return;
+
+      if (rider.country != country) {
+	rider.country = country;
 	if (country != 'A')
-	  $scope.rider.province = null;
+	  rider.province = null;
 	if (country == null)
 	  set_focus('#country', $timeout);
       }
@@ -278,21 +260,26 @@ var eventController = [
       }
     };
 
+    $scope.required_error = function(field) {
+      return field.$error.required;
+    }
+
     $scope.save_rider = function() {
       if ($scope.busy)
 	return;
       $scope.busy = true;
-      var rider = $scope.riders[$scope.internal.index];
+      var rider = $scope.rider; // $scope.riders[$scope.internal.index];
       var request;
-      if ($scope.rider.number) {
-	request = $http.put('/api/register/event/' + $routeParams.id + '/rider/' + $scope.rider.number, rider);
+      if (rider.number) {
+	request = $http.put('/api/register/event/' + $routeParams.id + '/rider/' + rider.number, rider);
       } else {
 	request = $http.post('/api/register/event/' + $routeParams.id + '/rider', rider);
       }
       request.success(function (rider) {
 	$scope.riders[$scope.internal.index] = rider;
-	$scope.rider = rider;
-	$scope.old_rider = angular.copy(rider);
+	$scope.reset_rider();
+	// $scope.rider = rider;
+	// $scope.old_rider = angular.copy(rider);
       }).error(function (error) {
 	$timeout(function() {
 	  alert(JSON.stringify(error));
@@ -303,24 +290,34 @@ var eventController = [
     };
 
     $scope.reset_rider = function() {
-      if ($scope.rider.number) {
-        $scope.riders[$scope.internal.index] =
-	  $scope.rider =
-	    angular.copy($scope.old_rider);
-      } else
-	$scope.internal.index = '' + ($scope.internal.index - 1);
-    };
+      delete $scope.rider;
+      delete $scope.old_rider;
+      delete $scope.internal.index;
+    }
+
+    function rider_info(rider) {
+      var infos = [];
+      if (rider.first_name !== null && rider.first_name !== '')
+	infos.push(rider.first_name);
+      if (rider.last_name !== null && rider.last_name !== '')
+	infos.push(rider.last_name);
+
+      var infos2 = [];
+      if (rider.number !== null && rider.number >= 0)
+	infos2.push(rider.number);
+      if (rider.date_of_birth != null)
+	infos2.push($scope.$eval('rider.date_of_birth | date:"d.M.yyyy"', {rider: rider}));
+      if (infos2.length)
+	infos.push('(' + infos2.join(', ') + ')');
+
+      return infos.join(' ');
+    }
+
+    $scope.rider_info = rider_info;
 
     $scope.remove_rider = function() {
       $timeout(function() {
-	var rider_name = [];
-	if ($scope.rider.first_name)
-	  rider_name.push($scope.rider.first_name);
-	if ($scope.rider.last_name)
-	  rider_name.push($scope.rider.last_name);
-	rider_name = rider_name.join(' ');
-
-	if (confirm('Fahrer ' + $scope.rider_info($scope.rider) + ' wirklich löschen?')) {
+	if (confirm('Fahrer ' + rider_info($scope.rider) + ' wirklich löschen?')) {
 	  if ($scope.busy)
 	    return;
 	  $scope.busy = true;
@@ -328,7 +325,7 @@ var eventController = [
 		       {params: {version: $scope.rider.version}})
 	  .success(function (rider) {
 	    $scope.riders.splice($scope.internal.index, 1);
-	    $scope.internal.index = '' + ($scope.internal.index - 1);
+	    $scope.reset_rider();
 	  }).error(function (error) {
 	    $timeout(function() {
 	      alert(JSON.stringify(error));
@@ -341,7 +338,7 @@ var eventController = [
     };
 
     $scope.new_rider = function() {
-      $scope.internal.index = '' + riders.length;
+      $scope.change_rider($scope.riders.length);
     }
 
     $scope.logout = function() {
@@ -359,6 +356,9 @@ var eventController = [
     }
     if (event.registration_ends)
       kick();
+
+    if (!riders.length)
+      $scope.change_rider(0);
   }];
 
 eventController.resolve = {

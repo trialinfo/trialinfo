@@ -365,8 +365,13 @@ var marksController = [
       }
     };
 
-    $scope.rider_name = rider_name;
-    $scope.rider_info = rider_info;
+    $scope.rider_name = function(rider) {
+      return rider_name(rider, $scope);
+    }
+
+    $scope.rider_info = function(rider) {
+      return rider_info(rider, $scope);
+    }
 
     $scope.marks_tab_to = function(round, index) {
       var rider = $scope.rider;
