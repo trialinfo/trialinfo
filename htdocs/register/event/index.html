@@ -37,6 +37,12 @@
   </div>
   <div ng-if="rider">
       <table>
+	<tr ng-if="features.email">
+	  <th align="right"><label for="email">E-Mail</label></th>
+	  <td>
+	    <input type="text" size="40" maxlength="60" ng-model="rider.email" disabled id="email">
+	  </td>
+	</tr>
 	<tr ng-if="rider.number >= 0">
 	  <th align="right"><label for="number">Startnummer</label></th>
 	  <td>
@@ -192,12 +198,6 @@
 	      <option value="3">KFZ-Versicherung</option>
 	      <option value="4">Tagesversicherung</option>
 	    </select>
-	  </td>
-	</tr>
-	<tr ng-if="features.email && rider.email != user.email">
-	  <th align="right"><label for="email">E-Mail</label></th>
-	  <td>
-	    <input type="text" size="40" maxlength="60" ng-model="rider.email" id="email">
 	  </td>
 	</tr>
 	<tr ng-if="features.class">
