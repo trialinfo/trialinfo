@@ -37,10 +37,6 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	if (usec)
 	  setTimeout(start_timers, usec % 1000 + 100);
       }
-
-      function logout() {
-	window.location.href = '/logout';
-      }
     </script>
 
     <macro show_serie(serie, ignore)>
@@ -78,9 +74,6 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       <a href="ergebnisse/2014.shtml">2014</a>,
       <a href="ergebnisse/2013.shtml">2013</a>,
       <a href="ergebnisse/2012.shtml">2012</a>
-    </p>
-    <p if(data.email)>
-      <button onclick="logout()" title="Aktueller Benutzer: ${data.email}">Abmelden</button>
     </p>
   </body>
 </html>
