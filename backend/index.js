@@ -2795,18 +2795,15 @@ async function admin_event_get_as_base(connection, tag, email) {
 }
 
 async function index(req, res, next) {
-  let now = Date.now();
   try {
     var events = await req.conn.queryAsync(`
-      SELECT id, date, title, registration_ends
+      SELECT id, date, title,
+	     CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends
       FROM events
       JOIN rankings USING (id)
-      WHERE ranking = 1 AND enabled`);
-    events.map((event) => {
-      if (event.registration_ends &&
-	  new Date(event.registration_ends).getTime() < now)
-	event.registration_ends = null;
-    });
+      WHERE ranking = 1 AND enabled
+      AND (registration_ends > NOW() OR
+	  id IN (SELECT DISTINCT id FROM marks))`);
     events = events.reduce((hash, event) => {
       event.series = {};
       hash[event.id] = event;
@@ -2837,7 +2834,7 @@ async function index(req, res, next) {
     });
 
     let params = {
-      events: function(serie_id, hash) {
+      events: function(serie_id) {
 	let serie = series[serie_id] || {};
 	return Object.values(serie.events || {})
 	  .sort((a, b) =>
