@@ -20,20 +20,21 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       function start_timers() {
 	var usec;
 
-	Array.from(document.getElementsByClassName('timer')).forEach(function(timer) {
-	  var timestamp = timer.getAttribute('timestamp');
-	  if (!timestamp)
-	    return;
-	  usec = parse_timestamp(timestamp).getTime() - Date.now();
-	  var id = timer.getAttribute('for');
-	  var text = document.getElementById(id);
-	  if (usec > 0) {
-	    text.innerHTML = remaining_time(timestamp);
-	  } else {
-	    text.remove();
-	    timer.remove();
-	  }
-	});
+	Array.prototype.forEach.call(document.getElementsByClassName('timer'),
+	  function(timer) {
+	    var timestamp = timer.getAttribute('timestamp');
+	    if (!timestamp)
+	      return;
+	    usec = parse_timestamp(timestamp).getTime() - Date.now();
+	    var id = timer.getAttribute('for');
+	    var text = document.getElementById(id);
+	    if (usec > 0) {
+	      text.innerHTML = remaining_time(timestamp);
+	    } else {
+	      text.remove();
+	      timer.remove();
+	    }
+	  });
 	if (usec)
 	  setTimeout(start_timers, usec % 1000 + 100);
       }

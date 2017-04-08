@@ -17,13 +17,13 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	if (event)
 	  event.preventDefault();
 	['login', 'signup', 'reset'].forEach(function(mode) {
-	  Array.from(document.getElementsByClassName(mode))
-	    .forEach(function(element) {
+	  Array.prototype.forEach.call(document.getElementsByClassName(mode),
+	    function(element) {
 	      element.setAttribute('style', 'display:none');
 	    });
 	});
-	Array.from(document.getElementsByClassName(mode))
-	  .forEach(function(element) {
+	Array.prototype.forEach.call(document.getElementsByClassName(mode),
+	  function(element) {
 	    element.setAttribute('style', '');
 	  });
 	form.setAttribute('action', form.getAttribute('action')
