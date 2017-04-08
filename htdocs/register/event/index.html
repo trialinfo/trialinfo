@@ -10,14 +10,14 @@
       <span ng-if="rider.start || rider.start_tomorrow">
 	ist derzeit für den Start am
 	<span ng-if="rider.start">
-	  <span ng-if="date">{{date | date:"fullDate"}}</span>
+	  <span ng-if="date">{{date | date:"EEEE, d. MMMM yyyy"}}</span>
 	  <span ng-if="!date">ersten Tag</span>
 	</span>
 	<span ng-if="rider.start && rider.start_tomorrow">
 	  und
 	</span>
 	<span ng-if="rider.start_tomorrow">
-	  <span ng-if="date_tomorrow">{{date_tomorrow | date:"fullDate"}}</span>
+	  <span ng-if="date_tomorrow">{{date_tomorrow | date:"EEEE, d. MMMM yyyy"}}</span>
 	  <span ng-if="!date_tomorrow">zweiten Tag</span></label>
 	</span>
 	vorangemeldet.
@@ -233,12 +233,12 @@
 	  <td>
 	    <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
 	      <label for="start">
-		<span ng-if="date">am {{date | date:"fullDate"}}</span>
+		<span ng-if="date">am {{date | date:"EEEE, d. MMMM yyyy"}}</span>
 		<span ng-if="!date">am ersten Tag</span></label><br>
 	    <span ng-if="features.start_tomorrow">
 	      <input type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow" ng-disabled="rider.registered">
 		<label for="start_tomorrow">
-		  <span ng-if="date_tomorrow">am {{date_tomorrow | date:"fullDate"}}</span>
+		  <span ng-if="date_tomorrow">am {{date_tomorrow | date:"EEEE, d. MMMM yyyy"}}</span>
 		  <span ng-if="!date_tomorrow">am zweiten Tag</span></label>
 	    </span>
 	  </td>
