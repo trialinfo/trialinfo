@@ -6,6 +6,11 @@ function parse_timestamp(timestamp) {
     return new Date(match[1], match[2] - 1, match[3]);
 }
 
+// IE doesn't have Math.trunc
+Math.trunc = Math.trunc || function(x) {
+  return ~~x;
+}
+
 function remaining_time(timestamp) {
   var s = parse_timestamp(timestamp).getTime() - Date.now() + 1000;
   var seconds = Math.trunc(s / 1000),
