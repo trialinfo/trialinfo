@@ -33,7 +33,7 @@ require('marko/express'); //enable res.marko
 var html_escape = require('html-escape');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
-var remaining_time = require('./htdocs/js/remaining-time');
+var rt = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
@@ -2838,7 +2838,7 @@ async function index(req, res, next) {
 	let serie = series[serie_id] || {};
 	return Object.values(serie.events || {})
 	  .sort((a, b) =>
-	    (new Date(a.date).getTime() - new Date(b.date).getTime()) ||
+	    (rt.parse_timestamp(a.date).getTime() - rt.parse_timestamp(b.date).getTime()) ||
 	    (a.title || '').localeCompare(b.title || ''));
       },
       abbreviations: function(series, ignore) {
@@ -2854,7 +2854,8 @@ async function index(req, res, next) {
 	if (abbreviations.length)
 	  return '(' + abbreviations.join(', ') + ')';
       },
-      remaining_time: remaining_time
+      parse_timestamp: rt.parse_timestamp,
+      remaining_time: rt.remaining_time
     };
     if (req.user)
       params.email = req.user.email;

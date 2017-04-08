@@ -1,5 +1,13 @@
+function parse_timestamp(timestamp) {
+  var match = timestamp.match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2}))?$/);
+  if (match[4] !== undefined)
+    return new Date(match[1], match[2] - 1, match[3], match[4], match[5], match[6]);
+  else
+    return new Date(match[1], match[2] - 1, match[3]);
+}
+
 function remaining_time(timestamp) {
-  var s = (new Date(timestamp)).getTime() - Date.now() + 1000;
+  var s = parse_timestamp(timestamp).getTime() - Date.now() + 1000;
   var seconds = Math.trunc(s / 1000),
       minutes = Math.trunc(seconds /  60),
       hours = Math.trunc(minutes / 60),
@@ -31,4 +39,7 @@ function remaining_time(timestamp) {
 }
 
 if (typeof module !== 'undefined')
-  module.exports = remaining_time;
+  module.exports = {
+    parse_timestamp: parse_timestamp,
+    remaining_time: remaining_time
+  };

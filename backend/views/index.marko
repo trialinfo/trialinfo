@@ -24,7 +24,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	  var timestamp = timer.getAttribute('timestamp');
 	  if (!timestamp)
 	    return;
-	  usec = (new Date(timestamp)).getTime() - Date.now();
+	  usec = parse_timestamp(timestamp).getTime() - Date.now();
 	  var id = timer.getAttribute('for');
 	  var text = document.getElementById(id);
 	  if (usec > 0) {

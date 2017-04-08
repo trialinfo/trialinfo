@@ -9,7 +9,7 @@ var eventController = [
 
     $scope.event = event;
     if (event.date) {
-      var date = new Date(event.date);
+      var date = parse_timestamp(event.date);
       $scope.date = date;
       $scope.date_tomorrow = new Date(
         date.getTime() + 1000 * 60 * 60 * 24);
@@ -346,7 +346,7 @@ var eventController = [
     };
 
     function kick() {
-      var usec = (new Date(event.registration_ends)).getTime() - Date.now();
+      var usec = parse_timestamp(event.registration_ends).getTime() - Date.now();
       if (usec > 0) {
         $scope.remaining_time = remaining_time(event.registration_ends);
         $timeout(kick, usec % 1000 + 100);
