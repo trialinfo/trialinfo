@@ -1,3 +1,7 @@
-DirectoryIndex index.shtml
 Options Indexes Includes
 @SSI_LEGACY_EXPR_PARSER@
+Options +FollowSymLinks
+
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/ergebnisse/$
+RewriteRule (.*) / [R=301]
