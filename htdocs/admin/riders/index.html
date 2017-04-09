@@ -277,9 +277,6 @@
 	      Für Klasse {{rider.class}} sind keine zu befahrenen Runden und Sektionen<br>
 	      ausgewählt, die Klasse startet daher nicht.
 	    </span>
-	    <span ng-if="event.type.match('^otsv') && is_austria(rider.country)" style="display:block">
-	      Bitte das Feld Staatsangehörigkeit für Österreicher leer lassen.
-	    </span>
 	    <span ng-if="!rider.non_competing">
 	      <span ng-if="age && age_year">
 		<span ng-if="min_age && age < min_age" style="display:block">
