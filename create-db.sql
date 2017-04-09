@@ -1,8 +1,8 @@
--- MySQL dump 10.16  Distrib 10.1.20-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.16  Distrib 10.1.21-MariaDB, for Linux (x86_64)
 --
 -- Host: localhost    Database: localhost
 -- ------------------------------------------------------
--- Server version	10.1.20-MariaDB
+-- Server version	10.1.21-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -120,7 +120,7 @@ CREATE TABLE `events_admins` (
   `id` int(11) NOT NULL DEFAULT '0',
   `user` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`,`user`,`read_only`)
+  PRIMARY KEY (`id`,`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -135,7 +135,7 @@ CREATE TABLE `events_admins_inherit` (
   `id` int(11) NOT NULL,
   `user` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`,`user`,`read_only`)
+  PRIMARY KEY (`id`,`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -165,7 +165,7 @@ DROP TABLE IF EXISTS `events_groups`;
 CREATE TABLE `events_groups` (
   `id` int(11) NOT NULL DEFAULT '0',
   `group` int(11) NOT NULL,
-  `read_only` tinyint(1) DEFAULT NULL,
+  `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`,`group`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -181,7 +181,7 @@ CREATE TABLE `events_groups_inherit` (
   `id` int(11) NOT NULL,
   `group` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`,`group`,`read_only`)
+  PRIMARY KEY (`id`,`group`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -404,7 +404,7 @@ DROP TABLE IF EXISTS `series_admins`;
 CREATE TABLE `series_admins` (
   `serie` int(11) NOT NULL,
   `user` int(11) NOT NULL,
-  `read_only` tinyint(1) DEFAULT NULL,
+  `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`serie`,`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -465,7 +465,7 @@ DROP TABLE IF EXISTS `series_groups`;
 CREATE TABLE `series_groups` (
   `serie` int(11) NOT NULL,
   `group` int(11) NOT NULL,
-  `read_only` tinyint(1) DEFAULT NULL,
+  `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`serie`,`group`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -568,4 +568,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-12-24 12:34:22
+-- Dump completed on 2017-04-09 18:46:48
