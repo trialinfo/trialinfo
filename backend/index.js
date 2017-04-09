@@ -36,6 +36,7 @@ var deepEqual = require('deep-equal');
 var rt = require('./htdocs/js/remaining-time');
 var moment = require('moment');
 var crypto = require('crypto');
+var base64url = require('base64url');
 var nodemailer = require('nodemailer');
 var zlib = require('zlib');
 var clone = require('clone');
@@ -2215,7 +2216,7 @@ async function register_get_riders(connection, id, tag) {
 
 /* Return a random 16-character string */
 function random_tag() {
-  return crypto.randomBytes(12).toString('base64');
+  return base64url(crypto.randomBytes(12));
 }
 
 async function create_user_secret(connection, email, create_user) {

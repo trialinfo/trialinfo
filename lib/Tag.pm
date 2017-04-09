@@ -33,5 +33,5 @@ sub random_tag($) {
     (read $fh, $random, $bytes) == $bytes
 	or die "/dev/urandom: $!\n";
 
-    return encode_base64($random);
+    return encode_base64url($random);
 }

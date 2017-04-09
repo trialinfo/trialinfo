@@ -8,7 +8,7 @@ fi
 DB=./local-db
 
 function random_tag() {
-    head -c 12 /dev/random | base64
+    head -c 12 /dev/random | base64 | tr /+ _-
 }
 
 emails=$(
