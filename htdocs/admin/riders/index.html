@@ -292,7 +292,7 @@
 		  Fahrer ist vor Jahrgang {{year_for_age(max_age_year)}} geboren<br>und darf in Klasse {{rider.class}} nicht mehr starten.
 		</span>
 	      </span>
-	      <span ng-if="event.type != null && event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)'">
+	      <span ng-if="otsv_amf_event">
 		<span ng-if="rider.class >= 11 && rider.class <= 13">
 		  <span ng-if="!rider.license" style="display:block">
 		    Bitte die Lizenznummer eintragen.

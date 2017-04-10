@@ -425,6 +425,10 @@ var ridersController = [
       return rider_does_not_start($scope.rider, event);
     }
 
+    $scope.otsv_amf_event =
+      event.type != null &&
+      event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/);
+
     $scope.osk_license = function(rider) {
       return rider.license.match(/^(IJM|JM|JMJ) ?[0-9]+$/);
     };
