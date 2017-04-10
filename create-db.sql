@@ -497,14 +497,14 @@ CREATE TABLE `users` (
   `user` int(11) NOT NULL,
   `email` varchar(60) NOT NULL,
   `password` varchar(40) DEFAULT NULL,
-  `tag` char(16) NOT NULL,
+  `user_tag` char(16) NOT NULL,
   `secret` char(16) DEFAULT NULL,
   `secret_expires` timestamp NULL DEFAULT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `super_admin` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`user`),
   UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `tag` (`tag`)
+  UNIQUE KEY `user_tag` (`user_tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

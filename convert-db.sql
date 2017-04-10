@@ -213,7 +213,7 @@ ALTER TABLE benutzer
 	CHANGE name email VARCHAR(60) NOT NULL,
 	ADD secret_expires TIMESTAMP NULL DEFAULT NULL AFTER password,
 	ADD secret CHAR(16) AFTER password,
-	ADD tag CHAR(16) NOT NULL AFTER password,
+	ADD user_tag CHAR(16) NOT NULL AFTER password,
 	CHANGE admin super_admin BOOLEAN NOT NULL DEFAULT '0',
 	ADD COLUMN admin BOOLEAN NOT NULL DEFAULT '0' after secret_expires,
 	CHANGE password password VARCHAR(40) NULL;
@@ -225,9 +225,9 @@ UPDATE users
 CREATE UNIQUE INDEX email ON users (email);
 
 UPDATE users
-	SET tag = SUBSTRING(TO_BASE64(SHA1(RAND())), 1, 16)
-	WHERE tag IS NULL OR tag = '';
-CREATE UNIQUE INDEX tag ON users (tag);
+	SET user_tag = REPLACE(REPLACE(SUBSTRING(TO_BASE64(SHA1(RAND())), 1, 16), '/', '_'), '+', '-')
+	WHERE user_tag IS NULL OR user_tag = '';
+CREATE UNIQUE INDEX user_tag ON users (user_tag);
 
 DROP TABLE IF EXISTS groups;
 ALTER TABLE gruppe

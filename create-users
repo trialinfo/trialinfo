@@ -25,14 +25,14 @@ user=$(
     ' | $DB -N)
 
 for email in $emails; do
-    tag=$(random_tag)
+    user_tag=$(random_tag)
     echo -n "
-      INSERT INTO users (user, email, tag)
-      VALUES ($user, '$email', '$tag');
+      INSERT INTO users (user, email, user_tag)
+      VALUES ($user, '$email', '$user_tag');
     "
     echo -n "
       UPDATE riders
-      SET user_tag = '$tag'
+      SET user_tag = '$user_tag'
       WHERE email = '$email';
     "
     ((user++))

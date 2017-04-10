@@ -138,7 +138,7 @@ async function validate_user(connection, user) {
     throw 'Wrong email or password';
 
   var rows = await connection.queryAsync(`
-    SELECT email, password, tag, admin
+    SELECT email, password, user_tag, admin
     FROM users
     WHERE email = ? AND password IS NOT NULL`, [user.email]);
 
@@ -2197,13 +2197,13 @@ function register_filter_rider(rider) {
     return result;
 }
 
-async function register_get_riders(connection, id, tag) {
+async function register_get_riders(connection, id, user_tag) {
   var rows = await connection.queryAsync(`
     SELECT number
     FROM riders
     WHERE id = ? AND user_tag = ? AND NOT COALESCE(`+'`group`'+`, 0)
     ORDER BY last_name, first_name, date_of_birth, number`,
-    [id, tag]);
+    [id, user_tag]);
 
   var riders = [];
   for (let row of rows) {
@@ -2228,7 +2228,7 @@ async function create_user_secret(connection, email, create_user) {
   if (create_user) {
     try {
       await connection.queryAsync(`
-	INSERT INTO users (user, email, tag, secret, secret_expires)
+	INSERT INTO users (user, email, user_tag, secret, secret_expires)
 	  SELECT COALESCE(MAX(user), 0) + 1 AS user, ?, ?, ?, ?
 	  FROM users
       `, [email, random_tag(), secret, expires]);
@@ -2608,14 +2608,14 @@ async function change_password(req, res, next) {
   }
 }
 
-async function register_save_rider(connection, id, number, rider, tag, version) {
+async function register_save_rider(connection, id, number, rider, user_tag, version) {
   await cache.begin(connection);
   try {
     var event = await get_event(connection, id);
     var old_rider;
     if (number != null) {
       old_rider = await get_rider(connection, id, number);
-      if (old_rider.user_tag != tag)
+      if (old_rider.user_tag != user_tag)
 	throw new HTTPError(403, 'Forbidden');
     } else {
       var result = await connection.queryAsync(`
@@ -2655,7 +2655,7 @@ async function register_save_rider(connection, id, number, rider, tag, version) 
       delete rider.rankings;
       delete rider.registered;
       rider.verified = false;
-      rider.user_tag = tag;
+      rider.user_tag = user_tag;
 
       event = cache.modify_event(id);
       if (!event.features.verified)
@@ -3277,7 +3277,7 @@ app.get('/api/register/event/:id', auth, function(req, res, next) {
 });
 
 app.get('/api/register/event/:id/riders', function(req, res, next) {
-  register_get_riders(req.conn, req.params.id, req.user.tag)
+  register_get_riders(req.conn, req.params.id, req.user.user_tag)
   .then((result) => {
     res.json(result);
   }).catch(next);
@@ -3293,7 +3293,7 @@ app.get('/api/register/event/:id/suggestions', function(req, res, next) {
 app.post('/api/register/event/:id/rider', async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await register_save_rider(req.conn, req.params.id, null, rider, req.user.tag);
+    rider = await register_save_rider(req.conn, req.params.id, null, rider, req.user.user_tag);
     res.status(201);
     res.json(rider);
   } catch (err) {
@@ -3304,7 +3304,7 @@ app.post('/api/register/event/:id/rider', async function(req, res, next) {
 app.put('/api/register/event/:id/rider/:number', async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await register_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.tag);
+    rider = await register_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.user_tag);
     res.json(rider);
   } catch (err) {
     next(err);
@@ -3313,7 +3313,7 @@ app.put('/api/register/event/:id/rider/:number', async function(req, res, next) 
 
 app.delete('/api/register/event/:id/rider/:number', async function(req, res, next) {
   try {
-    await register_save_rider(req.conn, req.params.id, req.params.number, null, req.user.tag, req.query.version);
+    await register_save_rider(req.conn, req.params.id, req.params.number, null, req.user.user_tag, req.query.version);
     res.json({});
   } catch (err) {
     next(err);
@@ -3434,7 +3434,7 @@ app.get('/api/event/:id/find-riders', will_read_event, function(req, res, next) 
 app.post('/api/event/:id/rider', will_write_event, async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await admin_save_rider(req.conn, req.params.id, null, rider, req.user.tag);
+    rider = await admin_save_rider(req.conn, req.params.id, null, rider, req.user.user_tag);
     res.status(201);
     res.json(rider);
   } catch (err) {
@@ -3452,7 +3452,7 @@ app.post('/api/event/:id/reset', will_write_event, async function(req, res, next
 app.put('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await admin_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.tag);
+    rider = await admin_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.user_tag);
     res.json(rider);
   } catch (err) {
     next(err);
@@ -3461,7 +3461,7 @@ app.put('/api/event/:id/rider/:number', will_write_event, async function(req, re
 
 app.delete('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
   try {
-    await admin_save_rider(req.conn, req.params.id, req.params.number, null, req.user.tag, req.query.version);
+    await admin_save_rider(req.conn, req.params.id, req.params.number, null, req.user.user_tag, req.query.version);
     res.json({});
   } catch (err) {
     next(err);
