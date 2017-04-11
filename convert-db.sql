@@ -232,8 +232,7 @@ CREATE UNIQUE INDEX user_tag ON users (user_tag);
 DROP TABLE IF EXISTS groups;
 ALTER TABLE gruppe
 	RENAME groups,
-	CHANGE gruppe `group` INT,
-	CHANGE name groupname VARCHAR(30) NOT NULL;
+	CHANGE gruppe `group` INT;
 
 DROP TABLE IF EXISTS events_admins_inherit;
 CREATE TABLE events_admins_inherit (
