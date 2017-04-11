@@ -321,6 +321,9 @@
 	    <button type="button" ng-disabled="modified() || !enabled.remove" ng-disabled="!enabled.rider" ng-click="remove()" accesskey="l" tabindex="-1">
 	      {{groups ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
 	  </p>
+	  <p ng-if="regforms[event.type]">
+	    <button type="button" ng-disabled="modified() || !enabled.rider" ng-click="regform()">PDF</button>
+	  </p>
 	</fieldset>
       </form>
     </td>

@@ -28,10 +28,15 @@ def set_form_fields(document, fields):
         for field in page.formFields():
             name = str(field.name())
             if name in fields:
+                value = fields[name]
                 if field.type() == Poppler.FormField.FormText:
-                    field.setText(QString.fromUtf8(fields[name]))
+                    if value == None:
+                        value = ''
+                    elif not isinstance(value, basestring):
+                        value = str(value)
+                    field.setText(QString.fromUtf8(value))
                 elif field.type() == Poppler.FormField.FormButton:
-                    field.setState(fields[name])
+                    field.setState(value)
 
 def write_pdf(fd, document):
     converter = document.pdfConverter()
@@ -76,6 +81,7 @@ def main():
     else:
         fields = get_form_fields(document)
         json.dump(fields, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write('\n');
 
 if __name__ == "__main__":
     main()

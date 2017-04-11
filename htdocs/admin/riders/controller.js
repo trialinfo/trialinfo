@@ -1,9 +1,9 @@
 'use strict;'
 
 var ridersController = [
-  '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location',
+  '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window',
   'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
-  function ($scope, $sce, $http, $timeout, $q, $route, $location,
+  function ($scope, $sce, $http, $timeout, $q, $route, $location, $window,
 	    event, suggestions, groups, riders_hash, groups_hash) {
     $scope.$root.context(event.rankings[0].title);
 
@@ -643,6 +643,12 @@ var ridersController = [
     };
 
     warn_before_unload($scope, $scope.modified);
+
+    $scope.regforms = regforms;
+    $scope.regform = function() {
+      $window.location.href =
+	'/api/event/' + event.id + '/rider/' + $scope.rider.number + '/regform';
+    };
 
     $scope.$watch("rider.class", function(class_) {
       $scope.no_ranking1 = class_ &&

@@ -41,6 +41,7 @@ var nodemailer = require('nodemailer');
 var zlib = require('zlib');
 var clone = require('clone');
 var jsonpatch = require('json-patch');
+var child_process = require('child_process');
 
 require('marko/node-require').install();
 
@@ -3321,6 +3322,65 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
   }
 });
 
+async function admin_fill_reg_form(res, connection, id, number) {
+  let event = await get_event(connection, id);
+  let rider = await get_rider(connection, id, number);
+  if (event.type == null || !rider)
+    throw new HTTPError(404, 'Not Found');
+
+  rider = Object.assign({}, rider);
+
+  if (rider.number < 0)
+    rider.number = null;
+
+  if (rider.class != null) {
+    var cls = event.classes[rider.class - 1];
+    if (cls) {
+      cls = event.classes[cls.ranking_class - 1];
+      if (cls) {
+	var match;
+	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
+	  rider['class_' + match[1].toLowerCase()] = true;
+      }
+    }
+  }
+
+  if (rider.guardian != null) {
+    if (!common.guardian_visible(rider, event))
+      rider.guardian = null;
+  }
+
+  if (rider.date_of_birth != null) {
+    rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
+      .locale('de').format('D.M.YYYY');
+  }
+
+  var form = 'pdf/regform/' + event.type + '.pdf';
+  var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
+    stdio: ['pipe', 'pipe', process.stderr]
+  });
+
+  child.stdin.write(JSON.stringify(rider));
+  child.stdin.end();
+
+  var headers_sent;
+  child.stdout.on('data', (chunk) => {
+    if (!headers_sent) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${event.type}.pdf"`);
+      res.setHeader('Transfer-Encoding', 'chunked');
+    }
+    res.write(chunk);
+    headers_sent = true;
+  });
+
+  child.stdout.on('end', () => {
+    res.end();
+  });
+
+  /* FIXME: error handling! */
+}
+
 /*
  * Accessible to admins only:
  */
@@ -3423,6 +3483,14 @@ app.get('/api/event/:id/last-rider', will_read_event, function(req, res, next) {
   .then((result) => {
     res.json(result);
   }).catch(next);
+});
+
+app.get('/api/event/:id/rider/:number/regform', will_read_event, async function(req, res, next) {
+  try {
+    await admin_fill_reg_form(res, req.conn, req.params.id, req.params.number);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/api/event/:id/find-riders', will_read_event, function(req, res, next) {
