@@ -6,7 +6,7 @@
 <form novalidate name="form">
   <div ng-if="!rider">
     <p ng-repeat="rider in riders">
-      {{rider_info(rider)}}
+      <a href="" ng-click="change_rider($index)">{{rider_info(rider)}}</a>
       <span ng-if="rider.start || rider.start_tomorrow">
 	ist derzeit für den Start am
 	<span ng-if="rider.start">
@@ -25,8 +25,6 @@
       <span ng-if="!rider.start && !rider.start_tomorrow">
 	ist derzeit nicht vorangemeldet.
       </span>
-      <br>
-      <button ng-click="change_rider($index)">Ändern</button>
     </p>
     <p>
       <button ng-click="new_rider()">Weiteren Fahrer hinzufügen</button>
