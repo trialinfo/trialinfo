@@ -143,7 +143,7 @@
 	<tr ng-if="features.license && license_visible(rider)">
 	  <th align="right"><label for="license">Lizenznummer</label></th>
 	  <td>
-	    <input type="text" size="20" maxlength="20" ng-model="rider.license" required name="license" id="license"><span ng-if="required_error(form.license)" style="color:red">*</span>
+	    <input type="text" size="20" maxlength="20" ng-model="rider.license" name="license" id="license">
 	  </td>
 	</tr>
 	<tr ng-if="features.club">
