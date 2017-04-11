@@ -29,14 +29,6 @@ function guardian_visible(rider, event) {
   return age < 18;
 }
 
-function set_focus(selector, $timeout) {
-  $timeout(function() {
-    var element = document.querySelector(selector);
-    element.focus();
-    element.select();
-  });
-}
-
 var countries = [
   {name: 'Deutschland', codes: ['D', 'DE', 'DEU', 'GER', 'Germany', 'Allemagne']},
   {name: 'England', codes: ['GB', 'GBR', 'UK', 'Großbritannien']},
