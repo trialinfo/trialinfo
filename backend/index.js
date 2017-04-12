@@ -2658,9 +2658,11 @@ async function register_save_rider(connection, id, number, rider, user_tag, vers
       rider.verified = false;
       rider.user_tag = user_tag;
 
-      event = cache.modify_event(id);
-      if (!event.features.verified)
+      if (!event.features.verified) {
+        event = cache.modify_event(id);
+	event.features = Object.assign({}, event.features);
 	event.features.verified = true;
+      }
 
       rider = Object.assign(cache.modify_rider(id, number), rider);
     } else {
