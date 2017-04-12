@@ -49,9 +49,18 @@
 	      </select>
 	    </td>
 	  </tr>
+	  <tr ng-if="features.start_tomorrow"><th align="right">Start heute/morgen</th>
+	    <td>
+	      <select ng-model="show.start_either" yes-no-null title="Fahrer oder Gruppe startet heute oder morgen">
+		<option value="-"></option>
+		<option value="no">Nein</option>
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
 	  <tr><th align="right">Start</th>
 	    <td>
-	      <select ng-model="show.start" yes-no-null title="Fahrer oder Gruppe startet">
+	      <select ng-model="show.start" yes-no-null title="Fahrer oder Gruppe startet heute">
 		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
@@ -61,9 +70,9 @@
 		</span>
 	    </td>
 	  </tr>
-	  <tr ng-if="features.start_tomorrow"><th align="right"><span title="Fahrer oder Gruppe startet morgen">Start morgen</span></th>
+	  <tr ng-if="features.start_tomorrow"><th align="right">Start morgen</th>
 	    <td>
-	      <select ng-model="show.start_tomorrow" yes-no-null>
+	      <select ng-model="show.start_tomorrow" yes-no-null title="Fahrer oder Gruppe startet morgen">
 		<option value="-"></option>
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>

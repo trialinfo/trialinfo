@@ -406,6 +406,9 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
     if (show.registered !== null &&
 	!rider.registered == show.registered)
       return false;
+    if (show.start_either !== null &&
+	!(rider.start || rider.start_tomorrow) == show.start_either)
+      return false;
     if (show.start !== null &&
 	!rider.start == show.start)
       return false;
@@ -804,9 +807,21 @@ function eventListController($scope, $sce, $route, $location, $timeout, event, l
 	$scope.show['ranking' + (index + 1)] = null;
     });
   });
+  $scope.$watch('show.start_either', function(value) {
+    if (value != null) {
+      $scope.show.start = null;
+      $scope.show.start_tomorrow = null;
+    }
+  });
   $scope.$watch('show.start', function(value) {
-    if (!value)
+    if (value)
+      $scope.show.start_either = null;
+    else
       $scope.show.riding = false;
+  });
+  $scope.$watch('show.start_tomorrow', function(value) {
+    if (value)
+      $scope.show.start_either = null;
   });
   $scope.$watch('show.riding', function(value) {
     if (value) {
