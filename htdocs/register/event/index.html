@@ -147,7 +147,7 @@
 	<tr ng-if="features.club">
 	  <th align="right"><label for="club">Club</label></th>
 	  <td>
-	    <input type="text" size="25" maxlength="40" ng-model="rider.club" id="club" list="club_list">
+	    <input type="text" size="25" maxlength="40" nullable ng-model="rider.club" id="club" list="club_list">
 	    <datalist id="club_list">
 	      <option ng-repeat="club in suggestions.club" value="{{club}}">
 	    </datalist>
@@ -244,7 +244,7 @@
 	<tr ng-if="features.rider_comment">
 	  <th align="right"><label for="rider_comment">Anmerkungen<br>und Wünsche</label></th>
 	  <td>
-	    <textarea rows="2" cols="70" maxlength="150" ng-model="rider.rider_comment" id="rider_comment"></textarea>
+	    <textarea rows="2" cols="70" maxlength="150" nullable ng-model="rider.rider_comment" id="rider_comment"></textarea>
 	  </td>
 	</tr>
       </table>
