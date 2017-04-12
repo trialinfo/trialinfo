@@ -629,7 +629,8 @@ var ridersController = [
 
     /* FIXME: Wie kann dieser Code für alle Formulare verallgemeinert werden? */
     $scope.keydown = function(event) {
-      if (event.which == 13) {
+      if (event.which == 13 &&
+	  (document.activeElement.tagName != "TEXTAREA" || event.ctrlKey)) {
 	$timeout(function() {
 	  if ($scope.modified() && $scope.form.$valid)
 	    $scope.save();
