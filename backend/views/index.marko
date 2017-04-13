@@ -47,8 +47,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	<if(event.registration_ends)>
 	  <span class="timer" timestamp="${event.registration_ends}" for="timer${event.id}">
 	    ${event.title} ${data.abbreviations(event.series, ignore=ignore)}<br>
-	    &emsp;<span class="register"><a href="register/event/${event.id}" >Jetzt voranmelden</a>
-	    (noch <span id="timer${event.id}">${data.remaining_time(event.registration_ends)}</span>)</span><br>
+	    &emsp;<a href="register/event/${event.id}" class="register">Jetzt voranmelden</a>
+	    (noch <span id="timer${event.id}">${data.remaining_time(event.registration_ends)}</span>)<br>
 	  </span>
 	</if>
 	<else>
