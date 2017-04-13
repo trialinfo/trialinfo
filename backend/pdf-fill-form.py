@@ -5,6 +5,9 @@ import getopt
 import json
 from PyQt4.QtCore import QString, QFile, QIODevice
 from popplerqt4 import Poppler
+import tempfile
+import subprocess
+import fcntl
 
 def usage(err):
     print "USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}"
@@ -47,6 +50,14 @@ def write_pdf(fd, document):
     if not converter.convert():
         raise IOError(converter.lastError())
 
+def fill_one(document, fields, fp):
+    set_form_fields(document, fields)
+    write_pdf(fp.fileno(), document)
+
+def clear_cloexec(fd):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+    fcntl.fcntl(fd, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
+
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "o:", ["fill", "out="])
@@ -70,13 +81,32 @@ def main():
 
     if opt_fill:
         fields = json.load(sys.stdin)
-        set_form_fields(document, fields)
 
         out = sys.stdout
         if opt_out != None:
             out = open(opt_out, "wb")
-        write_pdf(out.fileno(), document)
-        out.flush()
+
+        if isinstance(fields, dict):
+            fill_one(document, fields, out)
+        else:
+            array = fields
+            if len(array) == 0:
+                pass
+            elif len(array) == 1:
+                fill_one(document, array[0], out)
+            else:
+                orig_fields = get_form_fields(document)
+                fps = []
+                for fields in array:
+                    fp = tempfile.TemporaryFile()
+                    clear_cloexec(fp.fileno())
+                    fill_one(document, dict(orig_fields, **fields), fp)
+                    fps.append(fp)
+                fps.append(out)
+
+                cmd = ['pdfunite']
+                cmd.extend(map(lambda fp: '/proc/self/fd/%s' % fp.fileno(), fps))
+                subprocess.call(cmd)
 
     else:
         fields = get_form_fields(document)
