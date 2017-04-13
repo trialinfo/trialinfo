@@ -1,0 +1,51 @@
+$ backend/pdf-fill-form.py pdf/Nennformular\ 2017.pdf
+{
+  "class_0000ff": false,
+  "last_name": "",
+  "class_008000": false,
+  "displacement": "",
+  "date_of_signature": "",
+  "class_ffff00": false,
+  "place_of_signature": "",
+  "city": "",
+  "first_name": "",
+  "zip": "",
+  "start_tomorrow": false,
+  "start": false,
+  "class_ff0000": false,
+  "vehicle": "",
+  "email": "",
+  "province": "",
+  "organizer_comment": "",
+  "club": "",
+  "guardian": "",
+  "emergency_phone": "",
+  "number": "",
+  "phone": "",
+  "street": "",
+  "license": "",
+  "rider_comment": "",
+  "country": "",
+  "class_ffffff": false,
+  "date_of_birth": ""
+}
+
+$ backend/pdf-fill-form.py --fill --out=Nennformular.pdf pdf/Nennformular\ 2017.pdf
+{
+  "first_name": "Andreas",
+  "last_name": "Grünbacher"
+}
+^D
+
+$ backend/pdf-fill-form.py --fill --out=Nennformulare.pdf pdf/Nennformular\ 2017.pdf
+[
+  {
+    "first_name": "Andreas",
+    "last_name": "Grünbacher"
+  },
+  {
+    "first_name": "Rudolf",
+    "last_name": "Sobotka"
+  }
+]
+^D
