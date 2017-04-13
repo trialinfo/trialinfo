@@ -2169,6 +2169,7 @@ const register_rider_fields = {
   emergency_phone: true,
   first_name: true,
   frame_number: true,
+  guardian: true,
   insurance: true,
   last_name: true,
   license: true,
