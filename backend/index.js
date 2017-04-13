@@ -3347,8 +3347,10 @@ async function rider_regform_data(connection, id, number, event) {
     }
   }
 
-  if (rider.guardian != null) {
-    if (!common.guardian_visible(rider, event))
+  if (common.guardian_visible(rider, event)) {
+    if (!rider.guardian)
+      rider.guardian = '……………………………………………………';
+  } else {
       rider.guardian = null;
   }
 
