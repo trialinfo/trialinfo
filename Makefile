@@ -24,9 +24,6 @@ download: $(DOWNLOAD_FILES)
 
 generate: $(GENERATED_FILES)
 
-update:
-	@./make-trialinfo-update
-
 install: download
 	cd backend && npm install
 
