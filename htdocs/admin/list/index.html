@@ -176,7 +176,10 @@
 	    </td>
 	  </tr>
 	  <tr><th></th>
-	    <td><button type="submit" ng-click="create_pdf($event)">PDF erzeugen</button></td>
+	    <td><button type="submit" ng-click="create_pdf($event)">Fahrerliste-PDF</button></td>
+	  </tr>
+	  <tr ng-if="existing_regforms[event.type]"><th></th>
+	    <td><button ng-disabled="!num_riders" type="button" ng-click="regforms()">{{num_riders == 1 ? 'Nennformular' : 'Nennformulare'}}.pdf</button></td>
 	  </tr>
 	</table>
       </fieldset>

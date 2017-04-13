@@ -3325,10 +3325,9 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
   }
 });
 
-async function admin_fill_reg_form(res, connection, id, number) {
-  let event = await get_event(connection, id);
+async function rider_regform_data(connection, id, number, event) {
   let rider = await get_rider(connection, id, number);
-  if (event.type == null || !rider)
+  if (!rider)
     throw new HTTPError(404, 'Not Found');
 
   rider = Object.assign({}, rider);
@@ -3357,20 +3356,39 @@ async function admin_fill_reg_form(res, connection, id, number) {
     rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
       .locale('de').format('D.M.YYYY');
   }
+  return rider;
+}
+
+async function admin_regform(res, connection, id, numbers) {
+  let event = await get_event(connection, id);
+  if (event.type == null)
+    throw new HTTPError(404, 'Not Found');
+
+  var riders;
+
+  if (Array.isArray(numbers)) {
+    riders = [];
+    for (let number of numbers) {
+      var rider = await rider_regform_data(connection, id, number, event);
+      riders.push(rider);
+    }
+  } else {
+    riders = await rider_regform_data(connection, id, numbers, event);
+  }
 
   var form = 'pdf/regform/' + event.type + '.pdf';
   var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
     stdio: ['pipe', 'pipe', process.stderr]
   });
 
-  child.stdin.write(JSON.stringify(rider));
+  child.stdin.write(JSON.stringify(riders));
   child.stdin.end();
 
   var headers_sent;
   child.stdout.on('data', (chunk) => {
     if (!headers_sent) {
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${event.type}.pdf"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${Array.isArray(numbers) ? 'Nennformulare' : 'Nennformular'}.pdf"`);
       res.setHeader('Transfer-Encoding', 'chunked');
     }
     res.write(chunk);
@@ -3488,9 +3506,9 @@ app.get('/api/event/:id/last-rider', will_read_event, function(req, res, next) {
   }).catch(next);
 });
 
-app.get('/api/event/:id/rider/:number/regform', will_read_event, async function(req, res, next) {
+app.get('/api/event/:id/regform', will_read_event, async function(req, res, next) {
   try {
-    await admin_fill_reg_form(res, req.conn, req.params.id, req.params.number);
+    await admin_regform(res, req.conn, req.params.id, req.query.number);
   } catch (err) {
     next(err);
   }

@@ -1,8 +1,8 @@
 'use strict;'
 
 var eventListController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', 'event', 'list',
-  function eventListController($scope, $sce, $route, $location, $timeout, event, list) {
+  '$scope', '$sce', '$route', '$location', '$window', '$timeout', 'event', 'list',
+  function eventListController($scope, $sce, $route, $location, $window, $timeout, event, list) {
     $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
     $scope.$root.context(event.rankings[0].title);
 
@@ -793,6 +793,23 @@ var eventListController = [
       event.preventDefault();
       event.target.blur();
       $scope.fold.settings = !$scope.fold.settings;
+    }
+
+    $scope.existing_regforms = existing_regforms;
+    $scope.regforms = function() {
+      var riders = $scope.resulting_list.reduce(function(riders, group) {
+	group.list.reduce(function(riders, rider) {
+	  if (!rider.group)
+	    riders.push(rider);
+	  return riders;
+	}, riders);
+	return riders;
+      }, []);
+
+      $window.location.href = '/api/event/' + event.id + '/regform?' +
+	riders.map(function(rider) {
+	  return 'number=' + encodeURIComponent(rider.number);
+	}).join('&');
     }
 
     $scope.$watch('show.riders_groups', function(value) {

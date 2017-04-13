@@ -102,11 +102,23 @@ def main():
                     clear_cloexec(fp.fileno())
                     fill_one(document, dict(orig_fields, **fields), fp)
                     fps.append(fp)
-                fps.append(out)
+
+                # Note: pdfunite wants a seekable output file, so we cannot
+                # pass it sys.stdout which may be a pipe.
+
+                tmp_out = tempfile.TemporaryFile()
+                clear_cloexec(tmp_out.fileno())
+                fps.append(tmp_out);
 
                 cmd = ['pdfunite']
                 cmd.extend(map(lambda fp: '/proc/self/fd/%s' % fp.fileno(), fps))
                 subprocess.call(cmd)
+
+                while True:
+                    chunk = tmp_out.read(16384)
+                    if not chunk:
+                        break
+                    out.write(chunk)
 
     else:
         fields = get_form_fields(document)
