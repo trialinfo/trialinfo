@@ -2954,6 +2954,66 @@ async function admin_export_event(connection, id, email) {
   };
 }
 
+function csv_field(field) {
+  if (field == null)
+    field = ''
+  else if (typeof field === 'boolean')
+    field = field + 0 + ''
+  else
+    field = field + ''
+
+  if (field.match(/[", \r\n]/))
+    field = '"' + field.replace(/"/g, '""') + '"';
+  return field;
+}
+
+function csv_table(table) {
+  return table.reduce(function(result, row) {
+    result += row.reduce(function(result, field) {
+      result.push(csv_field(field));
+      return result;
+    }, []).join(',');
+    return result + '\r\n';
+  }, '');
+}
+
+async function admin_export_csv(connection, id) {
+  let event = await get_event(connection, id);
+
+  return await new Promise(function(fulfill, reject) {
+    connection.query(`
+      SELECT *
+      FROM riders
+      WHERE id = ? AND
+            (number > 0 OR registered OR start OR start_tomorrow) AND
+	    NOT COALESCE(`+'`group`'+`, 0)
+      ORDER BY number
+    `, [id], function(error, rows, fields) {
+      if (error)
+	return reject(error);
+
+      for (let row of rows) {
+	if (row.number < 0)
+          row.number = null;
+      }
+
+      fields = fields.reduce(function(fields, field) {
+	  if (event.features[field.name])
+	    fields.push(field.name);
+	  return fields;
+	}, []);
+      var table = [fields];
+      for (let row of rows) {
+	table.push(fields.reduce(function(result, field) {
+	  result.push(row[field]);
+	  return result;
+	}, []));
+      }
+      fulfill(csv_table(table));
+    });
+  });
+}
+
 /*
 async function title_of_copy(connection, event) {
   let result = connection.queryAsync(`
@@ -3439,6 +3499,17 @@ app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
 		  "attachment; filename*=UTF-8''" +
 		  encodeURIComponent(req.query.filename || result.filename));
     res.send(result.data);
+  }).catch(next);
+});
+
+app.get('/api/event/:tag/csv', will_read_event, function(req, res, next) {
+  admin_export_csv(req.conn, req.params.id)
+  .then((result) => {
+    res.type('text/comma-separated-values');
+    res.setHeader('Content-Disposition',
+		  "attachment; filename*=UTF-8''" +
+		  encodeURIComponent(req.query.filename || 'Fahrerliste.csv'));
+    res.send(result);
   }).catch(next);
 });
 
