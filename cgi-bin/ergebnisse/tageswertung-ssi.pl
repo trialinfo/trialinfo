@@ -102,8 +102,6 @@ my @db_spalten =
     map { "$spalten_map->{$_} AS $_" }
         map { /^lbl$/ ? ('land', 'bundesland') : $_ } @spalten;
 
-print STDERR join(@db_spalten, ', '), "\n";
-
 $sth = $dbh->prepare(q{
     SELECT class AS klasse, rounds AS runden, name AS bezeichnung,
 	   color AS farbe, ranking_class AS wertungsklasse,
@@ -130,7 +128,8 @@ $sth = $dbh->prepare(q{
     FROM riders} . "\n" .
     ($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
     q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
-    WHERE id = ?});
+    WHERE id = ?} .
+    ($features->{verifiziert} ? ' AND verified' : ''));
 $sth->execute($wertung, $id);
 while (my $fahrer = $sth->fetchrow_hashref) {
     for (my $n = 0; $n <= 5; $n++) {
@@ -153,7 +152,8 @@ $sth = $dbh->prepare(q{
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
     my $fahrer = $fahrer_nach_startnummer->{$row[0]};
-    $fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2];
+    $fahrer->{punkte_pro_runde}[$row[1] - 1] = $row[2]
+      if $fahrer;
 }
 
 if ($alle_punkte) {

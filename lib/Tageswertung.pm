@@ -35,6 +35,8 @@ sub rang_wenn_definiert($$) {
 
     return exists($b->{rang}) - exists($a->{rang})
 	if !exists($a->{rang}) || !exists($b->{rang});
+    return defined($b->{rang}) - defined($a->{rang})
+	if !defined($a->{rang}) || !defined($b->{rang});
     return $a->{rang} <=> $b->{rang}
 	if $a->{rang} != $b->{rang};
     return $a->{startnummer} <=> $b->{startnummer};
@@ -290,12 +292,14 @@ sub tageswertung(@) {
 	foreach my $fahrer (@$fahrer_in_klasse) {
 	    my $row;
 	    if (!(ausser_konkurrenz($fahrer, $args{cfg}) || $fahrer->{ausfall})) {
-		push @$row, "$fahrer->{rang}.";
+		my $rang = $fahrer->{rang};
+		push @$row, defined $rang ? "$fahrer->{rang}." : "";
 	    } else {
 		push @$row, "";
 	    }
-	    push @$row, $fahrer->{startnummer}
-		if $features->{startnummer};
+	    my $startnummer = $fahrer->{startnummer};
+	    push @$row, $startnummer < 0 ? undef : $startnummer
+		if $startnummer;
 	    push @$row, [ $fahrer->{nachname} . " " . $fahrer->{vorname}, 'l', 'style="padding-right:1em"' ];
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
@@ -349,7 +353,7 @@ sub tageswertung(@) {
 		if $zusatzpunkte;
 
 	    if (ausser_konkurrenz($fahrer, $args{cfg}) ||
-		$fahrer->{ausfall} || $fahrer->{runden} == 0) {
+		$fahrer->{ausfall} || ($fahrer->{runden} // 0) == 0) {
 		my @details = ();
 		push @details, "außer konkurrenz"
 		    if ausser_konkurrenz($fahrer, $args{cfg});
