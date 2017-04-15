@@ -3,8 +3,6 @@ MAKEFLAGS = --no-print-directory
 CURL = curl
 SED = sed
 
-SSI_LEGACY_EXPR_PARSER ?= true
-
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
@@ -14,15 +12,9 @@ DOWNLOAD_FILES = \
 	htdocs/js/json-diff.js \
 	htdocs/js/validate.js \
 
-GENERATED_FILES = \
-	htdocs/ergebnisse/.htaccess \
-	htdocs/veranstalter/.htaccess \
-
-all: generate
+all:
 
 download: $(DOWNLOAD_FILES)
-
-generate: $(GENERATED_FILES)
 
 install: download
 	cd backend && npm install
@@ -38,26 +30,6 @@ serve: build
 
 profile: build
 	cd backend && npm run profile
-
-ifeq ($(SSI_LEGACY_EXPR_PARSER),true)
-SSI_LEGACY_EXPR_PARSER=-e 's:^@SSI_LEGACY_EXPR_PARSER@$$:SSILegacyExprParser on:'
-else
-SSI_LEGACY_EXPR_PARSER=-e '/^@SSI_LEGACY_EXPR_PARSER@$$/d'
-endif
-
-generate_web_file = \
-	$(SED) $(SSI_LEGACY_EXPR_PARSER)
-
-.PHONY: $(GENERATED_FILES)
-$(GENERATED_FILES): %: %.in
-	@$(generate_web_file) < $< > $@.tmp
-	@if ! test -f "$@" || \
-	    ! cmp -s "$@" "$@.tmp"; then \
-	  echo "$< -> $@"; \
-	  mv $@.tmp $@; \
-	else \
-	  rm -f $@.tmp; \
-	fi
 
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs

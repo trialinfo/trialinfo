@@ -1,5 +1,5 @@
 Options Indexes Includes
-@SSI_LEGACY_EXPR_PARSER@
+SSILegacyExprParser on
 Options +FollowSymLinks
 
 RewriteEngine On
