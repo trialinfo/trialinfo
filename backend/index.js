@@ -1588,7 +1588,8 @@ async function get_event_scores(connection, id) {
   Object.keys(riders).forEach((number) => {
     var rider = riders[number];
 
-    if (!rider.start)
+    if (!rider.start ||
+        (!rider.verified && event.features.verified))
       return;
 
     var r = {
