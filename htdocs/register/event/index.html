@@ -138,12 +138,6 @@
 	    <input type="text" size="40" maxlength="50" ng-model="rider.guardian" required name="guardian" id="guardian"><span ng-if="required_error(form.guardian)" style="color:red">*</span>
 	  </td>
 	</tr>
-	<tr ng-if="features.license && license_visible(rider)">
-	  <th align="right"><label for="license">Lizenznummer</label></th>
-	  <td>
-	    <input type="text" size="20" maxlength="20" ng-model="rider.license" name="license" id="license">
-	  </td>
-	</tr>
 	<tr ng-if="features.club">
 	  <th align="right"><label for="club">Club</label></th>
 	  <td>
@@ -224,6 +218,12 @@
 	  <th align="right"></th>
 	  <td>
 	    <em>Start außer Konkurrenz.</em>
+	  </td>
+	</tr>
+	<tr ng-if="features.license && license_visible(rider)">
+	  <th align="right"><label for="license">Lizenznummer</label></th>
+	  <td>
+	    <input type="text" size="20" maxlength="20" ng-model="rider.license" name="license" id="license">
 	  </td>
 	</tr>
 	<tr>
