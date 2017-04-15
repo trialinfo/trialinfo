@@ -382,6 +382,85 @@ async function get_serie(connection, serie_id) {
   return serie;
 }
 
+async function rider_regform_data(connection, id, number, event) {
+  let rider = await get_rider(connection, id, number);
+  if (!rider)
+    throw new HTTPError(404, 'Not Found');
+
+  rider = Object.assign({}, rider);
+
+  if (rider.number < 0)
+    rider.number = null;
+
+  if (rider.class != null) {
+    var cls = event.classes[rider.class - 1];
+    if (cls) {
+      cls = event.classes[cls.ranking_class - 1];
+      if (cls) {
+	var match;
+	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
+	  rider['class_' + match[1].toLowerCase()] = true;
+      }
+    }
+  }
+
+  if (common.guardian_visible(rider, event)) {
+    if (!rider.guardian)
+      rider.guardian = '……………………………………………………';
+  } else {
+      rider.guardian = null;
+  }
+
+  if (rider.date_of_birth != null) {
+    rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
+      .locale('de').format('D.M.YYYY');
+  }
+  return rider;
+}
+
+async function admin_regform(res, connection, id, numbers) {
+  let event = await get_event(connection, id);
+  if (event.type == null)
+    throw new HTTPError(404, 'Not Found');
+
+  var riders;
+
+  if (Array.isArray(numbers)) {
+    riders = [];
+    for (let number of numbers) {
+      var rider = await rider_regform_data(connection, id, number, event);
+      riders.push(rider);
+    }
+  } else {
+    riders = await rider_regform_data(connection, id, numbers, event);
+  }
+
+  var form = 'pdf/regform/' + event.type + '.pdf';
+  var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
+    stdio: ['pipe', 'pipe', process.stderr]
+  });
+
+  child.stdin.write(JSON.stringify(riders));
+  child.stdin.end();
+
+  var headers_sent;
+  child.stdout.on('data', (chunk) => {
+    if (!headers_sent) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${Array.isArray(numbers) ? 'Nennformulare' : 'Nennformular'}.pdf"`);
+      res.setHeader('Transfer-Encoding', 'chunked');
+    }
+    res.write(chunk);
+    headers_sent = true;
+  });
+
+  child.stdout.on('end', () => {
+    res.end();
+  });
+
+  /* FIXME: error handling! */
+}
+
 async function get_events(connection, email) {
   var ids = await connection.queryAsync(`
     SELECT DISTINCT id
@@ -3387,85 +3466,6 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
     next(err);
   }
 });
-
-async function rider_regform_data(connection, id, number, event) {
-  let rider = await get_rider(connection, id, number);
-  if (!rider)
-    throw new HTTPError(404, 'Not Found');
-
-  rider = Object.assign({}, rider);
-
-  if (rider.number < 0)
-    rider.number = null;
-
-  if (rider.class != null) {
-    var cls = event.classes[rider.class - 1];
-    if (cls) {
-      cls = event.classes[cls.ranking_class - 1];
-      if (cls) {
-	var match;
-	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
-	  rider['class_' + match[1].toLowerCase()] = true;
-      }
-    }
-  }
-
-  if (common.guardian_visible(rider, event)) {
-    if (!rider.guardian)
-      rider.guardian = '……………………………………………………';
-  } else {
-      rider.guardian = null;
-  }
-
-  if (rider.date_of_birth != null) {
-    rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
-      .locale('de').format('D.M.YYYY');
-  }
-  return rider;
-}
-
-async function admin_regform(res, connection, id, numbers) {
-  let event = await get_event(connection, id);
-  if (event.type == null)
-    throw new HTTPError(404, 'Not Found');
-
-  var riders;
-
-  if (Array.isArray(numbers)) {
-    riders = [];
-    for (let number of numbers) {
-      var rider = await rider_regform_data(connection, id, number, event);
-      riders.push(rider);
-    }
-  } else {
-    riders = await rider_regform_data(connection, id, numbers, event);
-  }
-
-  var form = 'pdf/regform/' + event.type + '.pdf';
-  var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
-    stdio: ['pipe', 'pipe', process.stderr]
-  });
-
-  child.stdin.write(JSON.stringify(riders));
-  child.stdin.end();
-
-  var headers_sent;
-  child.stdout.on('data', (chunk) => {
-    if (!headers_sent) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${Array.isArray(numbers) ? 'Nennformulare' : 'Nennformular'}.pdf"`);
-      res.setHeader('Transfer-Encoding', 'chunked');
-    }
-    res.write(chunk);
-    headers_sent = true;
-  });
-
-  child.stdout.on('end', () => {
-    res.end();
-  });
-
-  /* FIXME: error handling! */
-}
 
 /*
  * Accessible to admins only:
