@@ -2,6 +2,7 @@ MAKEFLAGS = --no-print-directory
 
 CURL = curl
 SED = sed
+MARKOC = node_modules/marko/bin/markoc
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
@@ -12,17 +13,27 @@ DOWNLOAD_FILES = \
 	htdocs/js/json-diff.js \
 	htdocs/js/validate.js \
 
-all:
+MARKO_FILES = \
+	$(wildcard backend/views/*.marko) \
+	$(wildcard backend/emails/*.marko)
+
+all: $(MARKO_FILES:%=%.js)
 
 download: $(DOWNLOAD_FILES)
 
 install: download
 	cd backend && npm install
 
-start:
+%.marko.js: backend/$(MARKOC)
+%.marko.js: %.marko
+	( cd backend && $(MARKOC) ../$< )
+
+backend/$(MARKOC): install
+
+start: $(MARKO_FILES:%=%.js)
 	cd backend && npm start
 
-build:
+build: $(MARKO_FILES:%=%.js)
 	cd backend && npm run build
 
 serve: build

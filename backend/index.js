@@ -43,18 +43,16 @@ var clone = require('clone');
 var jsonpatch = require('json-patch');
 var child_process = require('child_process');
 
-require('marko/node-require').install();
-
 var views = {
-  'index': require('./views/index.marko'),
-  'login': require('./views/login.marko'),
-  'change-password': require('./views/change-password.marko'),
-  'confirmation-sent': require('./views/confirmation-sent.marko'),
-  'password-changed': require('./views/password-changed.marko')
+  'index': require('./views/index.marko.js'),
+  'login': require('./views/login.marko.js'),
+  'change-password': require('./views/change-password.marko.js'),
+  'confirmation-sent': require('./views/confirmation-sent.marko.js'),
+  'password-changed': require('./views/password-changed.marko.js')
 };
 
 var emails = {
-  'change-password': require('./emails/change-password.marko')
+  'change-password': require('./emails/change-password.marko.js')
 };
 
 var regforms_dir = 'pdf/regform';

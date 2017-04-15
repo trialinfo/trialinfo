@@ -43,7 +43,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js --ext js,marko --exec babel-node",
+    "start": "nodemon index.js --exec babel-node",
     "build": "babel index.js -d dist",
     "serve": "export NODE_ENV=production; node dist/index.js",
     "profile": "export NODE_ENV=production; node --prof dist/index.js"
