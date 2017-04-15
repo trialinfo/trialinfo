@@ -3,13 +3,13 @@
 var importController = [
   '$scope', '$http', '$location', '$q', 'events',
   function ($scope, $http, $location, $q, events) {
-    $scope.SYNC_SOURCE = SYNC_SOURCE;
+    $scope.config = config;
     $scope.events = events;
     $scope.settings = {
-      operation: SYNC_SOURCE ? 'import-remote' : 'import-file',
+      operation: config.sync_target ? 'import-remote' : 'import-file',
       format: 'trialinfo',
       timeout: 30,
-      url: SYNC_REMOTE_URL,
+      url: config.sync_target,
     };
     try {
       $scope.settings.event = events[events.length - 1];

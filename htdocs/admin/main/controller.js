@@ -5,7 +5,6 @@ var mainController = [
   function ($scope, $cookies, $http, $location, $window, events, series) {
     $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
 
-    $scope.SYNC_SOURCE = SYNC_SOURCE;
     $scope.events = events;
     $scope.series = series;
     $scope.show = {};

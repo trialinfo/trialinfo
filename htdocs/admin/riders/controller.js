@@ -645,7 +645,6 @@ var ridersController = [
 
     warn_before_unload($scope, $scope.modified);
 
-    $scope.existing_regforms = existing_regforms;
     $scope.regform = function() {
       $window.location.href =
 	'/api/event/' + event.id + '/regform?number=' +

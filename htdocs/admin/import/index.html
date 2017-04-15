@@ -6,7 +6,7 @@
 	<th align="right"><label for="operation">Aktion</label></th>
 	<td>
 	  <select ng-model="settings.operation" id="operation" ng-disabled="busy">
-	    <option value="import-remote" ng-if="SYNC_SOURCE">Server-Import</option>
+	    <option value="import-remote" ng-if="config.sync_target">Server-Import</option>
 	    <option value="import-file">Datei-Import</option>
 	  </select>
 	</td>

@@ -1,7 +1,7 @@
 'use strict;'
 
 function eventScoresController($scope, $sce, $route, $location, $timeout, $http, $q, scores) {
-  $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
+  $scope.config = config;
   $scope.show = { fields: [], classes: [] };
   var features = scores.event.features;
   $scope.features = features;

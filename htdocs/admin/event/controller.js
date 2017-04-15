@@ -5,13 +5,13 @@ var eventController = [
   function ($scope, $location, $http, event) {
     $scope.$root.context(event.rankings[0].title);
 
-    $scope.SYNC_SOURCE = SYNC_SOURCE;
+    $scope.config = config;
 
     $scope.event = event;
     $scope.features = event.features;
     $scope.settings = {
-      action: SYNC_SOURCE ? 'sync' : 'trialinfo-export',
-      url: SYNC_REMOTE_URL,
+      action: config.sync_target ? 'sync' : 'trialinfo-export',
+      url: config.sync_target,
       timeout: 30
     };
     $scope.fold = {};

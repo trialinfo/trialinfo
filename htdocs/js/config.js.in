@@ -1,3 +1,8 @@
-var HAVE_WEASYPRINT = true;
-var SYNC_SOURCE = true;
-var SYNC_REMOTE_URL = 'https://www.trialinfo.at';
+var config = {
+  weasyprint: true,
+  sync_target: 'https://www.trialinfo.at',
+  existing_regforms: {
+    'otsv2016': true,
+    'otsv+osk2016': true
+  }
+};

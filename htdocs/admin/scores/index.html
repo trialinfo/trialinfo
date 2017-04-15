@@ -58,7 +58,7 @@
 	</table>
       </fieldset><br>
     </form>
-    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST" ng-if="HAVE_WEASYPRINT && show.duration == null">
+    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST" ng-if="config.weasyprint && show.duration == null">
       <fieldset style="display:inline">
 	<legend>Drucken</legend>
 	<table>

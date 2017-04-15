@@ -168,7 +168,7 @@
 	</table>
       </fieldset><br>
     </form>
-    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST" ng-if="HAVE_WEASYPRINT">
+    <form id="pdf" action="../../cgi-bin/pdf.pl" method="POST" ng-if="config.weasyprint">
       <fieldset style="display:inline">
 	<legend>Drucken</legend>
 	<table>
@@ -201,7 +201,7 @@
 	  <tr><th></th>
 	    <td><button type="submit" ng-click="create_pdf($event)">Fahrerliste-PDF</button></td>
 	  </tr>
-	  <tr ng-if="existing_regforms[event.type]"><th></th>
+	  <tr ng-if="config.existing_regforms[event.type]"><th></th>
 	    <td><button ng-disabled="!num_riders" type="button" ng-click="regforms()">{{num_riders == 1 ? 'Nennformular' : 'Nennformulare'}}.pdf</button></td>
 	  </tr>
 	</table>

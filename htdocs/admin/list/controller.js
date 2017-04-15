@@ -3,7 +3,7 @@
 var eventListController = [
   '$scope', '$sce', '$route', '$location', '$window', '$timeout', 'event', 'list',
   function eventListController($scope, $sce, $route, $location, $window, $timeout, event, list) {
-    $scope.HAVE_WEASYPRINT = HAVE_WEASYPRINT;
+    $scope.config = config;
     $scope.$root.context(event.rankings[0].title);
 
     $scope.event = event;
@@ -795,7 +795,6 @@ var eventListController = [
       $scope.fold.settings = !$scope.fold.settings;
     }
 
-    $scope.existing_regforms = existing_regforms;
     $scope.regforms = function() {
       var riders = $scope.resulting_list.reduce(function(riders, group) {
 	group.list.reduce(function(riders, rider) {
