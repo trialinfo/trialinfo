@@ -57,6 +57,8 @@ var emails = {
   'change-password': require('./emails/change-password.marko')
 };
 
+var regforms_dir = 'pdf/regform';
+
 var object_values = require('object.values');
 if (!Object.values)
   object_values.shim();
@@ -435,7 +437,7 @@ async function admin_regform(res, connection, id, numbers) {
     riders = await rider_regform_data(connection, id, numbers, event);
   }
 
-  var form = 'pdf/regform/' + event.type + '.pdf';
+  var form = regforms_dir + '/' + event.type + '.pdf';
   var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
     stdio: ['pipe', 'pipe', process.stderr]
   });
@@ -3270,6 +3272,18 @@ function query_string(query) {
   ).join('&');
 }
 
+var client_config = {
+  weasyprint: config.weasyprint,
+  sync_target: config.sync_target,
+  existing_regforms: fs.readdirSync(regforms_dir).reduce(
+    function(regforms, name) {
+      var match = name.match(/(.*)\.pdf$/);
+      if (match)
+	regforms[match[1]] = true;
+      return regforms;
+    }, {})
+};
+
 var sendFileOptions = {
   root: __dirname + '/htdocs/'
 };
@@ -3368,6 +3382,11 @@ app.get('/register/event/:id', conn(pool), async function(req, res, next) {
     return next();
   } catch(err) {}
   res.redirect(303, '/login/?redirect=' + encodeURIComponent(req.url));
+});
+
+app.get('/admin/config.js', function(req, res, next) {
+  res.type('application/javascript');
+  res.send('var config = ' + JSON.stringify(client_config, null, '  ') + ';');
 });
 
 /*

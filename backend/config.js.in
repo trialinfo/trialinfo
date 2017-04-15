@@ -1,4 +1,4 @@
-var config = {
+module.exports = {
   database: {
     host: '<<hostname>>',
     user: '<<username>>',
@@ -26,11 +26,15 @@ var config = {
 /*
   nodemailer: {
     // nodemailer options (https://www.npmjs.com/package/nodemailer)
-  }
- */
+  },
+*/
 /*
- log_sql: false
- */
+  log_sql: true,
+*/
+/*
+  weasyprint: true,
+*/
+/*
+  sync_target: '<<url to sync to>>',
+*/
 };
-
-module.exports = config;

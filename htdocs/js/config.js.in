@@ -1,8 +1,0 @@
-var config = {
-  weasyprint: true,
-  sync_target: 'https://www.trialinfo.at',
-  existing_regforms: {
-    'otsv2016': true,
-    'otsv+osk2016': true
-  }
-};
