@@ -50,7 +50,7 @@ ALTER TABLE fahrer
 	CHANGE punkte marks INT,
 	CHANGE rang rank INT,
 	ADD COLUMN user_tag CHAR(16),
-	ADD COLUMN verified BOOLEAN DEFAULT 1;
+	ADD COLUMN verified BOOLEAN NOT NULL DEFAULT 1;
 
 UPDATE riders
 	SET country = NULL
@@ -213,6 +213,7 @@ ALTER TABLE benutzer
 	CHANGE name email VARCHAR(60) NOT NULL,
 	ADD secret_expires TIMESTAMP NULL DEFAULT NULL AFTER password,
 	ADD secret CHAR(16) AFTER password,
+	ADD verified BOOLEAN NOT NULL DEFAULT 0 after secret_expires,
 	ADD user_tag CHAR(16) NOT NULL AFTER password,
 	CHANGE admin super_admin BOOLEAN NOT NULL DEFAULT '0',
 	ADD COLUMN admin BOOLEAN NOT NULL DEFAULT '0' after secret_expires,

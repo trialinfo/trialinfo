@@ -324,7 +324,7 @@ CREATE TABLE `riders` (
   `marks` int(11) DEFAULT NULL,
   `rank` int(11) DEFAULT NULL,
   `user_tag` char(16) DEFAULT NULL,
-  `verified` tinyint(1) DEFAULT '1',
+  `verified` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -500,6 +500,7 @@ CREATE TABLE `users` (
   `user_tag` char(16) NOT NULL,
   `secret` char(16) DEFAULT NULL,
   `secret_expires` timestamp NULL DEFAULT NULL,
+  `verified` tinyint(1) NOT NULL DEFAULT '0',
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `super_admin` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`user`),
@@ -568,4 +569,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-11 15:48:21
+-- Dump completed on 2017-04-12  2:07:02
