@@ -1,4 +1,3 @@
 var HAVE_WEASYPRINT = true;
 var SYNC_SOURCE = true;
 var SYNC_REMOTE_URL = 'https://www.trialinfo.at';
-var TRIALTOOL = false;
