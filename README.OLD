@@ -251,6 +251,18 @@ BEVOR DIE SCRIPTS VERWENDET WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich i
 der Datei lib/Auswertung.pm.txt.
 
 
+DEB-Paket bauen
+===============
+
+$ dnf install dpkg dpkg-dev debhelper devscripts
+$ make release
+$ ./deb.sh trialinfo-0.1.tar.gz
+$ debsign ... ?
+
+(When dpkg-buildpackage builds packages builds packages as non-root, it uses
+fakeroot which makes the build takes extremely long.)
+
+
 Veranstaltungsverwaltung
 ========================
 

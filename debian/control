@@ -1,0 +1,19 @@
+Source: trialinfo
+Section: unknown
+Priority: optional
+Maintainer: Andreas Gruenbacher <andreas.gruenbacher@gmail.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: https://www.trialinfo.at
+#Vcs-Git: git://github.com/trialinfo/trialinfo.git
+#Vcs-Browser: https://github.com/trialinfo/trialinfo
+
+Package: trialinfo
+Architecture: all
+Depends: nodejs, mariadb-server, python-poppler-qt4, poppler-utils
+#For proxying through Apache and for the old Perl cgi scripts:
+#Depends: apache2, libjson-perl
+Description: Web application for managing observed trials competitions
+ A web application for managing observed trials motorbike and bicycle
+ competitions. The documentation, and user interface are all in German;
+ the code is mainly in English.

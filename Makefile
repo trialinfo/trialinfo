@@ -1,3 +1,5 @@
+export PACKAGE = trialinfo
+
 MAKEFLAGS = --no-print-directory
 
 CURL = curl
@@ -16,6 +18,8 @@ DOWNLOAD_FILES = \
 MARKO_FILES = \
 	$(wildcard backend/views/*.marko) \
 	$(wildcard backend/emails/*.marko)
+
+TAG = $(shell git describe --tags --candidates=0 ${1:-HEAD} 2>/dev/null)
 
 all: $(MARKO_FILES:%=%.js)
 
@@ -41,6 +45,24 @@ serve: build
 
 profile: build
 	cd backend && npm run profile
+
+.PHONY: require-tag
+require-tag:
+	@tag="$(TAG)"; \
+	if [ -z "$$tag" ]; then \
+	    echo "Please create a vN.N tag" >&2; \
+	    exit 2; \
+	fi; \
+	if ! echo "$$tag" | grep -q -e '^v[0-9]\+\.[0-9]\+$$'; then \
+	    echo "Tag '$$tag' does not have the form vN.N" >&2; \
+	    exit 2; \
+	fi
+
+tarball: require-tag
+	@./tarball.sh $(TAG)
+
+release: require-tag tarball
+	@./release.sh $(TAG)
 
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs

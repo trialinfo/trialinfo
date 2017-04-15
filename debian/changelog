@@ -1,0 +1,5 @@
+trialinfo (@VERSION@) unstable; urgency=medium
+
+  * Release @VERSION@
+
+ -- Andreas Gruenbacher <andreas.gruenbacher@gmail.com>  @DATE@

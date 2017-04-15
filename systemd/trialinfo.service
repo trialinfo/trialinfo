@@ -1,0 +1,12 @@
+[Unit]
+Description=TrialInfo
+
+[Service]
+ExecStart=/usr/bin/nodejs index.js
+WorkingDirectory=/var/lib/trialinfo/backend
+StandardOutput=journal
+SyslogIdentifier=trialinfo
+User=trialinfo
+Group=trialinfo
+Environment=NODE_ENV=production
+Environment=TRIALINFO=systemd

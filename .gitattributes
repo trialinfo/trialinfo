@@ -1,0 +1,8 @@
+/* export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+backend !export-ignore
+htdocs !export-ignore
+pdf !export-ignore
+create-db.sql !export-ignore
+systemd !export-ignore
