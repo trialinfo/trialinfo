@@ -117,23 +117,25 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 
     <VirtualHost *:80>
 	DocumentRoot /home/agruen/trialinfo/htdocs
-	ServerName trialinfo.home
+	ServerName www.trialinfo.at
 
 	ScriptAlias /cgi-bin/ "/home/agruen/trialinfo/cgi-bin/"
+
+	<LocationMatch ".*">
+	    Require all granted
+	</LocationMatch>
 
 	<Directory "/home/agruen/trialinfo/htdocs">
 	    Options Indexes
 	    AllowOverride All
-	    Require all granted
 	</Directory>
 
 	<Directory "/home/agruen/trialinfo/cgi-bin">
 	    Options None
 	    AllowOverride All
-	    Require all granted
 	</Directory>
 
-	<LocationMatch "^/(|login/?|admin/|register/event/\d+|logout|signup|reset|change-password|api/.*)$">
+	<LocationMatch "^/(|login/?|admin/|register/event/\d+|logout|signup|reset|change-password|admin/config.js|api/.*)$">
 	    ProxyPassMatch "http://localhost:3080/$1"
 	</LocationMatch>
     </VirtualHost>
