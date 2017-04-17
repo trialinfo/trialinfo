@@ -21,6 +21,7 @@ require('any-promise/register/bluebird');
 
 var config = require('./config.js');
 var fs = require('fs');
+var fsp = require('fs-promise');
 var Promise = require('bluebird');
 var compression = require('compression');
 var express = require('express');
@@ -42,6 +43,7 @@ var zlib = require('zlib');
 var clone = require('clone');
 var jsonpatch = require('json-patch');
 var child_process = require('child_process');
+var tmp = require('tmp');
 
 var views = {
   'index': require('./views/index.marko.js'),
@@ -3314,7 +3316,7 @@ app.use(logger(app.get('env') == 'production' ? production_log_format : 'dev'));
 if (app.get('env') == 'production')
   app.get('*.js', minified_redirect);
 app.use(bodyParser.json({limit: '5mb'}));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ limit: '5mb', extended: false }));
 app.use(cookieParser(/* config.session.secret */));
 app.use(cookieSession({
   name: 'trialinfo.session',
@@ -3439,14 +3441,14 @@ app.get('/register/*', function(req, res, next) {
 app.use('/api', conn(pool));
 app.all('/api/*', auth);
 
-app.get('/api/event/:id/scores', auth, function(req, res, next) {
+app.get('/api/event/:id/scores', function(req, res, next) {
   get_event_scores(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
-app.get('/api/register/event/:id', auth, function(req, res, next) {
+app.get('/api/register/event/:id', function(req, res, next) {
   register_get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
@@ -3495,6 +3497,39 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
   } catch (err) {
     next(err);
   }
+});
+
+app.post('/api/to-pdf', async function(req, res, next) {
+  var baseurl = (req.body.url || '.').replace(/\/admin\/.*/, '/admin/');
+  var html = req.body.html
+    .replace(/<!--.*?-->\s?/g, '')
+    .replace(/<script.*?>[\s\S]*?<\/script>\s*/g, '');
+    /*.replace(/<[^>]*>/g, function(x) {
+      return x.replace(/\s+ng-\S+="[^"]*"/g, '');
+    })*/
+
+  var tmp_html = tmp.fileSync();
+  console.log(tmp_html.name);
+  await fsp.write(tmp_html.fd, html);
+
+  var tmp_pdf = tmp.fileSync();
+  console.log(tmp_pdf.name);
+  var child = child_process.spawn('weasyprint',
+				  ['-f', 'pdf', '--base-url', baseurl,
+				   tmp_html.name, tmp_pdf.name]);
+  child.on('close', (code) => {
+    tmp_html.removeCallback();
+
+    if (code)
+      next(new HTTPError(500, 'Internal Error'));
+
+    var filename = req.body.filename || 'print.pdf';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.sendFile(tmp_pdf.name, {}, () => {
+      tmp_pdf.removeCallback();
+    });
+  });
 });
 
 /*
