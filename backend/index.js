@@ -2726,6 +2726,7 @@ async function register_save_rider(connection, id, number, rider, user, version)
       });
       rider.number = +number;
 
+      delete rider.rankings;
       if (old_rider) {
 	if (old_rider.number)
 	  delete rider['class'];
@@ -2739,7 +2740,6 @@ async function register_save_rider(connection, id, number, rider, user, version)
       }
 
       delete rider.non_competing;
-      delete rider.rankings;
       delete rider.registered;
       delete rider.verified;
       if (!user.verified) {
