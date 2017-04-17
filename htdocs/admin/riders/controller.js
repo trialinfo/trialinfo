@@ -682,13 +682,13 @@ var ridersController = [
 	if (event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
 	  if (class_ == 3) {
 	    $scope.max_age_year = 44;
+	  } else if (class_ == 4 || class_ == 7) {
+	    $scope.min_age_year = 45;
 	  } else if (class_ == 5) {
+	    $scope.max_age_year = 11;
+	  } else if (class_ == 6) {
 	    $scope.min_age_year = 12;
 	    $scope.max_age_year = 44;
-	  } else if (class_ == 4 || class_ == 6) {
-	    $scope.min_age_year = 45;
-	  } else if (class_ == 9) {
-	    $scope.max_age_year = 11;
 	  } else if (class_ == 11) {
 	    $scope.min_age = 14;
 	  } else if (class_ == 12) {
