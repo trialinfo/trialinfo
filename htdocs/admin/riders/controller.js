@@ -469,6 +469,8 @@ var ridersController = [
 	    assign_rider(undefined);
 	    update_hashes(old_rider, null);
 	    set_focus('#search_term', $timeout);
+
+	    clear_search_result();
 	  }).
 	  error(network_error);
       }
