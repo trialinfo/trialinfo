@@ -44,7 +44,7 @@ var eventListController = [
 
     angular.forEach(list, function(group) {
       if (group.group) {
-	angular.forEach(group.rider, function(number) {
+	angular.forEach(group.riders, function(number) {
 	  var rider = riders_by_number[number];
 	  if (rider) {
 	    if (!rider.groups)
