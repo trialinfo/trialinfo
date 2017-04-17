@@ -241,10 +241,10 @@
 	    <input type="text" ng-disabled="modified()" size="20" maxlength="40" ng-model="search.term" onchange="angular.element(this).scope().find_riders()" id="search_term" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>
-	    <span ng-repeat="rider in rider_list">
+	    <span ng-repeat="rider in riders_list">
 	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
 	    </span>
-	    <span ng-if="rider_list != null && rider_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
+	    <span ng-if="riders_list != null && riders_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
 	  </p>
 	  <p ng-if="groups && rider">
 	    <label for="member_search_term">Fahrer suchen:</label><br>

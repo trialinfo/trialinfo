@@ -104,7 +104,7 @@ var ridersController = [
 	$scope.form.$setPristine();
       if (rider) {
 	if (rider.riders)
-	  rider.riders = normalize_rider_list(rider.riders);
+	  rider.riders = normalize_riders_list(rider.riders);
       }
       $scope.rider = rider;
       $scope.internal.number = visible_number(rider);
@@ -131,7 +131,7 @@ var ridersController = [
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
 	    focus_rider();
-	    delete $scope.rider_list;
+	    delete $scope.riders_list;
 	  }
 	}).
 	error(network_error);
@@ -187,15 +187,15 @@ var ridersController = [
 	  group: +groups
 	};
 	$http.get(url, {params: params}).
-	  success(function(rider_list) {
-	    if (rider_list.length == 1)
-	      $scope.load_rider(rider_list[0].number);
+	  success(function(riders_list) {
+	    if (riders_list.length == 1)
+	      $scope.load_rider(riders_list[0].number);
 	    else
-	      $scope.rider_list = rider_list;
+	      $scope.riders_list = riders_list;
 	  }).
 	  error(network_error);
       } else {
-	delete $scope.rider_list;
+	delete $scope.riders_list;
       }
     };
 
@@ -503,7 +503,7 @@ var ridersController = [
 	return s != number;
       });
       $scope.members_list.push(number);
-      $scope.members_list = normalize_rider_list($scope.members_list);
+      $scope.members_list = normalize_riders_list($scope.members_list);
       set_focus('#member_search_term', $timeout);
     };
 
@@ -519,7 +519,7 @@ var ridersController = [
 	if (rider.riders[n] == number)
 	  return;
       rider.riders.push(number);
-      rider.riders = normalize_rider_list(rider.riders);
+      rider.riders = normalize_riders_list(rider.riders);
       set_focus('#member_search_term', $timeout);
     };
 
@@ -534,7 +534,7 @@ var ridersController = [
       });
     }
 
-    function normalize_rider_list(numbers) {
+    function normalize_riders_list(numbers) {
       return normalize_hash_list(riders_hash, numbers);
     }
 
@@ -551,9 +551,9 @@ var ridersController = [
 	  active: true,
 	};
 	$http.get(url, {params: params}).
-	  success(function(rider_list) {
-	    var found = normalize_rider_list(
-	      rider_list.map(function(rider) {
+	  success(function(riders_list) {
+	    var found = normalize_riders_list(
+	      riders_list.map(function(rider) {
 		return rider.number;
 	      }).filter(function(number) {
 		return !$scope.rider.riders.some(function(s) {
