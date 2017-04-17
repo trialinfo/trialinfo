@@ -3439,14 +3439,14 @@ app.get('/register/*', function(req, res, next) {
 app.use('/api', conn(pool));
 app.all('/api/*', auth);
 
-app.get('/api/event/:id/scores', auth, function(req, res, next) {
+app.get('/api/event/:id/scores', function(req, res, next) {
   get_event_scores(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
-app.get('/api/register/event/:id', auth, function(req, res, next) {
+app.get('/api/register/event/:id', function(req, res, next) {
   register_get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
