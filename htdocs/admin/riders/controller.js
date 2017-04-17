@@ -131,11 +131,14 @@ var ridersController = [
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
 	    focus_rider();
-	    delete $scope.riders_list;
 	  }
 	}).
 	error(network_error);
     };
+
+    function clear_search_result() {
+      delete $scope.riders_list;
+    }
 
     $scope.load_rider = function(number) {
       var params = {
@@ -151,6 +154,7 @@ var ridersController = [
       };
       load_rider($http.get('/api/event/' + event.id + '/first-rider',
 			   {params: params}));
+      clear_search_result();
     };
 
     $scope.load_previous_rider = function() {
@@ -160,6 +164,7 @@ var ridersController = [
       if ($scope.rider && $scope.rider.number != null)
         load_rider($http.get('/api/event/' + event.id + '/previous-rider/' + $scope.rider.number,
 		   {params: params}));
+      clear_search_result();
     };
 
     $scope.load_next_rider = function() {
@@ -169,6 +174,7 @@ var ridersController = [
       if ($scope.rider && $scope.rider.number != null)
         load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number,
 		   {params: params}));
+      clear_search_result();
     };
 
     $scope.load_last_rider = function() {
@@ -177,6 +183,7 @@ var ridersController = [
       };
       load_rider($http.get('/api/event/' + event.id + '/last-rider',
 			   {params: params}));
+      clear_search_result();
     };
 
     $scope.find_riders = function() {
@@ -195,7 +202,7 @@ var ridersController = [
 	  }).
 	  error(network_error);
       } else {
-	delete $scope.riders_list;
+	clear_search_result();
       }
     };
 
@@ -207,6 +214,11 @@ var ridersController = [
     $scope.guardian_visible = function(rider) {
       return guardian_visible(rider, event);
     }
+
+    $scope.$watchCollection('rider', function() {
+      if ($scope.modified())
+	clear_search_result();
+    });
 
     $scope.$watch('rider.date_of_birth', function(date_of_birth) {
       var match;
@@ -313,6 +325,7 @@ var ridersController = [
 	discard: true,
       });
       focus_rider();
+      clear_search_result();
     };
 
     $scope.change_number = function() {
@@ -323,6 +336,7 @@ var ridersController = [
 	neu: false
       });
       set_focus('#number', $timeout);
+      clear_search_result();
     };
 
     $scope.rider_name = function(rider) {
