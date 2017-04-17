@@ -114,5 +114,8 @@ update-perl-json-patch:
 	git add -v "$${files[@]/#/lib/}"
 
 clean:
+	rm -f $(MARKO_FILES:%=%.js)
+
+distclean: clean
 	rm -f $(DOWNLOAD_FILES)
 	rm -rf backend/node_modules

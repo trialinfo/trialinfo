@@ -2892,6 +2892,9 @@ async function index(req, res, next) {
       AND (registration_ends > NOW() OR
 	  id IN (SELECT DISTINCT id FROM marks))`);
     events = events.reduce((hash, event) => {
+      var date = common.parse_timestamp(event.date);
+      if (date)
+	event.ts = date.getTime();
       event.series = {};
       hash[event.id] = event;
       return hash;
@@ -2921,12 +2924,19 @@ async function index(req, res, next) {
     });
 
     let params = {
-      events: function(serie_id) {
-	let serie = series[serie_id] || {};
-	return Object.values(serie.events || {})
+      events: function(serie_id, register) {
+	let e = (serie_id == null) ? events :
+	  (series[serie_id] || {}).events;
+	if (e && register) {
+	  e = Object.values(e).reduce(function(events, event) {
+	    if (event.registration_ends)
+	      events[event.id] = event;
+	    return events;
+	  }, {});
+	}
+	return Object.values(e || {})
 	  .sort((a, b) =>
-	    (common.parse_timestamp(a.date).getTime() -
-	     common.parse_timestamp(b.date).getTime()) ||
+	    (a.ts - b.ts) ||
 	    (a.title || '').localeCompare(b.title || ''));
       },
       abbreviations: function(series, ignore) {
