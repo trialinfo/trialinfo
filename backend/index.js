@@ -811,10 +811,14 @@ async function get_rider(connection, id, number, params, direction, event) {
       filters.push('start');
   }
   if (direction != null) {
-    if (event && event.features.registered)
-      filters.push('(number >= 0 OR (registered AND start) OR `group`)');
-    else
-      filters.push('(number >= 0 OR start OR `group`)');
+    var or = ['number >= 0', 'start', '`group`'];
+    if (event) {
+      if (event.features.registered)
+	or.push('registered');
+      if (event.features.start_tomorrow)
+	or.push('start_tomorrow');
+    }
+    filters.push('(' + or.join(' OR ') + ')');
   }
   if (params.group != null) {
     if (+params.group)
