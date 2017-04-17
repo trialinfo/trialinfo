@@ -935,9 +935,8 @@ async function find_riders(connection, id, params) {
     return {};
 
   function rider_applies(rider) {
-    return (!params.start || rider.start) &&
-	   (params.group === undefined || +rider.group == +params.group) &&
-	   (!params.active || rider.group || rider.number >= 0 || rider.start);
+    return (params.group === undefined || +rider.group == +params.group) &&
+	   (!params.active || rider.group || rider.number >= 0 || rider.start || rider.registered);
   }
 
   let found = [];
