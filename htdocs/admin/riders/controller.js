@@ -470,7 +470,11 @@ var ridersController = [
 	    update_hashes(old_rider, null);
 	    set_focus('#search_term', $timeout);
 
-	    clear_search_result();
+	    if ($scope.riders_list) {
+	      $scope.riders_list = $scope.riders_list.filter(function(rider) {
+		return rider.number != number;
+	      });
+	    }
 	  }).
 	  error(network_error);
       }
