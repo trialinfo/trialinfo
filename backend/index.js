@@ -3290,13 +3290,19 @@ function query_string(query) {
 var client_config = {
   weasyprint: config.weasyprint,
   sync_target: config.sync_target,
-  existing_regforms: fs.readdirSync(regforms_dir).reduce(
-    function(regforms, name) {
-      var match = name.match(/(.*)\.pdf$/);
-      if (match)
-	regforms[match[1]] = true;
-      return regforms;
-    }, {})
+  existing_regforms: (function() {
+    try {
+      return fs.readdirSync(regforms_dir).reduce(
+	function(regforms, name) {
+	  var match = name.match(/(.*)\.pdf$/);
+	  if (match)
+	    regforms[match[1]] = true;
+	  return regforms;
+	}, {});
+    } catch(err) {
+      return {};
+    }
+  })(),
 };
 
 var sendFileOptions = {
