@@ -3805,17 +3805,20 @@ app.delete('/api/serie/:serie', will_write_serie, async function(req, res, next)
 
 app.use(clientErrorHandler);
 
-if (!config.http && !config.https)
-  config.http = {};
-
-if (process.env.TRIALINFO == 'systemd') {
-  require('autoquit');
-  require('systemd');
+try {
   var http = require('http');
   var server = http.createServer(app);
-  server.autoQuit({timeout: 300 });
+
+  require('systemd');
   server.listen('systemd');
-} else {
+
+  /* We don't get here unless started by systemd. */
+  require('autoquit');
+  server.autoQuit({timeout: 300 });
+} catch (_) {
+  if (!config.http && !config.https)
+    config.http = {};
+
   if (config.http) {
     var http = require('http');
     var port = config.http.port || 80;
@@ -3832,6 +3835,6 @@ if (process.env.TRIALINFO == 'systemd') {
     var port = config.https.port || 443;
     https.createServer(options, app).listen(port);
   }
-}
+};
 
 /* ex:set shiftwidth=2: */
