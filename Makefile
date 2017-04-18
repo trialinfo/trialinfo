@@ -64,6 +64,9 @@ tarball: require-tag
 release: require-tag tarball
 	@./release.sh $(TAG)
 
+upload:
+	@./upload.sh
+
 # AngularJS
 ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
 ANGULAR_VERSION=1.2.32
