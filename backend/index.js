@@ -1673,12 +1673,11 @@ async function get_event_scores(connection, id) {
     var rider = riders[number];
 
     if (!rider.start ||
+        (!rider.registered && event.features.registered) ||
         (!rider.verified && event.features.verified))
       return;
 
-    var r = {
-      rankings: []
-    };
+    var r = {};
 
     ['number', 'last_name', 'first_name', 'club', 'vehicle',
     'country', 'province', 'rank', 'failure', 'non_competing',
@@ -1752,8 +1751,11 @@ async function get_event_scores(connection, id) {
 	  active_rankings[index] = true;
       });
     });
-
   });
+
+  /* FIXME: Hack to get the event title into the result. */
+  if (!active_rankings.length)
+    active_rankings[0] = true;
 
   hash.event.rankings = [];
   active_rankings.forEach((ranking, index) => {

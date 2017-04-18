@@ -84,7 +84,8 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
-    $features->{$features_map->{$row[0]}} = 1;
+    $features->{$features_map->{$row[0]}} = 1
+	if exists $features_map->{$row[0]};
 }
 
 my @spalten;
@@ -119,28 +120,41 @@ while (my $row = $sth->fetchrow_hashref) {
     $cfg->{klassen}[$klasse - 1] = $row;
 }
 
-$sth = $dbh->prepare(q{
-    SELECT class AS klasse, } . ($wertung == 1 ? "riders.rank AS rang" : "rider_rankings.rank AS rang") . ", " . q{
-	   number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
-	   } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
-	   s0, s1, s2, s3, s4, s5, marks AS punkte, score AS wertungspunkte, riders.rounds AS
-	   runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start
-    FROM riders} . "\n" .
-    ($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
-    q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
-    WHERE id = ?} .
-    ($features->{verifiziert} ? ' AND verified' : ''));
-$sth->execute($wertung, $id);
-while (my $fahrer = $sth->fetchrow_hashref) {
-    for (my $n = 0; $n <= 5; $n++) {
-	$fahrer->{punkteverteilung}[$n] = $fahrer->{"s$n"};
-	delete $fahrer->{"s$n"};
+my $ergebnis_vorhanden;
+my $nur_vorangemeldet;
+
+for(;;) {
+    $sth = $dbh->prepare(q{
+	SELECT class AS klasse, } . ($wertung == 1 ? "riders.rank AS rang" : "rider_rankings.rank AS rang") . ", " . q{
+	       number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
+	       } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
+	       s0, s1, s2, s3, s4, s5, marks AS punkte, score AS wertungspunkte, riders.rounds AS
+	       runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start
+	FROM riders} . "\n" .
+	($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
+	q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
+	WHERE id = ?} .
+	(!$nur_vorangemeldet && $features->{registriert} ? ' AND registered' : '') .
+	($features->{verifiziert} ? ' AND verified' : ''));
+    $sth->execute($wertung, $id);
+    while (my $fahrer = $sth->fetchrow_hashref) {
+	for (my $n = 0; $n <= 5; $n++) {
+	    $fahrer->{punkteverteilung}[$n] = $fahrer->{"s$n"};
+	    delete $fahrer->{"s$n"};
+	}
+	my $startnummer = $fahrer->{startnummer};
+	$fahrer->{wertungen} = [];
+	$fahrer->{wertungen}[$wertung - 1] = { punkte => $fahrer->{wertungspunkte} }
+	    if defined $fahrer->{wertungspunkte};
+	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
+
+	$ergebnis_vorhanden = 1
+	    if $fahrer->{start} && defined($fahrer->{rang});
     }
-    my $startnummer = $fahrer->{startnummer};
-    $fahrer->{wertungen} = [];
-    $fahrer->{wertungen}[$wertung - 1] = { punkte => $fahrer->{wertungspunkte} }
-	if defined $fahrer->{wertungspunkte};
-    $fahrer_nach_startnummer->{$startnummer} = $fahrer;
+
+    last
+	if $ergebnis_vorhanden || $nur_vorangemeldet || !$features->{registriert};
+    $nur_vorangemeldet = 1;
 }
 
 $sth = $dbh->prepare(q{

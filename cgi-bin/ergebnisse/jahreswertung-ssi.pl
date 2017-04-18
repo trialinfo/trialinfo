@@ -111,7 +111,8 @@ if ($letzte_id) {
     });
     $sth->execute($letzte_id);
     while (my @row = $sth->fetchrow_array) {
-	$features->{$features_map->{$row[0]}} = 1;
+	$features->{$features_map->{$row[0]}} = 1
+	    if exists $features_map->{$row[0]};
     }
 
     foreach my $spalte ($q->param('spalte')) {
