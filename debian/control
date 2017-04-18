@@ -13,7 +13,7 @@ Architecture: all
 Depends: nodejs, mariadb-server, python-poppler-qt4, poppler-utils
 #For proxying through Apache and for the old Perl cgi scripts:
 #Depends: apache2, libjson-perl
-Description: Web application for managing observed trials competitions
+Description: TrialInfo
  A web application for managing observed trials motorbike and bicycle
  competitions. The documentation, and user interface are all in German;
  the code is mainly in English.

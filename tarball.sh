@@ -5,7 +5,7 @@ set -e
 topdir=$PWD
 tag=$1
 
-version=${tag:1}
+version=${tag#$PACKAGE-}
 basename=$PACKAGE-$version
 
 tmpdir=$(mktemp -d)

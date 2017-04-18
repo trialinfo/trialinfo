@@ -21,6 +21,7 @@ set -e
 case "$1" in
     configure)
 	useradd --system trialinfo || [ $? -eq 9 ]
+	systemctl daemon-reload
 	systemctl stop trialinfo 2> /dev/null || :
     ;;
 

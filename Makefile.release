@@ -10,6 +10,7 @@ distclean: clean
 install:
 	find -depth \( -name debian -o -name Makefile -o -name create-db.sql \) -prune -o -print \
 	| cpio -pd $(DESTDIR)/var/lib/$(package)
+	install -d $(DESTDIR)/var/lib/$(package)/pdf/regform
 	install -D create-db.sql $(DESTDIR)/usr/share/doc/$(package)/create-db.sql
 	install -d $(DESTDIR)/etc/systemd/system
 	install systemd/trialinfo.{socket,service} $(DESTDIR)/etc/systemd/system

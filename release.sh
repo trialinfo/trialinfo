@@ -2,11 +2,14 @@
 
 set -e
 
-version=${1:1}
+REPO=debs
+
+tag=$1
+version=${tag#$PACKAGE-}
 
 tarball=$PACKAGE-$version.tar.gz
 basename=$PACKAGE-$version
-deb=${basename/-/_}_all.deb
+deb=${PACKAGE}_${version}_all.deb
 
 curdir=$PWD
 
@@ -23,4 +26,5 @@ sed -i \
 sudo dpkg-buildpackage -us -uc -d
 cd ..
 sudo chown -R $(whoami) .
-cat "$deb" > "$curdir/$deb"
+mkdir -p "$curdir/$REPO"
+cat "$deb" > "$curdir/$REPO/$deb"
