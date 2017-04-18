@@ -50,11 +50,11 @@ profile: build
 require-tag:
 	@tag="$(TAG)"; \
 	if [ -z "$$tag" ]; then \
-	    echo "Please create a vN.N tag" >&2; \
+	    echo "Please create a $(PACKAGE)-X.Y tag" >&2; \
 	    exit 2; \
 	fi; \
-	if ! echo "$$tag" | grep -q -e '^v[0-9]\+\.[0-9]\+$$'; then \
-	    echo "Tag '$$tag' does not have the form vN.N" >&2; \
+	if ! echo "$$tag" | grep -q -e '^$(PACKAGE)-[0-9]\+\.[0-9]\+$$'; then \
+	    echo "Tag '$$tag' does not have the form $(PACKAGE)-X.Y" >&2; \
 	    exit 2; \
 	fi
 

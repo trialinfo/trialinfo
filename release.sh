@@ -4,7 +4,8 @@ set -e
 
 REPO=debs
 
-version=${1:1}
+tag=$1
+version=${tag#$PACKAGE-}
 
 tarball=$PACKAGE-$version.tar.gz
 basename=$PACKAGE-$version
