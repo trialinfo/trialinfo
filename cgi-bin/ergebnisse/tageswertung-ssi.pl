@@ -24,6 +24,8 @@ use Tageswertung;
 use Datenbank;
 use Auswertung;
 use Timestamp;
+use Berechnung qw(wertungsklassen_setzen fahrer_nach_klassen);
+use POSIX qw(mktime strftime);
 use strict;
 
 binmode STDOUT, ':encoding(utf8)';
@@ -64,6 +66,7 @@ if (my @row = $sth->fetchrow_array) {
     $bezeichnung = $row[1];
     $wertung = $row[2];
     $cfg->{wertungen}[$wertung - 1] = { titel => $row[3] };
+    $cfg->{datum} = $row[4];
     $mtime = $row[5]
 	if !defined($row[4]) || same_day($row[4]);
     $cfg->{wertungsmodus} = $row[6];
@@ -121,7 +124,7 @@ while (my $row = $sth->fetchrow_hashref) {
 }
 
 my $ergebnis_vorhanden;
-my $nur_vorangemeldet;
+my $nur_vorangemeldete;
 
 for(;;) {
     $sth = $dbh->prepare(q{
@@ -129,12 +132,13 @@ for(;;) {
 	       number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
 	       } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
 	       s0, s1, s2, s3, s4, s5, marks AS punkte, score AS wertungspunkte, riders.rounds AS
-	       runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start
+	       runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start,
+	       start_tomorrow AS start_morgen
 	FROM riders} . "\n" .
 	($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
 	q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
 	WHERE id = ?} .
-	(!$nur_vorangemeldet && $features->{registriert} ? ' AND registered' : '') .
+	(!$nur_vorangemeldete && $features->{registriert} ? ' AND registered' : '') .
 	($features->{verifiziert} ? ' AND verified' : ''));
     $sth->execute($wertung, $id);
     while (my $fahrer = $sth->fetchrow_hashref) {
@@ -153,8 +157,8 @@ for(;;) {
     }
 
     last
-	if $ergebnis_vorhanden || $nur_vorangemeldet || !$features->{registriert};
-    $nur_vorangemeldet = 1;
+	if $ergebnis_vorhanden || $nur_vorangemeldete || !$features->{registriert};
+    $nur_vorangemeldete = 1;
 }
 
 $sth = $dbh->prepare(q{
@@ -204,17 +208,83 @@ doc_h1 "$bezeichnung"
     if defined $bezeichnung;
 doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
 
-tageswertung cfg => $cfg,
-	     fahrer_nach_startnummer => $fahrer_nach_startnummer,
-	     wertung => $wertung,
-	     spalten => [ @spalten ],
-	     $klassenfarben ? (klassenfarben => $klassenfarben) : (),
-	     alle_punkte => $alle_punkte,
-	     nach_relevanz => $nach_relevanz,
-	     @klassen ? (klassen => \@klassen) : (),
-	     statistik_gesamt => 1,
-	     statistik_pro_klasse => 0,
-	     features => $features;
+use Data::Dumper;
+
+if ($nur_vorangemeldete) {
+    my $timeval = mktime(0, 0, 0, $3, $2 - 1, $1 - 1900)
+	if $cfg->{datum} =~ /^(\d{4})-(\d{2})-(\d{2})/;
+    my ($nur_heute, $nur_morgen);
+    if ($timeval) {
+	my $wochentag = strftime("%w", localtime $timeval);
+	my $wochentage = [
+	    'Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'
+	];
+	$nur_heute = "nur $wochentage->[$wochentag]";
+	$nur_morgen = "nur $wochentage->[($wochentag + 1) % 7]";
+    } else {
+	$nur_heute = "nur Tag 1";
+	$nur_morgen = "nur Tag 2";
+    }
+
+    sub sortiert_nach_name(@) {
+	my (@fahrer) = @_;
+
+	return sort {
+	    $a->{nachname} cmp $b->{nachname} ||
+	    $a->{vorname} cmp $b->{vorname}
+	} @fahrer;
+    }
+
+    sub fahrer_info($) {
+	my ($fahrer) = @_;
+	my $args = [];
+
+	push @$args, $fahrer->{startnummer}
+	    if ($fahrer->{startnummer} // 0) > 0;
+	push @$args, $nur_heute
+	    if !$fahrer->{start_morgen};
+	push @$args, $nur_morgen
+	    if !$fahrer->{start};
+	return $fahrer->{nachname} . ' ' . $fahrer->{vorname} .
+	    (@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '');
+    }
+
+    foreach my $startnummer (keys %$fahrer_nach_startnummer) {
+	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
+	delete $fahrer_nach_startnummer->{$startnummer}
+	    unless $fahrer->{start} || $fahrer->{start_morgen};
+    }
+    doc_p scalar(values %$fahrer_nach_startnummer) . " vorangemeldete Fahrer.";
+
+    wertungsklassen_setzen $fahrer_nach_startnummer, $cfg;
+    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer, 'klasse');
+    delete $fahrer_nach_klassen->{0};  # Gruppen
+    foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
+	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
+
+	my $farbe = '';
+	if ($klassenfarben->{$klasse}) {
+            $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span> ";
+        }
+
+	doc_h3 $cfg->{klassen}[$klasse - 1]{bezeichnung};
+	doc_table header => [$farbe],
+	    body => [map {[fahrer_info $_]} sortiert_nach_name(@$fahrer_in_klasse)],
+	    format => ['l'];
+    }
+} else {
+    tageswertung cfg => $cfg,
+		 fahrer_nach_startnummer => $fahrer_nach_startnummer,
+		 wertung => $wertung,
+		 spalten => [ @spalten ],
+		 $klassenfarben ? (klassenfarben => $klassenfarben) : (),
+		 alle_punkte => $alle_punkte,
+		 nach_relevanz => $nach_relevanz,
+		 @klassen ? (klassen => \@klassen) : (),
+		 statistik_gesamt => 1,
+		 statistik_pro_klasse => 0,
+		 features => $features;
+}
 
 print "<p>Letzte Änderung: $mtime</p>\n"
     if defined $mtime;
