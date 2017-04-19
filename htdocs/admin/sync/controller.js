@@ -3,6 +3,29 @@ var syncController = [
   function ($scope, $http, $q, $timeout, $sce, $location) {
     $scope.kill = {};
 
+    var query = $location.search();
+    if (query.sync) {
+      var args = JSON.parse(decodeURIComponent(query.sync));
+      $location.search('sync', null);
+      $timeout(function() {
+	$scope.$root.$broadcast('sync', args);
+      });
+    }
+
+    // We put this in the config of remote $http requests.  The config is
+    // available to response objects.  If a remote request fails
+    // authentication, we redirect to the remote login page, with a redirect
+    // URL that contains this additional sync parameter.  When the remote login
+    // succeeds, it redirects back to us.  We find the sync parameter, and
+    // start the sync as originally requested (see above).
+    function sync_param() {
+      return encodeURIComponent(JSON.stringify({
+	tag: $scope.tag,
+	url: $scope.url,
+	timeout: $scope.timeout,
+      }));
+    }
+
     $scope.zustand = function() {
       var color;
       if ($scope.running) {
@@ -104,7 +127,9 @@ var syncController = [
 	var request =
 	  $http.post($scope.url + '/api/event/' + $scope.to_tag + '/patch',
 		     {patch: $scope.patch},
-		     {timeout: cancel.promise, withCredentials: true});
+		     {sync: sync_param(),
+		      timeout: cancel.promise,
+		      withCredentials: true});
 	return make_request('patch request', request, cancel).
 	  then(function() {
 	    $scope.target_dump = $scope.source_dump;
@@ -149,8 +174,11 @@ var syncController = [
       delete $scope.target_dump;
       var cancel = $q.defer();
       var target_request =
-	$http.get($scope.url + '/api/event/' + $scope.to_tag + '/dump',
-		  {timeout: cancel.promise, withCredentials: true});
+	$http.get($scope.url + '/api/event/' + $scope.to_tag + '/dump', {
+	  sync: sync_param(),
+	  timeout: cancel.promise,
+	  withCredentials: true
+	});
       return make_request('target request', target_request, cancel).
 	then(function(dump) {
 	  if (dump.format) {
@@ -181,7 +209,8 @@ var syncController = [
 		var import_request =
 		  $http.post($scope.url + '/api/event/import',
 			     {data: enc},
-			     {timeout: cancel.promise,
+			     {sync: sync_param(),
+			      timeout: cancel.promise,
 			      withCredentials: true});
 		  make_request('import request', import_request, cancel).
 		    then(function() {
@@ -203,6 +232,7 @@ var syncController = [
 
     $scope.$on('sync', function(event, args) {
       $scope.stop();
+      delete $scope.title;
       angular.extend($scope, args);
       $scope.from_tag = $scope.to_tag = $scope.tag;
 
