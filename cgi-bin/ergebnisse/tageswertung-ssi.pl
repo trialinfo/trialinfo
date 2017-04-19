@@ -237,16 +237,19 @@ if ($nur_vorangemeldete) {
 
     sub fahrer_info($) {
 	my ($fahrer) = @_;
-	my $args = [];
 
-	push @$args, $fahrer->{startnummer}
-	    if ($fahrer->{startnummer} // 0) > 0;
+	my $startnummer = $fahrer->{startnummer};
+	$startnummer = ''
+	    if $startnummer < 0;
+
+	my $args = [];
 	push @$args, $nur_heute
 	    if !$fahrer->{start_morgen};
 	push @$args, $nur_morgen
 	    if !$fahrer->{start};
-	return $fahrer->{nachname} . ' ' . $fahrer->{vorname} .
-	    (@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '');
+	return [$startnummer,
+		$fahrer->{nachname} . ' ' . $fahrer->{vorname} .
+		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '')];
     }
 
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
@@ -268,9 +271,9 @@ if ($nur_vorangemeldete) {
         }
 
 	doc_h3 $cfg->{klassen}[$klasse - 1]{bezeichnung};
-	doc_table header => [$farbe],
-	    body => [map {[fahrer_info $_]} sortiert_nach_name(@$fahrer_in_klasse)],
-	    format => ['l'];
+	doc_table header => [$farbe, ''],
+	    body => [map {fahrer_info $_} sortiert_nach_name(@$fahrer_in_klasse)],
+	    format => ['r','l'];
     }
 } else {
     tageswertung cfg => $cfg,
