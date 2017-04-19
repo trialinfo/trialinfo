@@ -243,10 +243,12 @@ if ($nur_vorangemeldete) {
 	    if $startnummer < 0;
 
 	my $args = [];
-	push @$args, $nur_heute
-	    if !$fahrer->{start_morgen};
-	push @$args, $nur_morgen
-	    if !$fahrer->{start};
+	if ($features->{start_morgen}) {
+	    push @$args, $nur_heute
+		if !$fahrer->{start_morgen};
+	    push @$args, $nur_morgen
+		if !$fahrer->{start};
+	}
 	return [$startnummer,
 		$fahrer->{nachname} . ' ' . $fahrer->{vorname} .
 		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '')];
@@ -255,7 +257,7 @@ if ($nur_vorangemeldete) {
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	delete $fahrer_nach_startnummer->{$startnummer}
-	    unless $fahrer->{start} || $fahrer->{start_morgen};
+	    unless $fahrer->{start} || ($features->{start_morgen} && $fahrer->{start_morgen});
     }
     doc_p scalar(values %$fahrer_nach_startnummer) . " vorangemeldete Fahrer.";
 
