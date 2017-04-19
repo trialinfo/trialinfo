@@ -2730,7 +2730,7 @@ async function register_save_rider(connection, id, number, rider, user, version)
 
       delete rider.rankings;
       if (old_rider) {
-	if (old_rider.number)
+	if (old_rider.number > 0)
 	  delete rider['class'];
 	if (old_rider.registered) {
 	  delete rider.start;
