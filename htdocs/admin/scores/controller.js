@@ -13,7 +13,7 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
     scores = a;
     event = scores.event;
     $scope.event = event;
-    $scope.$root.context(event.rankings[($scope.show.ranking || 1) - 1].title);
+    $scope.$root.context((event.rankings[($scope.show.ranking || 1) - 1] || {}).title);
 
     $scope.classes = (function() {
       var classes = [];
@@ -212,10 +212,10 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
   function update() {
     var ranking = $scope.show.ranking;
 
-    $scope.$root.context(event.rankings[(ranking || 1) - 1].title);
+    $scope.$root.context((event.rankings[(ranking || 1) - 1] || {}).title);
     if (ranking == null)
       $scope.show.all = true;
-    else if (event.rankings[ranking - 1].groups)
+    else if ((event.rankings[ranking - 1] || {}).groups)
       $scope.show.all = false;
 
     $scope.columns = [];

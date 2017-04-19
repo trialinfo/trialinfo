@@ -95,7 +95,7 @@ sub fahrerstatistik($$$) {
 	if $ausfall->{4};
     push @details, "$ausfall->{ausser_konkurrenz} außer Konkurrenz"
 	if $ausfall->{ausser_konkurrenz};
-    return "$fahrer_gesamt Fahrer" .
+    return ($fahrer_gesamt || 'Keine') . " Fahrer" .
 	(@details ? " (davon " . join(", ", @details) . ")" : "") . ".";
 }
 

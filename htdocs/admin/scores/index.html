@@ -133,6 +133,9 @@ table.ranking tr td.important {
 </style>
 
 <p ng-if="show.duration == null">{{summary}}</p>
+<div ng-if="!classes.length">
+Keine Fahrer oder Gruppen.
+</div>
 <div ng-repeat="class in classes | filter:show_class" ng-init="rounds = event.classes[class - 1].rounds" class="class" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
   <h2>{{event.classes[class - 1].name}}</h2>
   <table class="ranking">

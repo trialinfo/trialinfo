@@ -9,4 +9,3 @@ SyslogIdentifier=trialinfo
 User=trialinfo
 Group=trialinfo
 Environment=NODE_ENV=production
-Environment=TRIALINFO=systemd
