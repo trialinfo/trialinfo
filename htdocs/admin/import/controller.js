@@ -22,8 +22,8 @@ var importController = [
 	if (filename && filename.files[0]) {
 	  var reader = new FileReader();
 	  reader.onloadend = function(e) {
-	    var data = e.target.result;
-	    $http.post('/api/event/import', { data: window.btoa(data) }).
+	    var data = window.btoa(e.target.result);
+	    $http.post('/api/event/import', { data: data }).
 	      success(function(result) {
 		if (result.id != null)
 		  $location.path('/event/' + result.id).replace();
@@ -108,9 +108,9 @@ var importController = [
 	      tag: tag,
 	    };
 	  }
-	  var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	  data = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
 	  cancel_remote = $q.defer();
-	  $http.post('/api/event/import', enc,
+	  $http.post('/api/event/import', { data: data },
 		     {params: params, timeout: cancel_remote.promise}).
 	    success(function(result) {
 	      $location.path('/event/' + result.id).replace();
