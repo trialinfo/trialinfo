@@ -78,7 +78,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    }).when('/event/:id', {
 	      controller: 'eventController',
 	      templateUrl: 'event/view.html',
-	      resolve: eventController.resolve
+	      resolve: eventController.resolve,
+	      reloadOnSearch: false
 	    }).when('/event/:id/riders', {
 	      title: 'Fahrer',
 	      controller: 'ridersController',
@@ -163,9 +164,13 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 			encodeURIComponent(location.toString());
 		    });
 		  } else {
-		    var sync = response.config.sync || '';
-		    if (sync)
-		      sync = '?sync=' + sync;
+		    var restart = '';
+		    response.config.restart;
+		    if (response.config.restart) {
+		      restart = '?restart=' +
+		        encodeURIComponent(
+		          JSON.stringify(response.config.restart));
+		    }
 
 		    /* Request is "remote" (sync or server import). */
 		    var match = response.config.url.match('^(.+?://.+?)/');
@@ -173,7 +178,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 		      $timeout(function() {
 			$window.location.href =
 			  match[1] + '/login?redirect=' +
-			  encodeURIComponent(location.toString() + sync);
+			  encodeURIComponent(location.toString() + restart);
 		      });
 		    }
 		  }
