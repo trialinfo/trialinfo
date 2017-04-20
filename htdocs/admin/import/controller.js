@@ -94,8 +94,8 @@ var importController = [
       if (cancel_remote)
 	cancel_remote.resolve();
       cancel_remote = $q.defer();
-      $http.get($scope.settings.url + '/api/event/export',
-		{params: {tag: tag}, timeout: cancel_remote.promise, withCredentials: true, responseType: 'arraybuffer'}).
+      $http.get($scope.settings.url + '/api/event/' + tag + '/export',
+		{timeout: cancel_remote.promise, withCredentials: true, responseType: 'arraybuffer'}).
 	success(function(data) {
 	  var params;
 	  if (!$scope.remote.exists) {

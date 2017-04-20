@@ -1173,9 +1173,9 @@ async function event_tag_to_id(connection, tag, email) {
     SELECT id, events_all_admins.email AS email
     FROM (
       SELECT id, ? as email from events
+      WHERE tag = ?
     ) AS _
-    LEFT JOIN events_all_admins USING (id, email)
-    WHERE tag = ?`,
+    LEFT JOIN events_all_admins USING (id, email)`,
     [email, tag]);
   if (result.length != 1)
     return new HTTPError(404, 'Not Found');
