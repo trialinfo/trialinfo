@@ -36,6 +36,19 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	mode($!{JSON.stringify(data.mode)});
 	document.getElementById('email').focus();
       }
+
+      function input() {
+	if (document.getElementById('email').value != '') {
+	  document.getElementById('confirm').removeAttribute('disabled');
+	  if (document.getElementById('password').value != '')
+	    document.getElementById('login').removeAttribute('disabled');
+	  else
+	    document.getElementById('login').setAttribute('disabled', '');
+	} else {
+	    document.getElementById('confirm').setAttribute('disabled', '');
+	    document.getElementById('login').setAttribute('disabled', '');
+	}
+      }
     </script>
 
     <style>
@@ -64,20 +77,20 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	  <tr class="login signup reset">
 	    <th>E-Mail</th>
 	    <td>
-	      <input type="text" name="email" value="${data.email}" size="40" maxlength="60" id="email">
+	      <input type="text" name="email" value="${data.email}" size="40" maxlength="60" id="email" oninput="input()">
 	    </td>
 	  </tr>
 	  <tr class="login">
 	    <th>Kennwort</th>
 	    <td>
-	      <input type="password" name="password" size="12">
+	      <input type="password" name="password" size="12" id="password" oninput="input()">
 	    </td>
 	  </tr>
 	  <tr>
 	    <th></th>
 	    <td>
-	      <button class="login" type="submit">Anmelden</button>
-	      <button class="signup reset" type="submit">E-Mail-Bestätigung senden</button>
+	      <button class="login" type="submit" id="login" disabled>Anmelden</button>
+	      <button class="signup reset" type="submit" id="confirm" disabled>E-Mail-Bestätigung senden</button>
 	    </td>
 	  </tr>
 	  <tr>

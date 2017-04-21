@@ -138,25 +138,29 @@ class HTTPError extends Error {
 
 async function validate_user(connection, user) {
   if (!user || !user.email || !user.password)
-    throw 'Wrong email or password';
+    throw 'E-Mail-Adresse oder Kennwort fehlt.';
 
   var rows = await connection.queryAsync(`
     SELECT email, password, user_tag, verified, admin
     FROM users
-    WHERE email = ? AND password IS NOT NULL`, [user.email]);
+    WHERE email = ?`, [user.email]);
 
-  try {
-    var password_hash = rows[0].password;
-    delete rows[0].password;
-    if (apache_md5(user.password, password_hash) == password_hash) {
-      Object.assign(user, rows[0]);
-      return user;
-    }
-    console.error('Wrong password for user ' + JSON.stringify(user.email));
-  } catch(e) {
+  if (rows.length != 1) {
     console.error('User ' + JSON.stringify(user.email) + ' does not exist');
+    throw 'E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist nicht registriert.';
   }
-  throw 'Wrong email or password';
+  if (rows[0].password == null) {
+    console.error('No password set for user ' + JSON.stringify(user.email));
+    throw 'Für E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist noch kein Kennwort gesetzt.';
+  }
+  var password_hash = rows[0].password;
+  delete rows[0].password;
+  if (apache_md5(user.password, password_hash) != password_hash) {
+    console.error('Wrong password for user ' + JSON.stringify(user.email));
+    throw 'Falsches Kennwort für E-Mail-Adresse ' + JSON.stringify(user.email) + '.';
+  }
+  Object.assign(user, rows[0]);
+  return user;
 }
 
 /*
@@ -2208,6 +2212,7 @@ async function update_event(connection, id, old_event, new_event) {
 passport.use('local', new LocalStrategy(
   {
     usernameField: 'email',
+    badRequestMessage: 'E-Mail-Adresse oder Kennwort fehlt.'
   },
   (email, password, done) => {
     pool.getConnectionAsync()
@@ -2501,14 +2506,14 @@ function minified_redirect(req, res, next) {
 }
 
 function login(req, res, next) {
-  passport.authenticate('local', function(err, user) {
+  passport.authenticate('local', function(err, user, info) {
     if (err)
       return next(err);
     if (!user || (req.query.admin != null && !user.admin)) {
       var params = {
 	mode: 'login',
 	email: req.body.email,
-	error: 'Anmeldung fehlgeschlagen.'
+	error: (info || {}).message || 'Anmeldung fehlgeschlagen.'
       };
       if (user)
 	params.error = 'Benutzer hat keine Administratorrechte.';
