@@ -81,7 +81,7 @@ function network_error(data, status) {
 	(status == 500 ?
 	   'Interner Serverfehler.' :
 	   'HTTP-Request ist ' + (status ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
-	(typeof data === 'object' && data.error !== undefined ? '\n\n' + data.error : ''));
+	(typeof data === 'object' && data.error != null ? '\n\n' + data.error : ''));
 }
 
 var score = (function() {
