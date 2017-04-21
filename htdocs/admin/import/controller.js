@@ -1,8 +1,8 @@
 'use strict;'
 
 var importController = [
-  '$scope', '$http', '$location', '$q', 'events',
-  function ($scope, $http, $location, $q, events) {
+  '$scope', '$http', '$location', '$q', '$timeout', 'events',
+  function ($scope, $http, $location, $q, $timeout, events) {
     $scope.config = config;
     $scope.events = events;
     $scope.settings = {
@@ -16,14 +16,27 @@ var importController = [
     } catch(_) { }
     $scope.remote = {};
 
+    var query = $location.search();
+    if (query.restart) {
+      var args = JSON.parse(decodeURIComponent(query.restart));
+      if (args.action == 'get-events') {
+	$location.search('restart', null);
+	$scope.settings.operation = 'import-remote';
+	$scope.settings.url = args.url;
+	$timeout(function() {
+	  $scope.get_events();
+	});
+      }
+    }
+
     $scope.import_file = function() {
       if ($scope.settings.format == 'trialinfo') {
 	var filename = document.getElementById('filename');
 	if (filename && filename.files[0]) {
 	  var reader = new FileReader();
 	  reader.onloadend = function(e) {
-	    var data = e.target.result;
-	    $http.post('/api/event/import', { data: window.btoa(data) }).
+	    var data = window.btoa(e.target.result);
+	    $http.post('/api/event/import', { data: data }).
 	      success(function(result) {
 		if (result.id != null)
 		  $location.path('/event/' + result.id).replace();
@@ -58,8 +71,13 @@ var importController = [
     $scope.get_events = function() {
       $scope.busy = true;
       cancel_remote = $q.defer();
-      $http.get($scope.settings.url + '/api/events',
-		{timeout: cancel_remote.promise, withCredentials: true}).
+      $http.get($scope.settings.url + '/api/events', {
+		restart: {
+		    action: 'get-events',
+		    url: $scope.settings.url
+		  },
+		timeout: cancel_remote.promise,
+		withCredentials: true}).
 	success(function(events) {
 	  $scope.remote.events = events;
 	  $scope.remote.event =
@@ -108,9 +126,9 @@ var importController = [
 	      tag: tag,
 	    };
 	  }
-	  var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	  data = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
 	  cancel_remote = $q.defer();
-	  $http.post('/api/event/import', enc,
+	  $http.post('/api/event/import', { data: data },
 		     {params: params, timeout: cancel_remote.promise}).
 	    success(function(result) {
 	      $location.path('/event/' + result.id).replace();
@@ -128,8 +146,9 @@ var importController = [
 	});
     };
 
-    $scope.$watch('settings.url', function() {
-      delete $scope.remote.events;
+    $scope.$watch('settings.url', function(newValue, oldValue) {
+      if (oldValue != newValue)
+	delete $scope.remote.events;
     });
 
     $scope.$on('$destroy', function() {

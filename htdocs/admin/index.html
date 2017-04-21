@@ -74,11 +74,13 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      controller: 'mainController',
 	      templateUrl: 'main/view.html',
 	      resolve: mainController.resolve,
+	      reloadOnSearch: false,
 	      hideMenus: true
 	    }).when('/event/:id', {
 	      controller: 'eventController',
 	      templateUrl: 'event/view.html',
-	      resolve: eventController.resolve
+	      resolve: eventController.resolve,
+	      reloadOnSearch: false
 	    }).when('/event/:id/riders', {
 	      title: 'Fahrer',
 	      controller: 'ridersController',
@@ -101,17 +103,20 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      title: 'Einstellungen',
 	      controller: 'settingsController',
 	      templateUrl: 'settings/view.html',
-	      resolve: settingsController.resolve
+	      resolve: settingsController.resolve,
+	      reloadOnSearch: false
 	    }).when('/event/:id/settings', {
 	      title: 'Einstellungen',
 	      controller: 'settingsController',
 	      templateUrl: 'settings/view.html',
-	      resolve: settingsController.resolve
+	      resolve: settingsController.resolve,
+	      reloadOnSearch: false
 	    }).when('/event/:id/zones', {
 	      title: 'Sektionen aus der Wertung',
 	      controller: 'zonesController',
 	      templateUrl: 'zones/view.html',
-	      resolve: zonesController.resolve
+	      resolve: zonesController.resolve,
+	      reloadOnSearch: false
 	    }).when('/event/:id/scores', {
 	      title: 'Auswertung',
 	      controller: eventScoresController,
@@ -127,18 +132,22 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    }).when('/serie/new', {
 	      controller: 'serieController',
 	      templateUrl: 'serie/view.html',
-	      resolve: serieController.resolve
+	      resolve: serieController.resolve,
+	      reloadOnSearch: false
 	    }).when('/serie/:serie', {
 	      controller: 'serieController',
 	      templateUrl: 'serie/view.html',
-	      resolve: serieController.resolve
+	      resolve: serieController.resolve,
+	      reloadOnSearch: false
 	    }).when('/import', {
 	      title: 'Import',
 	      controller: 'importController',
 	      templateUrl: 'import/view.html',
-	      resolve: importController.resolve
+	      resolve: importController.resolve,
+	      reloadOnSearch: false
 	    }).when('/help', {
 	      templateUrl: 'help/view.html',
+	      reloadOnSearch: false
 	    }).otherwise({
 	      redirectTo: '/'
 	    });
@@ -163,9 +172,13 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 			encodeURIComponent(location.toString());
 		    });
 		  } else {
-		    var sync = response.config.sync || '';
-		    if (sync)
-		      sync = '?sync=' + sync;
+		    var restart = '';
+		    response.config.restart;
+		    if (response.config.restart) {
+		      restart = '?restart=' +
+		        encodeURIComponent(
+		          JSON.stringify(response.config.restart));
+		    }
 
 		    /* Request is "remote" (sync or server import). */
 		    var match = response.config.url.match('^(.+?://.+?)/');
@@ -173,7 +186,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 		      $timeout(function() {
 			$window.location.href =
 			  match[1] + '/login?redirect=' +
-			  encodeURIComponent(location.toString() + sync);
+			  encodeURIComponent(location.toString() + restart);
 		      });
 		    }
 		  }

@@ -4,26 +4,31 @@ var syncController = [
     $scope.kill = {};
 
     var query = $location.search();
-    if (query.sync) {
-      var args = JSON.parse(decodeURIComponent(query.sync));
-      $location.search('sync', null);
-      $timeout(function() {
-	$scope.$root.$broadcast('sync', args);
-      });
+    if (query.restart) {
+      var args = JSON.parse(decodeURIComponent(query.restart));
+      if (args.action == 'sync') {
+	// Note: this requires reloadOnSearch to be false for the active route
+	// or else an unnecessary route reload will happen.
+	$location.search('restart', null);
+	$timeout(function() {
+	  $scope.$root.$broadcast('sync', args);
+	});
+      }
     }
 
     // We put this in the config of remote $http requests.  The config is
     // available to response objects.  If a remote request fails
     // authentication, we redirect to the remote login page, with a redirect
-    // URL that contains this additional sync parameter.  When the remote login
-    // succeeds, it redirects back to us.  We find the sync parameter, and
-    // start the sync as originally requested (see above).
-    function sync_param() {
-      return encodeURIComponent(JSON.stringify({
+    // URL that contains this additional restart parameter.  When the remote
+    // login succeeds, it redirects back to us.  We find the restart parameter,
+    // and start the sync as originally requested (see above).
+    function restart_param() {
+      return {
+	action: 'sync',
 	tag: $scope.tag,
 	url: $scope.url,
 	timeout: $scope.timeout,
-      }));
+      };
     }
 
     $scope.zustand = function() {
@@ -127,7 +132,7 @@ var syncController = [
 	var request =
 	  $http.post($scope.url + '/api/event/' + $scope.to_tag + '/patch',
 		     {patch: $scope.patch},
-		     {sync: sync_param(),
+		     {restart: restart_param(),
 		      timeout: cancel.promise,
 		      withCredentials: true});
 	return make_request('patch request', request, cancel).
@@ -175,7 +180,7 @@ var syncController = [
       var cancel = $q.defer();
       var target_request =
 	$http.get($scope.url + '/api/event/' + $scope.to_tag + '/dump', {
-	  sync: sync_param(),
+	  restart: restart_param(),
 	  timeout: cancel.promise,
 	  withCredentials: true
 	});
@@ -209,7 +214,7 @@ var syncController = [
 		var import_request =
 		  $http.post($scope.url + '/api/event/import',
 			     {data: enc},
-			     {sync: sync_param(),
+			     {restart: restart_param(),
 			      timeout: cancel.promise,
 			      withCredentials: true});
 		  make_request('import request', import_request, cancel).
