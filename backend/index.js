@@ -143,20 +143,24 @@ async function validate_user(connection, user) {
   var rows = await connection.queryAsync(`
     SELECT email, password, user_tag, verified, admin
     FROM users
-    WHERE email = ? AND password IS NOT NULL`, [user.email]);
+    WHERE email = ?`, [user.email]);
 
-  try {
-    var password_hash = rows[0].password;
-    delete rows[0].password;
-    if (apache_md5(user.password, password_hash) == password_hash) {
-      Object.assign(user, rows[0]);
-      return user;
-    }
-    console.error('Wrong password for user ' + JSON.stringify(user.email));
-  } catch(e) {
+  if (rows.length != 1) {
     console.error('User ' + JSON.stringify(user.email) + ' does not exist');
+    throw 'User ' + JSON.stringify(user.email) + ' does not exist';
   }
-  throw 'Wrong email or password';
+  if (rows[0].password == null) {
+    console.error('No password set for user ' + JSON.stringify(user.email));
+    throw 'No password set for user ' + JSON.stringify(user.email);
+  }
+  var password_hash = rows[0].password;
+  delete rows[0].password;
+  if (apache_md5(user.password, password_hash) != password_hash) {
+    console.error('Wrong password for user ' + JSON.stringify(user.email));
+    throw 'Wrong password for user ' + JSON.stringify(user.email);
+  }
+  Object.assign(user, rows[0]);
+  return user;
 }
 
 /*
