@@ -3,7 +3,7 @@
   <table>
     <tbody>
       <tr>
-	<th align="right"><label for="operation">Aktion</label></th>
+	<th><label for="operation">Aktion</label></th>
 	<td>
 	  <select ng-model="settings.operation" id="operation" ng-disabled="busy">
 	    <option value="import-remote" ng-if="config.sync_target">Server-Import</option>
@@ -12,7 +12,7 @@
 	</td>
       </tr>
       <tr ng-if="settings.operation != 'import-remote' && settings.operation != 'import-file'">
-	<th align="right"><label for="tag">Veranstaltung</label></th>
+	<th><label for="tag">Veranstaltung</label></th>
 	<td>
 	  <select ng-model="settings.event" ng-options="event as veranstaltung_bezeichnung(event) for event in events" id="tag">
 	  </select>
@@ -21,26 +21,26 @@
     </tbody>
     <tbody ng-if="settings.operation == 'import-remote'">
       <tr>
-	<th align="right"><label for="url">Quelladresse</label></th>
+	<th><label for="url">Quelladresse</label></th>
 	<td>
 	  <input type="text" size="30" ng-model="settings.url" id="url" required ng-disabled="busy"> <button ng-click="get_events()" ng-disabled="busy">Liste abrufen</button>
 	</td>
       </tr>
       <tr>
-	<th align="right"><label for="tag">Veranstaltung</label></th>
+	<th><label for="tag">Veranstaltung</label></th>
 	<td>
 	  <select ng-model="remote.event" ng-options="event as event_name(event) for event in remote.events | filter:event_visible" ng-disabled="busy || !remote.events" id="tag">
 	  </select>
 	</td>
       </tr>
       <tr ng-if="remote.exists">
-	<th align="right"></th>
+	<th></th>
 	<td>
 	  <input type="checkbox" ng-model="remote.replace" id="replace"><label for="replace">Vorhandene Veranstaltung ersetzen</label>
 	</td>
       </tr>
       <tr>
-	<th align="right"><label for="url"></label></th>
+	<th><label for="url"></label></th>
 	<td>
 	  <button ng-click="import_remote()" ng-disabled="!(remote.events && remote.event) || busy">Importieren (vom Server)</button>
 	</td>
@@ -48,13 +48,13 @@
     </tbody>
     <tbody ng-if="settings.operation == 'import-file' && settings.format == 'trialinfo'">
       <tr>
-	<th align="right"><label for="filename">ti-Datei</label></th>
+	<th><label for="filename">ti-Datei</label></th>
 	<td>
 	  <input type="file" id="filename" ng-disabled="busy" ng-model="settings.filename">
 	</td>
       </tr>
       <tr>
-	<th align="right"></th>
+	<th></th>
 	<td>
 	  <button ng-click="import_file()" ng-disabled="busy || !form.$valid">Importieren</button>
 	</td>

@@ -15,6 +15,17 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
     $scope.event = event;
     $scope.$root.context((event.rankings[($scope.show.ranking || 1) - 1] || {}).title);
 
+    if (event.type && event.type.match(/^otsv/)) {
+      scores.riders.forEach(function(class_) {
+	if (!class_)
+	  return;
+	class_.forEach(function(rider) {
+	  if (rider.country == 'A')
+	    rider.country = null;
+	});
+      });
+    }
+
     $scope.classes = (function() {
       var classes = [];
       angular.forEach(scores.riders, function(value, index) {

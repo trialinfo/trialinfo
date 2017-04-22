@@ -210,7 +210,7 @@ var eventController = [
 
     $scope.countries = countries.map(function(country) {
       return {
-	name: country.name /* + ' (' + country.codes[0] + ')' */,
+	name: country.name,
 	code: country.codes[0]
       };
     });
@@ -224,9 +224,20 @@ var eventController = [
       if (country.codes[0]) {
 	country_codes[country.name.toLocaleUpperCase()] = country.codes[0];
 	country.codes.forEach(function(code) {
-	  country_codes[code] = country.codes[0];
+	  country_codes[code.toLocaleUpperCase()] = country.codes[0];
 	});
       }
+    });
+
+    $scope.provinces = [{
+      name: '',
+      code: null
+    }];
+    provinces['A'].forEach(function(province) {
+      $scope.provinces.push({
+	name: province.name,
+	code: province.codes[0]
+      });
     });
 
     $scope.$watch('internal.country', function(country) {

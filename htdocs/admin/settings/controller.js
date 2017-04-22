@@ -289,19 +289,21 @@ var settingsController = [
       $scope.old_type = type;
       if (type) {
 	angular.forEach(event.classes, function(class_, index) {
-	  class_.ranking_class =
-	    ((type === 'otsv2014' ||
-	      type === 'otsv2016') &&
-	     index >= 10 && index <= 12) ? index - 9 :
-	    ((type === 'otsv+osk2014' ||
-	      type === 'otsv+osk2016') &&
-	     index == 0) ? 11 : index + 1;
-	  class_.no_ranking1 =
-	    ((type === 'otsv2014' || type === 'otsv+osk2014') &&
-	     index == 6) ||
-	    ((type === 'otsv2014' ||
-	      type === 'otsv2016') &&
-	     (index == 0 || (index >= 10 && index <= 12)));
+	  if (index != 4) {
+	    class_.ranking_class =
+	      ((type === 'otsv2014' ||
+		type === 'otsv2016') &&
+	       index >= 10 && index <= 12) ? index - 9 :
+	      ((type === 'otsv+osk2014' ||
+		type === 'otsv+osk2016') &&
+	       index == 0) ? 11 : index + 1;
+	    class_.no_ranking1 =
+	      ((type === 'otsv2014' || type === 'otsv+osk2014') &&
+	       index == 6) ||
+	      ((type === 'otsv2014' ||
+		type === 'otsv2016') &&
+	       (index == 0 || (index >= 10 && index <= 12)));
+	  }
 	  class_.non_competing =
 	    ((type === 'otsv+osk2014' ||
 	      type === 'otsv+osk2016') && index == 0);

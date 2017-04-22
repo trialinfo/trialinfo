@@ -12,6 +12,13 @@ var eventListController = [
     $scope.fold = {};
     $scope.show = { fields: [] };
 
+    if (event.type && event.type.match(/^otsv/)) {
+      list.forEach(function(rider) {
+	if (rider.country == 'A')
+	  rider.country = null;
+      });
+    }
+
     function starting_classes() {
       var classes = {};
       angular.forEach(event.classes, function(class_) {
