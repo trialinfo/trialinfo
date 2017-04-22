@@ -56,7 +56,7 @@
 	    <tr ng-if="features.country">
 	      <th><label for="country">Staatsangehörigkeit</label></th>
 	      <td>
-		<input ng-disabled="!enabled.rider" type="text" nullable size="15" maxlength="15" ng-model="rider.country" id="country" list="country_list">
+		<input ng-disabled="!enabled.rider" type="text" nullable size="15" maxlength="15" ng-model="rider.country" ng-blur="blur_country()" id="country" list="country_list">
 		<datalist id="country_list">
 		  <option ng-repeat="country in suggestions.country" value="{{country}}">
 		</datalist>
@@ -65,7 +65,7 @@
 	    <tr ng-if="features.province">
 	      <th><label for="province">Bundesland</label></th>
 	      <td>
-		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="20" ng-model="rider.province" list="province_list">
+		<input ng-disabled="!enabled.rider" type="text" size="15" maxlength="20" ng-model="rider.province" ng-blur="blur_province()" list="province_list">
 		<datalist id="province_list">
 		  <option ng-repeat="province in suggestions.province" value="{{province}}">
 		</datalist>
