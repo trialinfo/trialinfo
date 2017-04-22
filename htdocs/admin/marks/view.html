@@ -1,7 +1,7 @@
 <h1>{{event.rankings[0].title}} – Punktevergabe</h1>
 <table>
   <tr>
-    <td valign="top">
+    <td style="vertical-align:top">
       <form name="form" ng-keydown="keydown($event)">
 	<fieldset>
 	  <legend>Punktevergabe</legend>
@@ -26,10 +26,10 @@
 		      R<span class="accesskey">{{runde}}</span>
 		    </label>
 		  </th>
-		  <td ng-repeat="zone in zones_list()" align="center">
+		  <td ng-repeat="zone in zones_list()" style="text-align:center">
 		    <input ng-if="!skipped_zones[ranking_class - 1][runde - 1][zone - 1]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[runde - 1][zone - 1]" ng-disabled="!rider.start || rider_does_not_start()" punkte id="marks_{{runde}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(runde, $index)">
 		  </td>
-		  <td align="right" style="font-weight:bold">
+		  <td style="text-align:right;font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{runde}}">{{rider.marks_per_round[runde - 1]}}</span>
 		  </td>
 		</tr>
@@ -43,13 +43,13 @@
 	  <p>
 	    <table>
 	      <tr>
-		<th align="right"><label for="additional_marks" accesskey="p">Zusatz<span class="accesskey">p</span>unkte</label></th>
+		<th><label for="additional_marks" accesskey="p">Zusatz<span class="accesskey">p</span>unkte</label></th>
 		<td>
 		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" numeric size="3" min="-999" max="999" ng-model="rider.additional_marks" id="additional_marks">
 		</td>
 	      </tr>
 	      <tr>
-		<th align="right">Gesamtpunkte</th>
+		<th>Gesamtpunkte</th>
 		<td>
 		  <input type="text" size="3" ng-model="rider.marks" disabled="disabled">
 		    <span ng-if="rider.start" style="font-weight:bold">
@@ -58,7 +58,7 @@
 		</td>
 	      </tr>
 	      <tr ng-if="features.start_time || features.finish_time">
-		<th align="right"><label for="start_time">Fahr<span class="accesskey">z</span>eit</label></th>
+		<th><label for="start_time">Fahr<span class="accesskey">z</span>eit</label></th>
 		<td>
 		  <input ng-if="features.start_time" ng-disabled="!rider" type="text" size="5" maxlength="8" ng-model="rider.start_time" name="start_time" iso-time accesskey="z" title="Startzeit"> −
 		  <input ng-if="features.finish_time" ng-disabled="!rider" type="text" size="5" maxlength="8" ng-model="rider.finish_time" name="finish_time" iso-time title="Zielzeit">
@@ -66,7 +66,7 @@
 		</td>
 	      </tr>
 	      <tr>
-		<th align="right"><label for="failure" accesskey="a"><span class="accesskey">A</span>usfall</label></th>
+		<th><label for="failure" accesskey="a"><span class="accesskey">A</span>usfall</label></th>
 		<td>
 		  <select ng-disabled="!rider.start || rider_does_not_start()" ng-model="rider.failure" numeric id="failure">
 		    <option value="0"></option>
@@ -78,7 +78,7 @@
 		</td>
 	      </tr>
 	      <tr>
-		<th align="right"><label for="tie_break" accesskey="t">S<span class="accesskey">t</span>echen</label></th>
+		<th><label for="tie_break" accesskey="t">S<span class="accesskey">t</span>echen</label></th>
 		<td>
 		  <select ng-disabled="!rider.start || rider_does_not_start()" ng-model="rider.tie_break" numeric id="tie_break">
 		    <option value="0"></option>
@@ -96,7 +96,7 @@
 		</td>
 	      </tr>
 	      <tr ng-if="rider && (!old_rider.start || (features.registered && !old_rider.registered)) && starting_classes[ranking_class - 1]">
-		<th align="right">Teilnahme</th>
+		<th>Teilnahme</th>
 		<td>
 		  <span ng-if="features.registered">
 		    <input type="checkbox" ng-model="rider.registered" id="registered">
@@ -111,7 +111,7 @@
 	</fieldset>
       </form>
     </td>
-    <td valign="top">
+    <td style="vertical-align:top">
       <form name="navigation">
 	<fieldset>
 	  <legend>Navigation</legend>

@@ -32,7 +32,7 @@
       <fieldset style="display:inline">
 	<legend>Anzeige einstellen</legend>
 	<table>
-	  <tr ng-if="riders_groups"><th align="right">Fahrer/Gruppen</th>
+	  <tr ng-if="riders_groups"><th>Fahrer/Gruppen</th>
 	    <td>
 	      <select ng-model="show.riders_groups">
 		<option value=""></option>
@@ -41,7 +41,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-if="features.verified"><th align="right">Verifiziert</th>
+	  <tr ng-if="features.verified"><th>Verifiziert</th>
 	    <td>
 	      <select ng-model="show.verified" yes-no-null>
 		<option value="-"></option>
@@ -50,7 +50,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-if="features.number"><th align="right">Startnummer</th>
+	  <tr ng-if="features.number"><th>Startnummer</th>
 	    <td>
 	      <select ng-model="show.number" yes-no-null title="Fahrer ist eine Startnummer zugeordnet">
 		<option value="-"></option>
@@ -59,7 +59,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-if="features.registered"><th align="right">Nennungseingang</th>
+	  <tr ng-if="features.registered"><th>Nennungseingang</th>
 	    <td>
 	      <select ng-model="show.registered" yes-no-null>
 		<option value="-"></option>
@@ -68,7 +68,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-if="features.start_tomorrow"><th align="right">Start heute/morgen</th>
+	  <tr ng-if="features.start_tomorrow"><th>Start heute/morgen</th>
 	    <td>
 	      <select ng-model="show.start_either" yes-no-null title="Fahrer oder Gruppe startet heute oder morgen">
 		<option value="-"></option>
@@ -77,7 +77,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr><th align="right">Start</th>
+	  <tr><th>Start</th>
 	    <td>
 	      <select ng-model="show.start" yes-no-null title="Fahrer oder Gruppe startet heute">
 		<option value="-"></option>
@@ -89,7 +89,7 @@
 		</span>
 	    </td>
 	  </tr>
-	  <tr ng-if="features.start_tomorrow"><th align="right">Start morgen</th>
+	  <tr ng-if="features.start_tomorrow"><th>Start morgen</th>
 	    <td>
 	      <select ng-model="show.start_tomorrow" yes-no-null title="Fahrer oder Gruppe startet morgen">
 		<option value="-"></option>
@@ -99,7 +99,7 @@
 	    </td>
 	  </tr>
 	  <tr ng-repeat="ranking in [1,2,3,4]" ng-if="features['ranking' + ranking] && ((show.riders && event.rankings[ranking - 1].riders) || (show.groups && event.rankings[ranking - 1].groups))">
-	    <th align="right">{{ranking_name(ranking)}}</th>
+	    <th>{{ranking_name(ranking)}}</th>
 	    <td>
 	      <select ng-model="show['ranking' + ranking]" yes-no-null>
 		<option value="-"></option>
@@ -109,27 +109,27 @@
 	    </td>
 	  </tr>
 	  <tr ng-if="features.number">
-	    <th align="right">Startnummernbereich</th>
+	    <th>Startnummernbereich</th>
 	    <td>
 	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="show.number_min" title="Von"> −
 	      <input type="text" numeric size="3" maxlength="5" min="-99999" mx="99999" ng-model="show.number_max" title="Bis">
 	    </td>
 	  </tr>
 	  <tr ng-if="features.date_of_birth">
-	    <th align="right">Jahrgangsbereich</th>
+	    <th>Jahrgangsbereich</th>
 	    <td>
 	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="show.year_min" title="Von"> −
 	      <input type="text" numeric size="3" maxlength="5" min="1900" mx="9999" ng-model="show.year_max" title="Bis (Fehlendes Geburtsdatum zählt als „älter“.)">
 	    </td>
 	  </tr>
 	  <tr>
-	    <th align="right">Klasse (in Wertung)</th>
+	    <th>Klasse (in Wertung)</th>
 	    <td>
 	      <span ng-repeat="class in starting_classes"><input type="checkbox" ng-model="show.classes[class]" id="{{'class' + class}}" title="{{event.classes[class - 1].name}}"><label for="{{'class' + class}}" title="{{event.classes[class - 1].name}}">{{class}}</label> </span>
 	      <input type="checkbox" ng-model="show.other_classes" id="other_classes"><label for="other_classes">Andere</label>
 	    </td>
 	  </tr>
-	  <tr><th align="right">Gruppieren nach</th>
+	  <tr><th>Gruppieren nach</th>
 	    <td>
 	      <select ng-model="show.group_by">
 		<option value="-"></option>
@@ -144,7 +144,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr><th align="right">Sortieren nach</th>
+	  <tr><th>Sortieren nach</th>
 	    <td>
 	      <select ng-model="show.order_by">
 		<option value="date_of_birth" ng-if="features.date_of_birth">Geburtsdatum</option>
@@ -154,7 +154,7 @@
 		<option value="finish_time" ng-if="features.finish_time">Zielzeit</option>
 	      </select>
 	    </td></tr>
-	  <tr><th align="right">Felder</th>
+	  <tr><th>Felder</th>
 	    <td>
 	      <span ng-repeat="_ in show.fields track by $index">
 		<select ng-model="show.fields[$index]" ng-options="field.key as field.name for field in field_list">
@@ -172,7 +172,7 @@
       <fieldset style="display:inline">
 	<legend>Drucken</legend>
 	<table>
-	  <tr><th align="right">Seitenformat</th>
+	  <tr><th>Seitenformat</th>
 	    <td>
 	      <select ng-model="show['page-size']">
 		<option value="A4">A4 Hochformat</option>
@@ -180,7 +180,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr><th align="right">Ränder</th>
+	  <tr><th>Ränder</th>
 	    <td>
 	      <input type="text" size="4" maxlength="6" ng-model="show['margin-left']" title="Links" style="text-align:center">
 	      <input type="text" size="4" maxlength="6" ng-model="show['margin-top']" title="Oben" style="text-align:center">
@@ -188,7 +188,7 @@
 	      <input type="text" size="4" maxlength="6" ng-model="show['margin-bottom']" title="Unten" style="text-align:center">
 	    </td>
 	  </tr>
-	  <tr><th align="right">Schriftgröße</th>
+	  <tr><th>Schriftgröße</th>
 	    <td>
 	      <input type="text" numeric min="6" max="20" size="2" maxlength="2" ng-model="show['font-size']" style="text-align:center"> Punkt
 	    </td>

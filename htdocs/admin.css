@@ -8,7 +8,7 @@ table th { text-align:right; }
 body { background-color:white; }
 
 span.accesskey { text-decoration:underline; }
-.punktespalte { width:2em; }
+.punktespalte { width:2em;text-align:center }
 
 input, textarea, select, button { font-family:inherit; font-size:inherit; }
 

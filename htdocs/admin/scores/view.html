@@ -13,7 +13,7 @@
       <fieldset style="display:inline">
 	<legend>Anzeige einstellen</legend>
 	<table>
-	  <tr ng-if="riders_groups"><th align="right">Fahrer/Gruppen</th>
+	  <tr ng-if="riders_groups"><th>Fahrer/Gruppen</th>
 	    <td>
 	      <select ng-model="show.riders_groups">
 		<option value=""></option>
@@ -21,30 +21,30 @@
 		<option value="groups">Gruppen</option>
 	      </select>
 	    </td></tr>
-	  <tr ng-if="rankings.length"><th align="right">Wertung</th>
+	  <tr ng-if="rankings.length"><th>Wertung</th>
 	    <td>
 	      <select ng-model="show.ranking" ng-options="ranking.ranking as ranking.name for ranking in rankings">
 		<option value=""></option>
 	      </select>
 	    </td></tr>
-	  <tr ng-if="rankings.length && show.ranking !== null"><th align="right">Alle Fahrer</th>
+	  <tr ng-if="rankings.length && show.ranking !== null"><th>Alle Fahrer</th>
 	    <td>
 	      <input type="checkbox" ng-model="show.all" id="all"><label for="all">Auch Fahrer und Gruppen ohne {{event.rankings[show.ranking - 1].name}} anzeigen</label>
 	    </td></tr>
-	  <tr><th align="right">Klassen</th>
+	  <tr><th>Klassen</th>
             <td>
               <span ng-repeat="class in classes | filter:is_class_of_riders">
 		<input type="checkbox" ng-model="show.classes[class - 1]" id="class_{{class}}"><label for="class_{{class}}">{{event.classes[class - 1].groups ? 'Gruppen' : class}}</label>
               </span>
             </td></tr>
-	  <tr><th align="right">Felder</th>
+	  <tr><th>Felder</th>
             <td>
               <span ng-repeat="_ in show.fields track by $index">
                 <select ng-model="show.fields[$index]" ng-options="field.key as field.name for field in field_list">
                 </select>
               </span>
             </td></tr>
-	  <tr><th align="right">Präsentation</th>
+	  <tr><th>Präsentation</th>
 	    <td>
 	      <select ng-model="show.duration" nullable>
 		<option value="">Aus</option>
@@ -62,7 +62,7 @@
       <fieldset style="display:inline">
 	<legend>Drucken</legend>
 	<table>
-	  <tr><th align="right">Seitenformat</th>
+	  <tr><th>Seitenformat</th>
 	    <td>
 	      <select ng-model="show['page-size']">
 		<option value="A4">A4 Hochformat</option>
@@ -70,7 +70,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr><th align="right">Ränder</th>
+	  <tr><th>Ränder</th>
 	    <td>
 	      <input type="text" size="4" maxlength="6" ng-model="show['margin-left']" title="Links" style="text-align:center">
 	      <input type="text" size="4" maxlength="6" ng-model="show['margin-top']" title="Oben" style="text-align:center">
@@ -78,7 +78,7 @@
 	      <input type="text" size="4" maxlength="6" ng-model="show['margin-bottom']" title="Unten" style="text-align:center">
 	    </td>
 	  </tr>
-	  <tr><th align="right">Schriftgröße</th>
+	  <tr><th>Schriftgröße</th>
 	    <td>
 	      <input type="text" numeric min="6" max="20" size="2" maxlength="2" ng-model="show['font-size']" style="text-align:center"> Punkt
 	    </td>
