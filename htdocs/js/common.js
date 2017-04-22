@@ -54,6 +54,20 @@ var countries = [
   {name: 'Ungarn', codes: ['H', 'HU', 'HUN', 'Magyarország']},
 ];
 
+var provinces = {
+  'A': [
+    {name: 'Burgenland', codes: ['B']},
+    {name: 'Kärnten', codes: ['K']},
+    {name: 'Niederösterreich', codes: ['NÖ']},
+    {name: 'Oberösterreich', codes: ['OÖ']},
+    {name: 'Salzburg', codes: ['S']},
+    {name: 'Steiermark', codes: ['ST']},
+    {name: 'Tirol', codes: ['T']},
+    {name: 'Vorarlberg', codes: ['V']},
+    {name: 'Wien', codes: ['W']}
+  ]
+};
+
 function remaining_time(timestamp) {
   var s = parse_timestamp(timestamp).getTime() - Date.now() + 1000;
   var seconds = Math.trunc(s / 1000),
