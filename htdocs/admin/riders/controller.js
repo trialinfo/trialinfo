@@ -276,9 +276,9 @@ var ridersController = [
 	request = $http.post('/api/event/' + event.id + '/rider', rider);
 
       request.
-	success(function(fahrer_neu) {
-	  update_hashes(rider, fahrer_neu);
-	  assign_rider(fahrer_neu);
+	success(function(new_rider) {
+	  update_hashes($scope.old_rider, new_rider);
+	  assign_rider(new_rider);
 	  set_focus('#search_term', $timeout);
 	}).
 	error(function (data, status) {
@@ -530,15 +530,19 @@ var ridersController = [
 	     (list.length ? ' (' + list.join(', ') + ')' : '');
     };
 
+    function not_equal(v1) {
+      return function(v2) {
+	return v1 != v2;
+      };
+    }
+
     $scope.members_list = [];
 
     $scope.remove_member = function(number) {
       $scope.member_search.term = '';
 
       var rider = $scope.rider;
-      $scope.rider.riders = rider.riders.filter(function(s) {
-	return s != number;
-      });
+      $scope.rider.riders = rider.riders.filter(not_equal(number));
       $scope.members_list.push(number);
       $scope.members_list = normalize_riders_list($scope.members_list);
       set_focus('#member_search_term', $timeout);
@@ -547,9 +551,7 @@ var ridersController = [
     $scope.add_member = function(number) {
       $scope.member_search.term = '';
 
-      $scope.members_list = $scope.members_list.filter(function(s) {
-	return s != number;
-      });
+      $scope.members_list = $scope.members_list.filter(not_equal(number));
 
       var rider = $scope.rider;
       for (var n = 0; n < rider.riders.length; n++)
@@ -611,11 +613,9 @@ var ridersController = [
       if (old_group && old_group.group) {
 	var hashed = groups_hash[old_group.number];
 	if (hashed) {
-	  angular.forEach(old_group.rider || [], function(number) {
+	  angular.forEach(old_group.riders || [], function(number) {
 	    var rider = riders_hash[number];
-	    rider.groups = rider.groups.filter(function(number) {
-	      return number != old_group.number;
-	    });
+	    rider.groups = rider.groups.filter(not_equal(old_group.number));
 	  });
 	  delete groups_hash[old_group.number];
 	}
@@ -625,8 +625,9 @@ var ridersController = [
 	angular.forEach(['first_name', 'last_name', 'class', 'date_of_birth'], function(name) {
 	  hashed[name] = group[name];
 	});
+	hashed.riders = angular.copy(group.riders);
 	groups_hash[group.number] = hashed;
-	angular.forEach(group.rider || [], function(number) {
+	angular.forEach(group.riders || [], function(number) {
 	  var rider = riders_hash[number];
 	  rider.groups.push(group.number);
 	  rider.groups = normalize_groups_list(rider.groups);
