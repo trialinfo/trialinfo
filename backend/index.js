@@ -141,7 +141,7 @@ async function validate_user(connection, user) {
     throw 'E-Mail-Adresse oder Kennwort fehlt.';
 
   var rows = await connection.queryAsync(`
-    SELECT email, password, user_tag, verified, admin
+    SELECT email, password, user_tag, verified, admin, kiosk
     FROM users
     WHERE email = ?`, [user.email]);
 
@@ -2230,7 +2230,7 @@ passport.use('local', new LocalStrategy(
       });
   }));
 
-async function register_get_event(connection, id) {
+async function register_get_event(connection, id, user) {
   var event = await get_event(connection, id);
   var result = {
     id: id,
@@ -2240,6 +2240,10 @@ async function register_get_event(connection, id) {
    'type', 'features'].forEach((field) => {
     result[field] = event[field];
   });
+  if (user.kiosk) {
+    result.features = Object.assign({}, result.features);
+    result.features.kiosk = true;
+  }
   result.classes = [];
   event.classes.forEach((class_, index) => {
     if (class_ && class_.rounds && event.zones[index]) {
@@ -2291,13 +2295,16 @@ function register_filter_rider(rider) {
     return result;
 }
 
-async function register_get_riders(connection, id, user_tag) {
+async function register_get_riders(connection, id, user) {
+  if (user.kiosk)
+    return [];
+
   var rows = await connection.queryAsync(`
     SELECT number
     FROM riders
     WHERE id = ? AND user_tag = ? AND NOT COALESCE(`+'`group`'+`, 0)
     ORDER BY last_name, first_name, date_of_birth, number`,
-    [id, user_tag]);
+    [id, user.user_tag]);
 
   var riders = [];
   for (let row of rows) {
@@ -2708,6 +2715,9 @@ async function register_save_rider(connection, id, number, rider, user, version)
     var event = await get_event(connection, id);
     var old_rider;
     if (number != null) {
+      if (user.kiosk)
+	throw new HTTPError(403, 'Forbidden');
+
       old_rider = await get_rider(connection, id, number);
       if (old_rider.user_tag != user.user_tag)
 	throw new HTTPError(403, 'Forbidden');
@@ -3464,14 +3474,14 @@ app.get('/api/event/:id/scores', function(req, res, next) {
 });
 
 app.get('/api/register/event/:id', function(req, res, next) {
-  register_get_event(req.conn, req.params.id)
+  register_get_event(req.conn, req.params.id, req.user)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
 app.get('/api/register/event/:id/riders', function(req, res, next) {
-  register_get_riders(req.conn, req.params.id, req.user.user_tag)
+  register_get_riders(req.conn, req.params.id, req.user)
   .then((result) => {
     res.json(result);
   }).catch(next);

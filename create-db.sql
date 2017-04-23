@@ -503,6 +503,7 @@ CREATE TABLE `users` (
   `verified` tinyint(1) NOT NULL DEFAULT '0',
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `super_admin` tinyint(1) NOT NULL DEFAULT '0',
+  `kiosk` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`user`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `user_tag` (`user_tag`)
@@ -569,4 +570,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-12  2:07:02
+-- Dump completed on 2017-04-23  0:31:58
