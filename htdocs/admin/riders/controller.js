@@ -313,8 +313,14 @@ var ridersController = [
 	'insurance': event.insurance,
 	'verified': true
       };
-      if (groups)
+      if (groups) {
 	rider.riders = [];
+
+	var max = Object.values(groups_hash).reduce(function(max, group) {
+	  return Math.max(alpha2num(group.last_name), max);
+	}, 0);
+	rider.last_name = num2alpha(max + 1);
+      }
       assign_rider(rider);
       $scope.fahrer_ist_neu = true;
       angular.extend($scope.enabled, {

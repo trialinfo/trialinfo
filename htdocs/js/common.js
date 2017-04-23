@@ -100,13 +100,45 @@ function remaining_time(timestamp) {
   return result.join(', ');
 }
 
+// Decode 'A'..'Z', 'AA'..'AZ', ... string into number
+function alpha2num(str) {
+  let num = 0;
+
+  for (let n = 0; n < str.length; n++) {
+    let ord = str.charCodeAt(n);
+
+    if (ord >= 'a'.charCodeAt(0) && ord <= 'z'.charCodeAt(0))
+      ord -= 'a'.charCodeAt(0);
+    else if (ord >= 'A'.charCodeAt(0) && ord <= 'Z'.charCodeAt(0))
+      ord -= 'A'.charCodeAt(0);
+    else
+      return 0;
+    num = num * 26 + ord + 1;
+  }
+  return num;
+}
+
+// Encode number into 'A'..'Z', 'AA'..'AZ', ... string
+function num2alpha(num) {
+  let alpha = '';
+
+  do {
+    num--;
+    alpha = String.fromCharCode('A'.charCodeAt(0) + num % 26) + alpha;
+    num = Math.floor(num / 26);
+  } while (num > 0);
+  return alpha;
+}
+
 if (typeof module !== 'undefined') {
   module.exports = {
     parse_timestamp: parse_timestamp,
     date_of_event: date_of_event,
     guardian_visible: guardian_visible,
     countries: countries,
-    remaining_time: remaining_time
+    remaining_time: remaining_time,
+    alpha2num: alpha2num,
+    num2alpha: num2alpha
   };
 } else {
   // IE doesn't have Math.trunc
