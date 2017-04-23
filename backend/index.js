@@ -3096,10 +3096,24 @@ function csv_table(table) {
 async function admin_export_csv(connection, id) {
   let event = await get_event(connection, id);
 
+  let rankings = [];
+  for (let n = 1; n <= 4; n++) {
+    if (event.features['ranking' + n])
+      rankings.push(n);
+  }
+
   return await new Promise(function(fulfill, reject) {
     connection.query(`
-      SELECT *
-      FROM riders
+      SELECT riders.*, ` +
+      rankings.map((n) => `COALESCE(ranking${n}, 0) AS ranking${n}`).join(', ') + `
+      FROM riders` +
+      rankings.map((n) => `
+      LEFT JOIN (
+        SELECT id, number, 1 AS ranking${n}
+	FROM rider_rankings
+	WHERE ranking = ${n}
+      ) AS ranking${n} USING (id, number)
+      `).join('') + `
       WHERE id = ? AND
             (number > 0 OR registered OR start OR start_tomorrow) AND
 	    NOT COALESCE(`+'`group`'+`, 0)
