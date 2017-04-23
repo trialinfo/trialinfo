@@ -12,8 +12,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/angular-route.js \
 	htdocs/js/angular-cookies.js \
 	htdocs/js/angular-locale_de-at.js \
-	htdocs/js/json-diff.js \
-	htdocs/js/validate.js \
+	htdocs/js/json-diff.js
 
 MARKO_FILES = \
 	$(wildcard backend/views/*.marko) \
@@ -80,12 +79,6 @@ htdocs/js/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
-
-# AngularUI Validate
-htdocs/js/validate.js:
-	@mkdir -p  $(dir $@)
-	$(CURL) -o $@ --fail --silent --location \
-		https://github.com/angular-ui/ui-utils/raw/v2.0.0/modules/validate/validate.js
 
 htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)

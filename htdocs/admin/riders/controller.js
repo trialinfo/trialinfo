@@ -72,7 +72,7 @@ var ridersController = [
 	else if (enabled.rider && features['class'] && rider['class'] === null)
 	  set_focus('#class', $timeout);
 	else if (features.number && enabled.number &&
-		 visible_number(rider) == null)
+		 rider && !(rider.number > 0))
 	  set_focus('#number', $timeout);
 	else if (enabled.rider) {
 	  var fields = ['first_name', 'last_name', 'date_of_birth'];
@@ -115,7 +115,7 @@ var ridersController = [
 
       $scope.fahrer_ist_neu = false;
       angular.extend($scope.enabled, {
-	'number': rider && visible_number(rider) == null,
+	'number': rider && !(rider.number > 0),
 	'rider': rider && true,
 	'remove': rider && rider.number != null,
 	neu: true,
@@ -207,8 +207,7 @@ var ridersController = [
     };
 
     $scope.modified = function() {
-      return !(angular.equals($scope.old_rider, $scope.rider) &&
-	       visible_number($scope.old_rider) == $scope.internal.number);
+      return !angular.equals($scope.old_rider, $scope.rider);
     };
 
     $scope.guardian_visible = function(rider) {
@@ -258,8 +257,6 @@ var ridersController = [
       var rider = $scope.rider;
 
       rider = angular.copy(rider);
-      if ($scope.internal.number != visible_number(rider))
-	rider.number = $scope.internal.number;
       rider.verified = true;
 
       /* Nicht gültige Wertungen deaktivieren.  Das umfasst für Fahrer die
@@ -348,77 +345,52 @@ var ridersController = [
     }
 
     var canceler;
-    $scope.number_valid = function(number) {
+    function check_number(number) {
+      if (!$scope.rider ||
+	  ($scope.rider.number > 0 && $scope.old_rider &&
+	   $scope.rider.number == $scope.old_rider.number)) {
+	$scope.number_used = undefined;
+	$scope.form.$setValidity('number', true);
+	return;
+      }
       if (canceler)
 	canceler.resolve();
-      if (typeof number == 'string') {
-	/* ui-validate calls the validator function too early for numeric form
-	 * fields which convert input fields to numbers or undefined; maybe this can be
-	 * fixed there instead of here. */
-	if (number == '')
-	  number = null;
-	else
-	  number = +number;
+      var params = {};
+      if ($scope.rider.number > 0) {
+	$scope.form.$setValidity('number', undefined);
+	params.number = $scope.rider.number;
+      } else {
+	$scope.form.$setValidity('number', true);
       }
-      if (number == '')
-	number = null;
-      if (number == null ||
-	  number == $scope.old_rider.number) {
-	$scope.number_used = undefined;
-	return true;
-      }
-      var params = {
-	number: number
-      };
+      if ($scope.rider.class)
+	params.class = $scope.rider.class;
       canceler = $q.defer();
-      checker = $q.defer();
       $http.get('/api/event/' + event.id + '/check-number',
 		{params: params, timeout: canceler.promise}).
-	success(function(data, status, headers, config) {
-	  if (data.number) {
-	    $scope.number_used = data;
-	    if (!('id' in data) || data.id == event.id)
-	      checker.reject();
-	    else
-	      checker.resolve();
-	  } else {
-	    $scope.number_used = undefined;
-	    checker.resolve();
-	  }
+	success(function(data, status) {
+	  $scope.number_used = data;
+	  $scope.form.$setValidity('number', !data.number || data.id);
 	}).
 	error(function(data, status) {
+	  $scope.number_used = undefined;
+	  $scope.form.$setValidity('number', null);
 	  if (data) {
-	    $scope.number_used = undefined;
 	    network_error(data, status);
-	    checker.reject();
 	  }
 	});
-      return checker.promise;
     };
 
-    function next_number() {
-      if (canceler)
-	canceler.resolve();
-      canceler = $q.defer();
-      var rider = $scope.rider;
-      if (rider && rider.number == null && rider['class'] != null) {
-	var params = {
-	  'class': rider['class']
-	};
-	$http.get('/api/event/' + event.id + '/check-number',
-		  {params: params, timeout: canceler.promise}).
-	  success(function(data, status, headers, config) {
-	    if (data.next_number)
-	      $scope.number_used = data;
-	    else
-	      $scope.number_used = undefined;
-	  }).
-	  error(function() {
-	    $scope.number_used = undefined;
-	  });
+    $scope.$watch('rider.class', check_number);
+    $scope.$watch('rider.number', check_number);
+
+    $scope.$watch('internal.number', function(number) {
+      if ($scope.rider) {
+	if (number == null && $scope.old_rider)
+	  number = $scope.old_rider.number;
+	if ($scope.rider.number != number)
+	  $scope.rider.number = number;
       }
-    }
-    $scope.$watch("rider['class']", next_number);
+    });
 
     $scope.$watchCollection("rider.rankings", function(value) {
       if (value) {

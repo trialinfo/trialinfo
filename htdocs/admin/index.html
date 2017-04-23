@@ -19,7 +19,6 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/angular-locale_de-at.js"></script>
     <script src="../js/angular-route.js"></script>
     <script src="../js/angular-cookies.js"></script>
-    <script src="../js/validate.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="../js/directives.js"></script>
     <script src="../js/common.js"></script>
@@ -38,7 +37,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="sync/controller.js"></script>
     <script>
 
-      var application = angular.module('application', ['ngRoute', 'ngCookies', 'ui.validate']);
+      var application = angular.module('application', ['ngRoute', 'ngCookies']);
 
       application.directive('isoDate', isoDateDirective);
       application.directive('isoTime', isoTimeDirective);
@@ -146,8 +145,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      resolve: importController.resolve,
 	      reloadOnSearch: false
 	    }).when('/help', {
-	      templateUrl: 'help/view.html',
-	      reloadOnSearch: false
+	      templateUrl: 'help/index.html'
 	    }).otherwise({
 	      redirectTo: '/'
 	    });
