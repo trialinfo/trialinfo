@@ -21,7 +21,7 @@
 	    <tr ng-if="features.number">
 	      <th><label for="number" accesskey="t">S<span class="accesskey">t</span>artnummer</label></th>
 	      <td>
-		<input ng-if="features.number" ng-disabled="!enabled.number" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="internal.number" name="number" id="number" ui-validate="'number_valid($value)'">
+		<input ng-if="features.number" ng-disabled="!enabled.number" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="internal.number" name="number" id="number">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.first_name">
