@@ -47,8 +47,9 @@ var eventController = [
       if (!rider) {
 	rider = {
 	  country: 'A',
-	  email: $scope.user.email,
 	};
+	if (!event.features.kiosk)
+	  rider.email = $scope.user.email;
       }
 
       $scope.old_rider = rider;
@@ -286,10 +287,15 @@ var eventController = [
 	request = $http.post('/api/register/event/' + $routeParams.id + '/rider', rider);
       }
       request.success(function (rider) {
-	$scope.riders[$scope.internal.index] = rider;
-	$scope.reset_rider();
-	// $scope.rider = rider;
-	// $scope.old_rider = angular.copy(rider);
+	if (event.features.kiosk) {
+	  alert('Der Fahrer wurde gespeichert.\n' +
+		'Über folgenden Code kann er im Nennbüro gefunden werden:\n\n' +
+		rider.number);
+	  $timeout($scope.reset_rider);
+	} else {
+	  $scope.riders[$scope.internal.index] = rider;
+	  $scope.back();
+	}
       }).error(function (error) {
 	$timeout(function() {
 	  alert(JSON.stringify(error));
@@ -300,6 +306,10 @@ var eventController = [
     };
 
     $scope.reset_rider = function() {
+      $scope.rider = angular.copy($scope.old_rider);
+    };
+
+    $scope.back = function() {
       delete $scope.rider;
       delete $scope.old_rider;
       delete $scope.internal.index;
@@ -335,7 +345,7 @@ var eventController = [
 		       {params: {version: $scope.rider.version}})
 	  .success(function (rider) {
 	    $scope.riders.splice($scope.internal.index, 1);
-	    $scope.reset_rider();
+	    $scope.back();
 	  }).error(function (error) {
 	    $timeout(function() {
 	      alert(JSON.stringify(error));
