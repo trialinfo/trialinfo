@@ -1,0 +1,20 @@
+<marko-compiler-options preserve-whitespace/>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+th { text-align:right }
+td { white-space:pre-wrap }
+ins { background-color:#a0ffa0;text-decoration:underline }
+del { background-color:#ffa0a0;text-decoration:line-through }
+</style>
+</head>
+<body>
+<if(data.url)>
+<p>
+<a href="$!{data.url}">$!{data.url}</a>
+</p>
+</if>
+$!{data.diff}
+</body>
+</html>
