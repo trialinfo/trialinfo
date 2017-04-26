@@ -492,14 +492,12 @@ sub rang_und_wertungspunkte_berechnen($$) {
     }
 }
 
-sub fahrer_nach_klassen($;$) {
-    my ($fahrer_nach_startnummern, $klasse) = @_;
+sub fahrer_nach_klassen($) {
+    my ($fahrer_nach_startnummern) = @_;
     my $fahrer_nach_klassen;
 
-    $klasse //= 'wertungsklasse';
-
     foreach my $fahrer (values %$fahrer_nach_startnummern) {
-	my $klasse = $fahrer->{gruppe} ? 0 : $fahrer->{$klasse};
+	my $klasse = $fahrer->{gruppe} ? 0 : $fahrer->{wertungsklasse};
 	push @{$fahrer_nach_klassen->{$klasse}}, $fahrer
 	    if defined $klasse;
     }
