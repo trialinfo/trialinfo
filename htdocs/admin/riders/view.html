@@ -22,6 +22,10 @@
 	      <th><label for="number" accesskey="t">S<span class="accesskey">t</span>artnummer</label></th>
 	      <td>
 		<input ng-if="features.number" ng-disabled="!enabled.number" type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="internal.number" name="number" id="number">
+		<span ng-if="event.classes[rider.class - 1].color">
+		  <span style="position: absolute; z-index: 1">◻</span>
+		  <span style="color:{{event.classes[rider.class - 1].color}}">◼</span>
+		</span>
 	      </td>
 	    </tr>
 	    <tr ng-if="features.first_name">

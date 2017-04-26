@@ -243,13 +243,16 @@ if ($nur_vorangemeldete) {
 	    if $startnummer < 0;
 
 	my $args = [];
+	push @$args, $cfg->{klassen}[$fahrer->{klasse} - 1]{bezeichnung}
+	    if $fahrer->{klasse} != $fahrer->{wertungsklasse};
 	if ($features->{start_morgen}) {
 	    push @$args, $nur_heute
 		if !$fahrer->{start_morgen};
 	    push @$args, $nur_morgen
 		if !$fahrer->{start};
 	}
-	return [$startnummer,
+	return [undef,
+		$startnummer,
 		$fahrer->{nachname} . ' ' . $fahrer->{vorname} .
 		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '')];
     }
@@ -262,7 +265,7 @@ if ($nur_vorangemeldete) {
     doc_p scalar(values %$fahrer_nach_startnummer) . " vorangemeldete Fahrer.";
 
     wertungsklassen_setzen $fahrer_nach_startnummer, $cfg;
-    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer, 'klasse');
+    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
     delete $fahrer_nach_klassen->{0};  # Gruppen
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
@@ -273,9 +276,9 @@ if ($nur_vorangemeldete) {
         }
 
 	doc_h3 $cfg->{klassen}[$klasse - 1]{bezeichnung};
-	doc_table header => [$farbe, ''],
+	doc_table header => [[ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name"],
 	    body => [map {fahrer_info $_} sortiert_nach_name(@$fahrer_in_klasse)],
-	    format => ['r','l'];
+	    format => ['r','r','l'];
     }
 } else {
     tageswertung cfg => $cfg,
