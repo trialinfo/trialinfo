@@ -16,5 +16,13 @@ del { background-color:#ffa0a0;text-decoration:line-through }
 </p>
 </if>
 $!{data.diff}
+<if(data.new_rider)>
+<p if(data.new_rider.verified)>
+Änderung ist verifiziert.
+</p>
+<p if(!data.new_rider.verified)>
+Änderung ist nicht verifiziert.
+</p>
+</if>
 </body>
 </html>

@@ -2712,26 +2712,43 @@ async function change_password(req, res, next) {
 }
 
 function html_diff(old_rider, new_rider) {
+  var ignore = {
+    version: true,
+    group: true,
+    tie_break: true,
+    non_competing: true,
+    failure: true,
+    additional_marks: true,
+    user_tag: true,
+    verified: true
+  };
+
   var result = [];
   for (let key of Object.keys(new_rider)) {
+    if (key in ignore)
+      continue;
     let old_value = old_rider[key];
     let new_value = new_rider[key];
     if (Array.isArray(old_value) || Array.isArray(new_value))
       continue;
     old_value = (old_value == null) ? '' : old_value.toString();
     new_value = (new_value == null) ? '' : new_value.toString();
-    if (old_value != new_value) {
-      result.push({key: key, diff: diff.diffWordsWithSpace(
-	old_value, new_value, {newlineIsToken: true})});
-    }
+    let d = diff.diffWordsWithSpace(
+      old_value, new_value, {newlineIsToken: true});
+    if (d.length)
+      result.push({key: key, diff: d});
   }
   for (let key of Object.keys(old_rider)) {
+    if (key in ignore)
+      continue;
     let old_value = old_rider[key];
     if (key in new_rider || Array.isArray(old_value))
       continue;
     old_value = (old_value == null) ? '' : old_value.toString();
-    result.push({key: key, diff: diff.diffWordsWithSpace(
-      old_value, '', {newlineIsToken: true})});
+    let d = diff.diffWordsWithSpace(
+      old_value, '', {newlineIsToken: true});
+    if (d.length)
+      result.push({key: key, diff: d});
   }
   if (result.length) {
     function html_encode(str) {
@@ -2740,19 +2757,42 @@ function html_diff(old_rider, new_rider) {
       });
     }
 
-    return '<table>\n' +
-      result.reduce((str, diff) => {
-	return str +
-	  diff.diff.reduce((str, op) => {
-	    let enc = html_encode(op.value);
-	    return str + (op.added ?
-	      '<ins>' + enc + '</ins>' :
-	      (op.removed ?
-		'<del>' + enc + '</del>' : enc));
-	  }, '<tr><th>' + html_encode(diff.key) + '</th><td>') +
-	  '</td></tr>\n';
-      }, '') +
-      '</table>';
+    var rows = result.reduce((str, change) => {
+      var data = change.diff.reduce((str, op) => {
+	let enc = html_encode(op.value);
+	return str + (op.added ?
+	  '<ins>' + enc + '</ins>' :
+	  (op.removed ?
+	    '<del>' + enc + '</del>' : enc));
+      }, '');
+      if (data.length)
+	return str + '<tr><th>' + html_encode(change.key) + '</th><td>' + data + '</td></tr>\n';
+      else
+	return str;
+    }, '');
+
+    if (rows)
+      return '<table>\n' + rows + '</table>';
+  }
+}
+
+function atob(str) {
+  return new Buffer(str).toString('base64');
+}
+
+function rider_email(rider) {
+  if (rider.email) {
+    var name = [];
+
+    if (rider.first_name != null)
+      name.push(rider.first_name);
+    if (rider.last_name != null)
+      name.push(rider.last_name);
+
+    if (name.length)
+      return '=?utf-8?B?' + atob(name.join(' ')) + '?= <' + rider.email + '>';
+    else
+      return rider.email;
   }
 }
 
@@ -2761,8 +2801,13 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
   if (!config.from || !to)
     return;
 
+  if (new_rider && new_rider.number)
+    number = new_rider.number;
+
   var params = {
-    diff: html_diff(old_rider || {}, new_rider || {}),
+    old_rider: old_rider,
+    new_rider: new_rider,
+    diff: html_diff(old_rider || {}, new_rider || {})
   };
   if (new_rider)
     params.url = config.url + 'admin/event/' + id + '/riders?number=' + number;
@@ -2770,15 +2815,22 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
 
   var transporter = nodemailer.createTransport(config.nodemailer);
 
+  var headers = {
+    'Auto-Submitted': 'auto-generated'
+  };
+
+  if (new_rider && new_rider.email)
+    headers['Reply-to'] = rider_email(new_rider);
+  else if (old_rider && old_rider.email)
+    headers['Reply-to'] = rider_email(old_rider);
+
   await transporter.sendMail({
     date: moment().locale('en').format('ddd, DD MMM YYYY HH:mm:ss ZZ'),
     from: config.from,
     to: to,
     subject: 'TrialInfo - Registrierung',
     html: message,
-    headers: {
-      'Auto-Submitted': 'auto-generated'
-    }
+    headers: headers
   });
   console.log('Notification email sent to ' + JSON.stringify(to));
 }
@@ -2861,11 +2913,11 @@ async function register_save_rider(connection, id, number, rider, user, version)
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
     await cache.commit(connection);
-    notify_registration(id, number, old_rider, rider, event);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
       rider = await read_rider(connection, id, number, () => {});
     }
+    notify_registration(id, number, old_rider, rider, event);
   } catch (err) {
     await cache.rollback(connection);
     throw err;
