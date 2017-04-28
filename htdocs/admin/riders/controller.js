@@ -22,6 +22,7 @@ var ridersController = [
       }
     });
 
+    $scope.config = config;
     $scope.event = event;
 
     var features = event.features;
