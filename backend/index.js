@@ -3162,7 +3162,6 @@ async function export_event(connection, id, email) {
   delete event.id;
   delete event.version;
   delete event.registration_ends;
-  delete event.registration_email;
 
   riders = Object.values(riders).reduce(
     (riders, rider) => {
