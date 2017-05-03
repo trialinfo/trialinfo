@@ -1096,6 +1096,18 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
 
     compute(cache, id, event);
 
+    /* When verifying a rider, also verify the user so that future changes by
+       that user will not need verification in the future.  */
+    var user_tag = (rider && rider.user_tag) ||
+		   (old_rider && old_rider.user_tag);
+    if (user_tag && rider && rider.verified) {
+      await connection.queryAsync(`
+	UPDATE users
+	SET verified = 1
+	WHERE user_tag = ?
+      `, [user_tag]);
+    }
+
     await cache.commit(connection);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
