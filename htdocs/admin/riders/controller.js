@@ -396,7 +396,7 @@ var ridersController = [
 
     $scope.$watch('internal.number', function(number) {
       if ($scope.rider) {
-	if (number == null && $scope.old_rider)
+	if (number == null && $scope.old_rider.number <= 0)
 	  number = $scope.old_rider.number;
 	if ($scope.rider.number != number)
 	  $scope.rider.number = number;
