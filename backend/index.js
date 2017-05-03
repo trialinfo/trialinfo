@@ -2337,7 +2337,7 @@ function random_tag() {
 async function create_user_secret(connection, email, create_user) {
   var secret = random_tag();
   var expires =
-    moment(new Date(Date.now() + 1000 * 60 * 60 * 24))
+    moment(new Date(Date.now() + 1000 * 60 * 60 * 24 * 3))
     .format('YYYY-MM-DD HH:mm:ss');
 
   if (create_user) {
