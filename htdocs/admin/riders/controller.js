@@ -215,11 +215,6 @@ var ridersController = [
       return guardian_visible(rider, event);
     }
 
-    $scope.$watchCollection('rider', function() {
-      if ($scope.modified())
-	clear_search_result();
-    });
-
     $scope.$watch('rider.date_of_birth', function(date_of_birth) {
       var match;
       if (date_of_birth == null ||
@@ -244,6 +239,15 @@ var ridersController = [
 
     $scope.year_for_age = function(age) {
       return new Date().getFullYear() - age - 1;
+    }
+
+    function update_numbers(old_number, new_number) {
+      if (old_number && old_number != new_number) {
+	($scope.riders_list || []).forEach(function(rider) {
+	  if (rider.number == old_number)
+	    rider.number = new_number;
+	});
+      }
     }
 
     $scope.save = function() {
@@ -278,6 +282,7 @@ var ridersController = [
 
       request.
 	success(function(new_rider) {
+	  update_numbers($scope.old_rider.number, new_rider.number);
 	  update_hashes($scope.old_rider, new_rider);
 	  assign_rider(new_rider);
 	  set_focus('#search_term', $timeout);
@@ -340,7 +345,6 @@ var ridersController = [
 	neu: false
       });
       set_focus('#number', $timeout);
-      clear_search_result();
     };
 
     $scope.rider_name = function(rider) {

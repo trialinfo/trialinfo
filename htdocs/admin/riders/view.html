@@ -242,9 +242,9 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in riders_list">
-	      <a href="" ng-click="load_rider(rider.number)" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
+	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
 	    </span>
-	    <span ng-if="riders_list != null && riders_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
+	    <span ng-if="riders_list && riders_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
 	  </p>
 	  <p ng-if="groups && rider">
 	    <label for="member_search_term">Fahrer suchen:</label><br>
