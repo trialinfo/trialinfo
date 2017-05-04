@@ -508,12 +508,16 @@ var ridersController = [
       }
     };
 
-    $scope.member_starts = function(number) {
-      var rider = riders_hash[number];
-      if (!rider)
-	return true;
+    function rider_starts(rider) {
+      if (!rider.class || !event.classes[rider['class'] - 1])
+	return false;
       var ranking_class = event.classes[rider['class'] - 1].ranking_class;
       return rider.start && event.zones[ranking_class - 1];
+    };
+
+    $scope.member_starts = function(number) {
+      var rider = riders_hash[number];
+      return !rider || rider_starts(rider);
     };
 
     $scope.member_name = function(number) {
@@ -539,6 +543,20 @@ var ridersController = [
       }
       return name +
 	     (list.length ? ' (' + list.join(', ') + ')' : '');
+    };
+
+    $scope.member_info = function(number, action) {
+      var rider = riders_hash[number];
+      if (!rider)
+	return;
+
+      var info = '';
+      if (action)
+	info = action + ':\n';
+      info += rider_info(rider, $scope);
+      if (!rider_starts(rider))
+	info += '\n(Fahrer startet nicht)';
+      return info;
     };
 
     function not_equal(v1) {
