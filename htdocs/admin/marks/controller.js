@@ -79,6 +79,10 @@ var marksController = [
       }
     }
 
+    function clear_search_result() {
+      delete $scope.riders_list;
+    }
+
     function assign_rider(rider) {
       if ($scope.form)
 	$scope.form.$setPristine();
@@ -91,7 +95,6 @@ var marksController = [
 	$scope.rider = undefined;
       $scope.old_rider = angular.copy($scope.rider);
       $scope.search_term = '';
-      delete $scope.riders_list;
 
       update_url();
     }
@@ -138,6 +141,7 @@ var marksController = [
 	start: 1
       };
       load_rider($http.get('/api/event/' + event.id + '/first-rider', {params: params}));
+      clear_search_result();
     }
 
     $scope.load_previous_rider = function() {
@@ -145,6 +149,7 @@ var marksController = [
 	start: 1
       };
       load_rider($http.get('/api/event/' + event.id + '/previous-rider/' + $scope.rider.number, {params: params}));
+      clear_search_result();
     }
 
     $scope.load_next_rider = function() {
@@ -152,6 +157,7 @@ var marksController = [
 	start: 1
       };
       load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number, {params: params}));
+      clear_search_result();
     }
 
     $scope.load_last_rider = function() {
@@ -159,6 +165,7 @@ var marksController = [
 	start: 1
       };
       load_rider($http.get('/api/event/' + event.id + '/last-rider', {params: params}));
+      clear_search_result();
     }
 
     $scope.find_rider = function() {
@@ -179,7 +186,7 @@ var marksController = [
 	  }).
 	  error(network_error);
       } else {
-	delete $scope.riders_list;
+	clear_search_result();
       }
     };
 
@@ -439,8 +446,10 @@ var marksController = [
       if (current_number !== number) {
 	if (number !== undefined)
 	  $scope.load_rider(number);
-	else
+	else {
 	  assign_rider(undefined);
+	  clear_search_result();
+	}
       }
     });
     $scope.$emit('$routeUpdate');

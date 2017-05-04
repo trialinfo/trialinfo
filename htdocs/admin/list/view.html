@@ -202,7 +202,7 @@
 	    <td><button type="submit" ng-click="create_pdf($event)">Fahrerliste-PDF</button></td>
 	  </tr>
 	  <tr ng-if="config.existing_regforms[event.type]"><th></th>
-	    <td><button ng-disabled="!num_riders" type="button" ng-click="regforms()">{{num_riders == 1 ? 'Nennformular' : 'Nennformulare'}}.pdf</button></td>
+	    <td><button ng-disabled="!num_riders" type="button" ng-click="regforms()">{{num_riders == 1 ? 'Nennformular' : 'Nennformulare'}}</button></td>
 	  </tr>
 	</table>
       </fieldset>
