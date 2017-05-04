@@ -3057,7 +3057,7 @@ async function index(req, res, next) {
       FROM events
       JOIN rankings USING (id)
       WHERE ranking = 1 AND enabled
-      AND (registration_ends > NOW() OR
+      AND (registration_ends IS NOT NULL OR
 	  id IN (SELECT DISTINCT id FROM marks))`);
     events = events.reduce((hash, event) => {
       var date = common.parse_timestamp(event.date);
