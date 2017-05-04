@@ -149,11 +149,17 @@ async function validate_user(connection, user) {
 
   if (rows.length != 1) {
     console.error('User ' + JSON.stringify(user.email) + ' does not exist');
-    throw 'E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist nicht registriert.';
+    throw 'E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist nicht registriert. ' +
+	  'Bitte fahren Sie mit <em>Neu registrieren</em> fort.';
   }
   if (rows[0].password == null) {
     console.error('No password set for user ' + JSON.stringify(user.email));
-    throw 'Für E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist noch kein Kennwort gesetzt.';
+    throw 'Für die E-Mail-Adresse ' + JSON.stringify(user.email) +
+	  ' ist noch kein Kennwort gesetzt.<br>' +
+          'Bitte fahren Sie mit der an diese Adresse geschickten ' +
+	  'Bestätigungs-E-Mail fort, oder schicken Sie über ' +
+	  '<em>Kennwort zurücksetzen</em> erneut eine ' +
+	  'Bestätigungs-E-Mail an diese Adresse.';
   }
   var password_hash = rows[0].password;
   delete rows[0].password;
@@ -2589,7 +2595,7 @@ async function signup_or_reset(req, res, mode) {
     params.error =
       'Die E-Mail-Adresse <em>' +
       html_escape(email) +
-      '</em> ist nicht gültig.';
+      '</em> ist ungültig.';
     return res.marko(views['login'], params);
   }
   var secret = await create_user_secret(req.conn, email, mode == 'signup');
@@ -2620,9 +2626,10 @@ async function signup_or_reset(req, res, mode) {
     if (mode == 'signup') {
       error += ' ist bereits registriert.<br>Wenn das Ihre E-Mail-Adresse' +
                ' ist und Sie das Kennwort vergessen haben, können Sie' +
-	       ' das Kennwort zurücksetzen.';
+	       ' hier das <em>Kennwort zurücksetzen</em>.';
     } else {
-      error += ' ist nicht registriert.';
+      error += ' ist nicht registriert. Bitte setzen Sie mit <em>Neu ' +
+	       ' registrieren</em> fort.';
     }
 
     params.mode = mode;
