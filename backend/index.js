@@ -130,6 +130,34 @@ var pool = mysql.createPool({
   dateStrings: true,
 });
 
+async function column_exists(connection, table, column) {
+  var rows = await connection.queryAsync(`
+    SELECT 1
+    FROM INFORMATION_SCHEMA.columns
+    WHERE table_schema = ? AND table_name = ? AND column_name = ?
+    LIMIT 1
+    `, [config.database.database, table, column]);
+  return rows.length != 0;
+}
+
+async function update_database(connection) {
+  if (!await column_exists(connection, 'events', 'registration_info')) {
+    console.log('Adding column `registration_info` to table `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD registration_info VARCHAR(512)
+    `);
+  }
+}
+
+pool.getConnectionAsync()
+  .then((connection) => {
+    update_database(connection)
+    .finally(() => {
+      connection.release();
+    });
+  });
+
 class HTTPError extends Error {
   constructor(status, message) {
     super(message);
@@ -2256,7 +2284,7 @@ async function register_get_event(connection, id, user) {
     id: id,
     title: event.rankings[0].title
   };
-  ['date', 'registration_ends', 'ranking1_enabled',
+  ['date', 'registration_ends', 'registration_info',
    'type', 'features'].forEach((field) => {
     result[field] = event[field];
   });

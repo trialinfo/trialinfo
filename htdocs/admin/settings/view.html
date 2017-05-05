@@ -296,6 +296,12 @@
     <legend>Registrierung</legend>
     <table>
       <tr>
+	<th><label for="registration_info">Allgemeine Informationen<br>(HTML)</th>
+	<td>
+	  <textarea rows="5" cols="70" maxlength="512" nullable ng-model="event.registration_info" id="registration_info"></textarea>
+	</td>
+      </tr>
+      <tr>
 	<th><label for="registration_ends">Ende der Registrierung</th>
 	<td>
 	  <input type="text" size="16" maxlength="19" ng-model="event.registration_ends" iso-timestamp id="registration_ends">

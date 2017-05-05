@@ -105,6 +105,7 @@ CREATE TABLE `events` (
   `insurance` int(11) DEFAULT NULL,
   `registration_ends` timestamp NULL DEFAULT NULL,
   `registration_email` varchar(60) DEFAULT NULL,
+  `registration_info` varchar(512) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -570,4 +571,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-23  0:31:58
+-- Dump completed on 2017-05-06  0:36:01

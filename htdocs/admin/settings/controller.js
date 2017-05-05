@@ -213,7 +213,8 @@ var settingsController = [
     }
 
     $scope.keydown = function(event) {
-      if (event.which == 13) {
+      if (event.which == 13 &&
+	  (document.activeElement.tagName != "TEXTAREA" || event.ctrlKey)) {
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.save();
