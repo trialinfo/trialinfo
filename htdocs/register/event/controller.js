@@ -28,11 +28,11 @@ var eventController = [
       var defined_classes = [];
       return function() {
 	new_defined_classes = [];
-	angular.forEach(event.classes, function(name, index) {
-	  if (name != null && !class_disabled[index]) {
+	angular.forEach(event.classes, function(class_, index) {
+	  if (class_ && !class_disabled[index]) {
 	    new_defined_classes.push({
 	      'class': index + 1,
-	      name: name
+	      name: class_.name
 	    });
 	  }
 	});

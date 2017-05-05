@@ -2295,7 +2295,10 @@ async function register_get_event(connection, id, user) {
   result.classes = [];
   event.classes.forEach((class_, index) => {
     if (class_ && class_.rounds && event.zones[index]) {
-      result.classes[index] = class_.name;
+      result.classes[index] = {
+	name: class_.name,
+	ranking_class: class_.ranking_class
+      };
     }
   });
   return result;
