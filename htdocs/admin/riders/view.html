@@ -168,7 +168,7 @@
 	    <tr ng-if="features.email">
 	      <th><label for="email">E-Mail</label></th>
 	      <td>
-		<input ng-disabled="!enabled.rider" type="text" size="40" maxlength="60" ng-model="rider.email" id="email">
+		<input ng-disabled="!enabled.rider" type="text" size="40" maxlength="60" nullable ng-model="rider.email" id="email">
 	      </td>
 	    </tr>
 	    <tr ng-if="features.comment">
