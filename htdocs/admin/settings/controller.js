@@ -213,7 +213,8 @@ var settingsController = [
     }
 
     $scope.keydown = function(event) {
-      if (event.which == 13) {
+      if (event.which == 13 &&
+	  (document.activeElement.tagName != "TEXTAREA" || event.ctrlKey)) {
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.save();
@@ -265,7 +266,6 @@ var settingsController = [
 		unique_title(event.rankings[0].title, $scope.events);
 	      delete event.date;
 	      delete event.registration_ends;
-	      delete event.registration_email;
 	      event.base = base;
 	      assign_event(event, true);
 	      $scope.internal.reset = 'register';

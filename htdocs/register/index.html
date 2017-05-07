@@ -31,6 +31,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 
       application.controller('eventController', eventController);
 
+      application.filter('trusted', ['$sce', function($sce) {
+        return function(text) {
+	  return $sce.trustAsHtml(text);
+        };
+      }]);
+
       application.config([
         '$routeProvider',
 	function($routeProvider) {

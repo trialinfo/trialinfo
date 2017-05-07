@@ -364,6 +364,7 @@ function compute(cache, id, event) {
       start: (cached_rider.group || ranking_class) &&
 	     cached_rider.verified && cached_rider.start &&
 	     (cached_rider.registered || !event.features.registered),
+      'class': class_,
       ranking_class: ranking_class,
       additional_marks: cached_rider.additional_marks,
       rankings: cached_rider.rankings.map(
@@ -410,7 +411,7 @@ function compute(cache, id, event) {
 	  rider.rankings[ranking - 1] &&
 	  (ranking_class == 'G' ||
 	   (ranking > 1 ||
-	    !(event.classes[ranking_class - 1] || {}).no_ranking1))
+	    !(event.classes[rider.class - 1] || {}).no_ranking1))
       );
 
       let ranks = compute_ranks(riders_in_class);
