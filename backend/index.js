@@ -3397,9 +3397,11 @@ async function import_event(connection, existing_id, data, email) {
       await get_event(connection, id);
       await get_riders(connection, id);
 
-      for (let number in cache.saved_riders[id]) {
-	if (!data.riders[number])
-	  cache.delete_rider(id, number);
+      for (let number in cache.cached_riders[id]) {
+	if (!data.riders[number]) {
+	  cache.modify_rider(id, number);
+	  delete cache.cached_riders[id][number];
+	}
       }
     }
 
