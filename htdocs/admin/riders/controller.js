@@ -196,10 +196,14 @@ var ridersController = [
 	};
 	$http.get(url, {params: params}).
 	  success(function(riders_list) {
-	    if (riders_list.length == 1)
+	    if (riders_list.length == 1) {
+	      clear_search_result();
 	      $scope.load_rider(riders_list[0].number);
-	    else
+	    } else {
 	      $scope.riders_list = riders_list;
+	      if (riders_list.length == 0)
+		      assign_rider(undefined);
+	    }
 	  }).
 	  error(network_error);
       } else {
