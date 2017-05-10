@@ -1134,6 +1134,16 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
       number = rider.number;
     }
 
+    if (rider && rider.email && rider.user_tag == null) {
+      let rows = await connection.queryAsync(`
+        SELECT user_tag
+	FROM users
+	WHERE email = ?
+      `, [rider.email]);
+      if (rows.length == 1)
+	rider.user_tag = rows[0].user_tag;
+    }
+
     if (rider) {
       if (!old_rider && !rider.rankings && event.ranking1_enabled)
 	rider.rankings = [{"rank":null, "score":null}];
@@ -2753,12 +2763,13 @@ async function change_password(req, res, next) {
     return res.marko(views['change-password'], params);
   }
 
-  var result = await req.conn.queryAsync(`
-    UPDATE users
-    SET password = ?, secret = NULL, secret_expires = NULL
+  await req.conn.queryAsync('BEGIN');
+  var rows = await req.conn.queryAsync(`
+    SELECT password, user_tag
+    FROM users
     WHERE email = ? AND secret = ? AND secret_expires > NOW()`,
-    [apache_md5(new_password), email, secret]);
-  if (result.affectedRows != 1) {
+    [email, secret]);
+  if (rows.length != 1) {
     var params = {
       mode: 'reset',
       email: email,
@@ -2767,18 +2778,34 @@ async function change_password(req, res, next) {
     if (req.query.redirect)
       params.query = query_string({redirect: req.query.redirect});
     return res.marko(views['login'], params);
-  } else {
-    var user = {
-      email: email,
-      password: new_password
-    };
-    req.logIn(user, function(err) {
-      if (err)
-	return next(err);
-      var params = {redirect: req.query.redirect || '/'};
-      res.marko(views['password-changed'], params);
-    });
   }
+
+  await req.conn.queryAsync(`
+    UPDATE users
+    SET password = ?, secret = NULL, secret_expires = NULL
+    WHERE email = ?`,
+    [apache_md5(new_password), email]);
+
+  if (rows[0].password == null) {
+    await req.conn.queryAsync(`
+      UPDATE riders
+      SET user_tag = ?
+      WHERE email = ? AND user_tag IS NULL
+    `,
+    [rows[0].user_tag, email]);
+  }
+  await req.conn.queryAsync('COMMIT');
+
+  var user = {
+    email: email,
+    password: new_password
+  };
+  req.logIn(user, function(err) {
+    if (err)
+      return next(err);
+    var params = {redirect: req.query.redirect || '/'};
+    res.marko(views['password-changed'], params);
+  });
 }
 
 function html_diff(old_rider, new_rider) {
@@ -3484,6 +3511,12 @@ async function import_event(connection, existing_id, data, email) {
 	}
       }
     }
+
+    await connection.queryAsync(`
+      UPDATE riders
+      JOIN users USING (email)
+      SET riders.user_tag = users.user_tag, riders.version = riders.version + 1
+      WHERE riders.user_tag IS NULL AND id = ?`, [id]);
 
     await cache.commit(connection);
     return {id: id};
