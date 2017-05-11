@@ -51,7 +51,9 @@ var views = {
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
-  'password-changed': require('./views/password-changed.marko.js')
+  'password-changed': require('./views/password-changed.marko.js'),
+  'clear-notify': require('./views/clear-notify.marko.js')
+  'set-notify': require('./views/set-notify.marko.js')
 };
 
 var emails = {
@@ -148,6 +150,14 @@ async function update_database(connection) {
       ADD registration_info VARCHAR(512)
     `);
   }
+
+  if (!await column_exists(connection, 'users', 'notify')) {
+    console.log('Adding column `notify ` to table `users`');
+    await connection.queryAsync(`
+      ALTER TABLE users
+      ADD notify BOOLEAN NOT NULL DEFAULT 1
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -171,7 +181,7 @@ async function validate_user(connection, user) {
     throw 'E-Mail-Adresse oder Kennwort fehlt.';
 
   var rows = await connection.queryAsync(`
-    SELECT email, password, user_tag, verified, admin, kiosk
+    SELECT email, password, user_tag, verified, admin, kiosk, notify
     FROM users
     WHERE email = ?`, [user.email]);
 
@@ -2282,7 +2292,10 @@ async function register_get_event(connection, id, user) {
   var event = await get_event(connection, id);
   var result = {
     id: id,
-    title: event.rankings[0].title
+    title: event.rankings[0].title,
+    settings: {
+      notify: user.notify
+    }
   };
   ['date', 'registration_ends', 'registration_info',
    'type', 'features'].forEach((field) => {
@@ -2976,6 +2989,17 @@ async function register_save_rider(connection, id, number, rider, user, version)
     return register_filter_rider(rider);
 }
 
+async function register_save_settings(connection, settings, user) {
+  let query = 'UPDATE users ' +
+    'SET notify = ' + connection.escape(settings.notify) + ' ' +
+    'WHERE email = ' + connection.escape(user.email);
+  log_sql(query);
+  await connection.queryAsync(query);
+  return {
+    notify: settings.notify,
+  };
+}
+
 async function check_number(connection, id, query) {
   var check_result = {};
   var number;
@@ -3651,6 +3675,58 @@ app.get('/register/*', function(req, res, next) {
   res.sendFile('register/index.html', sendFileOptions);
 });
 
+app.get('/action/clear-notify', conn(pool), async function(req, res, next) {
+  try {
+    var user_tag = req.query.user_tag;
+    var result;
+
+    if (user_tag) {
+      result = await req.conn.queryAsync(`
+	UPDATE users
+	SET notify = 0
+	WHERE email = ? AND user_tag = ?`,
+	[req.query.email, user_tag]);
+    } else {
+      user_tag = random_tag();
+      result = await req.conn.queryAsync(`
+	INSERT INTO users (user, email, user_tag, notify)
+	  SELECT COALESCE(MAX(user), 0) + 1 AS user, ?, ?, 0
+	  FROM users`,
+	[req.query.email, user_tag]);
+    }
+
+    let params = {
+      success: result.affectedRows == 1,
+      email: req.query.email,
+      user_tag: user_tag
+    };
+    res.marko(views['clear-notify'], params);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/action/set-notify', conn(pool), async function(req, res, next) {
+  try {
+    var user_tag = req.query.user_tag;
+    var result;
+
+    result = await req.conn.queryAsync(`
+      UPDATE users
+      SET notify = 0
+      WHERE email = ? AND user_tag = ?`,
+      [req.query.email, user_tag]);
+
+    let params = {
+      email: req.query.email,
+      user_tag: user_tag
+    };
+    res.marko(views['set-notify'], params);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /*
  * Accessible to all registered users:
  */
@@ -3702,6 +3778,16 @@ app.put('/api/register/event/:id/rider/:number', async function(req, res, next) 
   try {
     rider = await register_save_rider(req.conn, req.params.id, req.params.number, rider, req.user);
     res.json(rider);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/register/settings', async function(req, res, next) {
+  var settings = req.body;
+  try {
+    settings = await register_save_settings(req.conn, settings, req.user);
+    res.json(settings);
   } catch (err) {
     next(err);
   }
