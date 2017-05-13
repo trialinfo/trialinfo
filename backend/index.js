@@ -52,7 +52,7 @@ var views = {
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
   'password-changed': require('./views/password-changed.marko.js'),
-  'clear-notify': require('./views/clear-notify.marko.js')
+  'clear-notify': require('./views/clear-notify.marko.js'),
   'set-notify': require('./views/set-notify.marko.js')
 };
 
@@ -3698,7 +3698,9 @@ app.get('/action/clear-notify', conn(pool), async function(req, res, next) {
     let params = {
       success: result.affectedRows == 1,
       email: req.query.email,
-      user_tag: user_tag
+      set_url: '/action/set-notify' +
+		 '?email=' + encodeURIComponent(req.query.email) +
+		 '&user_tag=' + user_tag
     };
     res.marko(views['clear-notify'], params);
   } catch (err) {
@@ -3708,18 +3710,17 @@ app.get('/action/clear-notify', conn(pool), async function(req, res, next) {
 
 app.get('/action/set-notify', conn(pool), async function(req, res, next) {
   try {
-    var user_tag = req.query.user_tag;
-    var result;
-
-    result = await req.conn.queryAsync(`
+    await req.conn.queryAsync(`
       UPDATE users
       SET notify = 0
       WHERE email = ? AND user_tag = ?`,
-      [req.query.email, user_tag]);
+      [req.query.email, req.query.user_tag]);
 
     let params = {
       email: req.query.email,
-      user_tag: user_tag
+      clear_url: '/action/clear-notify' +
+		 '?email=' + encodeURIComponent(req.query.email) +
+		 '&user_tag=' + req.query.user_tag
     };
     res.marko(views['set-notify'], params);
   } catch (err) {
