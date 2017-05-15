@@ -1,9 +1,9 @@
 <h1>Voranmeldung für {{event.title}}</h1>
-<div ng-bind-html="event.registration_info | trusted"></div>
 <p style="color:gray">
   <span ng-if="remaining_time">Noch {{remaining_time}} bis zum Ende der Voranmeldung.</span>
   <span ng-if="!remaining_time" style="color:red">Für diese Veranstaltung ist keine Voranmeldung mehr möglich.</span>
 </p>
+<div ng-bind-html="event.registration_info | trusted"></div>
 <form novalidate name="form">
   <div ng-if="!rider">
     <p ng-repeat="rider in riders">
