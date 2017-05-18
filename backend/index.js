@@ -467,6 +467,13 @@ async function rider_regform_data(connection, id, number, event) {
     rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
       .locale('de').format('D.M.YYYY');
   }
+
+  if (event.date) {
+    var date = common.parse_timestamp(event.date);
+    rider['start_' + moment(date).format('ddd').toLowerCase()] = rider.start;
+    rider['start_' + moment(date).add(1, 'days').format('ddd').toLowerCase()] = rider.start_tomorrow;
+  }
+
   return rider;
 }
 
