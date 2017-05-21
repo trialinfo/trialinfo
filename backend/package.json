@@ -1,7 +1,7 @@
 {
   "name": "trialinfo",
   "version": "0.0.0",
-  "description": "New TrialInfo backend replacing the Perl+CGI backend",
+  "description": "TrialInfo backend",
   "author": "Andreas Gruenbacher <andreas.gruenbacher@gmail.com>",
   "license": "AGPL-3.0+",
   "repository": {
@@ -28,6 +28,7 @@
     "fs-promise": "^2.0.2",
     "html-escape": "^2.0.0",
     "json-patch": "^0.6.0",
+    "mailparser": "^2.0.5",
     "marko": "^4.2.8",
     "moment": "^2.17.1",
     "morgan": "^1.7.0",
@@ -47,9 +48,10 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js --exec babel-node",
-    "build": "babel index.js -d dist",
+    "build": "babel index.js mailer.js -d dist",
     "serve": "export NODE_ENV=production; node dist/index.js",
-    "profile": "export NODE_ENV=production; node --prof dist/index.js"
+    "profile": "export NODE_ENV=production; node --prof dist/index.js",
+    "mailer": "babel-node mailer.js"
   },
   "babel": {
     "presets": [

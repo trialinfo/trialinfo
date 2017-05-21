@@ -1,9 +1,9 @@
 <h1>Voranmeldung für {{event.title}}</h1>
-<div ng-bind-html="event.registration_info | trusted"></div>
 <p style="color:gray">
   <span ng-if="remaining_time">Noch {{remaining_time}} bis zum Ende der Voranmeldung.</span>
   <span ng-if="!remaining_time" style="color:red">Für diese Veranstaltung ist keine Voranmeldung mehr möglich.</span>
 </p>
+<div ng-bind-html="event.registration_info | trusted"></div>
 <form novalidate name="form">
   <div ng-if="!rider">
     <p ng-repeat="rider in riders">
@@ -29,6 +29,9 @@
     </p>
     <p>
       <button ng-click="new_rider()">Weiteren Fahrer hinzufügen</button>
+    </p>
+    <p>
+      <input type="checkbox" ng-model="event.settings.notify" id="notify" ng-change="change_notify()" ng-disabled="busy"><label for="notify">Ich möchte per E-Mail über künftige Veranstaltungen informiert werden.</label>
     </p>
     <p>
       <button ng-click="logout()" title="Aktueller Benutzer: {{user.email}}">Abmelden</button>

@@ -51,7 +51,9 @@ var views = {
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
-  'password-changed': require('./views/password-changed.marko.js')
+  'password-changed': require('./views/password-changed.marko.js'),
+  'clear-notify': require('./views/clear-notify.marko.js'),
+  'set-notify': require('./views/set-notify.marko.js')
 };
 
 var emails = {
@@ -148,6 +150,14 @@ async function update_database(connection) {
       ADD registration_info VARCHAR(512)
     `);
   }
+
+  if (!await column_exists(connection, 'users', 'notify')) {
+    console.log('Adding column `notify ` to table `users`');
+    await connection.queryAsync(`
+      ALTER TABLE users
+      ADD notify BOOLEAN NOT NULL DEFAULT 1
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -171,7 +181,7 @@ async function validate_user(connection, user) {
     throw 'E-Mail-Adresse oder Kennwort fehlt.';
 
   var rows = await connection.queryAsync(`
-    SELECT email, password, user_tag, verified, admin, kiosk
+    SELECT email, password, user_tag, verified, admin, kiosk, notify
     FROM users
     WHERE email = ?`, [user.email]);
 
@@ -457,6 +467,13 @@ async function rider_regform_data(connection, id, number, event) {
     rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
       .locale('de').format('D.M.YYYY');
   }
+
+  if (event.date) {
+    var date = common.parse_timestamp(event.date);
+    rider['start_' + moment(date).format('ddd').toLowerCase()] = rider.start;
+    rider['start_' + moment(date).add(1, 'days').format('ddd').toLowerCase()] = rider.start_tomorrow;
+  }
+
   return rider;
 }
 
@@ -1115,6 +1132,16 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
     if (rider && rider.number != number) {
       await rider_change_number(connection, id, number, rider.number);
       number = rider.number;
+    }
+
+    if (rider && rider.email && rider.user_tag == null) {
+      let rows = await connection.queryAsync(`
+        SELECT user_tag
+	FROM users
+	WHERE email = ?
+      `, [rider.email]);
+      if (rows.length == 1)
+	rider.user_tag = rows[0].user_tag;
     }
 
     if (rider) {
@@ -2282,7 +2309,10 @@ async function register_get_event(connection, id, user) {
   var event = await get_event(connection, id);
   var result = {
     id: id,
-    title: event.rankings[0].title
+    title: event.rankings[0].title,
+    settings: {
+      notify: user.notify
+    }
   };
   ['date', 'registration_ends', 'registration_info',
    'type', 'features'].forEach((field) => {
@@ -2733,12 +2763,13 @@ async function change_password(req, res, next) {
     return res.marko(views['change-password'], params);
   }
 
-  var result = await req.conn.queryAsync(`
-    UPDATE users
-    SET password = ?, secret = NULL, secret_expires = NULL
+  await req.conn.queryAsync('BEGIN');
+  var rows = await req.conn.queryAsync(`
+    SELECT password, user_tag
+    FROM users
     WHERE email = ? AND secret = ? AND secret_expires > NOW()`,
-    [apache_md5(new_password), email, secret]);
-  if (result.affectedRows != 1) {
+    [email, secret]);
+  if (rows.length != 1) {
     var params = {
       mode: 'reset',
       email: email,
@@ -2747,18 +2778,34 @@ async function change_password(req, res, next) {
     if (req.query.redirect)
       params.query = query_string({redirect: req.query.redirect});
     return res.marko(views['login'], params);
-  } else {
-    var user = {
-      email: email,
-      password: new_password
-    };
-    req.logIn(user, function(err) {
-      if (err)
-	return next(err);
-      var params = {redirect: req.query.redirect || '/'};
-      res.marko(views['password-changed'], params);
-    });
   }
+
+  await req.conn.queryAsync(`
+    UPDATE users
+    SET password = ?, secret = NULL, secret_expires = NULL
+    WHERE email = ?`,
+    [apache_md5(new_password), email]);
+
+  if (rows[0].password == null) {
+    await req.conn.queryAsync(`
+      UPDATE riders
+      SET user_tag = ?
+      WHERE email = ? AND user_tag IS NULL
+    `,
+    [rows[0].user_tag, email]);
+  }
+  await req.conn.queryAsync('COMMIT');
+
+  var user = {
+    email: email,
+    password: new_password
+  };
+  req.logIn(user, function(err) {
+    if (err)
+      return next(err);
+    var params = {redirect: req.query.redirect || '/'};
+    res.marko(views['password-changed'], params);
+  });
 }
 
 function html_diff(old_rider, new_rider) {
@@ -2974,6 +3021,17 @@ async function register_save_rider(connection, id, number, rider, user, version)
   }
   if (rider)
     return register_filter_rider(rider);
+}
+
+async function register_save_settings(connection, settings, user) {
+  let query = 'UPDATE users ' +
+    'SET notify = ' + connection.escape(settings.notify) + ' ' +
+    'WHERE email = ' + connection.escape(user.email);
+  log_sql(query);
+  await connection.queryAsync(query);
+  return {
+    notify: settings.notify,
+  };
 }
 
 async function check_number(connection, id, query) {
@@ -3454,6 +3512,12 @@ async function import_event(connection, existing_id, data, email) {
       }
     }
 
+    await connection.queryAsync(`
+      UPDATE riders
+      JOIN users USING (email)
+      SET riders.user_tag = users.user_tag, riders.version = riders.version + 1
+      WHERE riders.user_tag IS NULL AND id = ?`, [id]);
+
     await cache.commit(connection);
     return {id: id};
   } catch (err) {
@@ -3651,6 +3715,59 @@ app.get('/register/*', function(req, res, next) {
   res.sendFile('register/index.html', sendFileOptions);
 });
 
+app.get('/action/clear-notify', conn(pool), async function(req, res, next) {
+  try {
+    var user_tag = req.query.user_tag;
+    var result;
+
+    if (user_tag) {
+      result = await req.conn.queryAsync(`
+	UPDATE users
+	SET notify = 0
+	WHERE email = ? AND user_tag = ?`,
+	[req.query.email, user_tag]);
+    } else {
+      user_tag = random_tag();
+      result = await req.conn.queryAsync(`
+	INSERT INTO users (user, email, user_tag, notify)
+	  SELECT COALESCE(MAX(user), 0) + 1 AS user, ?, ?, 0
+	  FROM users`,
+	[req.query.email, user_tag]);
+    }
+
+    let params = {
+      success: result.affectedRows == 1,
+      email: req.query.email,
+      set_url: '/action/set-notify' +
+		 '?email=' + encodeURIComponent(req.query.email) +
+		 '&user_tag=' + user_tag
+    };
+    res.marko(views['clear-notify'], params);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/action/set-notify', conn(pool), async function(req, res, next) {
+  try {
+    await req.conn.queryAsync(`
+      UPDATE users
+      SET notify = 0
+      WHERE email = ? AND user_tag = ?`,
+      [req.query.email, req.query.user_tag]);
+
+    let params = {
+      email: req.query.email,
+      clear_url: '/action/clear-notify' +
+		 '?email=' + encodeURIComponent(req.query.email) +
+		 '&user_tag=' + req.query.user_tag
+    };
+    res.marko(views['set-notify'], params);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /*
  * Accessible to all registered users:
  */
@@ -3702,6 +3819,16 @@ app.put('/api/register/event/:id/rider/:number', async function(req, res, next) 
   try {
     rider = await register_save_rider(req.conn, req.params.id, req.params.number, rider, req.user);
     res.json(rider);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/register/settings', async function(req, res, next) {
+  var settings = req.body;
+  try {
+    settings = await register_save_settings(req.conn, settings, req.user);
+    res.json(settings);
   } catch (err) {
     next(err);
   }

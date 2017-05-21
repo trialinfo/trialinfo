@@ -45,6 +45,9 @@ serve: build
 profile: build
 	cd backend && npm run profile
 
+mailer:
+	cd backend && npm run mailer
+
 .PHONY: require-tag
 require-tag:
 	@tag="$(TAG)"; \
