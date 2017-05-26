@@ -45,6 +45,7 @@ var jsonpatch = require('json-patch');
 var child_process = require('child_process');
 var tmp = require('tmp');
 var diff = require('diff');
+var cors = require('cors');
 
 var views = {
   'index': require('./views/index.marko.js'),
@@ -3611,20 +3612,15 @@ app.use(compression());
  * Accessible to anyone:
  */
 
-
-app.use(function(req, res, next) {
-  let origin = req.headers.origin;
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-    // res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
-    res.header('Access-Control-Allow-Credentials', 'true');
-  }
-  if (req.method != 'OPTIONS')
-    return next();
-  res.end();
-});
+app.use(cors({
+    origin: function(origin, callback) {
+      // Make sure the response doesn't contain a wildcard
+      // "Access-Control-Allow-Origin: *" header; Firefox
+      // rejects that.
+      callback(null, true);
+    },
+    credentials: true
+  }));
 
 app.get('/', conn(pool), index);
 
