@@ -62,9 +62,9 @@ var pool = mysql.createPool({
 async function main() {
   var mail = await simpleParser(process.stdin);
 
-  var transporter = nodemailer.createTransport(config.nodemailer);
+  var transporter = nodemailer.createTransport(Object.assign({}, config.nodemailer));
 
-  async function error_reply(message) {
+  async function status_reply(message, subject) {
     if (!config.from) {
       console.error(message);
       return;
@@ -85,10 +85,14 @@ async function main() {
       date: moment().locale('en').format('ddd, DD MMM YYYY HH:mm:ss ZZ'),
       from: config.from,
       to: return_path,
-      subject: 'Zustellung fehlgeschlagen',
+      subject: subject,
       text: message,
       headers: headers
     });
+  }
+
+  async function error_reply(message) {
+    await status_reply(message, 'Zustellung fehlgeschlagen');
   }
 
   if (mail.attachments.length != 0)
@@ -124,6 +128,7 @@ async function main() {
 
   let date = moment().locale('en').format('ddd, DD MMM YYYY HH:mm:ss ZZ');
 
+  var jobs = [];
   for (let row of rows) {
     let unsubscribe = 'https://otsv.trialinfo.at/action/clear-notify?' +
       'email=' + encodeURIComponent(row.email);
@@ -136,23 +141,20 @@ Ankündigungen über ÖTSV-Veranstaltungen können über folgenden Link abbestel
   ${unsubscribe}
 `;
 
+    var promise;
     if (config.from) {
       var headers = {
 	'Auto-Submitted': 'auto-generated',
       };
 
-      try {
-	await transporter.sendMail({
-	  date: date,
-	  from: config.from,
-	  to: row.email,
-	  subject: mail.subject,
-	  text: message,
-	  headers: headers
-	});
-      } catch(err) {
-	// FIXME: Record bad email addresses ...
-      }
+      promise = transporter.sendMail({
+	date: date,
+	from: config.from,
+	to: row.email,
+	subject: mail.subject,
+	text: message,
+	headers: headers
+      });
     } else {
       console.log('Date: ' + date);
       console.log('To: ' + row.email);
@@ -160,8 +162,36 @@ Ankündigungen über ÖTSV-Veranstaltungen können über folgenden Link abbestel
       console.log('');
       console.log(message);
       console.log('');
+
+      promise = Promise.resolve();
     }
+    jobs.push({
+      email: row.email,
+      promise: promise
+    });
   }
+
+  var success = [];
+  var failure = [];
+
+  for (let job of jobs) {
+    try {
+      await job.promise;
+      success.push(job.email);
+    } catch (err) {
+      failure.push(job.email);
+    };
+  }
+
+  var message = '';
+
+  if (success)
+    message = message + 'Gesendet an:\n' + success.join('\n') + '\n';
+
+  if (failure)
+    message = message + 'Zustellung fehlgeschlagen an:\n' + failure.join('\n') + '\n';
+
+  await status_reply(message, 'Zustellungsbericht');
 }
 
 main();
