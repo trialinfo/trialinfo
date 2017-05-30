@@ -14,82 +14,93 @@
 <p>TrialInfo ist ein Auswertungssystem für Motorrad- und
 Fahrrad-Trial-Wettbewerbe, das alle wesentlichen Schritte zur Verwaltung von
 Veranstaltungen und Veranstaltungsreihen unterstützt (Fahrer, Gruppen,
-Punktevergabe, Fahrerlisten, Auswertungen, etc.).</p>
+Punktevergabe, Fahrerlisten, Auswertungen, usw.).</p>
 
-<p>Das System ist über einen Web-Browser bedienbar.  Verschiedene Seiten der
-Applikation können in mehreren Tabs oder Fenstern geöffnet werden, zwischen
-denen gewechselt werden kann.  Eine Verwendung von mehreren Eingabegeräten ist
-ebenfalls möglich.  Wenn versucht wird, die selben Daten von mehreren
-Eingabegeräten aus gleichzeitig verändert werden, wird das erkannt und
-verhindert.</p>
+<p>Das Auswertunggsystem ist eine Web-Applikation, die über einen Web-Browser
+bedient wird.  Der hauptsächlich unterstützte Web-Browser ist dabei Firefox.
+Die Applikation kann je nach Bedarf gleichzeitig auf mehreren Geräten oder auch
+in mehreren Fenstern und Tabs geöffnet werden.  Wenn versucht wird, die selben
+Daten von mehreren Stellen aus gleichzeitig verändert werden, wird das erkannt
+und verhindert.</p>
 
-<h2>Grundsätzliche Abläufe</h2>
+<h2>Grundsätzlicher Ablauf</h2>
 
 <p>Die erste Veranstaltung einer Veranstaltungsreihe enthält zunächst
-Fahrer-Stammdaten ohne zugeordnete Startnummern.  Im Laufe der Nennung für
-die Veranstaltung werden diesen bestehenden Fahrern Startnummern zugewiesen,
-und es werden weitere Fahrer mit Startnummern angelegt.  Bei allen Startern
+Fahrer-Stammdaten ohne zugeordnete Startnummern.  Im Laufe der Nennung für die
+Veranstaltung werden weitere Fahrer mit Startnummern angelegt, und es werden
+den Fahrern Startnummern zugewiesen.  Bei allen Startern bei der Veranstaltung
 wird im Fahrer-Nennformular das <em>Start</em>-Häkchen gesetzt.</p>
 
 <p>Nach der Nennung, also während des eigentlichen Wettbewerbs, werden die
 Punkte der Fahrer erfasst.  Der aktuelle Zwischenstand kann jederzeit überprüft
 werden; üblich ist die fortlaufende Anzeige auf einem weiteren Monitor.
-Genauso kann der Zwischenstand über das Internet abgerufen werden, falls die
+Genauso kann der Zwischenstand über das Internet abgerufen werden, wenn die
 Daten im Hintergrund ins Internet übertragen werden.  Auch das ist üblich, wenn
 es am Ort der Veranstaltung eine Internet-Verbindung gibt.  Am Ende der
-Punktevergabe sind keine besonderen Schritte notwendig; das Endergebnis ist
+Punktevergabe sind keine weiteren Schritte notwendig; das Endergebnis ist
 sofort verfügbar.</p>
 
 <p>Die nächste Veranstaltung der Veranstaltungsreihe wird basierend auf der
 ersten Veranstaltung angelegt.  Dabei werden die <em>Start</em>-Häkchen aller
 Fahrer automatisch zurückgesetzt, nicht jedoch die bereits vergebenen
 Startnummern.  Die Startnummer eines Fahrers bleibt also die gesamte
-Veranstaltungsreihe hindurch gleich.  Im Laufe der Nennung werden weitere
-Fahrer angelegt und weitere Startnummern zugewiesen, und bei allen Startern
-wird wieder das <em>Start</em>-Häkchen gesetzt.  Die Punktevergabe erfolgt wie
-bei der ersten Veranstaltung.</p>
+Veranstaltungsreihe hindurch gleich.  Es werden wieder weitere Fahrer angelegt
+und weitere Startnummern zugewiesen, usw.  Die Punktevergabe erfolgt wie bei
+der ersten Veranstaltung.</p>
+
+<p>Zusätzlich gibt es bei zweitägigen Veranstaltungen über ein <a
+href="#start_tomorrow"><em>Start morgen</em></a>-Häkchen im Fahrer-Nennformular
+die Möglichkeit, gleich für beide Tage zu nennen.</p>
 
 <p>Zu Beginn einer neuen Veranstaltungsreihe wir die erste Veranstaltung auf
 Basis der letzten vorhergehenden Veranstaltung angelegt.  Die Fahrerdaten
 werden dabei auf die Stammdaten zurückgesetzt, es werden also auch alle
 Startnummern gelöscht.</p>
 
-<h3>Selbständige Registrierung</h3>
+<h3>Online-Voranmeldung</h3>
 
-<p>Bei Einsatz der selbständigen Registrierung von Fahrern, entweder vor der
-Veranstaltung im Internet oder vor Ort während der Nennung, ändert sich der
-Ablauf wie folgt:</p>
+<p>Es gibt die Möglichkeit, dass sich die Fahrer vor der Veranstaltung
+selbständig über das Internet registrieren können.  Das ist maximal bis zum
+Vortag der Veranstaltung sinnvoll, da die Daten der Veranstaltung nach dem Ende
+der Online-Voranmeldung erst auf das bei der Veranstaltung eingesetzte
+Notebook übernommen werden müssen.</p>
+
+<p>Bei Einsatz dieser Online-Voranmeldung ändert sich der Ablauf wie folgt:</p>
 
 <ul>
-<li><p>Selbständig angelegte oder veränderte Fahrer werden als <em>nicht
-verifiziert</em> markiert.  Solange Fahrer nicht verifiziert sind, können sie
-nicht starten.</p>
+<li><p>Neu angelegte Fahrer werden zunächst als <em>nicht verifiziert</em>
+markiert.  Bei diesen Fahrern ändert sich die <em>Speichern</em>-Schaltfläche
+im Fahrer-Nennformular auf <em>Verifizieren</em>.  Es ist Aufgabe des
+Nennbüros, zu verifizieren, dass die vom Fahrer eingegebenen Daten sinnvoll und
+vollständig sind; diese Verifizierung kann über das Fahrer-Nennformular oder
+über die an das Nennbüro verschickten Benachrichtigungs-E-Mails erfolgen.</p>
 
-<p>Bei nicht verifizierten Fahrern ändert sich die Beschriftung der
-<em>Speichern</em>-Schaltfläche in der Fahrerverwaltung auf
-<em>Verifizieren</em>.  Die Verifizierung kann jederzeit erfolgen, indem der
-Fahrer dort gespeichert wird.</p>
+<p>Weitere Änderungen der Daten eines Fahrers führen zu keinem Zurücksetzen der
+Verifizierung, sehr wohl aber zu weiteren Benachrichtigungs-E-Mails an das
+Nennbüro.</p>
 
-<li><p>Die Fahrer haben selbst Kontrolle über die Häkchen <em>Start</em> und
-<a href="#start_tomorrow"><em>Start morgen</em></a>.</p>
+<li><p>Die Fahrer haben in der Online-Voranmeldung selbst Kontrolle über die
+Häkchen <em>Start</em> und <em>Start morgen</em>.  Um dennoch die Kontrolle
+über die Starter bei der Veranstaltung zu erhalten, muss die Einstellung
+<em>Nennungseingang</em> aktiviert werden.</p>
 
-<li><p>Um dennoch nicht die Kontrolle über die Starter einer Veranstaltung zu
-verlieren, sollte die Einstellung <em>Nennungseingang</em> aktiviert werden.
-Es gibt dann in der Fahrerverwaltung ein zusätzliches
-<em>Nennungseingang</em>-Häkchen, das bei Startern aktiviert sein muss.  Dieses
-Häkchen wird typischerweise bei Entgegennahme der Nennung und Bezahlung des
-Startgelds gesetzt.  Sollte der Fahrer zu diesem Zeitpunkt noch nicht
-verifiziert sein, erfolgt die Verifizierung im selben Schritt, also quasi
-automatisch.</p>
+<p>Es gibt dann in der Fahrerverwaltung ein zusätzliches
+<em>Nennungseingang</em>-Häkchen, das bei allen Startern aktiviert werden muss.
+Die Fahrer bestimmen bei der Online-Voranmeldung also, an welchen Tagen
+sie starten wollen, und das Nennbüro bestätigt das bei der eigentlichen Nennung
+vor Ort über das <em>Nennungseingang</em>-Häkchen.</p>
 
-<li><p>Fahrer mit <em>Nennungseingang</em> können die Häkchen <em>Start</em> und
-<em>Start morgen</em> nicht mehr selbst ändern.</p>
+<li><p>Vor der Veranstaltung sollten neben der Übernahme der
+Veranstaltungsdaten auf das Notebook auch noch Nennformulare für die Fahrer
+ausgedruckt werden, die online vorgenannt haben.  Die Fahrer müssen diese
+Nennformulare dann nur noch vor Ort unterschreiben.</p>
 </ul>
 
 <h2>Formulare und Navigation</h2>
 
-<p>Die Formulare und die ganze Web-Applikation sind so gestaltet, dass
-häufige Tätigkeiten über die Tastatur ausgeführt werden können.
+<p>Die Web-Applikation besteht zu einem wesentlichen Teil aus Formularen, also
+Daten-Eingabemasken.  Diese Formulare und die ganze Web-Applikation sind so
+gestaltet, dass häufige Tätigkeiten über die Tastatur ausgeführt werden können.
 Wichtige Felder in den Formularen können über die Tastatur angesprungen,
 wichtige Aktionen über die Tastatur ausgelöst werden:
 <ul>
@@ -103,8 +114,8 @@ anspringt oder die Aktion auslöst.  Auf PCs ist diese Tastenkombination oft Alt
 </ul>
 </p>
 
-<p>Formulare werden nicht automatisch gespeichert, sondern erst, wenn die
-Änderungen mit der Eingabetaste (⏎) bestätigt werden. Der Web-Browser
+<p>Änderungen in Formularen werden nicht automatisch gespeichert, sondern erst,
+wenn die Änderungen mit der Eingabetaste (⏎) bestätigt werden. Der Web-Browser
 warnt wenn versucht wird, ein Formular mit nicht gespeicherten Änderungen zu
 verlassen.</p>
 
@@ -140,7 +151,8 @@ berücksichtigen</a>).</p>
 Dort kann man zur Auswertung dieser Veranstaltung springen, Fahrerlisten
 erstellen, die Fahrer und Gruppen verwalten, Ergebnisse eingeben, Einstellungen
 vornehmen, Sektionen aus der Wertung nehmen, die Daten der Veranstaltung
-zurücksetzen, und die Veranstaltung löschen.</p>
+exportieren, ins Internet synchronisieren, oder zurücksetzen, und die
+Veranstaltung löschen.</p>
 
 <p>Bei Auswahl einer Veranstaltungsreihe kann man zur Gesamtwertung der
 Veranstaltungsreihe springen, Eigenschaften der Veranstaltungsreihe
@@ -193,6 +205,11 @@ liegen.</p>
 Druckeinstellungen vornehmen, und die Fahrerliste kann in eine PDF-Datei
 umgewandelt werden.</p>
 
+<p>Falls für die Veranstaltung eine Nennformular-Vorlage hinterlegt ist, kann
+hier außerdem eine PDF-Datei mit den Nennformularen aller Fahrer in der
+Fahrerliste erzeugt werden.  Die verwendete Vorlage hängt vom Typ der
+Veranstaltung ab (siehe Veranstaltungs-Einstellungen).</p>
+
 <p>Die Ansicht <em>Fahrer auf der Strecke</em> zeigt alle Starter an, die den
 Wettbewerb noch nicht abgeschlossen haben und die nicht ausgefallen sind. Das
 dient dazu, einen Überblick über den aktuellen Stand der Veranstaltung zu
@@ -220,6 +237,11 @@ umschreiben zu lassen (siehe
 <a href="#vareihe_startnummern">Startnummernänderungen</a>).  Das ist oft
 sinnvoller, als nachträglich die Startnummern in den einzelnen Veranstaltungen
 zu ändern.</p>
+
+<p>Falls für die Veranstaltung eine Nennformular-Vorlage hinterlegt ist, kann
+hier außerdem ein ausgefülltes Nennformular als PDF-Datei erzeugt werden.  Die
+verwendete Vorlage hängt vom Typ der Veranstaltung ab (siehe
+Einstellungen).</p>
 
 <p>Die Nennformulare für Fahrer und Gruppen können eine relativ große Anzahl an
 Feldern enthalten.  Um die Übersichtlichkeit zu erhöhen, können nicht
@@ -299,14 +321,14 @@ Plätze zu gleichen Teilen auf die Fahrer aufgeteilt.</p>
 <h3>Klassen</h3>
 
 <p>Das Feld <em>Wertung in Klasse</em> definiert, dass eine Klasse nicht
-eigenständig startet, sondern gemeinsam mit der angegebenen Klasse gewertet
-wird. Das Äquivalent wäre, die Klassen aller betroffenen Fahrer und Gruppen
-zu ändern. Dieses Feld ist üblicherweise leer.</p>
+eingenständig sondern als Teil einer anderen Klasse gewertet wird.  Das
+Äquivalent wäre, die Klassen aller betroffenen Fahrer und Gruppen zu ändern.
+Dieses Feld ist üblicherweise leer.</p>
 
 <p>Das Feld <em>Keine Wertung&nbsp;1</em> gibt an, dass Fahrer in dieser Klasse
 an Wertung&nbsp;1 unabhängig von den Fahrer-Einstellungen nicht teilnehmen, und
 daher auch keine Wertungspunkte erhalten.  Das Äquivalent wäre, alle
-betroffenen Fahrer und Gruppen einzeln aus der Wertung zu nehmen.</p>
+betroffenen Fahrer und Gruppen einzeln aus Wertung&nbsp;1 zu nehmen.</p>
 
 <p>Das Feld <em>Außer Konkurrenz</em> gibt an, dass Fahrer in dieser Klasse
 nur außer Konkurrenz starten können.</p>
@@ -349,23 +371,63 @@ Anzahl der Fünfer angezeigt, falls die Punkteverteilung angezeigt wird. (Die
 Fünfer werden üblicherweise nicht angezeigt, weil sie sich aus den anderen
 Spalten ergeben.)</p>
 
-<h3>Selbständige Registrierung</h3>
+<h3>Registrierung</h3>
+
+<p>Das Feld <em>Allgemeine Informationen</em> beinhaltet allgemeine
+Informationen über die Veranstaltung, die in der Online-Voranmeldung angezeigt
+werden.  Es können HTML-Befehle zur Formatierung verwendet werden.</p>
 
 <p>Das Feld <em>Ende der Registrierung</em> gibt den Zeitpunkt an, bis zu dem
-die selbständige Registrierung möglich ist.  Wenn das Feld leer ist, ist eine
-selbständige Registrierung nicht möglich.  Die selbständige Registrierung muss
-in jedem Fall vor dem Start enden.  Die Einstellung
-<a href="#registered">Nennungseingang</a> sollte bei selbständiger
-Registrierung aktiviert sein.</p>
+die Registrierung aktiv ist.  (Die Registrierung muss vor dem Start enden.)
+Wenn das Feld leer ist, ist die Registrierung deaktiviert.  Die Einstellung <a
+href="#registered">Nennungseingang</a> muss bei Verwendung der Registrierung
+ebenfalls aktiviert werden.</p>
 
 <p>Das Feld <em>Benachrichtigungs-E-Mail</em> gibt eine E-Mail-Adresse an, an
-die Registrierungs-Benachrichtigungen verschickt werden sollen.  Wenn das Feld
-leer ist, werden keine solchen Benachrichtigungen verschickt.</p>
+die Registrierungs-Benachrichtigungen verschickt werden.  Wenn das Feld leer
+ist, werden keine solchen Benachrichtigungen verschickt; das ist nicht zu
+empfehlen.</p>
+
+<h2>Synchronisieren und Export</h2>
+
+<p>Hier können die Daten der Veranstaltung auf einen Server im Internet
+synchronisiert oder als TrialInfo-Datei exportiert werden.  Außerdem kann die
+Fahrerliste als Textdatei exportiert werden.</p>
+
+<h3>Synchronisieren</h3>
+
+<p>Nach der Auswahl der Veranstaltung, der Zieladresse, und des Intervalls
+zwischen den Aktualisierungen startet man hier die Synchronisierung.  Daraufhin
+erscheint im rechten oberen Eck des Browser-Fensters ein Rechteck mit dem Namen
+der Veranstaltung und dem Status der Synchronisierung (Grün für erfolgreich,
+Orange für nicht synchron, Rot für Fehler). Man kann die Synchronisierung dort
+abbrechen und nach dem Auftreten von Fehlern wieder starten.  Diese
+Statusanzeige bleibt sichtbar, wenn man auf andere Seiten der
+Veranstaltungsverwaltung wechselt.</p>
+
+<h3>TrialInfo-Export</h3>
+
+<p>Für den Export im TrialInfo-Format muss lediglich die über den Link
+angegebene *.ti-Datei gespeichert werden.</p>
+
+<h3>Fahrerliste (CSV)</h3>
+
+<p>Hier kann die Fahrerliste mit allen Stammdaten der Fahrer als durch Kommas
+getrennte Textdatei gespeichert werden.  Informationen wie die erzielten Punkte
+fehlen in diesem Format.</p>
+
+<!--
+<p>Im TrialTool-Format werden beide Dateien (*.cfg und *.dat) benötigt.
+Außerdem ist zu beachten, dass das TrialTool-Format nicht alle Möglichkeiten
+von TrialInfo unterstützt. Beim Export in dieses Format wird versucht, die
+Daten dennoch so gut wie möglich zu abzubilden.</p>
+-->
 
 <h2>Sektionen aus der Wertung</h2>
 
 <p>Hier lässt sich einstellen, dass bestimmte Sektionen für bestimmte Klassen
-in bestimmten Runden nicht gewertet werden sollen.</p>
+in bestimmten Runden nicht gewertet werden sollen, etwa wenn sie durch Regen
+unfahrbar geworden sind und daher aus der Wertung genommen wurden.</p>
 
 <p>Wird eine Sektion aus der Wertung genommen, so scheint sie nicht mehr in der
 Punktevergabe auf. Eventuell bereits vergebene Punkte werden in der
@@ -401,10 +463,13 @@ Veranstaltung ist danach wirklich gelöscht!</p>
 <h2>Neue Veranstaltung</h2>
 
 <p>Beim Anlegen einer neuen Veranstaltung kann man eine der bestehenden
-Veranstaltungen als Basis angeben. Alle Daten dieser Basisveranstaltung werden
+Veranstaltungen als Basis angeben.  Die Daten dieser Basisveranstaltung werden
 dann in die neue Veranstaltung kopiert, und können dort unabhängig verändert
-werden.  Man hat hier auch die Möglichkeit, die Daten der neuen Veranstaltung
-direkt zurückzusetzen (siehe <a href="#reset">Zurücksetzen</a>).</p>
+werden.  Man hat hier die Möglichkeit, die Daten der neuen Veranstaltung
+direkt auf einen gewünschten Stand wie den Nennbeginn der neuen Veranstaltung
+zurückzusetzen (siehe <a href="#reset">Zurücksetzen</a>).  Sinnvoll ist hier
+natürlich nur die Eingabe keiner oder der unmittelbar vorausgegangenen
+Veranstaltung.</p>
 
 <p>Es werden nur Veranstaltungen als Basis angeboten, die nicht verborgen sind:
 weil sie nicht Teil einer Veranstaltungsreihe sind, oder weil sie Teil einer
@@ -460,52 +525,23 @@ aufscheinen, und die erzielten Wertungspunkte würden nicht addiert werden.
 Eine Startnummernänderung im ersten Wettbewerb von 7 auf 70 Löst dieses
 Problem.</p>
 
-<h2>Synchronisieren, Import und Export</h2>
+<h2>Import und Export</h2>
 
-<p>Über diese Schaltfläche können folgende Aktionen durchgeführt werden: Import
-einer Veranstaltung von einem anderen Server, laufendes Synchronisieren einer
-Veranstaltung auf einen anderen Server, Import und Export von Veranstaltungen
-von Dateien bzw. auf Dateien.</p>
+<p>Über diese Schaltfläche können Veranstaltungen von anderen Servern oder
+TrialInfo-Dateien importiert werden.</p>
 
 <h3>Server-Import</h3>
 
-<p>Über diese Aktion importiert man eine Veranstaltung von einem andern Server.
-Nach der Auswahl der Quelladresse kann die Liste der Veranstaltungen auf diesem
-Server abgerufen werden. Aus der Liste wählt man dann die zu importierende
-Veranstaltung aus und startet den Import. Nach einigen Sekunden wechselt
-TrialInfo zur neu importierten Veranstaltung.</p>
+<p>Nach der Auswahl der Quelladresse kann die Liste der Veranstaltungen auf
+diesem Server abgerufen werden. Aus der Liste wählt man dann die zu
+importierende Veranstaltung aus, und startet den Import.  Sobald die
+Veranstaltung importiert ist, wird diese angezeigt.</p>
 
-<h3>Synchronisieren</h3>
+<h3>TrialInfo-Import</h3>
 
-<p>Diese Aktion startet die laufende Synchronisierung einer Veranstaltung auf
-einen anderen Server. Nach der Auswahl der Veranstaltung, der Zieladresse, und
-des Intervalls zwischen den Aktualisierungen startet man die Synchronisierung.
-Daraufhin erscheint im rechten oberen Eck des Fensters ein Rechteck mit dem
-Namen der Veranstaltung, dem Status (Grün für erfolgreich, Orange für nicht
-synchron, und Rot für Fehler). Man kann dort die Synchronisierung abbrechen,
-sowie nach dem Auftreten von Fehlern neu starten.</p>
-
-<p>Diese Statusanzeige bleibt sichtbar, wenn man auf andere Seiten der
-Veranstaltungsverwaltung wechselt.</p>
-
-<h3>Datei-Import</h3>
-
-<p>Veranstaltungen von TrialInfo vom TrialTool importieren.  Hier wählt man das
-Format und die Datei (*.ti für TrialInfo) oder die Dateien (*.cfg und *.dat für
-das TrialTool-Format) aus und startet dann den Import.</p>
-
-<h3>Datei-Export</h3>
-
-<p>Die Daten einer Veranstaltungen auf Dateien exportieren. Neben dem Format
-für TrialInfo selbst (*.ti) wird auch das TrialTool-Format unterstützt (*.cfg
-und *.dat). Nach der Auswahl der Veranstaltung und des Formats wird die Datei
-oder werden die Dateien als Verknüpfungen angezeigt; die Verknüpfungen
-speichert man dann.</p>
-
-<p>Im TrialTool-Format werden beide Dateien (*.cfg und *.dat) benötigt.
-Außerdem ist zu beachten, dass das TrialTool-Format nicht alle Möglichkeiten
-von TrialInfo unterstützt. Beim Export in dieses Format wird versucht, die
-Daten dennoch so gut wie möglich zu abzubilden.</p>
+<p>Hier wählt man eine TrialInfo-Datei (mit der Endung *.ti) aus, und startet
+dann den Import.  Sobald die Veranstaltung importiert ist, wird diese
+angezeigt.</p>
 
 </body>
 </html>
