@@ -29,4 +29,4 @@ EOF
 rm -f Release.gpg
 gpg --sign --digest-algo SHA256 -ab -u "$GPG_NAME" -o Release.gpg Release
 
-rsync -rlt -v * trialinfo.at:/var/www/html/debs
+rsync -rlt --delete -v . trialinfo.at:/var/www/html/debs
