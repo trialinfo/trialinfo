@@ -152,6 +152,14 @@ async function update_database(connection) {
     `);
   }
 
+  if (!await column_exists(connection, 'users', 'kiosk')) {
+    console.log('Adding column `kiosk ` to table `users`');
+    await connection.queryAsync(`
+      ALTER TABLE users
+      ADD kiosk BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
+
   if (!await column_exists(connection, 'users', 'notify')) {
     console.log('Adding column `notify ` to table `users`');
     await connection.queryAsync(`
