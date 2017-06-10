@@ -2945,6 +2945,9 @@ async function register_save_rider(connection, id, number, rider, user, version)
   await cache.begin(connection);
   try {
     var event = await get_event(connection, id);
+    if (event.registration_ends == null ||
+        common.parse_timestamp(event.registration_ends).getTime() < Date.now())
+      throw new HTTPError(403, 'Forbidden');
     var old_rider;
     if (number != null) {
       if (user.kiosk)
