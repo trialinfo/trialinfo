@@ -3771,7 +3771,7 @@ app.get('/action/set-notify', conn(pool), async function(req, res, next) {
   try {
     await req.conn.queryAsync(`
       UPDATE users
-      SET notify = 0
+      SET notify = 1
       WHERE email = ? AND user_tag = ?`,
       [req.query.email, req.query.user_tag]);
 
