@@ -165,6 +165,9 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     delete $fahrer->{wertungspunkte};
     delete $fahrer->{wertungsrang};
 
+    $fahrer->{land} = undef
+	if $fahrer->{land} eq 'A';
+
     my $startnummer = $fahrer->{startnummer};
     $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
 }
