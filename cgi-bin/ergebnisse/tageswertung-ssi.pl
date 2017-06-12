@@ -160,6 +160,9 @@ for(;;) {
 	    if defined $fahrer->{wertungspunkte};
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
 
+	$fahrer->{land} = undef
+	    if $fahrer->{land} eq 'A';
+
 	$ergebnis_vorhanden = 1
 	    if $fahrer->{start} && defined($fahrer->{rang});
     }
