@@ -92,7 +92,15 @@ while (my @row = $sth->fetchrow_array) {
 }
 
 my @spalten;
-foreach my $spalte ($q->param('spalte')) {
+$sth = $dbh->prepare(q{
+    SELECT name
+    FROM result_columns
+    WHERE id = ?
+    ORDER BY n
+});
+$sth->execute($id);
+while (my @row = $sth->fetchrow_array) {
+    my $spalte = $result_columns_map->{$row[0]};
     $spalte =~ /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
 	or die "Invalid column name\n";
     if ($spalte eq 'lbl') {
