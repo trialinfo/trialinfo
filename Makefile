@@ -9,6 +9,7 @@ MARKOC = node_modules/marko/bin/markoc
 DOWNLOAD_FILES = \
 	htdocs/js/angular.js \
 	htdocs/js/angular.min.js \
+	htdocs/js/angular.min.js.map \
 	htdocs/js/angular-route.js \
 	htdocs/js/angular-cookies.js \
 	htdocs/js/angular-locale_de-at.js \
