@@ -31,7 +31,7 @@ require Exporter;
 	     vareihe_aus_datenbank vareihen_aus_datenbank
 	     db_utf8 force_utf8_on sql_value log_sql_statement trace_sql
 	     equal fixup_arrayref fixup_hashref
-	     $features_map $spalten_map);
+	     $features_map $spalten_map $result_columns_map);
 use strict;
 
 # Vergleicht zwei Werte als Strings, wobei undef == undef.
@@ -771,6 +771,16 @@ our $spalten_map = {
   geburtsdatum => 'date_of_birth',
   bundesland => 'province',
   land => 'country',
+};
+
+our $result_columns_map = {
+  vehicle => 'fahrzeug',
+  license => 'lizenznummer',
+  applicant => 'bewerber',
+  date_of_birth => 'geburtsdatum',
+  province => 'bundesland',
+  country => 'land',
+  country_province => 'lbl',
 };
 
 1;

@@ -153,7 +153,7 @@ async function update_database(connection) {
   }
 
   if (!await column_exists(connection, 'users', 'kiosk')) {
-    console.log('Adding column `kiosk ` to table `users`');
+    console.log('Adding column `kiosk` to table `users`');
     await connection.queryAsync(`
       ALTER TABLE users
       ADD kiosk BOOLEAN NOT NULL DEFAULT 0
@@ -161,10 +161,22 @@ async function update_database(connection) {
   }
 
   if (!await column_exists(connection, 'users', 'notify')) {
-    console.log('Adding column `notify ` to table `users`');
+    console.log('Adding column `notify` to table `users`');
     await connection.queryAsync(`
       ALTER TABLE users
       ADD notify BOOLEAN NOT NULL DEFAULT 1
+    `);
+  }
+
+  if (!await column_exists(connection, 'result_columns', 'id')) {
+    console.log('Creating table `result_columns`');
+    await connection.queryAsync(`
+      CREATE TABLE result_columns (
+        id INT,
+	n INT,
+	name VARCHAR(20),
+	PRIMARY KEY (id, n)
+      )
     `);
   }
 }

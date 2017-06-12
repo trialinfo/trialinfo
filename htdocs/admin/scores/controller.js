@@ -371,12 +371,12 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
 	expr: "club",
 	style: { 'text-align': 'left' },
 	when: function() { return features.club } },
-    wohnort:
+    city:
       { name: 'Wohnort',
 	heading: 'Wohnort',
-	expr: "wohnort",
+	expr: "city",
 	style: { 'text-align': 'left' },
-	when: function() { return features.wohnort } },
+	when: function() { return features.city } },
     country_province:
       { name: 'Land (Bundesland)',
 	heading: '<span title="Land (Bundesland)">Land</span>',
