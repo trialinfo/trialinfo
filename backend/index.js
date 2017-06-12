@@ -2946,7 +2946,7 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
     date: moment().locale('en').format('ddd, DD MMM YYYY HH:mm:ss ZZ'),
     from: config.from,
     to: to,
-    subject: 'TrialInfo - Registrierung',
+    subject: 'TrialInfo - Registrierung' + (new_rider && new_rider.verified ? ' (verifizert)' : ''),
     html: message,
     headers: headers
   });
