@@ -252,6 +252,21 @@ CREATE TABLE `rankings` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `result_columns`
+--
+
+DROP TABLE IF EXISTS `result_columns`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `result_columns` (
+  `id` int(11) NOT NULL,
+  `n` int(11) NOT NULL,
+  `name` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`,`n`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `rider_rankings`
 --
 
@@ -505,6 +520,7 @@ CREATE TABLE `users` (
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `super_admin` tinyint(1) NOT NULL DEFAULT '0',
   `kiosk` tinyint(1) NOT NULL DEFAULT '0',
+  `notify` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`user`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `user_tag` (`user_tag`)
@@ -571,4 +587,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-05-06  0:36:01
+-- Dump completed on 2017-06-12 20:19:11

@@ -55,7 +55,7 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
     SELECT id, NULL, ranking, title, date, mtime,
-	   equal_marks_resolution, four_marks, split_score
+	   equal_marks_resolution, four_marks, split_score, type
     FROM rankings
     JOIN events USING (id)
     WHERE id = ? AND ranking = ?
@@ -72,6 +72,7 @@ if (my @row = $sth->fetchrow_array) {
     $cfg->{wertungsmodus} = $row[6];
     $cfg->{vierpunktewertung} = $row[7];
     $cfg->{punkteteilung} = $row[8];
+    $cfg->{art} = $row[9];
 }
 
 unless (defined $cfg) {
@@ -161,7 +162,7 @@ for(;;) {
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
 
 	$fahrer->{land} = undef
-	    if $fahrer->{land} eq 'A';
+	    if $cfg->{art} =~ /^otsv/ && $fahrer->{land} eq 'A';
 
 	$ergebnis_vorhanden = 1
 	    if $fahrer->{start} && defined($fahrer->{rang});
