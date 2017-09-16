@@ -243,9 +243,9 @@ function punkteDirective() {
     require: 'ngModel',
     link: function(scope, element, attr, ctrl) {
       ctrl.$parsers.push(function(text) {
-	var vierpunktewertung;
+	var four_marks;
 	try {
-	  vierpunktewertung = scope.event.vierpunktewertung;
+	  four_marks = scope.event.four_marks;
 	} catch(_) {}
 
 	if (typeof text == 'string') {
@@ -255,8 +255,7 @@ function punkteDirective() {
 	  } else if (text == '-') {
 	    ctrl.$setValidity('punkte', true);
 	    return -1;
-	  } else if (text.match(/^[012345]$/) &&
-		     (vierpunktewertung || text != '4')) {
+	  } else if (text.match(/^[012345]$/) && (four_marks || text != '4')) {
 	    ctrl.$setValidity('punkte', true);
 	    return +text;
 	  } else

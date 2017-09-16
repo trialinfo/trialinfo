@@ -20,17 +20,17 @@
 		  <th class="punktespalte"></th>
 		  <th class="punktespalte" ng-repeat="zone in zones_list()"><span title="Sektion {{zone}}">{{zone}}</span></th>
 		</tr>
-		<tr ng-repeat="runde in rounds_list()">
+		<tr ng-repeat="round in rounds_list()">
 		  <th>
-		    <label for="marks_{{runde}}_{{event.zones[ranking_class - 1][0]}}" title="Runde {{runde}}" accesskey="{{runde}}">
-		      R<span class="accesskey">{{runde}}</span>
+		    <label for="marks_{{round}}_{{event.zones[ranking_class - 1][0]}}" title="Runde {{round}}" accesskey="{{round}}">
+		      R<span class="accesskey">{{round}}</span>
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" style="text-align:center">
-		    <input ng-if="!skipped_zones[ranking_class - 1][runde - 1][zone - 1]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[runde - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" punkte id="marks_{{runde}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(runde, $index)">
+		    <input ng-if="!skipped_zones[ranking_class - 1][round - 1][zone - 1]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" punkte id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
 		  </td>
 		  <td style="text-align:right;font-weight:bold">
-		    <span ng-if="rider.start" title="Runde {{runde}}">{{rider.marks_per_round[runde - 1]}}</span>
+		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
 		  </td>
 		</tr>
 	      </table>
