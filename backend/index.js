@@ -1025,12 +1025,11 @@ async function find_riders(connection, id, params) {
       found.push(+term);
   } else {
     term = new RegExp(
-      '^' +
+      '\\b' +
       term.latinize()
 	.replace(/[[+?\\.|^$({]/g, '\\$&')
 	.replace(/\*/g, '.*')
-	.replace(/\s+/g, '.* ')
-      + '.*',
+	.replace(/\s+/g, '.*\\b'),
       'i'
     );
 
