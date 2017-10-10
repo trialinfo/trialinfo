@@ -1242,7 +1242,8 @@ function reset_event(base_event, base_riders, event, riders, reset) {
     if (reset == 'register' &&
         base_event && base_riders && base_event.features.start_tomorrow) {
       Object.values(riders).forEach((rider) => {
-	rider.registered = base_riders[rider.number].registered || false;
+	rider.registered = (base_riders[rider.number].registered &&
+			    base_riders[rider.number].start_tomorrow) || false;
 	rider.start = base_riders[rider.number].start_tomorrow || false;
 	rider.start_tomorrow = false;
       });
