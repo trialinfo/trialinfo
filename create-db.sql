@@ -1,8 +1,8 @@
--- MySQL dump 10.16  Distrib 10.1.21-MariaDB, for Linux (x86_64)
+-- MySQL dump 10.16  Distrib 10.1.26-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: localhost
+-- Host: trialinfo    Database: trialinfo
 -- ------------------------------------------------------
--- Server version	10.1.21-MariaDB
+-- Server version	10.1.26-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -259,8 +259,8 @@ DROP TABLE IF EXISTS `result_columns`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `result_columns` (
-  `id` int(11) NOT NULL,
-  `n` int(11) NOT NULL,
+  `id` int(11) NOT NULL DEFAULT '0',
+  `n` int(11) NOT NULL DEFAULT '0',
   `name` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`,`n`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -487,6 +487,21 @@ CREATE TABLE `series_groups` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `series_tie_break`
+--
+
+DROP TABLE IF EXISTS `series_tie_break`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `series_tie_break` (
+  `serie` int(11) NOT NULL,
+  `number` int(11) NOT NULL,
+  `tie_break` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`serie`,`number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `skipped_zones`
 --
 
@@ -587,4 +602,4 @@ CREATE TABLE `zones` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-06-12 20:19:11
+-- Dump completed on 2017-10-28 22:07:04

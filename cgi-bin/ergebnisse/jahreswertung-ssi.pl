@@ -263,6 +263,17 @@ if (my @row = $sth->fetchrow_array) {
     $letzte_cfg->{wertungen}[$wertung - 1]{bezeichnung} = $row[0];
 }
 
+my $tie_break = {};
+$sth = $dbh->prepare(q{
+    SELECT number, tie_break
+    FROM series_tie_break
+    WHERE serie = ?
+});
+$sth->execute($vareihe);
+while (my @row = $sth->fetchrow_array) {
+    $tie_break->{$row[0]} = $row[1];
+}
+
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
 jahreswertung veranstaltungen => $veranstaltungen,
@@ -272,7 +283,8 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      $klassenfarben ? (klassenfarben => $klassenfarben) : (),
 	      spalten => [ @spalten ],
 	      nach_relevanz => 1,
-	      @klassen ? (klassen => \@klassen ) : ();
+	      @klassen ? (klassen => \@klassen ) : (),
+	      tie_break => $tie_break;
 
 print "<p>Letzte Änderung: $mtime</p>\n"
     if $mtime;
