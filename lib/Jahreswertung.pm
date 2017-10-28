@@ -50,12 +50,20 @@ sub wertungsrang_cmp($$) {
     return $a <=> $b;
 }
 
-sub jahreswertung_cmp($$;$) {
-    my ($aa, $bb, $rang_zuweisen) = @_;
+sub jahreswertung_cmp($$$;$) {
+    my ($aa, $bb, $tie_break, $rang_zuweisen) = @_;
 
     # Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
     return $bb->{gesamtpunkte} <=> $aa->{gesamtpunkte}
 	if $aa->{gesamtpunkte} != $bb->{gesamtpunkte};
+
+    if (%$tie_break) {
+	my $tie_aa = $tie_break->{$aa->{startnummer}};
+	my $tie_bb = $tie_break->{$bb->{startnummer}};
+
+	return $tie_aa <=> $tie_bb
+	    if $tie_aa && $tie_bb;
+    }
 
     # Laut Telefonat am 22.10.2014 mit Martin Suchy (OSK): Wenn Fahrer
     # punktegleich sind, werden sie in der Ergebnisliste anhand der besseren
@@ -108,15 +116,18 @@ sub jahreswertung_cmp($$;$) {
     $aa->{streichpunkte_wichtig}++
 	if $bb->{streichpunkte_wichtig};
 
-    # TODO: Ist auch dann noch keine Differenzierung möglich, wird der
+    # Folgende Regel ist nicht implementiert, und muss als explizite Reihung
+    # definiert werden (Tabelle series_tie_break):
+    #
+    # Ist auch dann noch keine Differenzierung möglich, wird der
     # OSK-Prädikatstitel dem Fahrer zuerkannt, der den letzten wertbaren Lauf
     # zu dem entsprechenden Bewerb gewonnen hat.
 
     return $cmp;
 }
 
-sub jahreswertung_berechnen($$$) {
-    my ($jahreswertung, $laeufe_gesamt, $streichresultate) = @_;
+sub jahreswertung_berechnen($$$$) {
+    my ($jahreswertung, $laeufe_gesamt, $streichresultate, $tie_break) = @_;
 
     foreach my $klasse (keys %$jahreswertung) {
 	foreach my $startnummer (keys %{$jahreswertung->{$klasse}}) {
@@ -153,10 +164,10 @@ sub jahreswertung_berechnen($$$) {
 	# Gesamtrang berechnen
 	my $gesamtrang = 1;
 	my $vorheriger_fahrer;
-	foreach my $fahrer (sort { jahreswertung_cmp($a, $b) } @$fahrer_in_klasse) {
+	foreach my $fahrer (sort { jahreswertung_cmp($a, $b, $tie_break) } @$fahrer_in_klasse) {
 	    $fahrer->{gesamtrang} =
 		$vorheriger_fahrer &&
-		jahreswertung_cmp($vorheriger_fahrer, $fahrer, 1) == 0 ?
+		jahreswertung_cmp($vorheriger_fahrer, $fahrer, $tie_break, 1) == 0 ?
 		    $vorheriger_fahrer->{gesamtrang} : $gesamtrang;
 	    $gesamtrang++;
 	    $vorheriger_fahrer = $fahrer;
@@ -200,7 +211,7 @@ sub jahreswertung_zusammenfassung($$$$) {
 
 sub jahreswertung(@) {
     # veranstaltungen wertung laeufe_gesamt streichresultate klassenfarben
-    # spalten klassen nach_relevanz
+    # spalten klassen nach_relevanz tie_break
     my %args = (
 	klassenfarben => $Auswertung::klassenfarben,
 	@_,
@@ -330,7 +341,7 @@ sub jahreswertung(@) {
 
     my $letzte_cfg = $args{veranstaltungen}[@{$args{veranstaltungen}} - 1][0];
 
-    jahreswertung_berechnen $jahreswertung, $args{laeufe_gesamt}, $args{streichresultate};
+    jahreswertung_berechnen $jahreswertung, $args{laeufe_gesamt}, $args{streichresultate}, $args{tie_break};
 
     my $zusammenfassung;
     foreach my $klasse (keys %$jahreswertung) {
