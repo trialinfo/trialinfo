@@ -57,6 +57,8 @@ sub jahreswertung_cmp($$$;$) {
     return $bb->{gesamtpunkte} <=> $aa->{gesamtpunkte}
 	if $aa->{gesamtpunkte} != $bb->{gesamtpunkte};
 
+    # Eine explizite Reihung von Fahrern bei Punktegleichstand überschreibt
+    # den Vergleich der Platzierungen, usw.:
     if (%$tie_break) {
 	my $tie_aa = $tie_break->{$aa->{startnummer}};
 	my $tie_bb = $tie_break->{$bb->{startnummer}};
