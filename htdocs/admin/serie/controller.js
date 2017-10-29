@@ -109,9 +109,9 @@ var serieController = [
     function normalize_new_numbers(serie) {
       angular.forEach(serie.new_numbers, function(new_numbers) {
 	if (!new_numbers.length ||
-	    new_numbers[new_numbers.length - 1].number !== null)
-	    new_numbers.push({ number: null, new_number: null });
-	else {
+	    new_numbers[new_numbers.length - 1].number !== null) {
+	  new_numbers.push({ number: null, new_number: null });
+	} else {
 	  for (var n = 0; n < new_numbers.length - 1; n++)
 	    if (new_numbers[n].number == null) {
 	      new_numbers.splice(n, 1);
@@ -121,9 +121,30 @@ var serieController = [
       });
     }
 
+    function normalize_tie_break(serie) {
+      var tie_break = serie.tie_break;
+
+      if (!tie_break.length ||
+	  tie_break[tie_break.length - 1].number !== null) {
+	tie_break.push({ number: null, tie_break: null });
+      } else {
+	for (var n = 0; n < tie_break.length - 1; n++)
+	  if (tie_break[n].number == null) {
+	    tie_break.splice(n, 1);
+	    n--;
+	  }
+      }
+    }
+
     $scope.$watch('serie.new_numbers', function() {
       try {
 	normalize_new_numbers($scope.serie);
+      } catch (_) {}
+    }, true);
+
+    $scope.$watch('serie.tie_break', function() {
+      try {
+	normalize_tie_break($scope.serie);
       } catch (_) {}
     }, true);
 
@@ -150,6 +171,27 @@ var serieController = [
       });
     }
 
+    function tie_break_from_api(serie) {
+      var tie_break = [];
+      Object.keys(serie.tie_break).sort(cmp_null)
+        .forEach(function(number) {
+	  tie_break.push({
+	    number: +number,
+	    tie_break: serie.tie_break[number]
+	  });
+	});
+      serie.tie_break = tie_break;
+    }
+
+    function tie_break_to_api(serie) {
+      serie.tie_break = serie.tie_break.reduce(
+	function(hash, tie_break) {
+	  if (tie_break.number)
+	    hash[tie_break.number] = tie_break.tie_break;
+	  return hash;
+	}, {});
+    }
+
     function assign_serie(serie) {
       if (serie === undefined)
 	serie = $scope.old_serie;
@@ -161,13 +203,16 @@ var serieController = [
 	    classes: [],
 	    events: [],
 	    new_numbers: {},
-	    ranking: 1
+	    ranking: 1,
+	    tie_break: {}
 	  };
 	}
 	new_numbers_from_api(serie.new_numbers);
+	tie_break_from_api(serie);
 	normalize_classes(serie);
 	normalize_events(serie);
 	normalize_new_numbers(serie);
+	normalize_tie_break(serie);
       }
       $scope.is_new = serie.serie === undefined;
       $scope.serie = serie;
@@ -189,6 +234,7 @@ var serieController = [
       if (classes.length && classes[classes.length - 1]['class'] === null)
 	  classes.pop();
       new_numbers_to_api(serie.new_numbers);
+      tie_break_to_api(serie);
       $scope.busy = true;
       var request;
       if (serie.serie)

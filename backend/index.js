@@ -452,6 +452,15 @@ async function get_serie(connection, serie_id) {
     event[row.number] = row.new_number;
   });
 
+  serie.tie_break = {};
+  (await connection.queryAsync(`
+    SELECT number, tie_break
+    FROM series_tie_break
+    WHERE serie = ?`, [serie_id])
+  ).forEach((row) => {
+    serie.tie_break[row.number] = row.tie_break;
+  });
+
   return serie;
 }
 
@@ -1552,6 +1561,17 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
       });
     });
 
+  await zipHashAsync(
+    old_serie.tie_break, new_serie.tie_break,
+    async function(a, b, number) {
+      await update(connection, 'series_tie_break',
+        {serie: serie_id, number: number},
+        ['tie_break'],
+        a, b,
+	(x) => (x != null ? {tie_break: x} : null))
+      && (changed = true);
+    });
+
   return changed;
 }
 
@@ -1565,7 +1585,8 @@ async function update_serie(connection, serie_id, old_serie, new_serie) {
     events: true,
     classes: true,
     new_numbers: true,
-    version: true
+    version: true,
+    tie_break: true
   };
 
   var nonkeys = Object.keys(new_serie || {}).filter(

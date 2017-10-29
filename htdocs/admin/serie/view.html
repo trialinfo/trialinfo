@@ -88,6 +88,19 @@
       </fieldset><br>
     </span>
   </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Reihung bei Punktegleichstand</legend>
+    <table>
+      <tr>
+	<th>Startnummer</th>
+	<th>Reihung</th>
+      </tr>
+      <tr ng-repeat="tie_break in serie.tie_break">
+	<td style="text-align:center"><input type="text" numeric size="3" maxlength="5" min="1" max="99999" ng-model="tie_break.number" style="text-align:center"></td>
+	<td style="text-align:center"><input type="text" numeric size="1" maxlength="2" min="1" max="99" ng-model="tie_break.tie_break" style="text-align:center"></td>
+      </tr>
+    </table>
+  </fieldset><br>
   <p>
     <button type="button" ng-disabled="!(modified() && form.$valid) || busy" ng-click="save()">Speichern</button>
     <button type="button" ng-disabled="!modified() || busy" ng-click="discard()" tabindex="-1">Verwerfen</button>
