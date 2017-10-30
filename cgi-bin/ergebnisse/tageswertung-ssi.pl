@@ -284,7 +284,7 @@ if ($nur_vorangemeldete) {
 
 	my $farbe = '';
 	if ($klassenfarben->{$klasse}) {
-            $farbe = "<span style=\"color:$klassenfarben->{$klasse}\">◼</span> ";
+            $farbe = "<span style=\"display:block; width:10pt; height:10pt; background-color:$klassenfarben->{$klasse}\"></span>";
         }
 
 	doc_h3 $cfg->{klassen}[$klasse - 1]{bezeichnung};

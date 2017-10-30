@@ -405,7 +405,7 @@ sub jahreswertung(@) {
 	my ($header, $body, $format);
 	my $farbe = "";
 	if ($RenderOutput::html && exists $args{klassenfarben}{$klasse}) {
-	    $farbe = "<span style=\"color:$args{klassenfarben}{$klasse}\">◼</span>";
+	    $farbe = "<span style=\"display:block; width:10pt; height:10pt; background-color:$args{klassenfarben}{$klasse}\"></span>";
 	}
 	push @$format, "r3", "r3", "l$namenlaenge";
 	push @$header, [ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name";

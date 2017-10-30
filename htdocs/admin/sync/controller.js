@@ -42,8 +42,7 @@ var syncController = [
       } else
 	color = '#FF1700';  // "Red"
       return $sce.trustAsHtml(
-	/* '<span style="position: absolute; z-index: 1">◻</span>' + */
-	'<span style="color:' + color + '">◼</span>');
+	'<span style="display:block; width:8pt; height:8pt; background-color:' + color + '"></span>');
       // FIXME: Status auch im Fenstertitel anzeigen?
     };
 
