@@ -184,7 +184,7 @@ sub tageswertung(@) {
 					4 + $vierpunktewertung + exists($features->{spalte5er}) + $stechen));
 
 	if ($RenderOutput::html && exists $args{klassenfarben}{$klasse}) {
-	    $farbe = "<span style=\"color:$args{klassenfarben}{$klasse}\">◼</span>";
+	    $farbe = "<span style=\"display:block; width:10pt; height:10pt; background-color:$args{klassenfarben}{$klasse}\"></span>";
 	}
 
 	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"

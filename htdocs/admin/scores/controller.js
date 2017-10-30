@@ -419,8 +419,7 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
       var color = event.classes[class_ - 1].color;
       if (color) {
 	return $sce.trustAsHtml(
-	  /* '<span style="position: absolute; z-index: 1">◻</span>' + */
-	  '<span style="color:' + color + '">◼</span>');
+	  '<span style="display:block; width:10pt; height:10pt; background-color:' + color + '"></span>');
       }
     } catch(_) { }
   };
