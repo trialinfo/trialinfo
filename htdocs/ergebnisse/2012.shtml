@@ -10,12 +10,12 @@
 <h1>ÖTSV Veranstaltungsergebnisse 2012</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=4&spalte=fahrzeug&kuerzel&nicht=4" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=4&kuerzel&nicht=4" -->
 
 <h2>Jahreswertungen</h2>
 <p>
-<a href="jahreswertung.shtml?vareihe=1&spalte=fahrzeug">ÖTSV Cup 2012</a><br>
-<a href="jahreswertung.shtml?vareihe=8&spalte=fahrzeug">OSK Staatsmeisterschaft 2012</a>
+<a href="jahreswertung.shtml?vareihe=1">ÖTSV Cup 2012</a><br>
+<a href="jahreswertung.shtml?vareihe=8">OSK Staatsmeisterschaft 2012</a>
 </p>
 <p>
 
