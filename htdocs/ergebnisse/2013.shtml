@@ -10,15 +10,15 @@
 <h1>ÖTSV Veranstaltungsergebnisse 2013</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=6&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=6" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=6&kuerzel&nicht=6" -->
 
 <p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
 
 <h2>Jahreswertungen</h2>
 <p>
-<a href="jahreswertung.shtml?vareihe=5&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2013</a><br>
+<a href="jahreswertung.shtml?vareihe=5">ÖTSV Cup 2013</a><br>
 <a href="jahreswertung.shtml?vareihe=7">ÖTSV Bike Trial Cup 2013</a><br>
-<a href="jahreswertung.shtml?vareihe=9&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2013</a>
+<a href="jahreswertung.shtml?vareihe=9">OSK Staatsmeisterschaft 2013</a>
 </p>
 <p>
 

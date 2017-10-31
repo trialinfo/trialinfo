@@ -10,12 +10,12 @@
 <h1>ÖTSV Veranstaltungsergebnisse 2015</h1>
 
 <h2>Veranstaltungen</h2>
-<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=16&spalte=lbl&spalte=fahrzeug&kuerzel&nicht=16" -->
+<!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=16&kuerzel&nicht=16" -->
 
 <h2>Jahreswertungen</h2>
 <p>
-<a href="jahreswertung.shtml?vareihe=17&spalte=lbl&spalte=fahrzeug">ÖTSV Cup 2015</a><br>
-<a href="jahreswertung.shtml?vareihe=18&spalte=lbl&spalte=fahrzeug">OSK Staatsmeisterschaft 2015</a><br>
+<a href="jahreswertung.shtml?vareihe=17">ÖTSV Cup 2015</a><br>
+<a href="jahreswertung.shtml?vareihe=18">OSK Staatsmeisterschaft 2015</a><br>
 <a href="jahreswertung.shtml?vareihe=20">ÖTSV Kids e-Cup 2015</a>
 <br>
 <a href="jahreswertung.shtml?vareihe=19">ÖTSV Bike Trial Cup 2015</a><br>
