@@ -158,8 +158,9 @@ var eventController = [
       otsv_check_class();
     });
 
+    var year_of_event = (date_of_event(event) || new Date()).getFullYear();
     $scope.year_for_age = function(age) {
-      return new Date().getFullYear() - age - 1;
+      return year_of_event - age - 1;
     }
 
     $scope.$watch('rider.class', function(class_) {
