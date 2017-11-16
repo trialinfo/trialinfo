@@ -124,6 +124,10 @@ sub jahreswertung_cmp($$$;$) {
     # Ist auch dann noch keine Differenzierung möglich, wird der
     # OSK-Prädikatstitel dem Fahrer zuerkannt, der den letzten wertbaren Lauf
     # zu dem entsprechenden Bewerb gewonnen hat.
+    #
+    # Im Jahr 2017 ist dieser Fall für die beiden Besten in der roten Spur
+    # eingetreten.  Nach Intervention hat die AMF diese Regelung für Trial
+    # gestrichen; es gibt in diesem Jahr zwei Staatsmeister (16.11.2017).
 
     return $cmp;
 }
