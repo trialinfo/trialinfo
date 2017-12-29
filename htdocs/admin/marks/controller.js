@@ -400,22 +400,22 @@ var marksController = [
       try {
 	var rider = $scope.rider;
 	var rc = ranking_class(rider);
-	var gesamt = event.classes[rc - 1].fahrzeit;
-	if (rider.startzeit && rider.zielzeit && gesamt) {
-	  var startzeit = rider.startzeit.match(/^(\d\d):(\d\d):(\d\d)$/);
-	  startzeit = (+startzeit[1] * 60 + +startzeit[2]) * 60 + +startzeit[3];
-	  var zielzeit = rider.zielzeit.match(/^(\d\d):(\d\d):(\d\d)$/);
-	  zielzeit = (+zielzeit[1] * 60 + +zielzeit[2]) * 60 + +zielzeit[3];
+	var gesamt = event.classes[rc - 1].riding_time;
+	if (rider.start_time && rider.finish_time && gesamt) {
+	  var start_time = rider.start_time.match(/^(\d\d):(\d\d):(\d\d)$/);
+	  start_time = (+start_time[1] * 60 + +start_time[2]) * 60 + +start_time[3];
+	  var finish_time = rider.finish_time.match(/^(\d\d):(\d\d):(\d\d)$/);
+	  finish_time = (+finish_time[1] * 60 + +finish_time[2]) * 60 + +finish_time[3];
 	  gesamt = gesamt.match(/^(\d\d):(\d\d):(\d\d)$/);
 	  gesamt = (+gesamt[1] * 60 + +gesamt[2]) * 60 + +gesamt[3];
-	  var fahrzeit = zielzeit - startzeit;
-	  if (fahrzeit < 0)
-	    fahrzeit += 24 * 60 * 60;
-	  fahrzeit -= gesamt;
-	  if (fahrzeit > 0) {
-	    var isotime = ('0' + Math.floor(fahrzeit / (60 * 60))).slice(-2) + ':' +
-			  ('0' + Math.floor((fahrzeit / 60) % 60)).slice(-2) + ':' +
-			  ('0' + (fahrzeit % 60)).slice(-2);
+	  var riding_time = finish_time - start_time;
+	  if (riding_time < 0)
+	    riding_time += 24 * 60 * 60;
+	  riding_time -= gesamt;
+	  if (riding_time > 0) {
+	    var isotime = ('0' + Math.floor(riding_time / (60 * 60))).slice(-2) + ':' +
+			  ('0' + Math.floor((riding_time / 60) % 60)).slice(-2) + ':' +
+			  ('0' + (riding_time % 60)).slice(-2);
 	    return '+' + format_iso_time($scope, isotime, 'H:mm', 'H:mm:ss');
 	  }
 	}
