@@ -293,6 +293,29 @@
     </fieldset>
   </fieldset><br>
   <fieldset style="display:inline">
+    <legend>Startzeiten zufällig vergeben</legend>
+    <table>
+      <tr>
+	<th><label for="start_time">Startzeit</th>
+	<td>
+	  <input type="text" size="6" maxlength="8" ng-model="event.start_time" id="start_time" iso-time>
+	</td>
+      </tr>
+      <tr>
+	<th><label for="start_interval">Startintervall</th>
+	<td>
+	  <input type="text" numeric min="1" max="600" size="3" ng-model="event.start_interval" id="start_interval"> Sekunden
+	</td>
+      </tr>
+      <tr>
+	<th><label for="start_spec">Klassen</th>
+	<td>
+	  <input type="text" size="20" maxlength="40" ng-model="event.start_spec" id="start_spec">
+	</td>
+      </tr>
+    </table>
+  </fieldset><br>
+  <fieldset style="display:inline">
     <legend>Registrierung</legend>
     <table>
       <tr>
