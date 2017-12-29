@@ -46,6 +46,8 @@ var child_process = require('child_process');
 var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
+var start_times = require('./start_times');
+var random_shuffle = require('./random_shuffle');
 
 var views = {
   'index': require('./views/index.marko.js'),
@@ -1227,9 +1229,8 @@ function event_reset_numbers(riders) {
 }
 
 function reset_event(base_event, base_riders, event, riders, reset) {
-  if (reset == 'master' || reset == 'register' || reset == 'start') {
+  if (reset == 'master' || reset == 'register' || reset == 'start' || reset == 'start_times') {
     Object.values(riders).forEach((rider) => {
-      rider.start_time = null;
       rider.finish_time = null;
       rider.tie_break = 0;
       rider.rounds = null;
@@ -1247,6 +1248,10 @@ function reset_event(base_event, base_riders, event, riders, reset) {
     event.skipped_zones = [];
   }
 
+  if (reset == 'start_times') {
+    set_start_times(event, riders);
+  }
+
   if (reset == 'master' || reset == 'register') {
     if (reset == 'register' &&
         base_event && base_riders && base_event.features.start_tomorrow) {
@@ -1254,16 +1259,16 @@ function reset_event(base_event, base_riders, event, riders, reset) {
 	rider.registered = (base_riders[rider.number].registered &&
 			    base_riders[rider.number].start_tomorrow) || false;
 	rider.start = base_riders[rider.number].start_tomorrow || false;
-	rider.start_tomorrow = false;
       });
     } else {
       Object.values(riders).forEach((rider) => {
 	rider.registered = false;
 	rider.start = false;
-	rider.start_tomorrow = false;
       });
     }
     Object.values(riders).forEach((rider) => {
+      rider.start_time = null;
+      rider.start_tomorrow = false;
       rider.entry_fee = null;
     });
   }
@@ -2441,6 +2446,87 @@ async function register_get_riders(connection, id, user) {
 /* Return a random 16-character string */
 function random_tag() {
   return base64url(crypto.randomBytes(12));
+}
+
+function parse_time(time) {
+  var match = time.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+  if (match)
+    return (+match[1] * 60 + +match[2]) * 60 + +match[3];
+}
+
+function format_time(time) {
+  let seconds = time % 60;
+  time = Math.trunc(time / 60);
+  let minutes = time % 60;
+  time = Math.trunc(time / 60);
+  let hours = time % 24;
+  return ('0' + hours).slice(-2) + ':' +
+	 ('0' + minutes).slice(-2) + ':' +
+	 ('0' + seconds).slice(-2)
+}
+
+function set_start_times(event, riders) {
+  if (event.start_time == null)
+    throw new HTTPError(400, 'Startzeit in Einstellungen nicht definiert.');
+  if (event.start_interval == null)
+    throw new HTTPError(400, 'Startintervall in Einstellungen nicht definiert.');
+  if (event.start_spec == null)
+    throw new HTTPError(400, 'Startklassen in Einstellungen nicht definiert.');
+
+  let start_time = parse_time(event.start_time);
+  let start_interval = event.start_interval;
+  let tree = start_times.parse(event.start_spec);
+
+  if (tree == null)
+    throw new HTTPError(400, 'Startklassen in Einstellungen nicht korrekt gesetzt.');
+
+  function riders_in_classes(riders, classes) {
+    classes = classes.reduce(function(result, cls) {
+      result[cls] = true;
+      return result;
+    }, {});
+    var numbers = [];
+    for (let number of Object.keys(riders)) {
+      let rider = riders[number];
+      if (rider.registered && rider.start && classes[rider['class']])
+	numbers.push(number);
+    };
+    return numbers;
+  }
+
+  function recursive_set(node) {
+    switch(node.op) {
+      case '|': // in parallel
+	let first_start_time = start_time;
+	let last_start_time = first_start_time;
+	for (let n = 0; n < node.args.length; n++) {
+	  recursive_set(node.args[n]);
+	  if (start_time > last_start_time)
+	    last_start_time = start_time;
+	  start_time = first_start_time;
+	}
+	start_time = last_start_time;
+	break;
+
+      case ' ': // sequential
+	for (let n = 0; n < node.args.length; n++) {
+	  recursive_set(node.args[n]);
+	}
+	break;
+
+      default: // class or classes
+	var numbers = riders_in_classes(riders, node.args);
+	for (let number of random_shuffle(numbers)) {
+	  let rider = riders[number];
+	  rider.start_time = format_time(start_time);
+	  start_time += start_interval;
+	};
+    }
+  }
+
+  for (let rider of Object.values(riders))
+    rider.start_time = null;
+  recursive_set(tree);
 }
 
 async function create_user_secret(connection, email, create_user) {

@@ -371,6 +371,16 @@ Anzahl der Fünfer angezeigt, falls die Punkteverteilung angezeigt wird. (Die
 Fünfer werden üblicherweise nicht angezeigt, weil sie sich aus den anderen
 Spalten ergeben.)</p>
 
+<h3>Startzeiten zufällig vergeben</h3>
+
+<p>Hier werden die Startzeit, das Startintervall, und die startenden Klassen
+definiert. Klassen starten dabei gleichzeitig, wenn sie im Klassen-Feld durch
+„|“-Zeichen getrennt sind, hintereinander, wenn sie im Klassen-Feld durch
+Leerzeichen getrennt sind, und gemeinsam, wenn sie durch „+“-Zeichen getrennt
+sind; wenn nötig können hier auch Klammern gesetzt werden. Die eigentliche
+Vergabe der Startzeiten erfolgt über Zurücksetzen / Startzeiten in der
+Veranstaltungsübersicht.</p>
+
 <h3>Registrierung</h3>
 
 <p>Das Feld <em>Allgemeine Informationen</em> beinhaltet allgemeine
@@ -438,17 +448,20 @@ Wertungsberechnung ignoriert, aber nicht endgültig gelöscht.</p>
 <p>Hier kann eine Veranstaltung auf einen definierten Stand zurückgesetzt
 werden. Die Auswahlmöglichkeiten sind:
 <ul>
-<li><p>Start: löscht alle Daten der Punktevergabe und alle aus der Wertung
-genommenen Sektionen. Die Nennungen von Fahrern und Gruppen sind davon nicht
-betroffen.</p>
+<li><p>Start: löscht alle aus der Wertung genommenen Sektionen und alle Daten
+der Punktevergabe außer der Startzeit.  Die Nennungen von Fahrern und Gruppen
+sind davon nicht betroffen.</p>
+
+<li><p>Startzeiten: Vergibt zusätzlich die Startzeiten anhand der dafür
+zuständigen Einstellungen.</p>
 
 <li><p>Nennbeginn: Löscht zusätzlich <em>Nennungseingang</em>, <em>Start</em>,
-<em>Start morgen</em> und das Nenngeld aller Fahrer und Gruppen. Wenn in der
-vorigen Veranstaltung Fahrer oder Gruppen für den <em>Start morgen</em>
-markiert sind, wird bei diesen Fahrern und Gruppen <em>Start</em>
+<em>Start morgen</em>, die Startzeit und das Nenngeld aller Fahrer und Gruppen.
+Wenn in der vorigen Veranstaltung Fahrer oder Gruppen für den <em>Start
+morgen</em> markiert sind, wird bei diesen Fahrern und Gruppen <em>Start</em>
 gesetzt und <em>Nennungseingang</em> übernommen.</p>
 
-<li><p>Nur Stammdaten: Löscht alles außer den Stammdaten der Fahrer und Gruppen,
+<li><p>Stammdaten: Löscht alles außer den Stammdaten der Fahrer und Gruppen,
 also auch die Startnummern und Lizenznummern.</p>
 </ul>
 

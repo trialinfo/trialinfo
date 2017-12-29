@@ -106,6 +106,9 @@ CREATE TABLE `events` (
   `registration_ends` timestamp NULL DEFAULT NULL,
   `registration_email` varchar(60) DEFAULT NULL,
   `registration_info` varchar(512) DEFAULT NULL,
+  `start_time` time DEFAULT NULL,
+  `start_interval` int(11) DEFAULT NULL,
+  `start_spec` varchar(40) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
