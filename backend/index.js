@@ -2488,7 +2488,8 @@ function set_start_times(event, riders) {
     var numbers = [];
     for (let number of Object.keys(riders)) {
       let rider = riders[number];
-      if (rider.registered && rider.start && classes[rider['class']])
+      if ((rider.registered || !event.features.registered) &&
+	  rider.start && classes[rider['class']])
 	numbers.push(number);
     };
     return numbers;
