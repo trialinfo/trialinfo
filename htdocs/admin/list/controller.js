@@ -302,13 +302,13 @@ var eventListController = [
       start_time:
 	{ name: 'Startzeit',
 	  heading: 'Startzeit',
-	  expr: "start_time | date:'H:mm'",
+	  expr: "start_time | date:'H:mm:ss'",
 	  style: { 'text-align': 'center' },
 	  when: function() { return features.start_time; } },
       finish_time:
 	{ name: 'Zielzeit',
 	  heading: 'Zielzeit',
-	  expr: "finish_time | date:'H:mm'",
+	  expr: "finish_time | date:'H:mm:ss'",
 	  style: { 'text-align': 'center' },
 	  when: function() { return features.finish_time; } },
       registered:

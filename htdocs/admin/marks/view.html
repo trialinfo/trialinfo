@@ -60,8 +60,8 @@
 	      <tr ng-if="features.start_time || features.finish_time">
 		<th><label for="start_time">Fahr<span class="accesskey">z</span>eit</label></th>
 		<td>
-		  <input ng-if="features.start_time" ng-disabled="!rider" type="text" size="5" maxlength="8" ng-model="rider.start_time" name="start_time" iso-time accesskey="z" title="Startzeit"> −
-		  <input ng-if="features.finish_time" ng-disabled="!rider" type="text" size="5" maxlength="8" ng-model="rider.finish_time" name="finish_time" iso-time title="Zielzeit">
+		  <input ng-if="features.start_time" ng-disabled="!rider" type="text" size="6" maxlength="8" ng-model="rider.start_time" name="start_time" iso-time accesskey="z" title="Startzeit"> −
+		  <input ng-if="features.finish_time" ng-disabled="!rider" type="text" size="6" maxlength="8" ng-model="rider.finish_time" name="finish_time" iso-time title="Zielzeit">
 		  &nbsp; <span style="font-weight: bold; color: red">{{over_time()}}</span>
 		</td>
 	      </tr>
