@@ -6,13 +6,17 @@ CURL = curl
 SED = sed
 MARKOC = node_modules/marko/bin/markoc
 
+# AngularJS
+ANGULAR_BASE=https://code.angularjs.org/
+ANGULAR_VERSION=1.2.32
+
 DOWNLOAD_FILES = \
-	htdocs/js/angular.js \
-	htdocs/js/angular.min.js \
-	htdocs/js/angular.min.js.map \
-	htdocs/js/angular-route.js \
-	htdocs/js/angular-cookies.js \
-	htdocs/js/angular-locale_de-at.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular.min.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular.min.js.map \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-route.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-cookies.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js \
 	htdocs/js/json-diff.js
 
 MARKO_FILES = \
@@ -70,16 +74,12 @@ release: require-tag tarball
 upload:
 	@./upload.sh
 
-# AngularJS
-ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
-ANGULAR_VERSION=1.2.32
-
-htdocs/js/angular%:
+htdocs/js/angular-$(ANGULAR_VERSION)/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
 
-htdocs/js/angular-locale_de-at.js:
+htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
