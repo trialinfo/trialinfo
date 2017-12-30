@@ -89,30 +89,6 @@ htdocs/js/json-diff.js:
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/trialinfo/json-diff/raw/master/json-diff.js
 
-update-perl-json-pointer:
-	@set -xe; \
-	tmpdir=$$(mktemp -td); \
-	trap "rm -rf $$tmpdir" EXIT; \
-	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
-		https://github.com/zigorou/perl-json-pointer/archive/master.zip; \
-	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
-	files=($$(find $$tmpdir/perl-json-pointer-master/lib -type f -printf '%P\n')); \
-	( cd $$tmpdir/perl-json-pointer-master/lib; \
-	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
-	git add -v "$${files[@]/#/lib/}"
-
-update-perl-json-patch:
-	@set -xe; \
-	tmpdir=$$(mktemp -td); \
-	trap "rm -rf $$tmpdir" EXIT; \
-	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
-		https://github.com/zigorou/perl-json-patch/archive/master.zip; \
-	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
-	files=($$(find $$tmpdir/perl-json-patch-master/lib -type f -printf '%P\n')); \
-	( cd $$tmpdir/perl-json-patch-master/lib; \
-	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
-	git add -v "$${files[@]/#/lib/}"
-
 clean:
 	rm -f $(MARKO_FILES:%=%.js)
 
