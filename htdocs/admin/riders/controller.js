@@ -368,6 +368,7 @@ var ridersController = [
     var canceler;
     function check_number(number) {
       if (!$scope.rider ||
+	  ($scope.rider.number == null && $scope.rider.class == null) ||
 	  ($scope.rider.number > 0 && $scope.old_rider &&
 	   $scope.rider.number == $scope.old_rider.number)) {
 	$scope.number_used = undefined;
