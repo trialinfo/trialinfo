@@ -36,13 +36,13 @@ var importController = [
 	  var reader = new FileReader();
 	  reader.onloadend = function(e) {
 	    var data = window.btoa(e.target.result);
-	    $http.post('/api/event/import', { data: data }).
-	      success(function(result) {
-		if (result.id != null)
-		  $location.path('/event/' + result.id).replace();
-	      }).
-	      error(network_error).
-	      finally(function() {
+	    $http.post('/api/event/import', { data: data })
+	      .then(function(response) {
+		if (response.data.id != null)
+		  $location.path('/event/' + response.data.id).replace();
+	      })
+	      .catch(network_error)
+	      .finally(function() {
 		$scope.busy = false;
 	      });
 	  };
@@ -77,14 +77,15 @@ var importController = [
 		    url: $scope.settings.url
 		  },
 		timeout: cancel_remote.promise,
-		withCredentials: true}).
-	success(function(events) {
+		withCredentials: true})
+	.then(function(response) {
+	  let events = response.data;
 	  $scope.remote.events = events;
 	  $scope.remote.event =
 	    events.length ? events[events.length - 1] : null;
-	}).
-	error(network_error).
-	finally(function() {
+	})
+	.catch(network_error)
+	.finally(function() {
 	  $scope.busy = false;
 	  cancel_remote = undefined;
 	});
@@ -113,8 +114,10 @@ var importController = [
 	cancel_remote.resolve();
       cancel_remote = $q.defer();
       $http.get($scope.settings.url + '/api/event/' + tag + '/export',
-		{timeout: cancel_remote.promise, withCredentials: true, responseType: 'arraybuffer'}).
-	success(function(data) {
+		{ timeout: cancel_remote.promise,
+		  withCredentials: true,
+		  responseType: 'arraybuffer'})
+	.then(function(response) {
 	  var params;
 	  if (!$scope.remote.exists) {
 	    params = {
@@ -126,23 +129,25 @@ var importController = [
 	      tag: tag,
 	    };
 	  }
-	  data = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	  let data = window.btoa(
+	    String.fromCharCode.apply(null,
+	      new Uint8Array(response.data)));
 	  cancel_remote = $q.defer();
 	  $http.post('/api/event/import', { data: data },
-		     {params: params, timeout: cancel_remote.promise}).
-	    success(function(result) {
-	      $location.path('/event/' + result.id).replace();
-	    }).
-	    error(network_error).
-	    finally(function() {
+		     {params: params, timeout: cancel_remote.promise})
+	    .then(function(response) {
+	      $location.path('/event/' + response.data.id).replace();
+	    })
+	    .catch(network_error)
+	    .finally(function() {
 	      $scope.busy = false;
 	      cancel_remote = undefined;
 	    });
-	}).
-	error(function() {
+	})
+	.catch(function(response) {
 	  $scope.busy = false;
 	  cancel_remote = undefined;
-	  network_error();
+	  network_error(response);
 	});
     };
 

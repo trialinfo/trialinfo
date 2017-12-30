@@ -18,8 +18,8 @@ var eventController = [
 
     if (event.base) {
       $http.get('/api/event/' + event.base + '/as-base')
-      .success(function(base) {
-	$scope.base = base;
+      .then(function(response) {
+	$scope.base = response.data;
       });
     }
 
@@ -49,11 +49,11 @@ var eventController = [
 	var params = {
 	  version: event.version
 	};
-	$http.delete('/api/event/' + event.id, {params: params}).
-	  success(function() {
+	$http.delete('/api/event/' + event.id, {params: params})
+	  .then(function() {
 	    $location.path('/');
-	  }).
-	  error(network_error);
+	  })
+	  .catch(network_error);
       }
       $scope.fold.remove = false;
     };
@@ -66,8 +66,8 @@ var eventController = [
 	  version: event.version,
 	  reset: reset
 	};
-	$http.post('/api/event/' + event.id + '/reset', undefined, {params: params}).
-	  error(network_error);
+	$http.post('/api/event/' + event.id + '/reset', undefined, {params: params})
+	  .catch(network_error);
       }
       $scope.fold.reset = false;
     };

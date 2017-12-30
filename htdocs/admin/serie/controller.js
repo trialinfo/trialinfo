@@ -241,17 +241,18 @@ var serieController = [
 	request = $http.put('/api/serie/' + serie.serie, serie);
       else
 	request = $http.post('/api/serie', serie);
-      request.
-	success(function(serie) {
+      request
+	.then(function(response) {
+	  let serie = response.data;
 	  assign_serie(serie);
 	  var path = '/serie/' + serie.serie;
 	  if ($location.path() != path) {
 	    $location.path(path).replace();
 	    /* FIXME: Wie Reload verhindern? */
 	  }
-	}).
-	error(network_error).
-	finally(function() {
+	})
+	.catch(network_error)
+	.finally(function() {
 	  delete $scope.busy;
 	});
     };
@@ -270,12 +271,12 @@ var serieController = [
 	var params = {};
 	if ($scope.serie.version)
 	  params.version = $scope.serie.version;
-	$http.delete('/api/serie/' + $scope.serie.serie, {params: params}).
-	  success(function() {
+	$http.delete('/api/serie/' + $scope.serie.serie, {params: params})
+	  .then(function() {
 	    $window.history.back();
-	  }).
-	  error(network_error).
-	  finally(function() {
+	  })
+	  .catch(network_error)
+	  .finally(function() {
 	    delete $scope.busy;
 	  });
       }

@@ -103,12 +103,12 @@ var zonesController = [
 	 Wertung genommen wird, muss es aber auf jeden Fall gesetzt werden! */
       event.features.skipped_zones = true;
       $scope.busy = true;
-      $http.put('/api/event/' + event.id, event).
-	success(function(event) {
-	  assign_event(event);
-	}).
-	error(network_error).
-	finally(function() {
+      $http.put('/api/event/' + event.id, event)
+	.then(function(response) {
+	  assign_event(response.data);
+	})
+	.catch(network_error)
+	.finally(function() {
 	  delete $scope.busy;
 	});
     };

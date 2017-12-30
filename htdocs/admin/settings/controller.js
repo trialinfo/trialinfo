@@ -189,8 +189,9 @@ var settingsController = [
       } else {
 	request = $http.put('/api/event/' + event.id, event);
       }
-      request.
-	success(function(event) {
+      request
+	.then(function(response) {
+	  let event = response.data;
 	  assign_event(event);
 	  var path = '/event/' + event.id;
 	  if (!event_is_new)
@@ -199,9 +200,9 @@ var settingsController = [
 	    $location.path(path).replace();
 	    /* FIXME: Wie Reload verhindern? */
 	  }
-	}).
-	error(network_error).
-	finally(function() {
+	})
+	.catch(network_error)
+	.finally(function() {
 	  delete $scope.busy;
 	});
     };
@@ -259,8 +260,9 @@ var settingsController = [
 	}).id;
 
 	if (id != null) {
-	  $http.get('/api/event/' + id).
-	    success(function(event) {
+	  $http.get('/api/event/' + id)
+	    .then(function(response) {
+	      let event = response.data;
 	      delete event.id;
 	      event.rankings[0].title =
 		unique_title(event.rankings[0].title, $scope.events);
@@ -269,12 +271,12 @@ var settingsController = [
 	      event.base = base;
 	      assign_event(event, true);
 	      $scope.internal.reset = 'register';
-	    }).
-	    error(network_error);
+	    })
+	    .catch(network_error);
 
-	  $http.get('/api/event/' + base + '/as-base').
-	    success(function(base) {
-	      $scope.internal.base = base;
+	  $http.get('/api/event/' + base + '/as-base')
+	    .then(function(response) {
+	      $scope.internal.base = response.data;
 	    });
 	} else
 	  assign_event(null);

@@ -127,14 +127,15 @@ var ridersController = [
     };
 
     function load_rider(promise) {
-      promise.
-	success(function(rider) {
+      promise
+	.then(function(response) {
+	  let rider = response.data;
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
 	    focus_rider();
 	  }
-	}).
-	error(network_error);
+	})
+	.catch(network_error);
     };
 
     function clear_search_result() {
@@ -194,18 +195,19 @@ var ridersController = [
 	  term: $scope.search.term,
 	  group: +groups
 	};
-	$http.get(url, {params: params}).
-	  success(function(riders_list) {
+	$http.get(url, {params: params})
+	  .then(function(response) {
+	    let riders_list = response.data;
 	    if (riders_list.length == 1) {
 	      clear_search_result();
 	      $scope.load_rider(riders_list[0].number);
 	    } else {
 	      $scope.riders_list = riders_list;
 	      if (riders_list.length == 0)
-		      assign_rider(undefined);
+		assign_rider(undefined);
 	    }
-	  }).
-	  error(network_error);
+	  })
+	  .catch(network_error);
       } else {
 	clear_search_result();
       }
@@ -285,20 +287,23 @@ var ridersController = [
       else
 	request = $http.post('/api/event/' + event.id + '/rider', rider);
 
-      request.
-	success(function(new_rider) {
+      request
+	.then(function(response) {
+	  let new_rider = response.data;
 	  update_numbers($scope.old_rider.number, new_rider.number);
 	  update_hashes($scope.old_rider, new_rider);
 	  assign_rider(new_rider);
 	  set_focus('#search_term', $timeout);
-	}).
-	error(function (data, status) {
+	})
+	.catch(function (response) {
+	  let data = response.data;
+	  let status = response.status;
 	  if (status == 409 && 'error' in data && data.error.match('Duplicate'))
 	    $scope.error = 'Startnummer ' + rider.number + ' existiert bereits.';
 	  else
-	    network_error(data, status);
-	}).
-	finally(function() {
+	    network_error(response);
+	})
+	.finally(function() {
 	  delete $scope.busy;
 	});
     };
@@ -382,17 +387,16 @@ var ridersController = [
 	params.class = $scope.rider.class;
       canceler = $q.defer();
       $http.get('/api/event/' + event.id + '/check-number',
-		{params: params, timeout: canceler.promise}).
-	success(function(data, status) {
+		{params: params, timeout: canceler.promise})
+	.then(function(response) {
+	  let data = response.data;
 	  $scope.number_used = data;
 	  $scope.form.$setValidity('number', !data.number || data.id);
-	}).
-	error(function(data, status) {
+	})
+	.catch(function(response) {
 	  $scope.number_used = undefined;
 	  $scope.form.$setValidity('number', null);
-	  if (data) {
-	    network_error(data, status);
-	  }
+	  network_error(response);
 	});
     };
 
@@ -497,8 +501,8 @@ var ridersController = [
 	var params = {
 	  version: version
 	};
-	$http.delete('/api/event/' + event.id + '/rider/' + number, {params: params}).
-	  success(function() {
+	$http.delete('/api/event/' + event.id + '/rider/' + number, {params: params})
+	  .then(function() {
 	    assign_rider(undefined);
 	    update_hashes(old_rider, null);
 	    set_focus('#search_term', $timeout);
@@ -508,8 +512,8 @@ var ridersController = [
 		return rider.number != number;
 	      });
 	    }
-	  }).
-	  error(network_error);
+	  })
+	  .catch(network_error);
       }
     };
 
@@ -623,8 +627,9 @@ var ridersController = [
 	  group: 0,
 	  active: true,
 	};
-	$http.get(url, {params: params}).
-	  success(function(riders_list) {
+	$http.get(url, {params: params})
+	  .then(function(response) {
+	    let riders_list = response.data;
 	    var found = normalize_riders_list(
 	      riders_list.map(function(rider) {
 		return rider.number;
@@ -636,8 +641,8 @@ var ridersController = [
 	    $scope.members_list = found;
 	    if (found.length == 1)
 	      $scope.add_member(found[0]);
-	  }).
-	  error(network_error);
+	  })
+	  .catch(network_error);
       } else {
 	delete $scope.members_list;
       }
