@@ -5,7 +5,9 @@ var eventController = [
   function ($routeParams, $scope, $cookies, $window, $timeout, $http, event, riders, suggestions) {
     $scope.context('Voranmeldung für ' + event.title);
 
-    $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
+    try {
+      $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
+    } catch(_) { }
 
     $scope.event = event;
     if (event.date) {
