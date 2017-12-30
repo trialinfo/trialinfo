@@ -213,19 +213,6 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	  });
 
 	  $rootScope.join = join;
-
-	  $rootScope.$on('$routeChangeStart', function(event, next) {
-	    function success() {
-	    }
-
-	    function error() {
-	      /* preventDefault() funktioniert erst in neueren Angular-Versionen: */
-	      event.preventDefault();
-	      $rootScope.$evalAsync(function () {
-		$window.location.href = '/login';
-	      });
-	    }
-	  });
 	}]);
     </script>
   </head>
