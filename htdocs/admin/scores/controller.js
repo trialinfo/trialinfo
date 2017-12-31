@@ -532,10 +532,10 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
     }
 
     var fields = [];
-    angular.forEach(['number', 'name', 'country_province', 'vehicle'], function(field) {
-      var when = defined_fields[field].when;
-      if (!when || when())
-	fields.push(field);
+    angular.forEach(['number', 'name'].concat(event.result_columns), function(name) {
+      var field = defined_fields[name];
+      if (field && (!field.when || field.when()))
+	fields.push(name);
     });
 
     var search = $location.search();
