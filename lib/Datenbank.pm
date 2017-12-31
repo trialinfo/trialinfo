@@ -781,6 +781,7 @@ our $result_columns_map = {
   province => 'bundesland',
   country => 'land',
   country_province => 'lbl',
+  club => 'club',
 };
 
 1;
