@@ -135,6 +135,7 @@ var pool = mysql.createPool({
   dateStrings: true,
 });
 
+/*
 async function column_exists(connection, table, column) {
   var rows = await connection.queryAsync(`
     SELECT 1
@@ -144,24 +145,10 @@ async function column_exists(connection, table, column) {
     `, [config.database.database, table, column]);
   return rows.length != 0;
 }
+*/
 
 async function update_database(connection) {
-  if (!await column_exists(connection, 'events', 'registration_info')) {
-    console.log('Adding column `registration_info` to table `events`');
-    await connection.queryAsync(`
-      ALTER TABLE events
-      ADD registration_info VARCHAR(512)
-    `);
-  }
-
-  if (!await column_exists(connection, 'users', 'kiosk')) {
-    console.log('Adding column `kiosk` to table `users`');
-    await connection.queryAsync(`
-      ALTER TABLE users
-      ADD kiosk BOOLEAN NOT NULL DEFAULT 0
-    `);
-  }
-
+  /*
   if (!await column_exists(connection, 'users', 'notify')) {
     console.log('Adding column `notify` to table `users`');
     await connection.queryAsync(`
@@ -169,18 +156,7 @@ async function update_database(connection) {
       ADD notify BOOLEAN NOT NULL DEFAULT 1
     `);
   }
-
-  if (!await column_exists(connection, 'result_columns', 'id')) {
-    console.log('Creating table `result_columns`');
-    await connection.queryAsync(`
-      CREATE TABLE result_columns (
-        id INT,
-	n INT,
-	name VARCHAR(20),
-	PRIMARY KEY (id, n)
-      )
-    `);
-  }
+  */
 }
 
 pool.getConnectionAsync()
@@ -648,6 +624,7 @@ async function read_event(connection, id, revalidate) {
 
   event.card_colors = await get_list(connection, 'card_colors', 'round', 'id', id, 'color');
   event.scores = await get_list(connection, 'scores', 'rank', 'id', id, 'score');
+  event.result_columns = await get_list(connection, 'result_columns', 'n', 'id', id, 'name');
 
   event.zones = [];
   (await connection.queryAsync(`
@@ -1443,7 +1420,7 @@ async function delete_event(connection, id) {
 		     'events_admins', 'events_admins_inherit', 'events_groups',
 		     'events_groups_inherit', 'riders', 'riders_groups',
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
-		     'new_numbers']) {
+		     'new_numbers', 'result_columns']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     log_sql(query);
@@ -1853,7 +1830,7 @@ async function get_event_scores(connection, id) {
 
   hash.event = {};
   ['equal_marks_resolution', 'mtime', 'four_marks', 'date',
-  'split_score', 'features', 'type'].forEach(
+  'split_score', 'features', 'type', 'result_columns'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
 
@@ -2229,6 +2206,16 @@ async function __update_event(connection, id, old_event, new_event) {
       && (changed = true);
     });
 
+  await zipAsync(old_event.result_columns, new_event.result_columns,
+    async function(a, b, index) {
+      await update(connection, 'result_columns',
+	{id: id, n: index + 1},
+	['name'],
+	a, b,
+	(name) => (name != null && {name: name}))
+      && (changed = true);
+    });
+
   function hash_zones(zones) {
     if (!zones)
       return {};
@@ -2293,7 +2280,8 @@ async function update_event(connection, id, old_event, new_event) {
     skipped_zones: true,
     features: true,
     mtime: true,
-    version: true
+    version: true,
+    result_columns: true
   };
 
   var nonkeys = Object.keys(new_event || {}).filter(

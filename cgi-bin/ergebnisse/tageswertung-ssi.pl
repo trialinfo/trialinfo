@@ -101,8 +101,7 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($id);
 while (my @row = $sth->fetchrow_array) {
-    my $spalte = $result_columns_map->{$row[0]};
-    $spalte =~ /^(club|fahrzeug|lizenznummer|bewerber|geburtsdatum|bundesland|land|lbl)$/
+    my $spalte = $result_columns_map->{$row[0]}
 	or die "Invalid column name\n";
     if ($spalte eq 'lbl') {
 	next unless $features->{land} || $features->{bundesland};
