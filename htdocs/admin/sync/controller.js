@@ -31,7 +31,7 @@ var syncController = [
       };
     }
 
-    $scope.zustand = function() {
+    $scope.status = function() {
       var color;
       if ($scope.running) {
 	if ($scope.source_dump && $scope.target_dump &&
@@ -42,7 +42,7 @@ var syncController = [
       } else
 	color = '#FF1700';  // "Red"
       return $sce.trustAsHtml(
-	'<span style="display:block; width:8pt; height:8pt; background-color:' + color + '"></span>');
+	'<span style="display:inline-block; width:8pt; height:8pt; background-color:' + color + '"></span>');
       // FIXME: Status auch im Fenstertitel anzeigen?
     };
 
@@ -107,9 +107,19 @@ var syncController = [
       return next.promise;
     };
 
-    function url_fehler(url, fehler) {
+    function url_error(url, fehler) {
       if (url == '')
 	url = $location.protocol() + '://' + $location.host();
+      if (typeof fehler != 'string') {
+	let response = fehler;
+	if (response.status < 0)
+	  fehler = 'Keine Verbindung';
+	else {
+	  fehler = response.status;
+	  if (response.data && response.data.error)
+	    fehler = fehler + ' ' + response.data.error;
+	}
+      }
       return url + ': ' + fehler;
     }
 
@@ -141,7 +151,7 @@ var syncController = [
 	    delete $scope.target_error;
 	  })
 	  .catch(function(response) {
-	    $scope.target_error = url_fehler($scope.url, response.data.error);
+	    $scope.target_error = url_error($scope.url, response);
 	    if (response.status == 409)
 	      $scope.stop();
 	  });
@@ -172,7 +182,7 @@ var syncController = [
 	    });
 	})
 	.catch(function(response) {
-	  $scope.source_error = url_fehler('', response.data.error);
+	  $scope.source_error = url_error('', response);
 	  later('source timeout', make_source_request, $scope.timeout);
 	});
     }
@@ -200,7 +210,7 @@ var syncController = [
 	})
 	.catch(function(response) {
 	  if (kein_import) {
-	    $scope.target_error = url_fehler($scope.url, 'Veranstaltung ' + $scope.to_tag + ' existiert nicht');
+	    $scope.target_error = url_error($scope.url, 'Veranstaltung ' + $scope.to_tag + ' existiert nicht');
 	    $scope.stop();
 	    return;
 	  }
@@ -226,16 +236,16 @@ var syncController = [
 		      make_target_request(true);
 		    })
 		    .catch(function(response) {
-		      $scope.target_error = url_fehler($scope.url, response.data.error);
+		      $scope.target_error = url_error($scope.url, response);
 		      $scope.stop();
 		    });
 	      })
 	      .catch(function() {
-		$scope.source_error = url_fehler('', 'Export fehlgeschlagen');
+		$scope.source_error = url_error('', 'Export fehlgeschlagen');
 		$scope.stop();
 	      });
 	  } else {
-	    $scope.target_error = url_fehler($scope.url, response.data.error);
+	    $scope.target_error = url_error($scope.url, response);
 	    later('target timeout', make_target_request, $scope.timeout);
 	  }
 	});
