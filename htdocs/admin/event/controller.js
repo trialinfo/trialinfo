@@ -59,8 +59,7 @@ var eventController = [
     };
 
     $scope.reset = function(reset) {
-      var what = reset.substr(0, 1).toUpperCase() + reset.substr(1);
-      if (confirm('Veranstaltung wirklich auf ' + what + ' zurücksetzen?\n\n' +
+      if (confirm('Veranstaltung wirklich zurücksetzen?\n\n' +
 		  'Diese Änderung kann nicht rückgängig gemacht werden.')) {
 	var params = {
 	  version: event.version,
