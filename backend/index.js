@@ -180,7 +180,7 @@ async function validate_user(connection, user) {
     throw 'E-Mail-Adresse oder Kennwort fehlt.';
 
   var rows = await connection.queryAsync(`
-    SELECT email, password, user_tag, verified, admin, kiosk, notify
+    SELECT email, password, user_tag, verified, admin, notify
     FROM users
     WHERE email = ?`, [user.email]);
 
@@ -2353,10 +2353,6 @@ async function register_get_event(connection, id, user) {
    'type', 'features'].forEach((field) => {
     result[field] = event[field];
   });
-  if (user.kiosk) {
-    result.features = Object.assign({}, result.features);
-    result.features.kiosk = true;
-  }
   result.classes = [];
   event.classes.forEach((class_, index) => {
     if (class_ && class_.rounds && event.zones[index]) {
@@ -2412,9 +2408,6 @@ function register_filter_rider(rider) {
 }
 
 async function register_get_riders(connection, id, user) {
-  if (user.kiosk)
-    return [];
-
   var rows = await connection.queryAsync(`
     SELECT number
     FROM riders
@@ -3058,9 +3051,6 @@ async function register_save_rider(connection, id, number, rider, user, version)
       throw new HTTPError(403, 'Forbidden');
     var old_rider;
     if (number != null) {
-      if (user.kiosk)
-	throw new HTTPError(403, 'Forbidden');
-
       old_rider = await get_rider(connection, id, number);
       if (old_rider.user_tag != user.user_tag)
 	throw new HTTPError(403, 'Forbidden');

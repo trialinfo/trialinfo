@@ -50,8 +50,7 @@ var eventController = [
 	rider = {
 	  country: 'A',
 	};
-	if (!event.features.kiosk)
-	  rider.email = $scope.user.email;
+	rider.email = $scope.user.email;
       }
 
       $scope.old_rider = rider;
@@ -291,15 +290,8 @@ var eventController = [
       }
       request.then(function (response) {
 	let rider = response.data;
-	if (event.features.kiosk) {
-	  alert('Der Fahrer wurde gespeichert.\n' +
-		'Über folgenden Code kann er im Nennbüro gefunden werden:\n\n' +
-		rider.number);
-	  $timeout($scope.reset_rider);
-	} else {
-	  $scope.riders[$scope.internal.index] = rider;
-	  $scope.back();
-	}
+	$scope.riders[$scope.internal.index] = rider;
+	$scope.back();
       }).catch(function (response) {
 	$timeout(function() {
 	  alert(JSON.stringify(response.data));
