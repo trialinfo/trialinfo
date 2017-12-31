@@ -135,6 +135,7 @@ var pool = mysql.createPool({
   dateStrings: true,
 });
 
+/*
 async function column_exists(connection, table, column) {
   var rows = await connection.queryAsync(`
     SELECT 1
@@ -144,24 +145,10 @@ async function column_exists(connection, table, column) {
     `, [config.database.database, table, column]);
   return rows.length != 0;
 }
+*/
 
 async function update_database(connection) {
-  if (!await column_exists(connection, 'events', 'registration_info')) {
-    console.log('Adding column `registration_info` to table `events`');
-    await connection.queryAsync(`
-      ALTER TABLE events
-      ADD registration_info VARCHAR(512)
-    `);
-  }
-
-  if (!await column_exists(connection, 'users', 'kiosk')) {
-    console.log('Adding column `kiosk` to table `users`');
-    await connection.queryAsync(`
-      ALTER TABLE users
-      ADD kiosk BOOLEAN NOT NULL DEFAULT 0
-    `);
-  }
-
+  /*
   if (!await column_exists(connection, 'users', 'notify')) {
     console.log('Adding column `notify` to table `users`');
     await connection.queryAsync(`
@@ -169,18 +156,7 @@ async function update_database(connection) {
       ADD notify BOOLEAN NOT NULL DEFAULT 1
     `);
   }
-
-  if (!await column_exists(connection, 'result_columns', 'id')) {
-    console.log('Creating table `result_columns`');
-    await connection.queryAsync(`
-      CREATE TABLE result_columns (
-        id INT,
-	n INT,
-	name VARCHAR(20),
-	PRIMARY KEY (id, n)
-      )
-    `);
-  }
+  */
 }
 
 pool.getConnectionAsync()
