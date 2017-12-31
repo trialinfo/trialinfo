@@ -25,8 +25,7 @@ var serieController = [
 
     $scope.event_name = event_name;
     $scope.event_visible = function(event) {
-      return $scope.serie.closed ||
-	     !(event.closed || false);
+      return $scope.serie.closed || !event.closed;
     };
 
     function sort_uniq(array, cmp) {
@@ -69,6 +68,18 @@ var serieController = [
 	normalize_classes($scope.serie);
       } catch (_) {}
     }, true);
+
+    $scope.$watch('serie.closed', function(closed) {
+      if (!closed) {
+	/*
+	 * Mark all events as open so that they won't disappear from the events
+	 * list, and the list of visible events will stay the same.
+	 */
+	$scope.events.forEach(function(event) {
+	  event.closed = false;
+	});
+      }
+    });
 
     function normalize_events(serie) {
       var events = serie.events;
