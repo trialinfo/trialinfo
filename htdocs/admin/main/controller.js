@@ -1,9 +1,11 @@
 'use strict;'
 
 var mainController = [
-  '$scope', '$cookies', '$http', '$location', '$window', 'events', 'series',
-  function ($scope, $cookies, $http, $location, $window, events, series) {
-    $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
+  '$scope', '$cookies', '$location', '$window', 'events', 'series',
+  function ($scope, $cookies, $location, $window, events, series) {
+    try {
+      $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
+    } catch (_) { }
 
     $scope.events = events;
     $scope.series = series;

@@ -1,6 +1,2 @@
-/angular.js
-/angular.min.js
-/angular-cookies.js
-/angular-route.js
+/angular-*
 /json-diff.js
-/angular-locale_de-at.js

@@ -15,10 +15,10 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <title ng-bind="$root.title">TrialInfo</title>
     <link rel="stylesheet" type="text/css" href="../admin.css" />
 
-    <script src="../js/angular.js"></script>
-    <script src="../js/angular-locale_de-at.js"></script>
-    <script src="../js/angular-route.js"></script>
-    <script src="../js/angular-cookies.js"></script>
+    <script src="../js/angular/angular.js"></script>
+    <script src="../js/angular/angular-locale_de-at.js"></script>
+    <script src="../js/angular/angular-route.js"></script>
+    <script src="../js/angular/angular-cookies.js"></script>
     <script src="../js/common.js"></script>
     <script src="../js/directives.js"></script>
     <script src="event/controller.js"></script>
@@ -52,25 +52,19 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.config([
         '$httpProvider',
 	function($httpProvider) {
-	  $httpProvider.responseInterceptors.push([
-	    '$location', '$window', '$q', '$timeout',
-	    function($location, $window, $q, $timeout) {
-	      function success(response) {
-		return response;
-	      }
-
-	      function error(response) {
-		if (response.status === 403) {
-		  $timeout(function() {
-		    $window.location.href = '/login?redirect=' +
-		      encodeURIComponent('/register' + $location.url());
-		  });
+	  $httpProvider.interceptors.push([
+	    '$window', '$q', '$timeout',
+	    function($window, $q, $timeout) {
+	      return {
+		'responseError': function(response) {
+		  if (response.status === 403) {
+		    $timeout(function() {
+		      $window.location.href = '/login?redirect=' +
+			encodeURIComponent(location.toString());
+		    });
+		  }
+		  return $q.reject(response);
 		}
-		return $q.reject(response);
-	      }
-
-	      return function(promise) {
-		return promise.then(success, error);
 	      };
 	    }]);
 	}]);

@@ -5,7 +5,9 @@ var eventController = [
   function ($routeParams, $scope, $cookies, $window, $timeout, $http, event, riders, suggestions) {
     $scope.context('Voranmeldung für ' + event.title);
 
-    $scope.user = JSON.parse(atob($cookies['trialinfo.session'])).passport.user;
+    try {
+      $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
+    } catch(_) { }
 
     $scope.event = event;
     if (event.date) {
@@ -287,7 +289,8 @@ var eventController = [
       } else {
 	request = $http.post('/api/register/event/' + $routeParams.id + '/rider', rider);
       }
-      request.success(function (rider) {
+      request.then(function (response) {
+	let rider = response.data;
 	if (event.features.kiosk) {
 	  alert('Der Fahrer wurde gespeichert.\n' +
 		'Über folgenden Code kann er im Nennbüro gefunden werden:\n\n' +
@@ -297,9 +300,9 @@ var eventController = [
 	  $scope.riders[$scope.internal.index] = rider;
 	  $scope.back();
 	}
-      }).error(function (error) {
+      }).catch(function (response) {
 	$timeout(function() {
-	  alert(JSON.stringify(error));
+	  alert(JSON.stringify(response.data));
 	});
       }).finally(function() {
 	delete $scope.busy;
@@ -344,12 +347,12 @@ var eventController = [
 	  $scope.busy = true;
 	  $http.delete('/api/register/event/' + $routeParams.id + '/rider/' + $scope.rider.number,
 		       {params: {version: $scope.rider.version}})
-	  .success(function (rider) {
+	  .then(function () {
 	    $scope.riders.splice($scope.internal.index, 1);
 	    $scope.back();
-	  }).error(function (error) {
+	  }).catch(function (response) {
 	    $timeout(function() {
-	      alert(JSON.stringify(error));
+	      alert(JSON.stringify(response.data));
 	    });
 	  }).finally(function() {
 	    delete $scope.busy;
@@ -381,10 +384,10 @@ var eventController = [
     $scope.change_notify = function() {
       $scope.busy = true;
       $http.put('/api/register/settings', $scope.event.settings)
-      .success(function(settings) {
-	$scope.event.settings = settings;
+      .then(function(response) {
+	$scope.event.settings = response.data;
       })
-      .error(function() {
+      .catch(function() {
         $scope.event.settings.notify = !$scope.event.settings.notify;
       })
       .finally(function() {

@@ -18,8 +18,8 @@ var eventController = [
 
     if (event.base) {
       $http.get('/api/event/' + event.base + '/as-base')
-      .success(function(base) {
-	$scope.base = base;
+      .then(function(response) {
+	$scope.base = response.data;
       });
     }
 
@@ -49,25 +49,24 @@ var eventController = [
 	var params = {
 	  version: event.version
 	};
-	$http.delete('/api/event/' + event.id, {params: params}).
-	  success(function() {
+	$http.delete('/api/event/' + event.id, {params: params})
+	  .then(function() {
 	    $location.path('/');
-	  }).
-	  error(network_error);
+	  })
+	  .catch(network_error);
       }
       $scope.fold.remove = false;
     };
 
     $scope.reset = function(reset) {
-      var what = reset.substr(0, 1).toUpperCase() + reset.substr(1);
-      if (confirm('Veranstaltung wirklich auf ' + what + ' zurücksetzen?\n\n' +
+      if (confirm('Veranstaltung wirklich zurücksetzen?\n\n' +
 		  'Diese Änderung kann nicht rückgängig gemacht werden.')) {
 	var params = {
 	  version: event.version,
 	  reset: reset
 	};
-	$http.post('/api/event/' + event.id + '/reset', undefined, {params: params}).
-	  error(network_error);
+	$http.post('/api/event/' + event.id + '/reset', undefined, {params: params})
+	  .catch(network_error);
       }
       $scope.fold.reset = false;
     };

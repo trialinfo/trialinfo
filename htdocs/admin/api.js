@@ -55,18 +55,20 @@ function warn_before_unload($scope, modified) {
 
 function http_request($q, request) {
   var deferred = $q.defer();
-  request.
-    success(function(data) {
-      deferred.resolve(data);
-    }).
-    error(function(data, status) {
+  request
+    .then(function(response) {
+      deferred.resolve(response.data);
+    })
+    .catch(function(response) {
       deferred.reject();
-      network_error(data, status);
+      network_error(response);
     });
   return deferred.promise;
 }
 
-function network_error(data, status) {
+function network_error(response) {
+  let data = response.data;
+  let status = response.status;
   if (status == 403 /* Forbidden */) {
     /*
      * Ignore here: the $httpProvider response interceptor will redirect to the

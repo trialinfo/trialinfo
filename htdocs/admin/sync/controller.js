@@ -31,7 +31,7 @@ var syncController = [
       };
     }
 
-    $scope.zustand = function() {
+    $scope.status = function() {
       var color;
       if ($scope.running) {
 	if ($scope.source_dump && $scope.target_dump &&
@@ -42,7 +42,7 @@ var syncController = [
       } else
 	color = '#FF1700';  // "Red"
       return $sce.trustAsHtml(
-	'<span style="display:block; width:8pt; height:8pt; background-color:' + color + '"></span>');
+	'<span style="display:inline-block; width:8pt; height:8pt; background-color:' + color + '"></span>');
       // FIXME: Status auch im Fenstertitel anzeigen?
     };
 
@@ -92,24 +92,34 @@ var syncController = [
 
       // console.log(name);
       var next = $q.defer();
-      request.
-	success(function(result) {
+      request
+	.then(function(response) {
 	  // console.log(name + ' succeeded');
 	  delete $scope.kill[name];
-	  next.resolve(result);
-	}).
-	error(function(data, status) {
+	  next.resolve(response);
+	})
+	.catch(function(response) {
 	  // console.log(name + ' ' +
 	  //	    ($scope.running ? 'failed' : 'cancelled'));
 	  delete $scope.kill[name];
-	  next.reject([data, status]);
+	  next.reject(response);
 	});
       return next.promise;
     };
 
-    function url_fehler(url, fehler) {
+    function url_error(url, fehler) {
       if (url == '')
 	url = $location.protocol() + '://' + $location.host();
+      if (typeof fehler != 'string') {
+	let response = fehler;
+	if (response.status < 0)
+	  fehler = 'Keine Verbindung';
+	else {
+	  fehler = response.status;
+	  if (response.data && response.data.error)
+	    fehler = fehler + ' ' + response.data.error;
+	}
+      }
       return url + ': ' + fehler;
     }
 
@@ -134,14 +144,15 @@ var syncController = [
 		     {restart: restart_param(),
 		      timeout: cancel.promise,
 		      withCredentials: true});
-	return make_request('patch request', request, cancel).
-	  then(function() {
+	return make_request('patch request', request, cancel)
+	  .then(function() {
 	    $scope.target_dump = $scope.source_dump;
 	    delete $scope.patch;
 	    delete $scope.target_error;
-	  }, function(result) {
-	    $scope.target_error = url_fehler($scope.url, result[0].error);
-	    if (result[1] == 409)
+	  })
+	  .catch(function(response) {
+	    $scope.target_error = url_error($scope.url, response);
+	    if (response.status == 409)
 	      $scope.stop();
 	  });
       } else {
@@ -158,18 +169,20 @@ var syncController = [
       var source_request =
 	$http.get('/api/event/' + $scope.from_tag + '/dump',
 		  {timeout: cancel.promise});
-      return make_request('source request', source_request, cancel).
-	then(function(dump) {
+      return make_request('source request', source_request, cancel)
+	.then(function(response) {
+	  let dump = response.data;
 	  $scope.source_dump = dump;
 	  $scope.title = dump.event.rankings[0].title;
 	  delete $scope.source_error;
-	  sync().
-	    then(function() {
+	  sync()
+	    .then(function() {
 	      if ($scope.running)
 		later('source timeout', make_source_request, $scope.timeout);
 	    });
-	}, function(result) {
-	  $scope.source_error = url_fehler('', result[0].error);
+	})
+	.catch(function(response) {
+	  $scope.source_error = url_error('', response);
 	  later('source timeout', make_source_request, $scope.timeout);
 	});
     }
@@ -183,8 +196,9 @@ var syncController = [
 	  timeout: cancel.promise,
 	  withCredentials: true
 	});
-      return make_request('target request', target_request, cancel).
-	then(function(dump) {
+      return make_request('target request', target_request, cancel)
+	.then(function(response) {
+	  let dump = response.data;
 	  if (dump.format) {
 	    delete $scope.target_error;
 	    $scope.target_dump = dump;
@@ -193,22 +207,23 @@ var syncController = [
 	    $scope.target_error = 'Fehlerhafte Antwort vom Server';
 	    $scope.stop();
 	  }
-	}, function(result) {
+	})
+	.catch(function(response) {
 	  if (kein_import) {
-	    $scope.target_error = url_fehler($scope.url, 'Veranstaltung ' + $scope.to_tag + ' existiert nicht');
+	    $scope.target_error = url_error($scope.url, 'Veranstaltung ' + $scope.to_tag + ' existiert nicht');
 	    $scope.stop();
 	    return;
 	  }
 
-	  if (result[1] == 404) {
+	  if (response.status == 404) {
 	    var cancel = $q.defer();
 	    var export_request =
 	      $http.get('/api/event/' + $scope.from_tag + '/export',
 			{timeout: cancel.promise,
 			 responseType: 'arraybuffer'});
-	    make_request('export request', export_request, cancel).
-	      then(function(data) {
-		var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	    make_request('export request', export_request, cancel)
+	      .then(function(response) {
+		var enc = window.btoa(String.fromCharCode.apply(null, new Uint8Array(response.data)));
 		var cancel = $q.defer();
 		var import_request =
 		  $http.post($scope.url + '/api/event/import',
@@ -216,19 +231,21 @@ var syncController = [
 			     {restart: restart_param(),
 			      timeout: cancel.promise,
 			      withCredentials: true});
-		  make_request('import request', import_request, cancel).
-		    then(function() {
+		  make_request('import request', import_request, cancel)
+		    .then(function() {
 		      make_target_request(true);
-		    }, function(result) {
-		      $scope.target_error = url_fehler($scope.url, result[0].error);
+		    })
+		    .catch(function(response) {
+		      $scope.target_error = url_error($scope.url, response);
 		      $scope.stop();
 		    });
-	      }, function() {
-		$scope.source_error = url_fehler('', 'Export fehlgeschlagen');
+	      })
+	      .catch(function() {
+		$scope.source_error = url_error('', 'Export fehlgeschlagen');
 		$scope.stop();
 	      });
 	  } else {
-	    $scope.target_error = url_fehler($scope.url, result[0].error);
+	    $scope.target_error = url_error($scope.url, response);
 	    later('target timeout', make_target_request, $scope.timeout);
 	  }
 	});

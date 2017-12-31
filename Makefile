@@ -6,13 +6,17 @@ CURL = curl
 SED = sed
 MARKOC = node_modules/marko/bin/markoc
 
+# AngularJS
+ANGULAR_BASE=https://code.angularjs.org/
+ANGULAR_VERSION=1.6.8
+
 DOWNLOAD_FILES = \
-	htdocs/js/angular.js \
-	htdocs/js/angular.min.js \
-	htdocs/js/angular.min.js.map \
-	htdocs/js/angular-route.js \
-	htdocs/js/angular-cookies.js \
-	htdocs/js/angular-locale_de-at.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular.min.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular.min.js.map \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-route.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-cookies.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js \
 	htdocs/js/json-diff.js
 
 MARKO_FILES = \
@@ -70,16 +74,12 @@ release: require-tag tarball
 upload:
 	@./upload.sh
 
-# AngularJS
-ANGULAR_BASE=https://ajax.googleapis.com/ajax/libs/angularjs
-ANGULAR_VERSION=1.2.32
-
-htdocs/js/angular%:
+htdocs/js/angular-$(ANGULAR_VERSION)/angular%:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
 
-htdocs/js/angular-locale_de-at.js:
+htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
@@ -88,30 +88,6 @@ htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --fail --silent --location \
 		https://github.com/trialinfo/json-diff/raw/master/json-diff.js
-
-update-perl-json-pointer:
-	@set -xe; \
-	tmpdir=$$(mktemp -td); \
-	trap "rm -rf $$tmpdir" EXIT; \
-	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
-		https://github.com/zigorou/perl-json-pointer/archive/master.zip; \
-	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
-	files=($$(find $$tmpdir/perl-json-pointer-master/lib -type f -printf '%P\n')); \
-	( cd $$tmpdir/perl-json-pointer-master/lib; \
-	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
-	git add -v "$${files[@]/#/lib/}"
-
-update-perl-json-patch:
-	@set -xe; \
-	tmpdir=$$(mktemp -td); \
-	trap "rm -rf $$tmpdir" EXIT; \
-	$(CURL) -o $$tmpdir/master.zip --fail --silent --location \
-		https://github.com/zigorou/perl-json-patch/archive/master.zip; \
-	unzip -x -d $$tmpdir $$tmpdir/master.zip; \
-	files=($$(find $$tmpdir/perl-json-patch-master/lib -type f -printf '%P\n')); \
-	( cd $$tmpdir/perl-json-patch-master/lib; \
-	  cp --parents "$${files[@]}" $(CURDIR)/lib ); \
-	git add -v "$${files[@]/#/lib/}"
 
 clean:
 	rm -f $(MARKO_FILES:%=%.js)

@@ -680,8 +680,9 @@ function eventScoresController($scope, $sce, $route, $location, $timeout, $http,
       (function animieren() {
 	if ($scope.show.duration != null) {
 	  if (http_request) {
-	    http_request.
-	      success(function(new_scores) {
+	    http_request
+	      .then(function(response) {
+		let new_scores = response.data;
 		if (!angular.equals(old_scores, new_scores)) {
 		  assign_scores(new_scores);
 		  update();

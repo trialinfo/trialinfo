@@ -15,10 +15,10 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <title ng-bind="$root.title">TrialInfo</title>
     <link rel="stylesheet" type="text/css" href="../admin.css" />
 
-    <script src="../js/angular.js"></script>
-    <script src="../js/angular-locale_de-at.js"></script>
-    <script src="../js/angular-route.js"></script>
-    <script src="../js/angular-cookies.js"></script>
+    <script src="../js/angular/angular.js"></script>
+    <script src="../js/angular/angular-locale_de-at.js"></script>
+    <script src="../js/angular/angular-route.js"></script>
+    <script src="../js/angular/angular-cookies.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="../js/directives.js"></script>
     <script src="../js/common.js"></script>
@@ -56,6 +56,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.controller('mainController', mainController);
       application.controller('eventController', eventController);
       application.controller('ridersController', ridersController);
+      application.controller('marksController', marksController);
       application.controller('settingsController', settingsController);
       application.controller('zonesController', zonesController);
       application.controller('eventScoresController', eventScoresController);
@@ -154,46 +155,39 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.config([
         '$httpProvider',
 	function($httpProvider) {
-	  $httpProvider.responseInterceptors.push([
-	    '$location', '$window', '$q', '$timeout',
-	    function($location, $window, $q, $timeout) {
-	      function success(response) {
-		return response;
-	      }
-
-	      function error(response) {
-		if (response.status === 403) {
-		  if (response.config.url.match('^/')) {
-		    /* Request is "local". */
-		    $timeout(function() {
-		      $window.location.href = '/login?redirect=' +
-			encodeURIComponent(location.toString());
-		    });
-		  } else {
-		    var restart = '';
-		    response.config.restart;
-		    if (response.config.restart) {
-		      restart = '?restart=' +
-		        encodeURIComponent(
-		          JSON.stringify(response.config.restart));
-		    }
-
-		    /* Request is "remote" (sync or server import). */
-		    var match = response.config.url.match('^(.+?://.+?)/');
-		    if (match) {
+	  $httpProvider.interceptors.push([
+	    '$window', '$q', '$timeout',
+	    function($window, $q, $timeout) {
+	      return {
+		'responseError': function(response) {
+		  if (response.status === 403) {
+		    if (response.config.url.match('^/')) {
+		      /* Request is "local". */
 		      $timeout(function() {
-			$window.location.href =
-			  match[1] + '/login?redirect=' +
-			  encodeURIComponent(location.toString() + restart);
+			$window.location.href = '/login?redirect=' +
+			  encodeURIComponent(location.toString());
 		      });
+		    } else {
+		      var restart = '';
+		      if (response.config.restart) {
+			restart = '?restart=' +
+			  encodeURIComponent(
+			    JSON.stringify(response.config.restart));
+		      }
+
+		      /* Request is "remote" (sync or server import). */
+		      var match = response.config.url.match('^(.+?://.+?)/');
+		      if (match) {
+			$timeout(function() {
+			  $window.location.href =
+			    match[1] + '/login?redirect=' +
+			    encodeURIComponent(location.toString() + restart);
+			});
+		      }
 		    }
 		  }
+		  return $q.reject(response);
 		}
-		return $q.reject(response);
-	      }
-
-	      return function(promise) {
-		return promise.then(success, error);
 	      };
 	    }]);
 	}]);
@@ -219,30 +213,17 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	  });
 
 	  $rootScope.join = join;
-
-	  $rootScope.$on('$routeChangeStart', function(event, next) {
-	    function success() {
-	    }
-
-	    function error() {
-	      /* preventDefault() funktioniert erst in neueren Angular-Versionen: */
-	      event.preventDefault();
-	      $rootScope.$evalAsync(function () {
-		$window.location.href = '/login';
-	      });
-	    }
-	  });
 	}]);
     </script>
   </head>
   <body>
     <div style="position:fixed; top:0px; right:1em" ng-controller="syncController" class="no-print">
       <p style="font-weight:bold; text-align:right; background-color:#FFFFE0; padding:0.5em; padding-left:1em; padding-right:1em; border:solid 1px" ng-if="visible">
-	{{title}} <span ng-bind-html="zustand()"></span>
+	<span title="{{title}}" ng-bind-html="status()"></span>
 	<button ng-click="close()" tabindex="-1" ng-if="running">Beenden</button>
 	<button ng-click="start()" tabindex="-1" ng-if="!running">Neustart</button>
-	<span ng-if="source_error"><br>{{source_error}}</span>
-	<span ng-if="target_error"><br>{{target_error}}</span>
+	<span style="display:block" ng-if="source_error"><br>{{source_error}}</span>
+	<span style="display:block" ng-if="target_error"><br>{{target_error}}</span>
       </p>
     </div>
     <div ng-view>

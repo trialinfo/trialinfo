@@ -121,14 +121,15 @@ var marksController = [
     }
 
     function load_rider(promise) {
-      promise.
-	success(function(rider) {
+      promise
+	.then(function(response) {
+	  let rider = response.data;
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
 	    focus_marks();
 	  }
-	}).
-	error(network_error);
+	})
+	.catch(network_error);
     }
 
     $scope.load_rider = function(number) {
@@ -174,8 +175,9 @@ var marksController = [
 	  term: $scope.search_term,
 	  active: 1
 	};
-	$http.get('/api/event/' + event.id + '/find-riders', {'params': params}).
-	  success(function(riders_list) {
+	$http.get('/api/event/' + event.id + '/find-riders', {'params': params})
+	  .then(function(response) {
+	    let riders_list = response.data;
 	    /*riders_list = riders_list.filter(function(rider) {
 	      return rider.number !== null && rider['class'] !== null;
 	    });*/
@@ -187,8 +189,8 @@ var marksController = [
 	      if (riders_list.length == 0)
 		      assign_rider(undefined);
 	    }
-	  }).
-	  error(network_error);
+	  })
+	  .catch(network_error);
       } else {
 	clear_search_result();
       }
@@ -307,13 +309,13 @@ var marksController = [
       /* FIXME: Wenn Start, dann muss die Klasse starten. */
       $scope.busy = true;
       var rider = $scope.rider;
-      $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider).
-	success(function(rider) {
-	  assign_rider(rider);
+      $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider)
+	.then(function(response) {
+	  assign_rider(response.data);
 	  set_focus('#search_term', $timeout);
-	}).
-	error(network_error).
-	finally(function() {
+	})
+	.catch(network_error)
+	.finally(function() {
 	  delete $scope.busy;
 	});
     };
