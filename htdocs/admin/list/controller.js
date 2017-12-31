@@ -914,7 +914,7 @@ var eventListController = [
 	'page-size': 'A4',
 	'font-size': 8,
 	'margin-left': '1cm',
-	'margin-top': '4cm',
+	'margin-top': '2cm',
 	'margin-right': '1cm',
 	'margin-bottom': '1cm',
       };
