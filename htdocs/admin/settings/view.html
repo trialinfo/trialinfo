@@ -296,19 +296,19 @@
     <legend>Startzeiten zufällig vergeben</legend>
     <table>
       <tr>
-	<th><label for="start_time">Startzeit</th>
+	<th><label for="start_time">Startzeit</label></th>
 	<td>
 	  <input type="text" size="6" maxlength="8" ng-model="event.start_time" id="start_time" iso-time>
 	</td>
       </tr>
       <tr>
-	<th><label for="start_interval">Startintervall</th>
+	<th><label for="start_interval">Startintervall</label></th>
 	<td>
 	  <input type="text" numeric min="1" max="600" size="3" ng-model="event.start_interval" id="start_interval"> Sekunden
 	</td>
       </tr>
       <tr>
-	<th><label for="start_spec">Klassen</th>
+	<th><label for="start_spec">Klassen</label></th>
 	<td>
 	  <input type="text" size="20" maxlength="40" ng-model="event.start_spec" id="start_spec">
 	</td>
@@ -319,19 +319,19 @@
     <legend>Registrierung</legend>
     <table>
       <tr>
-	<th><label for="registration_info">Allgemeine Informationen<br>(HTML)</th>
+	<th><label for="registration_info">Allgemeine Informationen<br>(HTML)</label></th>
 	<td>
 	  <textarea rows="5" cols="70" maxlength="512" nullable ng-model="event.registration_info" id="registration_info"></textarea>
 	</td>
       </tr>
       <tr>
-	<th><label for="registration_ends">Ende der Registrierung</th>
+	<th><label for="registration_ends">Ende der Registrierung</label></th>
 	<td>
 	  <input type="text" size="16" maxlength="19" ng-model="event.registration_ends" iso-timestamp id="registration_ends">
 	</td>
       </tr>
       <tr>
-	<th><label for="registration_email">Benachrichtigungs-E-Mail</th>
+	<th><label for="registration_email">Benachrichtigungs-E-Mail</label></th>
 	<td>
 	  <input type="text" size="40" maxlength="60" ng-model="event.registration_email" id="registration_email" nullable>
 	</td>
