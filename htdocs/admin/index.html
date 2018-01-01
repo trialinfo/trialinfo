@@ -43,6 +43,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.directive('isoTime', isoTimeDirective);
       application.directive('isoTimestamp', isoTimestampDirective);
       application.directive('numeric', numericDirective);
+      application.directive('fractional', fractionalDirective);
       application.directive('punkte', punkteDirective);
       application.directive('yesNoNull', yesNoNullDirective);
       application.directive('rankingClass', rankingClassDirective);
@@ -52,6 +53,17 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.directive('autofocus', autofocusDirective);
       application.directive('tabTo', tabTo);
 
+      application.filter('fractional', ['fractional', function(fractional) {
+	function fractionalFilter(x) {
+	  if (fractional.enabled)
+	    return fraction(x);
+	  else
+	    return x;
+	}
+	fractionalFilter.$stateful = true;
+	return fractionalFilter;
+      }]);
+      application.value('fractional', {enabled: true});
 
       application.controller('mainController', mainController);
       application.controller('eventController', eventController);

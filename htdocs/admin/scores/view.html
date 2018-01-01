@@ -167,9 +167,9 @@ Keine Fahrer oder Gruppen.
 	<td style="display:none" ng-repeat-start="round in rounds_list(class)"></td>
 	<td style="text-align:right" ng-if="features.individual_marks" ng-repeat="zone in event.zones[class - 1]" class="individual-marks">{{rider.individual_marks(round, zone)}}</th>
 	<td style="text-align:right" ng-repeat-end ng-if="rounds > 1" class="round {{rider.round_class[round - 1]}}" ng-bind-html="rider.marks_in_round(round)"></td>
-	<td style="text-align:right" ng-if="columns[class - 1].additional_marks">{{additional_marks(rider)}}</td>
+	<td style="text-align:right" ng-if="columns[class - 1].additional_marks">{{rider.additional_marks | fractional}}</td>
 	<td style="text-align:center" colspan="{{1 + columns[class - 1].tie_break + (features.individual_marks ? 0 : 4 + event.four_marks + features.column_5)}}">{{failure(rider)}}</td>
-	<td style="text-align:right" ng-if="columns[class - 1].score">{{score(rider)}}</td>
+	<td style="text-align:right" ng-if="columns[class - 1].score">{{rider.rankings[show.ranking - 1].score | fractional}}</td>
       </tr>
       <tr ng-class-even="'alt'" ng-if="!(rider.failure || rider.non_competing)">
 	<td style="text-align:right">{{rank(rider)}}</td>
@@ -177,8 +177,8 @@ Keine Fahrer oder Gruppen.
 	<td style="display:none" ng-repeat-start="round in rounds_list(class)"></td>
 	<td style="text-align:right" ng-if="features.individual_marks" ng-repeat="zone in event.zones[class - 1]" class="individual-marks">{{rider.individual_marks(round, zone)}}</th>
 	<td style="text-align:right" ng-repeat-end ng-if="rounds > 1" class="round {{rider.round_class[round - 1]}}" ng-bind-html="rider.marks_in_round(round)"></td>
-	<td style="text-align:right" ng-if="columns[class - 1].additional_marks">{{additional_marks(rider)}}</td>
-	<td style="text-align:right">{{total_marks(rider)}}</td>
+	<td style="text-align:right" ng-if="columns[class - 1].additional_marks">{{rider.additional_marks | fractional}}</td>
+	<td style="text-align:right">{{rider.marks | fractional}}</td>
 	<td style="text-align:right" ng-if="!features.individual_marks" class="distribution {{rider.distribution_class[0]}}">{{rider.marks_distribution[0]}}</td>
 	<td style="text-align:right" ng-if="!features.individual_marks" class="distribution {{rider.distribution_class[1]}}">{{rider.marks_distribution[1]}}</td>
 	<td style="text-align:right" ng-if="!features.individual_marks" class="distribution {{rider.distribution_class[2]}}">{{rider.marks_distribution[2]}}</td>
@@ -186,7 +186,7 @@ Keine Fahrer oder Gruppen.
 	<td style="text-align:right" ng-if="!features.individual_marks && event.four_marks" class="distribution {{rider.distribution_class[4]}}">{{rider.marks_distribution[4]}}</td>
 	<td style="text-align:right" ng-if="!features.individual_marks && features.column_5" class="distribution {{rider.distribution_class[5]}}">{{rider.marks_distribution[5]}}</td>
 	<td style="text-align:right" ng-if="columns[class - 1].tie_break">{{rider.tie_break ? rider.tie_break + '.' : ''}}</td>
-	<td style="text-align:right" ng-if="columns[class - 1].score">{{score(rider)}}</td>
+	<td style="text-align:right" ng-if="columns[class - 1].score">{{rider.rankings[show.ranking - 1].score | fractional}}</td>
       </tr>
     </tbody>
   </table>
