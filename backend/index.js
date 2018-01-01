@@ -1830,7 +1830,8 @@ async function get_event_scores(connection, id) {
 
   hash.event = {};
   ['equal_marks_resolution', 'mtime', 'four_marks', 'date',
-  'split_score', 'features', 'type', 'result_columns'].forEach(
+  'split_score', 'features', 'type', 'result_columns',
+  'class_order'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
 

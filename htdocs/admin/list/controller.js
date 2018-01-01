@@ -30,9 +30,10 @@ var eventListController = [
       return classes;
     }
 
+    var class_compare = compareNumberFactory(event.class_order);
     $scope.starting_classes =
       Object.keys(starting_classes())
-      .sort(function(a, b) { return a - b; });
+      .sort(class_compare);
 
     var insurances = {
       1: 'ADAC-Versicherung',
@@ -495,7 +496,7 @@ var eventListController = [
 		 'Andere Klassen';
 	},
 	compare: function(f1, f2) {
-	  return generic_compare(class_other(f1), class_other(f2));
+	  return class_compare(class_other(f1), class_other(f2));
 	}
       },
       city: {
