@@ -86,28 +86,46 @@ function network_error(response) {
 	(typeof data === 'object' && data.error != null ? '\n\n' + data.error : ''));
 }
 
-var score = (function() {
-  var fractions = [ [1/4, '¼'], [1/3, '⅓'], [1/2, '½'], [2/3, '⅔'], [3/4, '¾'] ];
+var fraction = (function() {
+  var fractions = [
+    [1/6, '⅙'],
+    [1/5, '⅕'],
+    [1/4, '¼'],
+    [1/3, '⅓'],
+    [2/5, '⅖'],
+    [1/2, '½'],
+    [3/5, '⅗'],
+    [2/3, '⅔'],
+    [3/4, '¾'],
+    [4/5, '⅘'],
+    [5/6, '⅚']];
   var eps = 1 / (1 << 13);
 
-  return function(score, split_score) {
-    if (score == null)
+  return function(x) {
+    if (x == null)
       return null;
+
     var sign = '';
-    if (score < 0) {
+    if (x < 0) {
       sign = '−';  /* Minuszeichen, kein Bindestrich! */
-      score = -score;
+      x = -x;
     }
-    var komma = score % 1;
-    if (komma && split_score) {
-      for (var n = 0; n < fractions.length; n++) {
+    var frac = x % 1;
+    if (frac) {
+      var l = 0, u = fractions.length - 1;
+      while (l <= u) {
+	var n = (l + u) >> 1;
 	var wert = fractions[n][0];
-	if (komma >= wert - eps && komma <= wert + eps)
-	  return sign + Math.floor(score) + fractions[n][1];
+	if (frac - eps > wert)
+	  l = n + 1;
+	else if (frac + eps < wert)
+	  u = n - 1;
+	else
+	  return sign + Math.floor(x) + fractions[n][1];
       }
-      return sign + score.toFixed(2).replace(/0+$/, '');
-    } else
-      return sign + score;
+      return sign + x.toFixed(2).replace(/\.?0+$/, '');
+    }
+    return sign + x;
   };
 })();
 
