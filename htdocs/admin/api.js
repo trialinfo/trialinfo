@@ -67,7 +67,8 @@ function http_request($q, request) {
 }
 
 function network_error(response) {
-  let data = response.data;
+  if (response.xhrStatus == 'abort')
+    return;
   let status = response.status;
   if (status == 403 /* Forbidden */) {
     /*
@@ -78,12 +79,17 @@ function network_error(response) {
     return;
   }
 
+  var error;
+  try {
+    error = response.data.error;
+  } catch(_) { }
+
   alert(status === 409 ?
 	  'Veränderung der Daten am Server festgestellt.' :
 	(status == 500 ?
 	   'Interner Serverfehler.' :
-	   'HTTP-Request ist ' + (status ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
-	(typeof data === 'object' && data.error != null ? '\n\n' + data.error : ''));
+	   'HTTP-Request ist ' + (status != -1 ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
+	(error != null ? '\n\n' + error : ''));
 }
 
 var fraction = (function() {
