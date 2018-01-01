@@ -45,13 +45,13 @@
 	      <tr>
 		<th><label for="additional_marks" accesskey="p">Zusatz<span class="accesskey">p</span>unkte</label></th>
 		<td>
-		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" numeric size="3" min="-999" max="999" ng-model="rider.additional_marks" id="additional_marks">
+		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.additional_marks" id="additional_marks">
 		</td>
 	      </tr>
 	      <tr>
 		<th>Gesamtpunkte</th>
 		<td>
-		  <input type="text" size="3" ng-model="rider.marks" disabled="disabled">
+		  <input type="text" size="4" value="{{rider.marks}}" disabled="disabled">
 		    <span ng-if="(rider.registered || !features.registered) && rider.start" style="font-weight:bold">
 		    &nbsp; (<span ng-repeat="h in rider.marks_distribution track by $index"><span ng-if="event.four_marks || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
