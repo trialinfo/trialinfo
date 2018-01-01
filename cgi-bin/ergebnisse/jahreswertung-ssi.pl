@@ -124,7 +124,7 @@ if ($letzte_id) {
     });
     $sth->execute($letzte_id);
     while (my @row = $sth->fetchrow_array) {
-	my $spalte = $result_columns_map->{$row[0]};
+	my $spalte = $result_columns_map->{$row[0]}
 	   or die "Invalid column name\n";
 	if ($spalte eq 'lbl') {
 	   next unless $features->{land} || $features->{bundesland};
