@@ -258,6 +258,9 @@
 	  <p style="color:red">
 	    <span ng-if="error">{{error}}</span>
 	    <!-- if (!(rider && rider.start && starting_classes[rider.class - 1])) ... -->
+	    <span ng-if="otsv_amf_event && features.date_of_birth && !rider.date_of_birth" style="display:block">
+	      Bitte das Geburtsdatum eingeben.
+	    </span>
 	    <span ng-if="number_used.number">
 	      <span ng-if="number_used.id" style="color:green;display:block">
 		Vorsicht, Startnummer war bereits in Verwendung:<br>
