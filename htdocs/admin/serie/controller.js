@@ -69,8 +69,8 @@ var serieController = [
       } catch (_) {}
     }, true);
 
-    $scope.$watch('serie.closed', function(closed) {
-      if (!closed) {
+    $scope.$watch('serie.closed', function(newval, oldval) {
+      if (oldval && !newval) {
 	/*
 	 * Mark all events as open so that they won't disappear from the events
 	 * list, and the list of visible events will stay the same.
