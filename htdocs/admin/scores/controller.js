@@ -666,6 +666,7 @@ var eventScoresController = [
     var timeout_promise;
     var http_request;
     var cancel_http_request;
+    var hide_settings_promise;
 
     function stop() {
       if (timeout_promise)
@@ -673,7 +674,24 @@ var eventScoresController = [
       if (cancel_http_request)
 	cancel_http_request.resolve();
     }
-    $scope.$on('$destroy', stop);
+
+    $scope.$on('$destroy', function() {
+      stop();
+      if (hide_settings_promise)
+	$timeout.cancel(hide_settings_promise);
+    });
+
+    function hide_settings_later() {
+      if (hide_settings_promise)
+	$timeout.cancel(hide_settings_promise);
+      if ($scope.fold.settings) {
+	hide_settings_promise = $timeout(function() {
+	  $scope.fold.settings = false;
+	}, 30000);
+      }
+    }
+    $scope.$watch('fold.settings', hide_settings_later);
+    $scope.$watch('show', hide_settings_later, true);
 
     $scope.$watch('show.duration', function() {
       stop();
