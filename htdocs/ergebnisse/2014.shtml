@@ -12,8 +12,6 @@
 <h2>Veranstaltungen</h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=10&kuerzel&nicht=10" -->
 
-<p><a href="http://www.a-trial.info/a-cup/">A-Cup-Veranstaltungen</a></p>
-
 <h2>Jahreswertungen</h2>
 <p>
 <a href="jahreswertung.shtml?vareihe=11">ÖTSV Cup 2014</a><br>
