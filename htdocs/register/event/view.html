@@ -1,4 +1,4 @@
-<h1>Voranmeldung für {{event.title}}</h1>
+<h1>Voranmeldung</h1>
 <p style="color:gray">
   <span ng-if="remaining_time">Noch {{remaining_time}} bis zum Ende der Voranmeldung.</span>
   <span ng-if="!remaining_time" style="color:red">Für diese Veranstaltung ist keine Voranmeldung mehr möglich.</span>
@@ -8,22 +8,13 @@
   <div ng-if="!rider">
     <p ng-repeat="rider in riders">
       <a href="" ng-click="change_rider($index)">{{rider_info(rider)}}</a>
-      <span ng-if="rider.start || rider.start_tomorrow">
-	ist derzeit für den Start am
-	<span ng-if="rider.start">
-	  <span ng-if="date">{{date | date:"EEEE, d. MMMM yyyy"}}</span>
-	  <span ng-if="!date">ersten Tag</span>
-	</span>
-	<span ng-if="rider.start && rider.start_tomorrow">
-	  und
-	</span>
-	<span ng-if="rider.start_tomorrow">
-	  <span ng-if="date_tomorrow">{{date_tomorrow | date:"EEEE, d. MMMM yyyy"}}</span>
-	  <span ng-if="!date_tomorrow">zweiten Tag</span></label>
-	</span>
-	vorangemeldet.
+      <span ng-if="number_of_starts(rider) == 1">
+        ist derzeit für einen Start vorangemeldet.
       </span>
-      <span ng-if="!rider.start && !rider.start_tomorrow">
+      <span ng-if="number_of_starts(rider) > 1">
+        ist derzeit für {{number_of_starts(rider)}} Starts vorangemeldet.
+      </span>
+      <span ng-if="number_of_starts(rider) == 0">
 	ist derzeit nicht vorangemeldet.
       </span>
     </p>
@@ -223,15 +214,13 @@
 	<tr>
 	  <th>Start</th>
 	  <td>
-	    <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
-	      <label for="start">
-		<span ng-if="date">am {{date | date:"EEEE, d. MMMM yyyy"}}</span>
-		<span ng-if="!date">am ersten Tag</span></label><br>
-	    <span ng-if="features.start_tomorrow">
-	      <input type="checkbox" ng-model="rider.start_tomorrow" id="start_tomorrow" ng-disabled="rider.registered">
-		<label for="start_tomorrow">
-		  <span ng-if="date_tomorrow">am {{date_tomorrow | date:"EEEE, d. MMMM yyyy"}}</span>
-		  <span ng-if="!date_tomorrow">am zweiten Tag</span></label>
+	    <span style="display:block">
+	      <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
+	      <label for="start">{{event.title}}<span ng-if="event.series"> ({{event.series}})</span></label>
+	    </span>
+	    <span ng-repeat="future_event in event.future_events" style="display:block">
+	      <input type="checkbox" ng-model="rider.future_starts[future_event.fid]" id="start_{{future_event.fid}}" ng-disabled="rider.registered && future_event.active">
+	        <label for="start_{{future_event.fid}}">{{future_event_label(future_event)}}</label>
 	    </span>
 	  </td>
 	</tr>
@@ -246,7 +235,7 @@
         * Eingabe erforderlich
       </p>
       <p ng-if="event.classes[rider.class - 1].ranking_class != rider.class" style="color:green">
-       * Klasse „{{event.classes[rider.class - 1].name}}“ wird <span ng-if="event.features.start_tomorrow">am {{date | date:"EEEE"}}</span> in Klasse „{{event.classes[event.classes[rider.class - 1].ranking_class - 1].name}}“ gewertet.
+       * Klasse „{{event.classes[rider.class - 1].name}}“ wird <span ng-if="hasFutureEvents">am {{date | date:"EEEE"}}</span> in Klasse „{{event.classes[event.classes[rider.class - 1].ranking_class - 1].name}}“ gewertet.
       </p>
       <p>
 	<button ng-disabled="form.$invalid || !modified() || busy" ng-click="save_rider()">Speichern</button>

@@ -10,7 +10,6 @@ $ backend/pdf-fill-form.py pdf/Nennformular\ 2017.pdf
   "city": "",
   "first_name": "",
   "zip": "",
-  "start_tomorrow": false,
   "start": false,
   "class_ff0000": false,
   "vehicle": "",

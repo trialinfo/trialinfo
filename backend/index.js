@@ -30,7 +30,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session')
 var cookieSession = require('cookie-session');
-require('marko/express'); //enable res.marko 
+require('marko/express'); //enable res.marko
 var html_escape = require('html-escape');
 var mysql = require('mysql');
 var deepEqual = require('deep-equal');
@@ -476,10 +476,18 @@ async function rider_regform_data(connection, id, number, event) {
       .locale('de').format('D.M.YYYY');
   }
 
-  if (event.date) {
-    var date = common.parse_timestamp(event.date);
-    rider['start_' + moment(date).format('ddd').toLowerCase()] = rider.start;
-    rider['start_' + moment(date).add(1, 'days').format('ddd').toLowerCase()] = rider.start_tomorrow;
+  let all_starts = {};
+  for (let future_event of event.future_events) {
+    if (future_event.date && future_event.active)
+      all_starts[future_event.date] =
+        rider.future_starts[future_event.fid] || false;
+  }
+  if (event.date)
+    all_starts[event.date] = rider.start;
+  for (let date in all_starts) {
+    let date_obj = common.parse_timestamp(date);
+    rider['start_' + moment(date_obj).format('ddd').toLowerCase()] =
+      all_starts[date];
   }
 
   return rider;
@@ -626,6 +634,15 @@ async function read_event(connection, id, revalidate) {
   event.scores = await get_list(connection, 'scores', 'rank', 'id', id, 'score');
   event.result_columns = await get_list(connection, 'result_columns', 'n', 'id', id, 'name');
 
+  event.future_events = await connection.queryAsync(`
+    SELECT *
+    FROM future_events
+    WHERE id = ?
+    ORDER BY date, title`, [id]);
+  Object.values(event.future_events).forEach((future_event) => {
+    delete future_event.id;
+  });
+
   event.zones = [];
   (await connection.queryAsync(`
     SELECT class, zone
@@ -664,6 +681,21 @@ async function read_event(connection, id, revalidate) {
       zones[row.zone] = true;
     });
   }
+
+  event.series = (await connection.queryAsync(`
+    SELECT DISTINCT abbreviation
+    FROM series_events
+    JOIN series USING (serie)
+    JOIN classes USING (id)
+    JOIN series_classes USING (serie, ranking_class)
+    WHERE id = ? AND ranking
+    ORDER BY abbreviation`, [id])
+  ).reduce((series, row) => {
+    if (series)
+      series += ', ';
+    series += row.abbreviation;
+    return series;
+  }, '');
 
   cache.set_event(id, event);
   return event;
@@ -780,6 +812,7 @@ async function read_riders(connection, id, revalidate, number) {
     row.rankings = [];
     if (row.group)
       row.riders = [];
+    row.future_starts = {};
   });
 
   (await connection.queryAsync(`
@@ -824,6 +857,17 @@ async function read_riders(connection, id, revalidate, number) {
     if (rider) {
       rider.rankings[row.ranking - 1] = {rank: row.rank, score: row.score};
     }
+  });
+
+  (await connection.queryAsync(`
+    SELECT fid, number
+    FROM future_starts
+    JOIN riders using (id, rider_tag)
+    WHERE ` + filters)
+  ).forEach((row) => {
+    var rider = riders[row.number];
+    if (rider)
+      rider.future_starts[row.fid] = true;
   });
 
   if (number) {
@@ -883,8 +927,9 @@ async function get_rider(connection, id, number, params, direction, event) {
     if (event) {
       if (event.features.registered)
 	or.push('registered');
-      if (event.features.start_tomorrow)
-	or.push('start_tomorrow');
+      or.push('rider_tag IN (SELECT rider_tag FROM future_events ' +
+	        'JOIN future_starts USING (id, fid) ' +
+		'WHERE id = ' + connection.escape(id) + ' AND active)');
     }
     filters.push('(' + or.join(' OR ') + ')');
   }
@@ -1055,6 +1100,14 @@ async function find_riders(connection, id, params) {
 async function delete_rider(connection, id, number) {
   let query;
 
+  query = 'DELETE future_starts ' +
+          'FROM future_starts ' +
+	  'JOIN riders USING (id, rider_tag) ' +
+	  'WHERE id = ' + connection.escape(id) +
+	    ' AND number = ' + connection.escape(number);
+  log_sql(query);
+  await connection.queryAsync(query);
+
   for (let table of ['riders', 'riders_groups', 'rider_rankings', 'marks',
 		     'rounds', 'new_numbers']) {
     query = 'DELETE FROM ' + connection.escapeId(table) +
@@ -1152,6 +1205,9 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
 	rider.user_tag = rows[0].user_tag;
     }
 
+    if (rider && rider.rider_tag == null)
+      rider.rider_tag = random_tag();
+
     if (rider) {
       if (!old_rider && !rider.rankings && event.ranking1_enabled)
 	rider.rankings = [{"rank":null, "score":null}];
@@ -1206,7 +1262,7 @@ function event_reset_numbers(riders) {
 }
 
 function reset_event(base_event, base_riders, event, riders, reset) {
-  if (reset == 'master' || reset == 'register' || reset == 'start' || reset == 'start_times') {
+  if (reset == 'master' || reset == 'register' || reset == 'start_times' || reset == 'start') {
     Object.values(riders).forEach((rider) => {
       rider.finish_time = null;
       rider.tie_break = 0;
@@ -1230,29 +1286,45 @@ function reset_event(base_event, base_riders, event, riders, reset) {
   }
 
   if (reset == 'master' || reset == 'register') {
-    if (reset == 'register' &&
-        base_event && base_riders && base_event.features.start_tomorrow) {
-      Object.values(riders).forEach((rider) => {
-	rider.registered = (base_riders[rider.number].registered &&
-			    base_riders[rider.number].start_tomorrow) || false;
-	rider.start = base_riders[rider.number].start_tomorrow || false;
-      });
-    } else {
-      Object.values(riders).forEach((rider) => {
-	rider.registered = false;
-	rider.start = false;
-      });
-    }
     Object.values(riders).forEach((rider) => {
+      rider.registered = false;
+      rider.start = false;
       rider.start_time = null;
-      rider.start_tomorrow = false;
       rider.entry_fee = null;
+    });
+  }
+
+  if (reset == 'register' && event.base && event.base_fid) {
+    let fid = event.base_fid;
+
+    /* Change base_riders to be indexed by rider_tag */
+    base_riders = Object.values(base_riders).reduce(
+      (riders, rider) => {
+	let rider_tag = rider.rider_tag;
+	if (rider_tag)
+	  riders[rider_tag] = rider;
+	return riders;
+      }, {});
+
+    let future_event = base_event.future_events.find(
+      (future_event) => future_event.fid == fid);
+    let active = (future_event || {}).active;
+    Object.values(riders).forEach((rider) => {
+      let base_rider = base_riders[rider.rider_tag];
+      if (base_rider) {
+	if (base_rider.future_starts[fid]) {
+	  rider.start = true;
+	  if (base_rider.registered && active)
+	    rider.registered = true;
+	}
+      }
     });
   }
 
   if (reset == 'master') {
     event_reset_numbers(riders);
     Object.values(riders).forEach((rider) => {
+      rider.future_starts = {};
       rider.license = null;
     });
     event.base = null;
@@ -1279,17 +1351,9 @@ async function admin_reset_event(connection, id, reset, email, version) {
   await cache.begin(connection);
   var event = await get_event(connection, id);
   var riders = await get_riders(connection, id);
-  var base_event, base_riders;
 
   if (version && event.version != version)
     throw new HTTPError(409, 'Conflict');
-
-  if (reset == 'register' && event.base) {
-    var base_id = await event_tag_to_id(connection, event.base, email);
-    var base_event = await get_event(connection, base_id);
-    if (base_event.features.start_tomorrow)
-      base_riders = await get_riders(connection, base_id);
-  }
 
   event = cache.modify_event(id);
   riders = cache.modify_riders(id);
@@ -1303,6 +1367,14 @@ async function admin_reset_event(connection, id, reset, email, version) {
 	  await rider_change_number(connection, id, number, min_number);
 	}
       }
+    }
+
+    let base_event, base_riders;
+
+    if (reset == 'register' && event.base && event.base_fid) {
+      let base_id = await event_tag_to_id(connection, event.base, email);
+      base_event = await get_event(connection, base_id);
+      base_riders = await get_riders(connection, base_id);
     }
 
     reset_event(base_event, base_riders, event, riders, reset);
@@ -1365,25 +1437,21 @@ async function add_serie_write_access(connection, serie, email) {
     [serie, email]);
 }
 
-async function inherit_from_event(connection, id, base_tag, reset, email) {
-  let result = await connection.queryAsync(`
-    SELECT id
-    FROM events
-    WHERE tag = ?`, [base_tag]);
-  if (result.length != 1)
-    throw new HTTPError(404, 'Not Found');
-  var base_id = result[0].id;
+function copy_event(event) {
+  return Object.assign({}, event);
+}
 
-  var event = Object.assign({}, await get_event(connection, base_id));
-  var riders = Object.values(await get_riders(connection, base_id)).reduce(
+function copy_riders(riders) {
+  return Object.values(riders).reduce(
     (riders, rider) => {
       riders[rider.number] = Object.assign({}, rider);
       return riders;
     }, {});
+}
 
-  event.base = base_tag;
-  if (reset)
-    reset_event(event, riders, event, riders, reset);
+async function inherit_from_event(connection, id, base_id, reset, email) {
+  var event = copy_event(await get_event(connection, base_id));
+  var riders = copy_riders(await get_riders(connection, base_id));
 
   /* Only events imported from TrialTool don't have the skipped_zones feature
      set.  */
@@ -1420,7 +1488,8 @@ async function delete_event(connection, id) {
 		     'events_admins', 'events_admins_inherit', 'events_groups',
 		     'events_groups_inherit', 'riders', 'riders_groups',
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
-		     'new_numbers', 'result_columns']) {
+		     'new_numbers', 'result_columns',
+		     'future_events', 'future_starts']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     log_sql(query);
@@ -1428,6 +1497,40 @@ async function delete_event(connection, id) {
   }
   cache.delete_event(id);
   cache.delete_riders(id);
+}
+
+function future_event_ids_equal(old_event, event) {
+  function fid_map(event) {
+    if (!event)
+      return {};
+    return event.future_events.reduce((map, future_event) => {
+      let fid = future_event.fid;
+      if (fid)
+	map[fid] = true;
+      return map;
+    }, {});
+  }
+  return deepEqual(fid_map(old_event), fid_map(event));
+}
+
+/* Delete future_starts for all removed future_events */
+async function reduce_future_starts(event, riders) {
+  let future_events = {};
+  event.future_events.forEach((future_event) => {
+    let fid = future_event.fid;
+    if (fid)
+      future_events[fid] = true;
+  });
+
+  Object.values(riders).forEach((rider) => {
+    var future_starts = Object.assign({}, rider.future_starts);
+    Object.keys(future_starts).forEach((fid) => {
+      if (!future_events[fid]) {
+	delete future_starts[fid];
+	rider.future_starts = future_starts;
+      }
+    });
+  });
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
@@ -1451,19 +1554,37 @@ async function admin_save_event(connection, id, event, version, reset, email) {
     if (old_event && version) {
       if (old_event.version != version)
 	throw new HTTPError(409, 'Conflict');
-    } else {
     }
 
     if (event) {
+      let base_id;
+      if (event.base)
+        base_id = await event_tag_to_id(connection, event.base, email);
+
       if (!old_event) {
 	event.tag = random_tag();
-	if (event.base) {
-	  await inherit_from_event(connection, id, event.base, reset, email);
-	}
+	if (event.base)
+	  await inherit_from_event(connection, id, base_id, reset, email);
 	await add_event_write_access(connection, id, email);
       }
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
+
+      if (reset) {
+	let base_event = await get_event(connection, base_id);
+	let base_riders = await get_riders(connection, base_id);
+	if (old_event)
+	  await get_riders(connection, id);
+	let riders = cache.modify_riders(id);
+	reset_event(base_event, base_riders, event, riders, reset);
+      }
+
+      if (!future_event_ids_equal(old_event, event)) {
+	if (old_event)
+	  await get_riders(connection, id);
+	let riders = cache.modify_riders(id);
+	await reduce_future_starts(event, riders);
+      }
 
       compute(cache, id, event);
     } else {
@@ -1743,7 +1864,7 @@ async function get_riders_list(connection, id) {
     ['city', 'class', 'club', 'country', 'date_of_birth', 'email', 'entry_fee',
     'failure', 'finish_time', 'first_name', 'group', 'insurance', 'last_name',
     'license', 'non_competing', 'number', 'phone', 'province', 'registered',
-    'riders', 'rounds', 'start', 'start_time', 'start_tomorrow', 'street',
+    'riders', 'rounds', 'start', 'start_time', 'street',
     'vehicle', 'zip', 'guardian', 'comment', 'rider_comment', 'verified'].forEach(
       (field) => { r[field] = rider[field]; }
     );
@@ -2101,6 +2222,16 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
       && (changed = true);
     });
 
+  let rider_tag = old_rider.rider_tag || new_rider.rider_tag;
+  await zipHashAsync(old_rider.future_starts, new_rider.future_starts,
+    async function(a, b, fid) {
+      await update(connection, 'future_starts',
+	{id: id, rider_tag: rider_tag, fid: fid},
+	[],
+	a != null && {}, b != null && {})
+      && (changed = true);
+    });
+
   return changed;
 }
 
@@ -2126,13 +2257,14 @@ async function update_rider(connection, id, number, old_rider, new_rider) {
   }
 
   var ignore_fields = {
+    classes: true,
+    future_starts: true,
+    marks_distribution: true,
+    marks_per_round: true,
+    marks_per_zone: true,
     number: true,
     rankings: true,
-    marks_per_zone: true,
-    marks_per_round: true,
-    marks_distribution: true,
     riders: true,
-    classes: true,
     version: true,
   };
 
@@ -2217,6 +2349,41 @@ async function __update_event(connection, id, old_event, new_event) {
       && (changed = true);
     });
 
+  if (new_event.future_events) {
+    let max_fid;
+    for (let future_event of new_event.future_events) {
+      if (future_event.fid == null) {
+	if (max_fid == null) {
+	  max_fid = (await connection.queryAsync(`
+	    SELECT COALESCE(MAX(fid), 0) AS max_fid
+	    FROM future_events
+	    WHERE id = ?`, [id]))[0].max_fid;
+	}
+	max_fid++;
+	future_event.fid = max_fid;
+      }
+    }
+  }
+
+  function hash_future_events(future_events) {
+    if (!future_events)
+      return {};
+    return future_events.reduce((hash, future_event) => {
+      hash[future_event.fid] = future_event;
+      return hash;
+    }, {});
+  }
+
+  await zipHashAsync(hash_future_events(old_event.future_events),
+		     hash_future_events(new_event.future_events),
+    async function(a, b, fid) {
+      await update(connection, 'future_events',
+		   {id: id, fid: fid},
+		   ['active', 'date', 'title', 'series'],
+		   a, b)
+      && (changed = true);
+    });
+
   function hash_zones(zones) {
     if (!zones)
       return {};
@@ -2282,7 +2449,9 @@ async function update_event(connection, id, old_event, new_event) {
     features: true,
     mtime: true,
     version: true,
-    result_columns: true
+    result_columns: true,
+    future_events: true,
+    series: true
   };
 
   var nonkeys = Object.keys(new_event || {}).filter(
@@ -2351,7 +2520,7 @@ async function register_get_event(connection, id, user) {
     }
   };
   ['date', 'registration_ends', 'registration_info',
-   'type', 'features'].forEach((field) => {
+   'type', 'features', 'future_events', 'series'].forEach((field) => {
     result[field] = event[field];
   });
   result.classes = [];
@@ -2378,6 +2547,7 @@ const register_rider_fields = {
   emergency_phone: true,
   first_name: true,
   frame_number: true,
+  future_starts: true,
   guardian: true,
   insurance: true,
   last_name: true,
@@ -2390,7 +2560,6 @@ const register_rider_fields = {
   registration: true,
   rider_comment: true,
   start: true,
-  start_tomorrow: true,
   street: true,
   vehicle: true,
   version: true,
@@ -3083,7 +3252,13 @@ async function register_save_rider(connection, id, number, rider, user, version)
 	  delete rider['class'];
 	if (old_rider.registered) {
 	  delete rider.start;
-	  delete rider.start_tomorrow;
+	  for (let future_event of event.future_events) {
+	    if (future_event.active) {
+	      let fid = future_event.fid;
+	      rider.future_starts[fid] =
+		old_rider.future_starts[fid];
+	    }
+	  }
 	}
       } else {
 	if (event.ranking1_enabled)
@@ -3102,8 +3277,11 @@ async function register_save_rider(connection, id, number, rider, user, version)
 	}
       }
       rider.user_tag = user.user_tag;
+      delete rider.rider_tag;
 
       rider = Object.assign(cache.modify_rider(id, number), rider);
+      if (rider.rider_tag == null)
+	rider.rider_tag = random_tag();
     } else {
       if (old_rider &&
 	  ((old_rider.registered && event.features.registered) ||
@@ -3232,18 +3410,28 @@ async function admin_event_get_as_base(connection, tag, email) {
     WHERE tag = ? AND email = ? AND ranking = 1`, [tag, email]);
   if (result.length == 1) {
     result = result[0];
+    result.starters = {};
     var id = result.id;
     var event = await get_event(connection, id);
-    if (event.features.start_tomorrow) {
+    var future_events = {};
+
+    if (Object.keys(event.future_events).length) {
       var riders = await get_riders(connection, id);
-      result.start_tomorrow = 0;
-      Object.values(riders).forEach((rider) => {
-	if ((rider.verified || !event.features.verified) &&
-	    (rider.registered || !event.features.registered) &&
-	    rider.start_tomorrow) {
-	  result.start_tomorrow++;
+      for (let future_event of event.future_events) {
+	let fid = future_event.fid;
+	future_events[fid] = future_event;
+	result.starters[fid] = 0;
+      }
+      for (let rider of Object.values(riders)) {
+	for (let fid in rider.future_starts) {
+	  if (!(fid in result.starters))
+	    continue;
+	  if (future_events[fid].active &&
+	      ((rider.verified || !event.features.verified) &&
+	       (rider.registered || !event.features.registered)))
+	    result.starters[fid]++;
 	}
-      });
+      }
     }
     return result;
   }
@@ -3380,6 +3568,7 @@ async function export_event(connection, id, email) {
 
   delete event.id;
   delete event.version;
+  delete event.series;
   delete event.registration_ends;
 
   riders = Object.values(riders).reduce(
@@ -3447,10 +3636,23 @@ async function admin_export_csv(connection, id) {
       rankings.push(n);
   }
 
+  let future_events = (await connection.queryAsync(`
+    SELECT fid
+    FROM future_events
+    WHERE id = ? AND active
+    ORDER BY date
+  `, [id])).map((row, index) => row.fid);
+
+  let extra_columns =
+    rankings.map((n) => `COALESCE(ranking${n}, 0) AS ranking${n}`);
+  extra_columns = extra_columns.concat(
+    future_events.map((fid, index) => `COALESCE(start${index + 2}, 0) AS start${index + 2}`)
+  );
+
   return await new Promise(function(fulfill, reject) {
-    connection.query(`
-      SELECT riders.*, ` +
-      rankings.map((n) => `COALESCE(ranking${n}, 0) AS ranking${n}`).join(', ') + `
+    let query =
+      `SELECT riders.*, ` +
+      extra_columns.join(', ') + `
       FROM riders` +
       rankings.map((n) => `
       LEFT JOIN (
@@ -3458,12 +3660,23 @@ async function admin_export_csv(connection, id) {
 	FROM rider_rankings
 	WHERE ranking = ${n}
       ) AS ranking${n} USING (id, number)
+      `).join('') +
+      future_events.map((fid, index) => `
+      LEFT JOIN (
+        SELECT id, rider_tag, 1 AS start${index + 2}
+	FROM future_starts
+	WHERE fid = ${fid}
+      ) AS start${index + 2} USING (id, rider_tag)
       `).join('') + `
-      WHERE id = ? AND
-            (number > 0 OR registered OR start OR start_tomorrow) AND
-	    NOT COALESCE(`+'`group`'+`, 0)
-      ORDER BY number
-    `, [id], function(error, rows, fields) {
+      WHERE id = ${connection.escape(id)} AND
+	(number > 0 OR registered OR start OR number IN (
+	  SELECT number
+	  FROM future_events JOIN future_starts USING (id, fid)
+	  WHERE id = ${connection.escape(id)} AND active)) AND
+	NOT COALESCE(`+'`group`'+`, 0)
+      ORDER BY number`;
+    // console.log(query);
+    connection.query(query, [], function(error, rows, fields) {
       if (error)
 	return reject(error);
 

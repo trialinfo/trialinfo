@@ -150,7 +150,7 @@ function join(separator) {
 
 function same_day(date_str) {
   var match;
-  if (match = date_str.match(/^(\d{4})-(\d{2})-(\d{2})$/)) {
+  if (date_str && (match = date_str.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
     var date = new Date(match[1], match[2] - 1, match[3]).getTime();
     var now = new Date().getTime()
     return now >= date && now < date + 24 * 60 * 60 * 1000;

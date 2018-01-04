@@ -114,6 +114,32 @@ var settingsController = [
       return !event.closed;
     };
 
+    function normalize_future_events(event) {
+      var future_events = event.future_events.sort(function(a, b) {
+	a = a.date;
+	b = b.date;
+	var cmp = (a == null) - (b == null);
+	return cmp || (a < b ? -1 : (a > b ? 1 : 0));
+      });
+      event.future_events = future_events;
+      var n, future_event;
+      for (n = 0; n < future_events.length - 1; n++) {
+	future_event = future_events[n];
+	if (future_event.date == null && future_event.title == null)
+	  future_events.splice(n, 1);
+      }
+      future_event = future_events[future_events.length - 1];
+      if (!future_event || future_event.date != null || future_event.title != null) {
+	future_events.push({
+	  fid: null,
+	  active: false,
+	  date: null,
+	  title: null,
+	  series: null
+	});
+      }
+    }
+
     function assign_event(event, modify) {
       if (event === undefined)
 	event = $scope.old_event;
@@ -130,12 +156,13 @@ var settingsController = [
 	    last_name: true,
 	    first_name: true,
 	    start: true,
-	    skipped_zones: true
+	    skipped_zones: true,
 	  },
 	  rankings: [{title: 'Neue Veranstaltung'}],
 	  scores: [],
 	  equal_marks_resolution: 0,
 	  insurance: 0,
+	  future_events: [],
 	};
 	$scope.internal.base = null;
 	$scope.internal.reset = null;
@@ -157,9 +184,8 @@ var settingsController = [
 	      name: null,
 	  };
 
-      if (event.date === undefined)
-	event.date = $scope.$eval('today | date:"yyyy-MM-dd"', {today: Date.now()});
       expand_scores(event.scores);
+      normalize_future_events(event);
       $scope.event = event;
       $scope.zones = zones_to_bool(event.zones);
       $scope.features = event.features;
@@ -178,6 +204,15 @@ var settingsController = [
       event.zones = zones_from_bool($scope.zones);
       event.features = $scope.features;
       collapse_scores(event.scores);
+
+      var future_events = event.future_events;
+      var future_event = future_events[future_events.length - 1];
+      if (future_event &&
+	  future_event.date == null &&
+	  future_event.title == null &&
+	  future_event.series == null)
+	future_events.pop();
+
       $scope.busy = true;
       var event_is_new = !event.id;
       var request;
@@ -248,9 +283,10 @@ var settingsController = [
 	return title;
       }
 
-      $scope.$watch('event.base', function(new_v, old_v) {
+      $scope.$watch('event.base', function() {
 	$scope.internal.base = null;
 	$scope.internal.reset = null;
+	$scope.event.base_fid = null;
 	var base = $scope.event.base;
 	if (base == null)
 	  return;
@@ -264,13 +300,17 @@ var settingsController = [
 	    .then(function(response) {
 	      let event = response.data;
 	      delete event.id;
-	      event.rankings[0].title =
+	      $scope.unique_title =
 		unique_title(event.rankings[0].title, $scope.events);
-	      delete event.date;
-	      delete event.registration_ends;
+	      event.registration_ends = null;
 	      event.base = base;
+	      let future_events = angular.copy(event.future_events);
+	      $scope.future_events = future_events;
+	      if (future_events.length)
+		event.base_fid = future_events[0].fid;
 	      assign_event(event, true);
 	      $scope.internal.reset = 'register';
+	      watch_base_fid();
 	    })
 	    .catch(network_error);
 
@@ -281,6 +321,54 @@ var settingsController = [
 	} else
 	  assign_event(null);
       });
+
+      $scope.future_event_active = function(fid) {
+	var future_event = $scope.future_events.find(
+	  function(future_event) {
+	    return future_event.fid == fid;
+	  });
+	return future_event && future_event.active;
+      };
+
+      function watch_base_fid(fid) {
+	var event = $scope.event;
+	if (!event || !$scope.future_events)
+	  return;
+
+	if (fid == null) {
+	  event.rankings[0].title = $scope.unique_title;
+	  event.date = $scope.$eval('today | date:"yyyy-MM-dd"', {today: Date.now()});
+	} else {
+	  var future_event = $scope.future_events.find(
+	    function(future_event) {
+	      return future_event.fid == fid;
+	    }) || {};
+	  if (future_event.title)
+	    event.rankings[0].title = future_event.title;
+	  if (future_event.date)
+	    event.date = future_event.date;
+	}
+	event.future_events =
+	  angular.copy($scope.future_events).reduce(
+	    function(future_events, future_event) {
+	      if (future_event.fid != fid) {
+		future_events.push(future_event);
+		if (event.date && future_event.date) {
+		  var event_date = parse_timestamp(event.date);
+		  var future_event_date = parse_timestamp(future_event.date);
+		  var diff = parse_timestamp(future_event.date) -
+			     parse_timestamp(event.date);
+		  if (fid)
+		    future_event.active =
+		      diff >= 0 &&
+		      diff <= 24 * 60 * 60 * 1000;
+		}
+	      }
+	      return future_events;
+	    }, []);
+	$scope.internal.reset = 'register';
+      }
+      $scope.$watch('event.base_fid', watch_base_fid);
     }
 
     $scope.type_blur = function() {
@@ -314,8 +402,6 @@ var settingsController = [
 	    type === 'otsv2016' || type === 'otsv+osk2016') {
 	  $scope.features.start_time = $scope.features.finish_time =
 	    (type === 'otsv+osk2014' || type === 'otsv+osk2016');
-	  $scope.features.start_tomorrow =
-	    (type === 'otsv2014' || type === 'otsv2016');
 	}
       }
     };
@@ -360,6 +446,10 @@ var settingsController = [
       }
       if (old_max_zone != max_zone)
 	$scope.zones_list = zones_list(max_zone);
+    }, true);
+
+    $scope.$watch('event.future_events', function() {
+      normalize_future_events($scope.event);
     }, true);
   }];
 

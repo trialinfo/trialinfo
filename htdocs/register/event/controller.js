@@ -3,7 +3,7 @@
 var eventController = [
   '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', 'event', 'riders', 'suggestions',
   function ($routeParams, $scope, $cookies, $window, $timeout, $http, event, riders, suggestions) {
-    $scope.context('Voranmeldung für ' + event.title);
+    $scope.context('Voranmeldung');
 
     try {
       $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
@@ -243,6 +243,12 @@ var eventController = [
       });
     });
 
+    $scope.hasFutureEvents = Object.keys(event.future_events).length != 0;
+
+    $scope.number_of_starts = function(rider) {
+      return rider.start + Object.keys(rider.future_starts).length;
+    }
+
     $scope.$watch('internal.country', function(country) {
       var rider = $scope.rider;
 
@@ -273,6 +279,16 @@ var eventController = [
       }
     };
 
+    $scope.$watch('rider.future_starts', function() {
+      if ($scope.rider) {
+	var future_starts = $scope.rider.future_starts;
+	Object.keys(future_starts).forEach(function(fid) {
+	  if (!future_starts[fid])
+	    delete future_starts[fid];
+	});
+      }
+    }, true);
+
     $scope.required_error = function(field) {
       return field.$error.required;
     }
@@ -281,7 +297,7 @@ var eventController = [
       if ($scope.busy)
 	return;
       $scope.busy = true;
-      var rider = $scope.rider; // $scope.riders[$scope.internal.index];
+      var rider = $scope.rider;
       var request;
       if (rider.number) {
 	request = $http.put('/api/register/event/' + $routeParams.id + '/rider/' + rider.number, rider);
@@ -330,6 +346,13 @@ var eventController = [
     }
 
     $scope.rider_info = rider_info;
+
+    $scope.future_event_label = function(future_event) {
+      var label = future_event.title;
+      if (future_event.series)
+	label += ' (' + future_event.series + ')';
+      return label;
+    };
 
     $scope.remove_rider = function() {
       $timeout(function() {
