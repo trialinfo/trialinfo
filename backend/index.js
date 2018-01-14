@@ -3906,6 +3906,8 @@ var sendFileOptions = {
 
 var app = express();
 
+app.set('etag', false);
+
 app.set('case sensitive routing', true);
 if (app.get('env') != 'production')
   app.set('json spaces', 2);
@@ -4022,7 +4024,7 @@ app.get('/register/*', function(req, res, next) {
   next();
 });
 
-app.use(express.static('htdocs'));
+app.use(express.static('htdocs', {etag: true}));
 
 app.get('/admin/*', function(req, res, next) {
   res.sendFile('admin/index.html', sendFileOptions);
