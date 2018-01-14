@@ -16,11 +16,11 @@ Fahrrad-Trial-Wettbewerbe, das alle wesentlichen Schritte zur Verwaltung von
 Veranstaltungen und Veranstaltungsreihen unterstützt (Fahrer, Gruppen,
 Punktevergabe, Fahrerlisten, Auswertungen, usw.).</p>
 
-<p>Das Auswertunggsystem ist eine Web-Applikation, die über einen Web-Browser
-bedient wird.  Der hauptsächlich unterstützte Web-Browser ist dabei Firefox.
+<p>Das Auswertunggsystem ist eine Web-Applikation, die über einen Browser
+bedient wird.  Der hauptsächlich unterstützte Browser ist Firefox.
 Die Applikation kann je nach Bedarf gleichzeitig auf mehreren Geräten oder auch
 in mehreren Fenstern und Tabs geöffnet werden.  Wenn versucht wird, die selben
-Daten von mehreren Stellen aus gleichzeitig verändert werden, wird das erkannt
+Daten von mehreren Stellen aus gleichzeitig zu verändern, wird das erkannt
 und verhindert.</p>
 
 <h2>Grundsätzlicher Ablauf</h2>
@@ -28,34 +28,35 @@ und verhindert.</p>
 <p>Die erste Veranstaltung einer Veranstaltungsreihe enthält zunächst
 Fahrer-Stammdaten ohne zugeordnete Startnummern.  Im Laufe der Nennung für die
 Veranstaltung werden weitere Fahrer mit Startnummern angelegt, und es werden
-den Fahrern Startnummern zugewiesen.  Bei allen Startern bei der Veranstaltung
-wird im Fahrer-Nennformular das <em>Start</em>-Häkchen gesetzt.</p>
+den Fahrern aus den Stammdaten Startnummern zugewiesen.  Bei allen Startern bei
+der Veranstaltung wird im Fahrer-Nennformular das <em>Start</em>-Häkchen
+gesetzt.</p>
 
-<p>Nach der Nennung, also während des eigentlichen Wettbewerbs, werden die
-Punkte der Fahrer erfasst.  Der aktuelle Zwischenstand kann jederzeit überprüft
-werden; üblich ist die fortlaufende Anzeige auf einem weiteren Monitor.
-Genauso kann der Zwischenstand über das Internet abgerufen werden, wenn die
-Daten im Hintergrund ins Internet übertragen werden.  Auch das ist üblich, wenn
-es am Ort der Veranstaltung eine Internet-Verbindung gibt.  Am Ende der
-Punktevergabe sind keine weiteren Schritte notwendig; das Endergebnis ist
-sofort verfügbar.</p>
+<p>Im Laufe des Wettbewerbs werden die Punkte der Fahrer erfasst.  Der aktuelle
+Zwischenstand kann jederzeit überprüft werden; üblich ist die fortlaufende
+Anzeige auf einem weiteren Monitor.  Genauso kann der Zwischenstand über das
+Internet abgerufen werden, wenn die Daten im Hintergrund ins Internet
+übertragen werden.  Auch das ist üblich, wenn es am Ort der Veranstaltung eine
+Internet-Verbindung gibt.  Am Ende der Punktevergabe sind keine weiteren
+Schritte notwendig; das Endergebnis ist sofort verfügbar.</p>
 
 <p>Die nächste Veranstaltung der Veranstaltungsreihe wird basierend auf der
 ersten Veranstaltung angelegt.  Dabei werden die <em>Start</em>-Häkchen aller
 Fahrer automatisch zurückgesetzt, nicht jedoch die bereits vergebenen
-Startnummern.  Die Startnummer eines Fahrers bleibt also die gesamte
-Veranstaltungsreihe hindurch gleich.  Es werden wieder weitere Fahrer angelegt
-und weitere Startnummern zugewiesen, usw.  Die Punktevergabe erfolgt wie bei
-der ersten Veranstaltung.</p>
+Startnummern.  Die Startnummer eines Fahrers bleibt also die gesamte Saison
+hindurch gleich.  Es werden wieder weitere Fahrer angelegt und weitere
+Startnummern zugewiesen, usw.  Die Punktevergabe erfolgt wie bei der ersten
+Veranstaltung.</p>
 
-<p>Zusätzlich gibt es bei zweitägigen Veranstaltungen über ein <a
-href="#start_tomorrow"><em>Start morgen</em></a>-Häkchen im Fahrer-Nennformular
-die Möglichkeit, gleich für beide Tage zu nennen.</p>
+<p>Zusätzlich gibt es die Möglichkeit, auch zukünftige Veranstaltungen zu
+definieren.  Dann können Fahrer für beide Tage eines Wettbewerbs-Wochenendes
+auf einmal nennen oder eine Voranmeldung für spätere Veranstaltungen
+abgeben.</p>
 
-<p>Zu Beginn einer neuen Veranstaltungsreihe wir die erste Veranstaltung auf
-Basis der letzten vorhergehenden Veranstaltung angelegt.  Die Fahrerdaten
-werden dabei auf die Stammdaten zurückgesetzt, es werden also auch alle
-Startnummern gelöscht.</p>
+<p>Zu Beginn einer neuen Saison wir die erste Veranstaltung auf Basis der
+letzten vorhergehenden Veranstaltung angelegt und die Fahrerdaten werden auf
+die Stammdaten zurückgesetzt, es werden also auch alle Startnummern
+gelöscht.</p>
 
 <h3>Online-Voranmeldung</h3>
 
@@ -63,7 +64,7 @@ Startnummern gelöscht.</p>
 selbständig über das Internet registrieren können.  Das ist maximal bis zum
 Vortag der Veranstaltung sinnvoll, da die Daten der Veranstaltung nach dem Ende
 der Online-Voranmeldung erst auf das bei der Veranstaltung eingesetzte
-Notebook übernommen werden müssen.</p>
+Notebook übertragen werden müssen.</p>
 
 <p>Bei Einsatz dieser Online-Voranmeldung ändert sich der Ablauf wie folgt:</p>
 
@@ -72,17 +73,18 @@ Notebook übernommen werden müssen.</p>
 markiert.  Bei diesen Fahrern ändert sich die <em>Speichern</em>-Schaltfläche
 im Fahrer-Nennformular auf <em>Verifizieren</em>.  Es ist Aufgabe des
 Nennbüros, zu verifizieren, dass die vom Fahrer eingegebenen Daten sinnvoll und
-vollständig sind; diese Verifizierung kann über das Fahrer-Nennformular oder
-über die an das Nennbüro verschickten Benachrichtigungs-E-Mails erfolgen.</p>
+vollständig sind; diese Verifizierung erfolgt über das Fahrer-Nennformular.</p>
 
 <p>Weitere Änderungen der Daten eines Fahrers führen zu keinem Zurücksetzen der
-Verifizierung, sehr wohl aber zu weiteren Benachrichtigungs-E-Mails an das
-Nennbüro.</p>
+Verifizierung.</p>
 
-<li><p>Die Fahrer haben in der Online-Voranmeldung selbst Kontrolle über die
-Häkchen <em>Start</em> und <em>Start morgen</em>.  Um dennoch die Kontrolle
-über die Starter bei der Veranstaltung zu erhalten, muss die Einstellung
-<em>Nennungseingang</em> aktiviert werden.</p>
+<p>Beim Anlegen oder Ändern eines Fahrers werden Benachrichtigungs-E-Mails an das
+Nennbüro verschickt.</p>
+
+<li><p>Die Fahrer haben in der Online-Voranmeldung selbst Kontrolle über das
+<em>Start</em>-Häkchen.  Um dennoch die Kontrolle über die Starter bei der
+Veranstaltung zu erhalten, muss die Einstellung <em>Nennungseingang</em>
+aktiviert werden.</p>
 
 <p>Es gibt dann in der Fahrerverwaltung ein zusätzliches
 <em>Nennungseingang</em>-Häkchen, das bei allen Startern aktiviert werden muss.
@@ -344,20 +346,10 @@ zusätzlich aktiviert sein.</p>
 alleine durch das Nennbüro erfasst werden.  Für einen Start reicht es dann, das
 <em>Start</em>-Häkchen zu aktivieren.</p>
 
-<p>Wenn Fahrer sich hingegen selbst registrieren, setzen sie die Häkchen
-<em>Start</em> und <em>Start morgen</em> selbst.  Wenn dann die tatsächliche
-Nennung erfolgt (z.B. durch Abgabe des Nennformulars und Bezahlung des
-Startgelds), setzt das Nennbüro das <em>Nennungseingang</em>-Häkchen, und der
-Fahrer kann starten.</p>
-
-<h3 id="start_tomorrow">Nennformular / Sichtbare Felder / Start morgen</h3>
-
-<p>Wenn diese Einstellung aktiviert ist, kann im Nennformular angewählt werden,
-dass ein Fahrer auch morgen (bei der nächsten Veranstaltung) startet. So kann
-an Wochenenden am Samstag erfasst werden, welche Fahrer auch schon für Sonntag
-genannt haben.  Wenn die nächste Veranstaltung dann basierend auf dieser
-Veranstaltung angelegt wird, werden diese Fahrer automatisch als Starter
-markiert.</p>
+<p>Wenn Fahrer sich hingegen selbst registrieren, setzen sie das
+<em>Start</em>-Häkchen selbst.  Wenn dann die tatsächliche Nennung erfolgt
+(z.B. durch Abgabe des Nennformulars und Bezahlung des Startgelds), setzt das
+Nennbüro das <em>Nennungseingang</em>-Häkchen, und der Fahrer kann starten.</p>
 
 <h3>Fahrerliste und Auswertung</h3>
 
@@ -389,6 +381,24 @@ Leerzeichen getrennt sind, und gemeinsam, wenn sie durch „+“-Zeichen getrenn
 sind; wenn nötig können hier auch Klammern gesetzt werden. Die eigentliche
 Vergabe der Startzeiten erfolgt über Zurücksetzen / Startzeiten in der
 Veranstaltungsübersicht.</p>
+
+<h3>Zukünftige Veranstaltungen</h3>
+
+<p>Hier werden Veranstaltungen definiert, die nach der aktuellen Veranstaltung
+stattfinden.  Ist das <em>Aktiv</em>-Häkchen aktiviert, so scheint die
+Veranstaltung im Nennformular auf und eine gemeinsame Nennung für diese
+Veranstaltung ist möglich.  Beim Anlegen der zukünftigen Veranstaltung wird das
+<em>Start</em>-Häkchen dann entsprechend gesetzt und das
+<em>Nennungseingang</em>-Häkchen übernommen, sodass die entsprechenden Fahrer
+als Starter markiert sind.</em>
+
+<p>Ist das <em>Aktiv</em>-Häkchen nicht aktiviert, so scheint die zukünftige
+Veranstaltung lediglich in der Online-Voranmeldung auf.</p>
+
+<p>Die Spalte <em>Veranstaltungsreihen</em> gibt die Art der zukünftigen
+Veranstaltung an, wobei die Einträge hier lediglich Kommentare sind die dazu
+dienen, die zukünftigen Veranstaltungen in der Voranmeldung besser
+unterscheiden zu können.</p>
 
 <h3>Registrierung</h3>
 
@@ -465,10 +475,10 @@ sind davon nicht betroffen.</p>
 zuständigen Einstellungen.</p>
 
 <li><p>Nennbeginn: Löscht zusätzlich <em>Nennungseingang</em>, <em>Start</em>,
-<em>Start morgen</em>, die Startzeit und das Nenngeld aller Fahrer und Gruppen.
-Wenn in der vorigen Veranstaltung Fahrer oder Gruppen für den <em>Start
-morgen</em> markiert sind, wird bei diesen Fahrern und Gruppen <em>Start</em>
-gesetzt und <em>Nennungseingang</em> übernommen.</p>
+die Startzeit und das Nenngeld aller Fahrer und Gruppen.
+Wenn in der vorigen Veranstaltung Fahrer oder Gruppen für den <em>Start</em>
+bei dieser Veranstaltung markiert sind, wird bei diesen Fahrern und Gruppen
+<em>Start</em> gesetzt und <em>Nennungseingang</em> übernommen.</p>
 
 <li><p>Stammdaten: Löscht alles außer den Stammdaten der Fahrer und Gruppen,
 also auch die Startnummern und Lizenznummern.</p>
