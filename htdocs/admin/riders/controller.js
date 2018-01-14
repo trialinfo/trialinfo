@@ -365,6 +365,23 @@ var ridersController = [
       return rider_info(rider, $scope);
     }
 
+    $scope.future_events = event.future_events.reduce(
+      function(future_events, future_event) {
+	if (future_event.active)
+	  future_events.push(future_event);
+	return future_events;
+      }, []);
+
+    $scope.$watch('rider.future_starts', function() {
+      if ($scope.rider) {
+	var future_starts = $scope.rider.future_starts;
+	Object.keys(future_starts).forEach(function(fid) {
+	  if (!future_starts[fid])
+	    delete future_starts[fid];
+	});
+      }
+    }, true);
+
     var canceler;
     function check_number(number) {
       if (!$scope.rider ||
@@ -685,7 +702,7 @@ var ridersController = [
 
     function create_ranking_labels() {
       /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-      var accesskeys = 'aknvpmsuäl' + groups ? 'g' : 'f';
+      var accesskeys = 'aknvpsuäl' + groups ? 'g' : 'f';
       $scope.rankings = [];
       angular.forEach(features.rankings, function(ranking) {
 	var name = event.rankings[ranking - 1].name || '';

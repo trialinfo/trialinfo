@@ -324,12 +324,6 @@ var eventListController = [
 	  expr: "start ? (rider_may_start(rider) ? 'Ja' : '?') : ''",
 	  style: { 'text-align': 'center' },
 	  when: function() { return features.start; } },
-      start_tomorrow:
-	{ name: 'Start morgen',
-	  heading: 'Start morgen',
-	  expr: "start_tomorrow ? (rider_may_start(rider) ? 'Ja' : '?') : ''",
-	  style: { 'text-align': 'center' },
-	  when: function() { return features.start_tomorrow; } },
       non_competing:
 	{ name: 'Außer Konkurrenz',
 	  heading: '<span title="Außer Konkurrenz">A.K.</span>',
@@ -416,14 +410,8 @@ var eventListController = [
       if (show.registered !== null &&
 	  !rider.registered == show.registered)
 	return false;
-      if (show.start_either !== null &&
-	  !(rider.start || rider.start_tomorrow) == show.start_either)
-	return false;
       if (show.start !== null &&
 	  !rider.start == show.start)
-	return false;
-      if (show.start_tomorrow !== null &&
-	  !rider.start_tomorrow == show.start_tomorrow)
 	return false;
       for (var ranking = 1; ranking <= 4; ranking++) {
 	if (show['ranking' + ranking] !== null &&
@@ -610,7 +598,7 @@ var eventListController = [
     };
 
     var tristate_optionen = (function() {
-      var fields = ['number', 'registered', 'start', 'start_tomorrow', 'verified'];
+      var fields = ['number', 'registered', 'start', 'verified'];
       for (var n = 1; n <= 4; n++)
 	fields.push('ranking' + n);
       return fields;
@@ -833,21 +821,9 @@ var eventListController = [
 	  $scope.show['ranking' + (index + 1)] = null;
       });
     });
-    $scope.$watch('show.start_either', function(value) {
-      if (value != null) {
-	$scope.show.start = null;
-	$scope.show.start_tomorrow = null;
-      }
-    });
     $scope.$watch('show.start', function(value) {
-      if (value)
-	$scope.show.start_either = null;
-      else
+      if (!value)
 	$scope.show.riding = false;
-    });
-    $scope.$watch('show.start_tomorrow', function(value) {
-      if (value)
-	$scope.show.start_either = null;
     });
     $scope.$watch('show.riding', function(value) {
       if (value) {

@@ -39,11 +39,8 @@ var serieController = [
     }
 
     function cmp_null(a, b) {
-      if (a === null || b === null) {
-	a = (a === null);
-	b = (b === null);
-      }
-      return a > b ? 1 : a < b ? -1 : 0;
+      var cmp = (a == null) - (b == null);
+      return cmp || (a > b ? 1 : a < b ? -1 : 0);
     }
 
     function normalize_classes(serie) {

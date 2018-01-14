@@ -92,6 +92,7 @@ CREATE TABLE `events` (
   `version` int(11) NOT NULL DEFAULT '1',
   `id` int(11) NOT NULL DEFAULT '0',
   `base` char(16) DEFAULT NULL,
+  `base_fid` int(11) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `mtime` timestamp NULL DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
@@ -187,6 +188,39 @@ CREATE TABLE `events_groups_inherit` (
   `group` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`,`group`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `future_events`
+--
+
+DROP TABLE IF EXISTS `future_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `future_events` (
+  `id` int(11) NOT NULL,
+  `fid` int(11) NOT NULL,
+  `date` date DEFAULT NULL,
+  `title` varchar(40) DEFAULT NULL,
+  `series` varchar(40) DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`,`fid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `future_starts`
+--
+
+DROP TABLE IF EXISTS `future_starts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `future_starts` (
+  `id` int(11) NOT NULL,
+  `fid` int(11) NOT NULL,
+  `rider_tag` char(16) NOT NULL,
+  PRIMARY KEY (`id`,`fid`,`rider_tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -329,7 +363,6 @@ CREATE TABLE `riders` (
   `tie_break` int(11) DEFAULT '0',
   `registered` tinyint(1) DEFAULT NULL,
   `start` tinyint(1) DEFAULT NULL,
-  `start_tomorrow` tinyint(1) DEFAULT NULL,
   `insurance` int(11) DEFAULT NULL,
   `rounds` int(11) DEFAULT NULL,
   `s0` int(11) DEFAULT NULL,
@@ -343,6 +376,7 @@ CREATE TABLE `riders` (
   `additional_marks` float DEFAULT NULL,
   `marks` float DEFAULT NULL,
   `rank` int(11) DEFAULT NULL,
+  `rider_tag` char(16) DEFAULT NULL,
   `user_tag` char(16) DEFAULT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`,`number`)

@@ -142,8 +142,7 @@ for(;;) {
 	       number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
 	       } . ( @db_spalten ? join(", ", @db_spalten) . ", " : "") . q{
 	       s0, s1, s2, s3, s4, s5, marks AS punkte, score AS wertungspunkte, riders.rounds AS
-	       runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start,
-	       start_tomorrow AS start_morgen
+	       runden, riders.non_competing AS ausser_konkurrenz, failure AS ausfall, start
 	FROM riders} . "\n" .
 	($wertung == 1 ? "LEFT JOIN" : "JOIN") . " " .
 	q{(SELECT * FROM rider_rankings WHERE ranking = ?) AS rider_rankings USING (id, number)
@@ -217,26 +216,76 @@ if ($alle_punkte) {
     }
 }
 
+my $wochentage = [
+    'Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'
+];
+
+sub wochentag($) {
+    my ($datum) = @_;
+
+    $datum && $datum =~ /^(\d{4})-(\d{2})-(\d{2})/
+	or return undef;
+    my $timeval = mktime(0, 0, 0, $3, $2 - 1, $1 - 1900);
+    my $wochentag = strftime("%w", localtime $timeval);
+    return $wochentage->[$wochentag];
+}
+
 doc_h1 "$bezeichnung"
     if defined $bezeichnung;
 doc_h2 "$cfg->{wertungen}[$wertung - 1]{titel}";
 
-use Data::Dumper;
-
 if ($nur_vorangemeldete) {
-    my $timeval = mktime(0, 0, 0, $3, $2 - 1, $1 - 1900)
-	if $cfg->{datum} =~ /^(\d{4})-(\d{2})-(\d{2})/;
-    my ($nur_heute, $nur_morgen);
-    if ($timeval) {
-	my $wochentag = strftime("%w", localtime $timeval);
-	my $wochentage = [
-	    'Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'
-	];
-	$nur_heute = "nur $wochentage->[$wochentag]";
-	$nur_morgen = "nur $wochentage->[($wochentag + 1) % 7]";
-    } else {
-	$nur_heute = "nur Tag 1";
-	$nur_morgen = "nur Tag 2";
+    my $alle_starts = {
+	0 => wochentag($cfg->{datum})
+    };
+    my $alle_starts_rev = {
+	$alle_starts->{0} => 1
+    };
+    $sth = $dbh->prepare(q{
+	SELECT fid, date
+	FROM future_events
+	WHERE id = ? AND active
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	my $val = wochentag($row[1]);
+	if (exists $alle_starts_rev->{$val}) {
+	    $alle_starts = {};
+	    last;
+	}
+	$alle_starts_rev->{$val} = 1;
+	$alle_starts->{$row[0]} = $val;
+    }
+
+    unless (%$alle_starts) {
+	$alle_starts->{0} = $cfg->{wertungen}[$wertung - 1]{titel};
+	$sth = $dbh->prepare(q{
+	    SELECT fid, title
+	    FROM future_events
+	    WHERE id = ? AND active
+	});
+	$sth->execute($id);
+	while (my @row = $sth->fetchrow_array) {
+	    $alle_starts->{$row[0]} = $row[1];
+	}
+    }
+
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	$fahrer->{alle_starts} = [];
+	push @{$fahrer->{alle_starts}}, 0
+	    if $fahrer->{start};
+    }
+    $sth = $dbh->prepare(q{
+	SELECT number, fid
+	FROM future_events JOIN future_starts USING (id, fid)
+	WHERE id = ? AND active
+	ORDER BY date
+    });
+    $sth->execute($id);
+    while (my @row = $sth->fetchrow_array) {
+	my $fahrer = $fahrer_nach_startnummer->{$row[0]};
+	push @{$fahrer->{alle_starts}}, $row[1]
+	    if $fahrer;
     }
 
     sub sortiert_nach_name(@) {
@@ -258,12 +307,12 @@ if ($nur_vorangemeldete) {
 	my $args = [];
 	push @$args, $cfg->{klassen}[$fahrer->{klasse} - 1]{bezeichnung}
 	    if $fahrer->{klasse} != $fahrer->{wertungsklasse};
-	if ($features->{start_morgen}) {
-	    push @$args, $nur_heute
-		if !$fahrer->{start_morgen};
-	    push @$args, $nur_morgen
-		if !$fahrer->{start};
+	if (@$fahrer->{alle_starts} != %$alle_starts) {
+	    foreach my $fid (@$fahrer->{alle_starts}) {
+		push @$args, $alle_starts->{$fid};
+	    }
 	}
+
 	return [undef,
 		$startnummer,
 		$fahrer->{nachname} . ' ' . $fahrer->{vorname} .
@@ -273,7 +322,7 @@ if ($nur_vorangemeldete) {
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	delete $fahrer_nach_startnummer->{$startnummer}
-	    unless $fahrer->{start} || ($features->{start_morgen} && $fahrer->{start_morgen});
+	    unless @$fahrer->{alle_starts};
     }
     doc_p scalar(values %$fahrer_nach_startnummer) . " vorangemeldete Fahrer.";
 
