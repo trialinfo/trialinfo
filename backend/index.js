@@ -17,8 +17,6 @@
 
 "use strict";
 
-require('any-promise/register/bluebird');
-
 var config = require('./config.js');
 var fs = require('fs');
 var fsp = require('fs-promise');

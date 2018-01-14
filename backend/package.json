@@ -9,7 +9,6 @@
     "url": "https://github.com/trialinfo/trialinfo.git"
   },
   "dependencies": {
-    "any-promise": "^1.3.0",
     "apache-md5": "^1.0.6",
     "autoquit": "^0.1.6",
     "base64url": "^2.0.0",

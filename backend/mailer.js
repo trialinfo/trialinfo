@@ -17,8 +17,6 @@
 
 "use strict";
 
-require('any-promise/register/bluebird');
-
 var config = require('./config.js');
 var Promise = require('bluebird');
 var mysql = require('mysql');
