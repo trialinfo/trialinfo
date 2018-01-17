@@ -40,18 +40,20 @@ Internet abgerufen werden, wenn die Daten im Hintergrund ins Internet
 Internet-Verbindung gibt.  Am Ende der Punktevergabe sind keine weiteren
 Schritte notwendig; das Endergebnis ist sofort verfügbar.</p>
 
-<p>Die nächste Veranstaltung der Veranstaltungsreihe wird basierend auf der
-ersten Veranstaltung angelegt.  Dabei werden die <em>Start</em>-Häkchen aller
-Fahrer automatisch zurückgesetzt, nicht jedoch die bereits vergebenen
-Startnummern.  Die Startnummer eines Fahrers bleibt also die gesamte Saison
-hindurch gleich.  Es werden wieder weitere Fahrer angelegt und weitere
+<p>Die nächste Veranstaltung in einer Veranstaltungsreihe wird basierend auf
+der jeweils vorigen Veranstaltung angelegt.  Dabei werden die
+<em>Start</em>-Häkchen aller Fahrer automatisch zurückgesetzt, nicht jedoch die
+bereits vergebenen Startnummern.  Die Startnummer eines Fahrers bleibt also die
+gesamte Saison hindurch gleich.  Es werden weitere Fahrer angelegt und weitere
 Startnummern zugewiesen, usw.  Die Punktevergabe erfolgt wie bei der ersten
 Veranstaltung.</p>
 
 <p>Zusätzlich gibt es die Möglichkeit, auch zukünftige Veranstaltungen zu
-definieren.  Dann können Fahrer für beide Tage eines Wettbewerbs-Wochenendes
-auf einmal nennen oder eine Voranmeldung für spätere Veranstaltungen
-abgeben.</p>
+definieren, also zum Beispiel den Sonntag an einem Wettbewerbs-Wochenende.
+Dann können die Fahrer am Samstag gleich für Samstag und Sonntag nennen.  Wenn
+die Sonntags-Veranstaltung dann basierend auf der Samstags-Veranstaltung
+angelegt wird, sind die für beide Tage genannten Fahrer bereits als Starter
+markiert.</p>
 
 <p>Zu Beginn einer neuen Saison wir die erste Veranstaltung auf Basis der
 letzten vorhergehenden Veranstaltung angelegt und die Fahrerdaten werden auf
@@ -60,11 +62,12 @@ gelöscht.</p>
 
 <h3>Online-Voranmeldung</h3>
 
-<p>Es gibt die Möglichkeit, dass sich die Fahrer vor der Veranstaltung
+<p>Es gibt auch die Möglichkeit, dass sich die Fahrer vor der Veranstaltung
 selbständig über das Internet registrieren können.  Das ist maximal bis zum
 Vortag der Veranstaltung sinnvoll, da die Daten der Veranstaltung nach dem Ende
-der Online-Voranmeldung erst auf das bei der Veranstaltung eingesetzte
-Notebook übertragen werden müssen.</p>
+der Online-Voranmeldung erst auf das bei der Veranstaltung eingesetzte Notebook
+übertragen werden müssen (vorausgesetzt, dass TrialInfo während der
+Veranstaltung nicht online eingesetzt wird).</p>
 
 <p>Bei Einsatz dieser Online-Voranmeldung ändert sich der Ablauf wie folgt:</p>
 
@@ -75,11 +78,11 @@ im Fahrer-Nennformular auf <em>Verifizieren</em>.  Es ist Aufgabe des
 Nennbüros, zu verifizieren, dass die vom Fahrer eingegebenen Daten sinnvoll und
 vollständig sind; diese Verifizierung erfolgt über das Fahrer-Nennformular.</p>
 
+<p>Beim Anlegen eines Fahrers und bei weiteren Änderungen werden
+Benachrichtigungs-E-Mails an das Nennbüro verschickt.</p>
+
 <p>Weitere Änderungen der Daten eines Fahrers führen zu keinem Zurücksetzen der
 Verifizierung.</p>
-
-<p>Beim Anlegen oder Ändern eines Fahrers werden Benachrichtigungs-E-Mails an das
-Nennbüro verschickt.</p>
 
 <li><p>Die Fahrer haben in der Online-Voranmeldung selbst Kontrolle über das
 <em>Start</em>-Häkchen.  Um dennoch die Kontrolle über die Starter bei der
@@ -91,6 +94,10 @@ aktiviert werden.</p>
 Die Fahrer bestimmen bei der Online-Voranmeldung also, an welchen Tagen
 sie starten wollen, und das Nennbüro bestätigt das bei der eigentlichen Nennung
 vor Ort über das <em>Nennungseingang</em>-Häkchen.</p>
+
+<p>Zusätzlich ist es möglich, weitere zukünftige Veranstaltungen zu definieren,
+etwa alle Veranstaltungen eines Jahres.  Dadurch besteht dann die Möglichkeit,
+sich bei all diesen Veranstaltungen voranzumelden.</p>
 
 <li><p>Vor der Veranstaltung sollten neben der Übernahme der
 Veranstaltungsdaten auf das Notebook auch noch Nennformulare für die Fahrer
@@ -386,19 +393,18 @@ Veranstaltungsübersicht.</p>
 
 <p>Hier werden Veranstaltungen definiert, die nach der aktuellen Veranstaltung
 stattfinden.  Ist das <em>Aktiv</em>-Häkchen aktiviert, so scheint die
-Veranstaltung im Nennformular auf und eine gemeinsame Nennung für diese
-Veranstaltung ist möglich.  Beim Anlegen der zukünftigen Veranstaltung wird das
-<em>Start</em>-Häkchen dann entsprechend gesetzt und das
-<em>Nennungseingang</em>-Häkchen übernommen, sodass die entsprechenden Fahrer
-als Starter markiert sind.</em>
+Veranstaltung im Nennformular auf, und eine gemeinsame Nennung für diese
+Veranstaltung ist möglich.  Beim Anlegen der jeweiligen zukünftigen
+Veranstaltung werden die bereits genannten Fahrer dann automatisch als Starter
+markiert.</p>
 
 <p>Ist das <em>Aktiv</em>-Häkchen nicht aktiviert, so scheint die zukünftige
 Veranstaltung lediglich in der Online-Voranmeldung auf.</p>
 
 <p>Die Spalte <em>Veranstaltungsreihen</em> gibt die Art der zukünftigen
 Veranstaltung an, wobei die Einträge hier lediglich Kommentare sind die dazu
-dienen, die zukünftigen Veranstaltungen in der Voranmeldung besser
-unterscheiden zu können.</p>
+dienen, die Veranstaltungen in der Voranmeldung besser unterscheiden zu
+können.</p>
 
 <h3>Registrierung</h3>
 
@@ -495,40 +501,41 @@ Veranstaltung ist danach wirklich gelöscht!</p>
 <h2>Neue Veranstaltung</h2>
 
 <p>Beim Anlegen einer neuen Veranstaltung kann man eine der bestehenden
-Veranstaltungen als Basis angeben.  Die Daten dieser Basisveranstaltung werden
-dann in die neue Veranstaltung kopiert, und können dort unabhängig verändert
-werden.  Man hat hier die Möglichkeit, die Daten der neuen Veranstaltung
-direkt auf einen gewünschten Stand wie den Nennbeginn der neuen Veranstaltung
-zurückzusetzen (siehe <a href="#reset">Zurücksetzen</a>).  Sinnvoll ist hier
-natürlich nur die Eingabe keiner oder der unmittelbar vorausgegangenen
-Veranstaltung.</p>
+Veranstaltungen als Basis angeben.  Wenn in der Basis-Veranstaltung eine oder
+mehrere zukünftige Veranstaltungen definiert sind, kann daraus die
+Veranstaltung ausgewählt werden, die neu angelegt werden soll.  Die Daten der
+Basisveranstaltung werden in die neue Veranstaltung kopiert, und können dort
+unabhängig weiter verändert werden.  Man hat hier auch die Möglichkeit, die
+Daten der neuen Veranstaltung direkt auf einen gewünschten Stand wie den
+Nennbeginn der neuen Veranstaltung zurückzusetzen (siehe <a
+href="#reset">Zurücksetzen</a>).</p>
 
-<p>Es werden nur Veranstaltungen als Basis angeboten, die nicht verborgen sind:
-weil sie nicht Teil einer Veranstaltungsreihe sind, oder weil sie Teil einer
-Veranstaltungsreihe sind, die nicht abgeschlossen ist.<p>
+<p>Es werden nur Veranstaltungen als Basis angeboten, die nicht abgeschlossen
+sind: weil sie nicht Teil einer Veranstaltungsreihe sind, oder weil sie Teil
+einer Veranstaltungsreihe sind, die nicht abgeschlossen ist.<p>
 
 <p>Die neue Veranstaltung wird den Veranstaltungsreihen zugeordnet, denen schon
 die Basisveranstaltung zugeordnet ist, soweit der Benutzer Schreibzugriff auf
-die jeweiligen Veranstaltungsreihen hat.</p>
+diese Veranstaltungsreihen hat.</p>
 
 <h2>Veranstaltungsreihen</h2>
 <p>Eine Veranstaltungsreihe ist üblicherweise eine Serie von Veranstaltungen,
 für die es eine gemeinsame Wertung gibt. Veranstaltungsreihen können aber auch
-verwendet werden, um mehrere an sich unabhängige Veranstaltungen formlos
-zusammenzufassen, zum Beispiel alle Veranstaltungen verschiedenster Art in
-einem Jahr.</p>
+verwendet werden, um mehrere unabhängige Veranstaltungen zusammenzufassen, zum
+Beispiel alle Veranstaltungen verschiedenster Art in einem Jahr.</p>
 
-<p>Es werden nur Veranstaltungen zur Auswahl angeboten, die nicht verborgen
+<p>Es werden nur Veranstaltungen zur Auswahl angeboten, die nicht abgeschlossen
 sind: weil sie nicht Teil einer Veranstaltungsreihe sind, oder weil sie Teil
 einer Veranstaltungsreihe sind, die nicht abgeschlossen ist.<p>
 
 <p>Um eine gemeinsame Wertung zu definieren, muss in der Veranstaltungsreihe
 die entsprechende Wertung ausgewählt werden, und es müssen die enthaltenen
 Veranstaltungen und Klassen zugeordnet werden. Eine Veranstaltung wird
-nur dann in einer Klasse berücksichtigt, wenn die Klasse Teil der
-Veranstaltungsreihe ist, die Klasse startet (Runden und Sektionen definiert,
-<em>Wertung in Klasse</em> leer), und die Klasse nicht von der Wertung
-ausgenommen ist (<em>Keine Wertung&nbsp;1</em> deaktiviert).</p>
+nur dann in einer Veranstaltungsreihe berücksichtigt, wenn die
+Veranstaltungsreihe Klassen enthält, die bei der Veranstaltung starten (Runden
+und Sektionen definiert, <em>Wertung in Klasse</em> leer), und die Klassen
+nicht von der Wertung ausgenommen sind (<em>Keine Wertung&nbsp;1</em>
+deaktiviert).</p>
 
 <h3>Allgemein / abgeschlossen</h3>
 
