@@ -126,6 +126,40 @@ var ridersController = [
       url_aktualisieren();
     };
 
+    var cancel_user_info;
+    function get_user_info(rider) {
+      if (cancel_user_info)
+	cancel_user_info.resolve();
+      delete $scope.user;
+      if (rider.user_tag) {
+	var timer = $timeout(function() {
+	  cancel_user_info = $q.defer();
+	  $http.get('/api/user/' + rider.user_tag,
+		    {timeout: cancel_user_info.promise})
+	  .then(function(response) {
+	    $scope.user = response.data;
+	  })
+	  .catch(network_error);
+	}, 500);
+	cancel_user_info = $q.defer();
+	cancel_user_info.promise.then(function() {
+	  $timeout.cancel(timer);
+	});
+      }
+    }
+
+    $scope.user_title = function() {
+      var rider = $scope.rider;
+      var user = $scope.user;
+      if (user && user.email != null) {
+	if (rider && rider.email != null &&
+	    rider.email.toLowerCase() == user.email.toLowerCase())
+	  return 'Registriert.';
+	else
+	  return 'Registriert durch ' + user.email + '.';
+      }
+    };
+
     function load_rider(promise) {
       promise
 	.then(function(response) {
@@ -133,6 +167,7 @@ var ridersController = [
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
 	    focus_rider();
+	    get_user_info(rider);
 	  }
 	})
 	.catch(network_error);

@@ -4458,6 +4458,22 @@ app.delete('/api/serie/:serie', will_write_serie, async function(req, res, next)
   }
 });
 
+app.get('/api/user/:user_tag', async function(req, res, next) {
+  try {
+    let result = await req.conn.queryAsync(`
+      SELECT email
+      FROM users
+      WHERE user_tag = ?
+    `, [req.params.user_tag]);
+    if (result.length == 1)
+      res.json(result[0]);
+    else
+      res.json({});
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(clientErrorHandler);
 
 try {

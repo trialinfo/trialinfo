@@ -22,27 +22,17 @@ var eventController = [
     $scope.riders = riders;
     $scope.internal = {};
 
-    /* FIXME: In Angular = 1.4, use ng-values="... disable when ..." instead of
-     * filtering classes here! */
-
-    var class_disabled = [];
-    $scope.defined_classes = function() {
-      var defined_classes = [];
-      return function() {
-	new_defined_classes = [];
-	angular.forEach(event.classes, function(class_, index) {
-	  if (class_ && !class_disabled[index]) {
-	    new_defined_classes.push({
-	      'class': index + 1,
-	      name: class_.name
-	    });
-	  }
-	});
-	if (!angular.equals(defined_classes, new_defined_classes))
-	  defined_classes = new_defined_classes;
-	return defined_classes;
-      };
-    }();
+    $scope.class_disabled = [];
+    $scope.defined_classes = event.classes.reduce(
+      function(classes, class_, index) {
+	if (class_) {
+	  classes.push({
+	    'class': index + 1,
+	    name: class_.name
+	  });
+	}
+	return classes;
+      }, []);
 
     $scope.change_rider = function(index) {
       var rider = riders[index];
@@ -79,8 +69,8 @@ var eventController = [
 
     function disable_class(class_, disabled) {
       disabled = !!disabled;
-      if (class_disabled[class_ - 1] != disabled)
-	class_disabled[class_ - 1] = disabled;
+      if ($scope.class_disabled[class_ - 1] != disabled)
+	$scope.class_disabled[class_ - 1] = disabled;
     }
 
     function otsv_check_class() {
