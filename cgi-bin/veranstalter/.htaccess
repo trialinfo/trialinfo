@@ -1,6 +1,0 @@
-AuthUserFile %{DOCUMENT_ROOT}/.htpasswd
-AuthGroupFile %{DOCUMENT_ROOT}/.htgroup
-AuthName "TrialInfo"
-AuthType Basic
-AuthBasicProvider file
-Require group veranstalter
