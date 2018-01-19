@@ -17,7 +17,6 @@
 
 "use strict";
 
-var config = require('./config.js');
 var fs = require('fs');
 var fsp = require('fs-promise');
 var Promise = require('bluebird');
@@ -46,6 +45,8 @@ var diff = require('diff');
 var cors = require('cors');
 var start_times = require('./start_times');
 var random_shuffle = require('./random_shuffle');
+
+var config = JSON.parse(fs.readFileSync('config.json'));
 
 var views = {
   'index': require('./views/index.marko.js'),

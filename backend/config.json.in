@@ -1,0 +1,23 @@
+{
+  "database": {
+    "host": "<<hostname>>",
+    "user": "<<username>>",
+    "password": "<<password>>",
+    "database": "<<name>>"
+  },
+  "from": "<<email (remove for debugging)>>",
+  "url": "<<proxy url>>",
+  "http": {
+    "port": 80
+  },
+  "https": {
+    "port": 443,
+    "key": "<<keyfile>>",
+    "cert": "<<certfile>>"
+  },
+  "nodemailer": {
+  },
+  "log_sql": true,
+  "weasyprint": true,
+  "sync_target": "<<url to sync to>>"
+}
