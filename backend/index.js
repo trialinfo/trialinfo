@@ -804,6 +804,7 @@ async function read_riders(connection, id, revalidate, number) {
         row.marks_distribution[n] = row['s'+n];
       delete row['s'+n];
     }
+    delete row.start_tomorrow;  // FIXME can be removed later
     row.marks_per_zone = [];
     row.marks_per_round = [];
     row.rankings = [];
