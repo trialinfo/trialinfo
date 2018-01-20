@@ -372,7 +372,7 @@ sub jahreswertung(@) {
     my $namenlaenge = 0;
     foreach my $fahrer (map { $alle_fahrer->{$_} }
 			    map { keys %$_ } values %$jahreswertung) {
-	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
+	my $n = length join(' ', $fahrer->{nachname} // (), $fahrer->{vorname} // ());
 	$namenlaenge = max($n, $namenlaenge);
     }
 
@@ -438,8 +438,8 @@ sub jahreswertung(@) {
 	    my $row;
 	    push @$row, $fahrerwertung->{gesamtpunkte} ? "$fahrerwertung->{gesamtrang}." : "";
 	    push @$row, $startnummer > 0 ? $startnummer : '',
-			$alle_fahrer->{$startnummer}{nachname} . " " .
-			$alle_fahrer->{$startnummer}{vorname};
+			join(" ", $alle_fahrer->{$startnummer}{nachname} // (),
+				  $alle_fahrer->{$startnummer}{vorname} // ());
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
 	    }
