@@ -159,15 +159,6 @@ sub tageswertung(@) {
 	}
     }
 
-    # Wir wollen, dass alle Tabellen gleich breit sind.
-    my $namenlaenge = 0;
-    foreach my $fahrer (values %{$args{fahrer_nach_startnummer}}) {
-	next
-	    unless $fahrer->{start};
-	my $n = length "$fahrer->{nachname}, $fahrer->{vorname}";
-	$namenlaenge = max($n, $namenlaenge);
-    }
-
     my $zusatzpunkte;
     my $vierpunktewertung = $args{cfg}{vierpunktewertung} ? 1 : 0;
     foreach my $fahrer (values %{$args{fahrer_nach_startnummer}}) {
@@ -213,7 +204,7 @@ sub tageswertung(@) {
 	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"
 	    if $RenderOutput::html;
 	doc_h3 "$args{cfg}{klassen}[$klasse - 1]{bezeichnung}";
-	push @$format, "r3", "r3", "l$namenlaenge";
+	push @$format, "r3", "r3", "l";
 	push @$header, [ "$farbe", "c" ];
 	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
 		if $features->{startnummer};

@@ -67,12 +67,12 @@ if (my @row = $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT id, date, ranking, title, subtitle, mtime, split_score, type
+    SELECT DISTINCT id, date, ranking, title, subtitle, mtime, split_score, type
     FROM rankings
     JOIN series_events USING (id)
     JOIN series USING (serie, ranking)
     JOIN events USING (id)
-    WHERE enabled AND serie = ?
+    WHERE serie = ? AND enabled
     ORDER BY date
 });
 $sth->execute($vareihe);
@@ -158,6 +158,8 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
 
+    next unless defined($fahrer->{wertungsrang});
+
     $fahrer->{wertungen}[$wertung - 1] = {
 	    punkte => $fahrer->{wertungspunkte},
 	    rang => $fahrer->{wertungsrang},
@@ -165,11 +167,15 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     delete $fahrer->{wertungspunkte};
     delete $fahrer->{wertungsrang};
 
-    $fahrer->{land} = undef
-	if $veranstaltungen->{$id}{cfg}{art} =~ /^otsv/ && $fahrer->{land} eq 'A';
+    my $veranstaltung = $veranstaltungen->{$id};
+    if ($veranstaltung) {
+	$fahrer->{land} = undef
+	    if $veranstaltung->{cfg}{art} =~ /^otsv/ &&
+	       defined $fahrer->{land} && $fahrer->{land} eq 'A';
 
-    my $startnummer = $fahrer->{startnummer};
-    $veranstaltungen->{$id}{fahrer}{$startnummer} = $fahrer;
+	my $startnummer = $fahrer->{startnummer};
+	$veranstaltung->{fahrer}{$startnummer} = $fahrer;
+    }
 }
 
 $sth = $dbh->prepare(q{
@@ -199,8 +205,11 @@ while (my $row = $sth->fetchrow_hashref) {
     delete $row->{id};
     my $klasse = $row->{klasse};
     delete $row->{klasse};
-    my $cfg = $veranstaltungen->{$id}{cfg};
-    $cfg->{klassen}[$klasse - 1] = $row;
+    my $veranstaltung = $veranstaltungen->{$id};
+    if ($veranstaltung) {
+	my $cfg = $veranstaltung->{cfg};
+	$cfg->{klassen}[$klasse - 1] = $row;
+    }
 }
 
 $sth = $dbh->prepare(q{
@@ -213,8 +222,11 @@ $sth = $dbh->prepare(q{
 });
 $sth->execute($vareihe);
 while (my @row = $sth->fetchrow_array) {
-    my $cfg = $veranstaltungen->{$row[0]}{cfg};
-    push @{$cfg->{sektionen}[$row[1] - 1]}, $row[2];
+    my $veranstaltung = $veranstaltungen->{$row[0]};
+    if ($veranstaltung) {
+	my $cfg = $veranstaltung->{cfg};
+	push @{$cfg->{sektionen}[$row[1] - 1]}, $row[2];
+    }
 }
 
 foreach my $id (keys %$veranstaltungen) {

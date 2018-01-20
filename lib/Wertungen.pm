@@ -51,7 +51,8 @@ sub spaltenwert($$) {
     if ($spalte eq 'lbl') {
 	my @text;
 
-	$fahrer->{bundesland} =~ s/ *$//;
+	$fahrer->{bundesland} =~ s/ *$//
+	    if defined $fahrer->{bundesland};
 	if (($fahrer->{land} // '') ne '') {
 	    push @text, $fahrer->{land};
 	}

@@ -162,7 +162,8 @@ for(;;) {
 	$fahrer_nach_startnummer->{$startnummer} = $fahrer;
 
 	$fahrer->{land} = undef
-	    if $cfg->{art} =~ /^otsv/ && $fahrer->{land} eq 'A';
+	    if $cfg->{art} =~ /^otsv/ &&
+	       defined $fahrer->{land} && $fahrer->{land} eq 'A';
 
 	$ergebnis_vorhanden = 1
 	    if $fahrer->{start} && defined($fahrer->{rang});
