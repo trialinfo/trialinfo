@@ -3175,11 +3175,26 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
   if (new_rider && new_rider.number)
     number = new_rider.number;
 
+  function flatten(rider) {
+    rider = Object.assign({}, rider);
+    if (rider.future_starts) {
+      for (let future_event of event.future_events) {
+	if (future_event.date) {
+	  rider['start_' + future_event.date] =
+	    rider.future_starts[future_event.fid] || false;
+	}
+      }
+      delete rider.future_starts;
+    }
+    return rider;
+  }
+
   var params = {
-    old_rider: old_rider,
-    new_rider: new_rider,
-    diff: html_diff(old_rider || {}, new_rider || {})
+    old_rider: flatten(old_rider),
+    new_rider: flatten(new_rider),
   };
+  params.diff = html_diff(params.old_rider, params.new_rider);
+
   if (new_rider)
     params.url = config.url + 'admin/event/' + id + '/riders?number=' + number;
   var message = emails['notify-registration'].renderToString(params).trim();
