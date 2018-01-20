@@ -602,7 +602,6 @@ CREATE TABLE `users` (
   `verified` tinyint(1) NOT NULL DEFAULT '0',
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `super_admin` tinyint(1) NOT NULL DEFAULT '0',
-  `notify` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`user`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

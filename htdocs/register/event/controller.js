@@ -386,20 +386,6 @@ var eventController = [
     if (event.registration_ends)
       kick();
 
-    $scope.change_notify = function() {
-      $scope.busy = true;
-      $http.put('/api/register/settings', $scope.event.settings)
-      .then(function(response) {
-	$scope.event.settings = response.data;
-      })
-      .catch(function() {
-        $scope.event.settings.notify = !$scope.event.settings.notify;
-      })
-      .finally(function() {
-	delete $scope.busy;
-      });
-    };
-
     if (!riders.length)
       $scope.change_rider(0);
   }];
