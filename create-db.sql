@@ -240,6 +240,36 @@ CREATE TABLE `groups` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `mailman_emails`
+--
+
+DROP TABLE IF EXISTS `mailman_emails`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mailman_emails` (
+  `listname` varchar(20) NOT NULL,
+  `email` varchar(60) NOT NULL,
+  PRIMARY KEY (`listname`,`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `mailman_series`
+--
+
+DROP TABLE IF EXISTS `mailman_series`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mailman_series` (
+  `listname` varchar(20) NOT NULL,
+  `serie` int(11) NOT NULL,
+  `id` int(11) DEFAULT NULL,
+  `mtime` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`listname`,`serie`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `marks`
 --
 
