@@ -1288,6 +1288,11 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.start = false;
       rider.start_time = null;
       rider.entry_fee = null;
+      rider.rider_comment = null;
+    });
+    Object.keys(riders).forEach((number) => {
+      if (riders[number].group)
+	delete riders[number];
     });
   }
 
