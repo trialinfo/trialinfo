@@ -55,7 +55,7 @@ var eventController = [
 
     $scope.license_visible = function(rider) {
       return event.type == null ||
-	     !event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/) ||
+	     !event.type.match(/^otsv(\+amf)?$/) ||
              (rider['class'] >= 11 && rider['class'] <= 13);
     }
 
@@ -80,7 +80,7 @@ var eventController = [
 	return;
 
       if (event.type != null &&
-	  event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
+	  event.type.match(/^otsv(\+amf)?$/)) {
 	if ($scope.age_year) {
 	  if ($scope.age_year >= 45) {
 	    if (rider.class == 3)
@@ -161,7 +161,7 @@ var eventController = [
       delete $scope.max_age_year;
 
       if (event.type != null) {
-	if (event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
+	if (event.type.match(/^otsv(\+amf)?$/)) {
 	  if (class_ == 3) {
 	    $scope.max_age_year = 44;
 	  } else if (class_ == 4 || class_ == 7) {
@@ -180,7 +180,7 @@ var eventController = [
 	    $scope.min_age = 10;
 	    $scope.max_age_year = 15;
 	  }
-	} else if (event.type.match(/^otsv-ecup2017/)) {
+	} else if (event.type.match(/^otsv-ecup/)) {
 	  if (class_ == 1) {
             $scope.max_age_year = 6;
           } else if (class_ == 2 || class_ == 3) {

@@ -64,7 +64,7 @@ var eventListController = [
     });
 
     function otsv_fee(event) {
-      if (event.type === 'otsv2014' || event.type === 'otsv+osk2014' || event.type === 'otsv2016' || event.type === 'otsv+osk2016') {
+      if (event.type == 'otsv' || event.type == 'otsv+amf') {
 	var now;
 	if (event.date &&
 	    (match = event.date.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
@@ -85,9 +85,9 @@ var eventListController = [
 	  return age_year != null && age_year < 18 ?
 	    2 : 6;
 	};
-      } else if (event.type === 'otsv-bike2015')
+      } else if (event.type == 'otsv-bike')
 	return function(rider) { return 2; };
-      else if (event.type === 'otsv-ecup2015')
+      else if (event.type == 'otsv-ecup')
 	return function(rider) { return 1.5; };
     };
 
