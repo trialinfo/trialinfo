@@ -486,9 +486,9 @@ var ridersController = [
 
     $scope.otsv_amf_event =
       event.type != null &&
-      event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/);
+      event.type.match(/^otsv(\+amf)?$/);
 
-    $scope.osk_license = function(rider) {
+    $scope.amf_license = function(rider) {
       return rider.license.match(/^(IJM|JM|JMJ) ?[0-9]+$/);
     };
 
@@ -793,7 +793,7 @@ var ridersController = [
       delete $scope.max_age_year;
 
       if (event.type != null) {
-	if (event.type.match(/^otsv(\+osk|\+amf)?\d{4}$/)) {
+	if (event.type.match(/^otsv(\+amf)?$/)) {
 	  if (class_ == 3) {
 	    $scope.max_age_year = 44;
 	  } else if (class_ == 4 || class_ == 7) {
@@ -812,7 +812,7 @@ var ridersController = [
 	    $scope.min_age = 10;
 	    $scope.max_age_year = 15;
 	  }
-	} else if (event.type.match(/^otsv-ecup2017/)) {
+	} else if (event.type.match(/^otsv-ecup/)) {
 	  if (class_ == 1) {
 	    $scope.max_age_year = 6;
 	  } else if (class_ == 2 || class_ == 3) {

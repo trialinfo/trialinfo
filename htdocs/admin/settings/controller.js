@@ -381,27 +381,21 @@ var settingsController = [
 	angular.forEach(event.classes, function(class_, index) {
 	  if (index != 4) {
 	    class_.ranking_class =
-	      ((type === 'otsv2014' ||
-		type === 'otsv2016') &&
+	      (type == 'otsv' &&
 	       index >= 10 && index <= 12) ? index - 9 :
-	      ((type === 'otsv+osk2014' ||
-		type === 'otsv+osk2016') &&
-	       index == 0) ? 11 : index + 1;
+	      (type == 'otsv+amf' &&
+	       index == 0) ? 11 :
+	      index + 1;
 	    class_.no_ranking1 =
-	      ((type === 'otsv2014' || type === 'otsv+osk2014') &&
-	       index == 6) ||
-	      ((type === 'otsv2014' ||
-		type === 'otsv2016') &&
+	      (type == 'otsv' &&
 	       (index == 0 || (index >= 10 && index <= 12)));
 	  }
 	  class_.non_competing =
-	    ((type === 'otsv+osk2014' ||
-	      type === 'otsv+osk2016') && index == 0);
+	    (type == 'otsv+amf' && index == 0);
 	});
-	if (type === 'otsv2014' || type === 'otsv+osk2014' ||
-	    type === 'otsv2016' || type === 'otsv+osk2016') {
+	if (type == 'otsv' || type == 'otsv+amf') {
 	  $scope.features.start_time = $scope.features.finish_time =
-	    (type === 'otsv+osk2014' || type === 'otsv+osk2016');
+	    (type == 'otsv+amf');
 	}
       }
     };
