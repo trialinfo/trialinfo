@@ -1192,16 +1192,6 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
       number = rider.number;
     }
 
-    if (rider && rider.email && rider.user_tag == null) {
-      let rows = await connection.queryAsync(`
-        SELECT user_tag
-	FROM users
-	WHERE email = ?
-      `, [rider.email]);
-      if (rows.length == 1)
-	rider.user_tag = rows[0].user_tag;
-    }
-
     if (rider && rider.rider_tag == null)
       rider.rider_tag = random_tag();
 
@@ -2580,9 +2570,9 @@ async function register_get_riders(connection, id, user) {
   var rows = await connection.queryAsync(`
     SELECT number
     FROM riders
-    WHERE id = ? AND user_tag = ? AND NOT COALESCE(`+'`group`'+`, 0)
+    WHERE id = ? AND (user_tag = ? OR email = ?) AND NOT COALESCE(`+'`group`'+`, 0)
     ORDER BY last_name, first_name, date_of_birth, number`,
-    [id, user.user_tag]);
+    [id, user.user_tag, user.email]);
 
   var riders = [];
   for (let row of rows) {
@@ -3236,7 +3226,8 @@ async function register_save_rider(connection, id, number, rider, user, version)
     var old_rider;
     if (number != null) {
       old_rider = await get_rider(connection, id, number);
-      if (old_rider.user_tag != user.user_tag)
+      if (old_rider.user_tag != user.user_tag &&
+	  old_rider.email != user.email)
 	throw new HTTPError(403, 'Forbidden');
     } else {
       var result = await connection.queryAsync(`
@@ -3290,12 +3281,12 @@ async function register_save_rider(connection, id, number, rider, user, version)
 	  event.features.verified = true;
 	}
       }
+
+      rider.rider_tag = old_rider ?
+        old_rider.rider_tag : random_tag();
       rider.user_tag = user.user_tag;
-      delete rider.rider_tag;
 
       rider = Object.assign(cache.modify_rider(id, number), rider);
-      if (rider.rider_tag == null)
-	rider.rider_tag = random_tag();
     } else {
       if (old_rider &&
 	  ((old_rider.registered && event.features.registered) ||
@@ -3838,12 +3829,6 @@ async function import_event(connection, existing_id, data, email) {
 	}
       }
     }
-
-    await connection.queryAsync(`
-      UPDATE riders
-      JOIN users USING (email)
-      SET riders.user_tag = users.user_tag, riders.version = riders.version + 1
-      WHERE riders.user_tag IS NULL AND id = ?`, [id]);
 
     await cache.commit(connection);
     return {id: id};
