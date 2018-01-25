@@ -21,21 +21,24 @@ Folgende Funktionen werden unterstützt:
  * Erstellung verschiedener Fahrerlisten und von Ergebnislisten online und
    als PDF-Dateien.
 
- * Definition von Veranstaltungsreihen (enthaltene Veranstaltungen und Klassen,
-   Anzahl der Läufe und Streichresultate, Startnummernänderungen zwischen
-   Veranstaltungen).
+ * Definition von Veranstaltungsreihen (Klassen, Anzahl der Läufe und
+   Streichresultate, Startnummernänderungen zwischen Veranstaltungen).
 
- * Import von und Export auf Dateien. Import vom und Export in das Programm
-   TrialTool von Ortwin Sann [1].
+ * Import von und Export auf Dateien.  (Der Import vom und Export in das
+   Programm TrialTool, http://www.ortwinsann.de/trialtool/, von Ortwin Sann
+   war in einer älteren Version möglich, wird derzeit aber nicht benötigt,
+   und daher nicht unterstützt.)
 
  * Import direkt von einem Server. Laufende Synchronisierung auf einen Server.
 
  * Präsentationsmodus (für einen externen Bildschirm).
 
+ * Online-Registrierung.
+
 Das System ist komplett über einen Web-Browser bedienbar.  Es kann von mehreren
 Geräten aus gleichzeitig verwendet werden. Wird dabei versucht, die selben
 Daten mehrfach zu verändern, dann werden diese Konflikte erkannt, und es kommt
-zu Fehlermeldungen
+zu Fehlermeldungen.
 
 
 Systemvoraussetzungen
@@ -44,18 +47,13 @@ Systemvoraussetzungen
  * Ein einigermaßen aktuelles Linux-System.  (Dieses System kann auch
    innerhalb einer virtuellen Maschine laufen.)
 
- * Die Scriptsprache Perl. Zusätzlich folgende Pakete oder Perl-Module:
-   perl-DBD-MySQL, perl-CGI, perl-JSON, perl-Clone, perl-URI-Escape oder
-   perl-Any-URI-Escape + perl-URI-Escape-XS, perl-Class-Accessor-Lite,
-   perl-Module-Load, perl-Module-Loaded, perl-Encode-Locale, perl-IO-Zlib,
-   perl-PDF-API2, perl-HTML-Entities-Interpolate.
-
-   (Die Paketnamen weichen teilweise ab; unter Debian heißt perl-PDF-API2
-   z.B. libpdf-api2-perl.)
+ * Die Pakete nodejs (https://nodejs.org/) und npm (https://www.npmjs.com/).
 
  * Die Datenbank MySQL (bzw. MariaDB).
 
- * Den Apache Web-Server.
+ * Für die statischen Ergebnissseiten, den Apache Web-Server und die
+   Scriptsprache Perl. Zusätzlich folgende Pakete oder Perl-Module:
+     perl-DBD-MySQL, perl-CGI, perl-JSON.
 
 
 Konfiguration
@@ -64,7 +62,7 @@ Konfiguration
 Datenbank
 ---------
 
-In MySQL ist wichtig, dass eine transaktionsfähige Datenbank-Engine  (InnoDB,
+In MySQL ist wichtig, dass eine transaktionsfähige Datenbank-Engine (InnoDB,
 nicht MyISAM) verwendet wird.
 
 
@@ -83,16 +81,9 @@ nicht MyISAM) verwendet wird.
   > GRANT ALL PRIVILEGES ON trialinfo.* TO 'trialinfo'@'%';
 
 
-Die anfängliche Datenbankstruktur lässt sich danach mit "db-sync
---create-tables" erzeugen.
+Die anfängliche Datenbankstruktur lässt sich danach folgendermaßen erzeugen:
 
-
-  Beispiel
-  --------
-  $ ./db-sync.pl --db='mysql:trialinfo;host=localhost' \
-		 --user=admin \
-		 --password=password \
-		 --create-tables
+  $ mysql --user=trialinfo --password=password < create-db.sql
 
 
   /etc/my.cnf.d/server.cnf
@@ -103,15 +94,44 @@ Die anfängliche Datenbankstruktur lässt sich danach mit "db-sync
   sql_mode=STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 
 
+Herunterladen und erzeugen diverser Dateien
+-------------------------------------------
+
+Um einige Dateien wie Angular.js herunterzuladen, wird Make verwendet:
+
+  $ make
+
+
+Backend konfigurieren
+---------------------
+
+Die Scripts lassen sich über die Datei backend/config.json konfigurieren.  Die
+Einstellungen dort betreffen Dinge wie die Zugriffsdaten auf die Datenbank.
+
+Achtung: Diese Datei muss per Hand erzeugt werden, bevor die Applikation
+gestartet werden kann.  Eine Vorlage dafür befindet sich in der Datei
+backend/config.json.in.
+
+
+Backend starten
+---------------
+
+Das Backend kann mit "make start" in einem Testmodus gestartet werden, und mit
+"make serve" in einem Produktionsmodus.
+
+Danach kann über einen Web-Browser auf TrialInfo zugegriffen werden.
+
+Im Betrieb kann der Start z.B. über systemd erfolgen.
+
+
 Web Server
 ----------
 
-Die Dateien im Verzeichnis "htdocs" müssen in einem Dokumentenverzeichnis
-liegen; die Dateien im Verzeichnis "cgi-bin" in einem Verzeichnis, in dem der
-Web Server CGI-Scripts ausführen darf.
-
-Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
-(SSI) verarbeitet werden.
+Die im Backend implementierte Web-Applikation beinhaltet alle Funktionen, um
+Veranstaltungen durchführen zu können.  Einzig die öffentliche Darstellung von
+Ergebnissen ist derzeit noch über Perl CGI-Scripts implementiert.  Wenn diese
+verwendet werden sollen, bietet es sich an, dafür Apache zu verwenden, und
+Apache als Proxy zum Backend zu verwenden.
 
   Beispielkonfiguration für Apache:
 
@@ -140,19 +160,8 @@ Die *.shtml - Dateien müssen vom Web Server als Server Side Include-Dateien
 	</LocationMatch>
     </VirtualHost>
 
-Die Verzeichnisse htdocs/veranstalter/, cgi-bin/veranstalter/, admin/, api/
-geben auch Zugriff auf Funktionen, die üblicherweise nicht öffentlich
-zugänglich sein sollen.
-
 Je nach Konfiguration kann es sein, dass die Konfiguration für TrialInfo mit
 dem Befehl "a2ensite" aktiviert werden muss.
-
-Standardmäßig ist der Zugriff auf den Veranstalter-Bereich auf die Gruppe
-"veranstalter" beschränkt.  Zum Rechtemodell in der Administration siehe unten.
-
-Um Benutzer zu definieren, muss eine Datei .htpasswd erzeugt werden (Utility
-"hdpasswd"). Diesen Benutzern müssen dann in der Datei .htgroup die
-entsprechenden Gruppen zugewiesen werden.
 
 
 SELinux
@@ -208,6 +217,7 @@ Systemd
   $ journalctl -u trialinfo
   $ journalctl -f -u trialinfo
 
+
 Git post-receive hook
 ---------------------
 
@@ -221,34 +231,13 @@ Git post-receive hook
     sudo /bin/systemctl restart trialinfo.socket
 
 
-Herunterladen und erzeugen diverser Dateien
--------------------------------------------
-
-Um einige Dateien wie Angular.js herunterzuladen und passende .htaccess-Dateien
-zu erzeugen, kann Make verwendet werden:
-
-  $ make
-  $ make install
-
-
 Apache-Module
 -------------
 
 Auf manchen Systemen wie Ubuntu 15.04 müssen die verwendeten Apache-Module
 mit folgendem Befehl aktiviert werden:
 
-  $ a2enmod include.load cgid.load authz_groupfile.load rewrite.load
-
-
-Scripts
--------
-
-Die Scripts lassen sich über die Datei lib/Auswertung.pm konfigurieren.  Die
-Einstellungen dort betreffen Dinge wie die Zugriffsdaten auf die Datenbank.
-
-Achtung: Diese Datei lib/Auswertung.pm muss per Hand erzeugt werden, teilweise
-BEVOR DIE SCRIPTS VERWENDET WERDEN KÖNNEN.  Eine Vorlage dafür befindet sich in
-der Datei lib/Auswertung.pm.txt.
+  $ a2enmod include.load cgid.load rewrite.load
 
 
 DEB-Paket bauen
@@ -273,24 +262,23 @@ Veranstaltungsverwaltung im Pfad /admin/ auf dem Web-Server verfügbar.
 Rechtemodell und Rechteverwaltung
 =================================
 
-Auf den Administrationsbereich haben nur für den Web-Server definierte Benutzer
-Zugriff.  Dabei sehen Benutzer nur diejenigen Veranstaltungen und
-Veranstaltungsreihen, zu denen sie zumindest Lesezugriff haben.
+Auf den Administrationsbereich haben nur Benutzer mit dem "admin"-Flag Zugriff.
+
+Dabei haben Benutzer mit dem "super_admin"-Flag vollen Zugriff auf alle
+Veranstaltungen und Veranstaltungsreihen.  Die anderen Benutzer sehen nur die
+Veranstaltungen und Veranstaltungsreihen, auf die sie zumindest Lesezugriff
+haben.
 
 Legt ein Benutzer eine neue Veranstaltung oder Veranstaltungsreihe an, dann
-bekommt er dort Schreib-/Lesezugriff.  Falls der Benutzer zu diesem Zeitpunkt
-noch nicht in der Datenbank existiert, wird er dort angelegt.
-
-Zusätzlich können Benutzer als Administratoren markiert sein, dann haben sie
-Schreib-/Lesezugriff auf alle Veranstaltungen und Veranstaltungsreihen.
+bekommt er dort Schreib-/Lesezugriff.
 
 Weiters lassen sich direkt in der Datenbank zusätzliche Rechte vergeben, es
 lassen sich Gruppen von Benutzern definieren, und es kann definiert werden, wie
-Berechtigungen zwischen Veranstaltungen "vererbt werden", wenn eine
-Veranstaltung auf Basis einer anderen Veranstaltung erzeugt wird.
+Berechtigungen zwischen Veranstaltungen vererbt werden, wenn eine Veranstaltung
+auf Basis einer anderen Veranstaltung erzeugt wird.
 
-Veranstaltungen "erben" auch die Zugehörigkeit zu Veranstaltungsreihen von
-ihrer Basisveranstaltung, sofern der Benutzer Schreibzugriff auf die jeweilige
+Veranstaltungen erben auch die Zugehörigkeit zu Veranstaltungsreihen von ihrer
+Basisveranstaltung, sofern der Benutzer Schreibzugriff auf die jeweilige
 Veranstaltungsreihe hat.
 
 
@@ -307,8 +295,8 @@ Plätze, usw., gewinnt.
 
 Danach gewinnt der Fahrer mit mehr Streichpunkten.
 
-Wenn danach immer noch Gleichstand herrscht, werden beide Fahrer momentan
-gleich gereiht.
+Diese Reihung kann in den Einstellungen der Veranstaltungsreihe überschrieben
+werden, indem die Reihenfolge bei Punktegleichstand explizit definiert wird.
 
 
 WeasyPrint
@@ -319,13 +307,7 @@ Weasyprint ist zwar speziell für die Ergebnislisten mit ihren großen Tabellen
 sehr langsam, dafür erzeugt es aber einen ordentlichen Seitenumbruch, was z.B.
 WebKit-basierte Lösungen wie wkhtmltopdf nur sehr mangelhaft beherrschen.
 
-  yum install weasyprint
-
-
-Perl-Module
-===========
-git://github.com/zigorou/perl-json-pointer.git
-git://github.com/zigorou/perl-json-patch.git
+  $ yum install weasyprint
 
 
 Lizenz
@@ -333,9 +315,3 @@ Lizenz
 
 Dieser Text und die Programme stehen under der GNU Affero General Public License
 Version 3, http://www.gnu.org/licenses/agpl-3.0.html.
-
-
-Referenzen
-==========
-
-[1] http://www.ortwinsann.de/trialtool/

@@ -32,7 +32,7 @@ download: $(DOWNLOAD_FILES)
 install: download
 	cd backend && npm install
 
-%.marko.js: backend/$(MARKOC)
+$(MARKO_FILES:%=%.js): backend/$(MARKOC)
 %.marko.js: %.marko
 	( cd backend && $(MARKOC) ../$< )
 
@@ -49,9 +49,6 @@ serve: build
 
 profile: build
 	cd backend && npm run profile
-
-mailer:
-	cd backend && npm run mailer
 
 .PHONY: require-tag
 require-tag:
@@ -76,17 +73,17 @@ upload:
 
 htdocs/js/angular-$(ANGULAR_VERSION)/angular%:
 	@mkdir -p  $(dir $@)
-	$(CURL) -o $@ --fail --silent --location \
+	$(CURL) -o $@ --silent --location \
 		$(ANGULAR_BASE)/$(ANGULAR_VERSION)/$(notdir $@)
 
 htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
-	$(CURL) -o $@ --fail --silent --location \
+	$(CURL) -o $@ --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
 
 htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)
-	$(CURL) -o $@ --fail --silent --location \
+	$(CURL) -o $@ --silent --location \
 		https://github.com/trialinfo/json-diff/raw/master/json-diff.js
 
 clean:
