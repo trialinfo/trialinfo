@@ -1154,12 +1154,15 @@ async function rider_change_number(connection, id, old_number, new_number) {
   }
 }
 
-async function admin_save_rider(connection, id, number, rider, tag, version) {
+async function admin_save_rider(connection, id, number, rider, tag, query) {
   rider = admin_rider_from_api(rider);
 
   await cache.begin(connection);
   try {
     var event = await get_event(connection, id);
+    if (event.version != query.event_version)
+      throw new HTTPError(409, 'Conflict');
+
     await get_riders(connection, id);
     var old_rider;
     if (number != null) {
@@ -1180,9 +1183,10 @@ async function admin_save_rider(connection, id, number, rider, tag, version) {
 	number = rider.number;
     }
 
+    let version = query.version;
     if (rider && version == null)
       version = rider.version;
-    if (old_rider && version) {
+    if (old_rider) {
       if (old_rider.version != version)
 	throw new HTTPError(409, 'Conflict');
     }
@@ -2502,14 +2506,24 @@ passport.use('local', new LocalStrategy(
       });
   }));
 
+const register_event_fields = {
+  date: true,
+  features: true,
+  future_events: true,
+  registration_ends: true,
+  registration_info: true,
+  series: true,
+  type: true,
+  version: true
+};
+
 async function register_get_event(connection, id, user) {
   var event = await get_event(connection, id);
   var result = {
     id: id,
     title: event.rankings[0].title,
   };
-  ['date', 'registration_ends', 'registration_info',
-   'type', 'features', 'future_events', 'series'].forEach((field) => {
+  Object.keys(register_event_fields).forEach((field) => {
     result[field] = event[field];
   });
   result.classes = [];
@@ -3216,13 +3230,16 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
   console.log('Notification email sent to ' + JSON.stringify(to));
 }
 
-async function register_save_rider(connection, id, number, rider, user, version) {
+async function register_save_rider(connection, id, number, rider, user, query) {
   await cache.begin(connection);
   try {
     var event = await get_event(connection, id);
     if (event.registration_ends == null ||
         common.parse_timestamp(event.registration_ends).getTime() < Date.now())
       throw new HTTPError(403, 'Forbidden');
+    if (event.version != query.event_version)
+      throw new HTTPError(409, 'Conflict');
+
     var old_rider;
     if (number != null) {
       old_rider = await get_rider(connection, id, number);
@@ -3237,9 +3254,10 @@ async function register_save_rider(connection, id, number, rider, user, version)
       number = result[0].number;
     }
 
+    let version = query.version;
     if (rider && version == null)
       version = rider.version;
-    if (old_rider && version) {
+    if (old_rider) {
       if (old_rider.version != version)
 	throw new HTTPError(409, 'Conflict');
     }
@@ -4062,7 +4080,9 @@ app.get('/api/register/event/:id/suggestions', function(req, res, next) {
 app.post('/api/register/event/:id/rider', async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await register_save_rider(req.conn, req.params.id, null, rider, req.user);
+    rider = await register_save_rider(req.conn, req.params.id,
+				      null, rider,
+				      req.user, req.query);
     res.status(201);
     res.json(rider);
   } catch (err) {
@@ -4073,7 +4093,9 @@ app.post('/api/register/event/:id/rider', async function(req, res, next) {
 app.put('/api/register/event/:id/rider/:number', async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await register_save_rider(req.conn, req.params.id, req.params.number, rider, req.user);
+    rider = await register_save_rider(req.conn, req.params.id,
+				      req.params.number, rider,
+				      req.user, req.query);
     res.json(rider);
   } catch (err) {
     next(err);
@@ -4082,7 +4104,9 @@ app.put('/api/register/event/:id/rider/:number', async function(req, res, next) 
 
 app.delete('/api/register/event/:id/rider/:number', async function(req, res, next) {
   try {
-    await register_save_rider(req.conn, req.params.id, req.params.number, null, req.user, req.query.version);
+    await register_save_rider(req.conn, req.params.id,
+			      req.params.number, null,
+			      req.user, req.query);
     res.json({});
   } catch (err) {
     next(err);
@@ -4255,7 +4279,9 @@ app.get('/api/event/:id/find-riders', will_read_event, function(req, res, next) 
 app.post('/api/event/:id/rider', will_write_event, async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await admin_save_rider(req.conn, req.params.id, null, rider, req.user.user_tag);
+    rider = await admin_save_rider(req.conn, req.params.id,
+				   null, rider,
+				   req.user.user_tag, req.query);
     res.status(201);
     res.json(rider);
   } catch (err) {
@@ -4264,7 +4290,9 @@ app.post('/api/event/:id/rider', will_write_event, async function(req, res, next
 });
 
 app.post('/api/event/:id/reset', will_write_event, async function(req, res, next) {
-  admin_reset_event(req.conn, req.params.id, req.query.reset, req.user.email, req.query.version)
+  admin_reset_event(req.conn, req.params.id,
+		    req.query.reset, req.user.email,
+		    req.query)
   .then(() => {
     res.json({});
   }).catch(next);
@@ -4273,7 +4301,9 @@ app.post('/api/event/:id/reset', will_write_event, async function(req, res, next
 app.put('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
   var rider = req.body;
   try {
-    rider = await admin_save_rider(req.conn, req.params.id, req.params.number, rider, req.user.user_tag);
+    rider = await admin_save_rider(req.conn, req.params.id,
+				   req.params.number, rider,
+				   req.user.user_tag, req.query);
     res.json(rider);
   } catch (err) {
     next(err);
@@ -4282,7 +4312,9 @@ app.put('/api/event/:id/rider/:number', will_write_event, async function(req, re
 
 app.delete('/api/event/:id/rider/:number', will_write_event, async function(req, res, next) {
   try {
-    await admin_save_rider(req.conn, req.params.id, req.params.number, null, req.user.user_tag, req.query.version);
+    await admin_save_rider(req.conn, req.params.id,
+			   req.params.number, null,
+			   req.user.user_tag, req.query);
     res.json({});
   } catch (err) {
     next(err);
