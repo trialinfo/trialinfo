@@ -317,10 +317,15 @@ var ridersController = [
 
       $scope.busy = true;
       var request;
+      var params = {
+	event_version: event.version
+      };
       if (number)
-	request = $http.put('/api/event/' + event.id + '/rider/' + number, rider);
+	request = $http.put('/api/event/' + event.id + '/rider/' + number, rider,
+			    {params: params});
       else
-	request = $http.post('/api/event/' + event.id + '/rider', rider);
+	request = $http.post('/api/event/' + event.id + '/rider', rider,
+			     {params: params});
 
       request
 	.then(function(response) {
@@ -362,7 +367,8 @@ var ridersController = [
 	'number': null,
 	'rankings': [ event.ranking1_enabled ],
 	'insurance': event.insurance,
-	'verified': true
+	'verified': true,
+	'future_starts': {}
       };
       if (groups) {
 	rider.riders = [];
@@ -552,7 +558,8 @@ var ridersController = [
 	var number = old_rider.number;
 	var version = old_rider.version;
 	var params = {
-	  version: version
+	  version: version,
+	  event_version: event.version
 	};
 	$http.delete('/api/event/' + event.id + '/rider/' + number, {params: params})
 	  .then(function() {

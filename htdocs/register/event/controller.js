@@ -39,6 +39,8 @@ var eventController = [
       if (!rider) {
 	rider = {
 	  country: 'A',
+	  future_starts: {},
+	  insurance: event.insurance
 	};
 	rider.email = $scope.user.email;
       }
@@ -289,10 +291,15 @@ var eventController = [
       $scope.busy = true;
       var rider = $scope.rider;
       var request;
+      var params = {
+	event_version: event.version
+      };
       if (rider.number) {
-	request = $http.put('/api/register/event/' + $routeParams.id + '/rider/' + rider.number, rider);
+	request = $http.put('/api/register/event/' + $routeParams.id + '/rider/' + rider.number, rider,
+			    {params: params});
       } else {
-	request = $http.post('/api/register/event/' + $routeParams.id + '/rider', rider);
+	request = $http.post('/api/register/event/' + $routeParams.id + '/rider', rider,
+			    {params: params});
       }
       request.then(function (response) {
 	let rider = response.data;
@@ -350,8 +357,12 @@ var eventController = [
 	  if ($scope.busy)
 	    return;
 	  $scope.busy = true;
+	  var params = {
+	    version: $scope.rider.version,
+	    event_version: event.version
+	  };
 	  $http.delete('/api/register/event/' + $routeParams.id + '/rider/' + $scope.rider.number,
-		       {params: {version: $scope.rider.version}})
+		       {params: params})
 	  .then(function () {
 	    $scope.riders.splice($scope.internal.index, 1);
 	    $scope.back();

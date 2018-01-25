@@ -309,7 +309,11 @@ var marksController = [
       /* FIXME: Wenn Start, dann muss die Klasse starten. */
       $scope.busy = true;
       var rider = $scope.rider;
-      $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider)
+      var params = {
+	event_version: event.version
+      };
+      $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider,
+		{params: params})
 	.then(function(response) {
 	  assign_rider(response.data);
 	  set_focus('#search_term', $timeout);

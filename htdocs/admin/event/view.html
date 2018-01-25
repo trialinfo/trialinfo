@@ -3,7 +3,9 @@
 <a href="event/{{event.id}}/list">Fahrerliste</a> (<a href="event/{{event.id}}/list?riding">Fahrer auf der Strecke</a>)<br>
 <br>
 <a href="event/{{event.id}}/riders">Fahrer</a><br>
-<a href="event/{{event.id}}/groups">Gruppen</a><br>
+<span ng-if="features.groups">
+  <a href="event/{{event.id}}/groups">Gruppen</a><br>
+</span>
 <a href="event/{{event.id}}/marks">Punktevergabe</a><br>
 <br>
 <a href="event/{{event.id}}/settings">Einstellungen</a><br>
@@ -91,7 +93,8 @@
     </td>
     <td>
       Löscht zusätzlich <span ng-if="features.registered">Nennungseingang,</span>
-      Start, die Startzeit, das Nenngeld, Anmerkungen des Fahrers und die Gruppen<span ng-if="base.starters[event.base_fid]">
+      Start, die Startzeit, das Nenngeld<span ng-if="features.groups">, die Gruppen</span>
+      und die Anmerkungen des Fahrers<span ng-if="base.starters[event.base_fid]">
       und setzt <span ng-if="features.registered">Nennungseingang und</span> Start bei
       {{base.starters[event.base_fid]}} Fahrern aus Veranstaltung
       <em>{{base.title}}</em></span>.
