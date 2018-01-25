@@ -48,10 +48,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js --exec babel-node",
-    "build": "babel index.js mailer.js random_shuffle.js start_times.js -d dist",
+    "build": "babel index.js random_shuffle.js start_times.js -d dist",
     "serve": "export NODE_ENV=production; node dist/index.js",
-    "profile": "export NODE_ENV=production; node --prof dist/index.js",
-    "mailer": "babel-node mailer.js"
+    "profile": "export NODE_ENV=production; node --prof dist/index.js"
   },
   "babel": {
     "presets": [
