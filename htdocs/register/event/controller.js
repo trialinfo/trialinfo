@@ -39,7 +39,8 @@ var eventController = [
       if (!rider) {
 	rider = {
 	  country: 'A',
-	  future_starts: {}
+	  future_starts: {},
+	  insurance: event.insurance
 	};
 	rider.email = $scope.user.email;
       }

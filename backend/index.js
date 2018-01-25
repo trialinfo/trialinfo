@@ -2510,6 +2510,7 @@ const register_event_fields = {
   date: true,
   features: true,
   future_events: true,
+  insurance: true,
   registration_ends: true,
   registration_info: true,
   series: true,
