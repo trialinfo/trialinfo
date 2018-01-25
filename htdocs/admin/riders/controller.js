@@ -367,7 +367,8 @@ var ridersController = [
 	'number': null,
 	'rankings': [ event.ranking1_enabled ],
 	'insurance': event.insurance,
-	'verified': true
+	'verified': true,
+	'future_starts': {}
       };
       if (groups) {
 	rider.riders = [];
