@@ -56,7 +56,6 @@ CREATE TABLE `classes` (
   `class` int(11) NOT NULL,
   `rounds` int(11) DEFAULT NULL,
   `name` varchar(60) DEFAULT NULL,
-  `started` tinyint(1) DEFAULT NULL,
   `color` varchar(20) DEFAULT NULL,
   `riding_time` time DEFAULT NULL,
   `ranking_class` int(11) NOT NULL,
