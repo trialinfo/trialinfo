@@ -99,7 +99,7 @@ Herunterladen und erzeugen diverser Dateien
 
 Um einige Dateien wie Angular.js herunterzuladen, wird Make verwendet:
 
-  $ make
+  $ make install
 
 
 Backend konfigurieren

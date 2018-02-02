@@ -104,35 +104,45 @@ unless (defined $id) {
     if ($vareihe) {
 	$sth = $dbh->prepare(q{
 	    SELECT id, title,
-		   GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ')
+		   GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ') AS series
 	    FROM series_events
 	    JOIN events USING (id)
 	    JOIN rankings USING (id)
-	    LEFT JOIN (
-		SELECT DISTINCT id, series.abbreviation
+	    JOIN (
+		SELECT DISTINCT id, series.abbreviation, ranking
 		FROM series_events
 		JOIN series USING (serie)
 		JOIN series_classes USING (serie)
 		JOIN classes USING (id, ranking_class)
-		WHERE classes.started) AS _ USING (id)
-	    WHERE enabled AND serie = ? AND ranking = ?
+		JOIN (
+		    SELECT id, class AS ranking_class
+		    FROM zones
+		) AS _1 USING (id, ranking_class)
+		JOIN marks USING (id)
+	    ) AS _2 USING (id, ranking)
+	    WHERE enabled AND serie = ?
 	    GROUP BY id
 	    ORDER BY date
 	});
-	$sth->execute($vareihe, $wertung);
+	$sth->execute($vareihe);
     } else {
 	$sth = $dbh->prepare(q{
 	    SELECT id, title,
-		   GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ')
+		   GROUP_CONCAT(abbreviation ORDER BY abbreviation SEPARATOR ', ') AS series
 	    FROM events
 	    JOIN rankings USING (id)
 	    LEFT JOIN (
-		SELECT DISTINCT id, series.abbreviation
+		SELECT DISTINCT id, series.abbreviation, ranking
 		FROM series_events
 		JOIN series USING (serie)
 		JOIN series_classes USING (serie)
 		JOIN classes USING (id, ranking_class)
-		WHERE classes.started) AS _ USING (id)
+		JOIN (
+		    SELECT id, class AS ranking_class
+		    FROM zones
+		) AS _1 USING (id, ranking_class)
+		JOIN marks USING (id)
+	    ) AS _2 USING (id, ranking)
 	    WHERE enabled AND ranking = ?
 	    GROUP BY id
 	    ORDER BY date

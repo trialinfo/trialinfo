@@ -4,7 +4,7 @@ MAKEFLAGS = --no-print-directory
 
 CURL = curl
 SED = sed
-MARKOC = node_modules/marko/bin/markoc
+MARKOC = backend/node_modules/marko/bin/markoc
 
 # AngularJS
 ANGULAR_BASE=https://code.angularjs.org/
@@ -27,16 +27,13 @@ TAG = $(shell git describe --tags --candidates=0 ${1:-HEAD} 2>/dev/null)
 
 all: $(MARKO_FILES:%=%.js)
 
-download: $(DOWNLOAD_FILES)
-
-install: download
+install: $(DOWNLOAD_FILES)
 	cd backend && npm install
 
-$(MARKO_FILES:%=%.js): backend/$(MARKOC)
-%.marko.js: %.marko
-	( cd backend && $(MARKOC) ../$< )
+$(MARKO_FILES:%=%.js): $(MARKOC)
 
-backend/$(MARKOC): install
+%.marko.js: %.marko
+	cd backend && ../$(MARKOC) ../$<
 
 start: $(MARKO_FILES:%=%.js)
 	cd backend && npm start
