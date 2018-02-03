@@ -7,7 +7,7 @@ SED = sed
 MARKOC = backend/node_modules/marko/bin/markoc
 
 # AngularJS
-ANGULAR_BASE=https://code.angularjs.org/
+ANGULAR_BASE=https://code.angularjs.org
 ANGULAR_VERSION=1.6.8
 
 DOWNLOAD_FILES = \

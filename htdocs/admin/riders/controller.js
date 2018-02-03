@@ -822,16 +822,16 @@ var ridersController = [
 	} else if (event.type.match(/^otsv-ecup/)) {
 	  if (class_ == 1) {
 	    $scope.max_age_year = 6;
-	  } else if (class_ == 2 || class_ == 3) {
-	    // $scope.min_age_year = 7;
+	  } else if (class_ == 2) {
+	    $scope.min_age_year = 7;
 	    $scope.max_age_year = 8;
+	  } else if (class_ == 3) {
+	    // $scope.min_age_year = 7;
+	    $scope.max_age_year = 9;
 	  } else if (class_ == 4) {
-	    // $scope.min_age_year = 9;
-	  } else if (class_ == 5) {
-	    // $scope.min_age_year = 10;
-	    $scope.max_age_year = 13;
-	  } else if (class_ == 6) {
-	    // $scope.min_age_year = 13;
+	    $scope.min_age_year = 10;
+	    $scope.max_age_year = 15;
+	  } else if (class_ == 5 || class_ == 6) {
 	    $scope.max_age_year = 15;
 	  }
 	}
