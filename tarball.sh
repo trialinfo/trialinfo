@@ -14,14 +14,13 @@ trap "rm -rf $tmpdir" EXIT
 mkdir "$tmpdir/$basename"
 git archive "$tag" | tar -C "$tmpdir/$basename" -x
 
+cd "$tmpdir/$basename"
+make -f $topdir/Makefile install
+make -f $topdir/Makefile build
+make -f $topdir/Makefile
+
 cd "$tmpdir/$basename/backend"
-npm install > /dev/null
-
-MARKO_FILES='views/*.marko emails/*.marko'
-node_modules/marko/bin/markoc $MARKO_FILES
-rm -f $MARKO_FILES
-
-npm run build
+rm -fv views/*.marko emails/*.marko
 
 cd dist
 find . -type f -print0 \
@@ -31,7 +30,6 @@ cd ..
 rm -rf dist
 
 cd ..
-make -f $topdir/Makefile download
 
 sed -e "s:@PACKAGE@:$PACKAGE:g" \
     -e "s:@VERSION@:$version:g" \

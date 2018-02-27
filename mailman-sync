@@ -94,12 +94,6 @@ for (email,) in cursor:
     email_map[lc] = email
     new_emails.add(lc)
 
-# DEBUG: FIXME:
-# Limit to just two addresses for debugging
-limit = {'andreas.gruenbacher@gmail.com', 'leitner.andreas92@yahoo.de'}
-old_emails = limit & old_emails
-new_emails = limit & new_emails
-
 added_emails = new_emails - old_emails
 removed_emails = old_emails - new_emails
 
