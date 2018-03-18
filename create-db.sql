@@ -408,6 +408,7 @@ CREATE TABLE `riders` (
   `rider_tag` char(16) DEFAULT NULL,
   `user_tag` char(16) DEFAULT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '1',
+  `accept_conditions` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

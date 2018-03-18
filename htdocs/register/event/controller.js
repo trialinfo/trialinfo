@@ -1,8 +1,8 @@
 'use strict;'
 
 var eventController = [
-  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', 'event', 'riders', 'suggestions',
-  function ($routeParams, $scope, $cookies, $window, $timeout, $http, event, riders, suggestions) {
+  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', '$anchorScroll', 'event', 'riders', 'suggestions',
+  function ($routeParams, $scope, $cookies, $window, $timeout, $http, $anchorScroll, event, riders, suggestions) {
     $scope.context('Voranmeldung');
 
     try {
@@ -40,7 +40,8 @@ var eventController = [
 	rider = {
 	  country: 'A',
 	  future_starts: {},
-	  insurance: event.insurance
+	  insurance: event.insurance,
+	  accept_conditions: false
 	};
 	rider.email = $scope.user.email;
       }
@@ -49,6 +50,11 @@ var eventController = [
       $scope.rider = angular.copy(rider);
       $scope.internal.index = index;
       $scope.blur_country();
+
+      $scope.internal.conditions =
+	  !riders.filter(function(rider) {
+	    return rider.accept_conditions;
+	  }).length;
     }
 
     $scope.guardian_visible = function(rider) {
@@ -284,6 +290,13 @@ var eventController = [
     $scope.required_error = function(field) {
       return field.$error.required;
     }
+
+    $scope.show_conditions = function() {
+      $scope.internal.conditions = true;
+      $timeout(function() {
+	$anchorScroll('conditions');
+      });
+    };
 
     $scope.save_rider = function() {
       if ($scope.busy)
