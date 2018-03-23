@@ -17,6 +17,10 @@ textarea.ng-invalid.ng-dirty, input.ng-invalid.ng-dirty {
   background-color: #fff0f0;
 }
 
+a.imprint { color:gray;text-decoration:none }
+a.imprint:link { color:gray }
+a.imprint:visited { color:gray }
+
 @media print {
   .no-print, .no-print * { display:none !important; }
   .page-break { page-break-before:always; }

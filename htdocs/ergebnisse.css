@@ -45,3 +45,7 @@ table.wertung td.info2 {
 table.wertung .incomplete {
   text-decoration:line-through;
 }
+
+a.imprint { color:gray;text-decoration:none }
+a.imprint:link { color:gray }
+a.imprint:visited { color:gray }
