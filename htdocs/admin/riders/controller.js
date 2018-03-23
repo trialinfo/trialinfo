@@ -378,6 +378,8 @@ var ridersController = [
 	}, 0);
 	rider.last_name = num2alpha(max + 1);
       }
+      if (event.type != null && event.type.match(/^otsv/))
+	rider.accept_conditions = true;
       assign_rider(rider);
       $scope.fahrer_ist_neu = true;
       angular.extend($scope.enabled, {

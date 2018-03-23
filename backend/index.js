@@ -132,7 +132,6 @@ var pool = mysql.createPool({
   dateStrings: true,
 });
 
-/*
 async function column_exists(connection, table, column) {
   var rows = await connection.queryAsync(`
     SELECT 1
@@ -142,18 +141,15 @@ async function column_exists(connection, table, column) {
     `, [config.database.database, table, column]);
   return rows.length != 0;
 }
-*/
 
 async function update_database(connection) {
-  /*
-  if (!await column_exists(connection, 'users', 'notify')) {
-    console.log('Adding column `notify` to table `users`');
+  if (!await column_exists(connection, 'riders', 'accept_conditions')) {
+    console.log('Adding column `accept_conditions` to table `riders`');
     await connection.queryAsync(`
-      ALTER TABLE users
-      ADD notify BOOLEAN NOT NULL DEFAULT 1
+      ALTER TABLE riders
+      ADD accept_conditions BOOLEAN NOT NULL DEFAULT 0
     `);
   }
-  */
 }
 
 pool.getConnectionAsync()
@@ -2540,6 +2536,7 @@ async function register_get_event(connection, id, user) {
 }
 
 const register_rider_fields = {
+  accept_conditions: true,
   applicant: true,
   city: true,
   'class': true,
