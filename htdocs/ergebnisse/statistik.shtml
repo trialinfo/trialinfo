@@ -16,5 +16,8 @@
 <h2>ÖTSV Punktestatistiken</h2>
 <!--#set var="which" value="$QUERY_STRING" -->
 <!--#include virtual="/cgi-bin/ergebnisse/statistik-ssi.pl?$which" -->
+<p>
+© Österreichischer Trialsport Verband &lt;<a style="text-decoration:none" href="mailto:auswertung@otsv.at">auswertung@otsv.at</a>&gt;
+</p>
 </body>
 </html>
