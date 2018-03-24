@@ -278,7 +278,9 @@ if ($nur_vorangemeldete) {
     }
     $sth = $dbh->prepare(q{
 	SELECT number, fid
-	FROM future_events JOIN future_starts USING (id, fid)
+	FROM future_events
+	JOIN future_starts USING (id, fid)
+	JOIN riders USING (id, rider_tag)
 	WHERE id = ? AND active
 	ORDER BY date
     });
@@ -308,8 +310,8 @@ if ($nur_vorangemeldete) {
 	my $args = [];
 	push @$args, $cfg->{klassen}[$fahrer->{klasse} - 1]{bezeichnung}
 	    if $fahrer->{klasse} != $fahrer->{wertungsklasse};
-	if (@$fahrer->{alle_starts} != %$alle_starts) {
-	    foreach my $fid (@$fahrer->{alle_starts}) {
+	if (@{$fahrer->{alle_starts}} != keys %$alle_starts) {
+	    foreach my $fid (@{$fahrer->{alle_starts}}) {
 		push @$args, $alle_starts->{$fid};
 	    }
 	}
@@ -323,7 +325,7 @@ if ($nur_vorangemeldete) {
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
 	my $fahrer = $fahrer_nach_startnummer->{$startnummer};
 	delete $fahrer_nach_startnummer->{$startnummer}
-	    unless @$fahrer->{alle_starts};
+	    unless @{$fahrer->{alle_starts}};
     }
     doc_p scalar(values %$fahrer_nach_startnummer) . " vorangemeldete Fahrer.";
 
