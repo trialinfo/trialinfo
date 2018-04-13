@@ -80,6 +80,15 @@
 		</span>
 	    </td>
 	  </tr>
+	  <tr><th>Vorangemeldet</th>
+	    <td>
+	      <select ng-model="show.any_start" yes-no-null>
+		<option value="-"></option>
+		<!-- <option value="no">Nein</option> -->
+		<option value="yes">Ja</option>
+	      </select>
+	    </td>
+	  </tr>
 	  <tr ng-repeat="ranking in [1,2,3,4]" ng-if="features['ranking' + ranking] && ((show.riders && event.rankings[ranking - 1].riders) || (show.groups && event.rankings[ranking - 1].groups))">
 	    <th>{{ranking_name(ranking)}}</th>
 	    <td>
