@@ -13,6 +13,11 @@
       <fieldset style="display:inline">
 	<legend>Anzeige einstellen</legend>
 	<table>
+	  <tr><th>Subtitel</th>
+	  <td>
+	    <input type="text" size="40" maxlength="70" ng-model="show.subtitle" id="subtitle" nullable>
+	  </td>
+	  </tr>
 	  <tr ng-if="riders_groups"><th>Fahrer/Gruppen</th>
 	    <td>
 	      <select ng-model="show.riders_groups">
@@ -99,6 +104,7 @@
     </form>
   </p>
 </div>
+<h2>{{show.subtitle}}</h2>
 
 <style type="text/css">
 table.ranking {

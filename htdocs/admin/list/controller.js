@@ -10,7 +10,10 @@ var eventListController = [
     var features = event.features;
     $scope.features = features;
     $scope.fold = {};
-    $scope.show = { fields: [] };
+    $scope.show = {
+      fields: [],
+      subtitle: event.rankings[0].subtitle
+    };
 
     if (event.type && event.type.match(/^otsv/)) {
       list.forEach(function(rider) {
@@ -679,6 +682,11 @@ var eventListController = [
 	if (value === null || value === '' || value === false)
 	  delete search[key];
       });
+
+      if (search.subtitle == event.rankings[0].subtitle)
+	delete search.subtitle;
+      else if (search.subtitle == null)
+	search.subtitle = '';
 
       return search;
     }
