@@ -4,7 +4,11 @@ var eventScoresController = [
   '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'scores',
   function ($scope, $sce, $route, $location, $timeout, $http, $q, fractional, scores) {
     $scope.config = config;
-    $scope.show = { fields: [], classes: [] };
+    $scope.show = {
+      fields: [],
+      classes: [],
+      subtitle: scores.event.rankings[0].subtitle
+    };
     var features = scores.event.features;
     $scope.features = features;
 
@@ -171,6 +175,11 @@ var eventScoresController = [
 	if (value === null || value === '' || value === false)
 	  delete search[key];
       });
+
+      if (search.subtitle == event.rankings[($scope.show.ranking || 1) - 1].subtitle)
+	delete search.subtitle;
+      else if (search.subtitle == null)
+	search.subtitle = '';
 
       return search;
     }
@@ -725,6 +734,9 @@ var eventScoresController = [
 	})();
       } else
 	show_all();
+    });
+    $scope.$watch('show.ranking', function(ranking) {
+      show.subtitle = event.rankings[(ranking || 1) - 1].subtitle;
     });
 
     $scope.rank = function(rider) {

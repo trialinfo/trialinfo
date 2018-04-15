@@ -51,10 +51,7 @@ var eventController = [
       $scope.internal.index = index;
       $scope.blur_country();
 
-      $scope.internal.conditions =
-	  !riders.filter(function(rider) {
-	    return rider.accept_conditions;
-	  }).length;
+      $scope.internal.conditions = !rider.accept_conditions;
     }
 
     $scope.guardian_visible = function(rider) {

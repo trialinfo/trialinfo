@@ -10,7 +10,10 @@ var eventListController = [
     var features = event.features;
     $scope.features = features;
     $scope.fold = {};
-    $scope.show = { fields: [] };
+    $scope.show = {
+      fields: [],
+      subtitle: event.rankings[0].subtitle
+    };
 
     if (event.type && event.type.match(/^otsv/)) {
       list.forEach(function(rider) {
@@ -413,6 +416,9 @@ var eventListController = [
       if (show.start !== null &&
 	  !rider.start == show.start)
 	return false;
+      if (show.any_start !== null &&
+	  !(rider.start || Object.values(rider.future_starts).indexOf(true) >= 0) == show.any_start)
+	return false;
       for (var ranking = 1; ranking <= 4; ranking++) {
 	if (show['ranking' + ranking] !== null &&
 	    (rider.rankings[ranking - 1] === true) !==
@@ -597,8 +603,8 @@ var eventListController = [
 	return group_by.heading(group);
     };
 
-    var tristate_optionen = (function() {
-      var fields = ['number', 'registered', 'start', 'verified'];
+    var tristate_options = (function() {
+      var fields = ['number', 'registered', 'start', 'any_start', 'verified'];
       for (var n = 1; n <= 4; n++)
 	fields.push('ranking' + n);
       return fields;
@@ -607,7 +613,7 @@ var eventListController = [
     function from_url(search) {
       var show = angular.copy(search);
 
-      angular.forEach(tristate_optionen, function(option) {
+      angular.forEach(tristate_options, function(option) {
 	if (show[option] === 'yes')
 	  show[option] = true;
 	else if (show[option] === 'no')
@@ -649,7 +655,7 @@ var eventListController = [
     function to_url(show) {
       var search = angular.copy(show);
 
-      angular.forEach(tristate_optionen, function(option) {
+      angular.forEach(tristate_options, function(option) {
 	if (search[option] === null)
 	  search[option] = '-'
 	else
@@ -676,6 +682,11 @@ var eventListController = [
 	if (value === null || value === '' || value === false)
 	  delete search[key];
       });
+
+      if (search.subtitle == event.rankings[0].subtitle)
+	delete search.subtitle;
+      else if (search.subtitle == null)
+	search.subtitle = '';
 
       return search;
     }
@@ -824,6 +835,15 @@ var eventListController = [
     $scope.$watch('show.start', function(value) {
       if (!value)
 	$scope.show.riding = false;
+    });
+    $scope.$watch('show.any_start', function(value) {
+      if (value != null) {
+	$scope.show.registered = null;
+	$scope.show.start = null;
+      } else {
+	$scope.show.registered = true;
+	$scope.show.start = true;
+      }
     });
     $scope.$watch('show.riding', function(value) {
       if (value) {

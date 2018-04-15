@@ -32,6 +32,11 @@
       <fieldset style="display:inline">
 	<legend>Anzeige einstellen</legend>
 	<table>
+	  <tr><th>Subtitel</th>
+	    <td>
+	      <input type="text" size="40" maxlength="70" ng-model="show.subtitle" id="subtitle" nullable>
+	    </td>
+	  </tr>
 	  <tr ng-if="riders_groups"><th>Fahrer/Gruppen</th>
 	    <td>
 	      <select ng-model="show.riders_groups">
@@ -78,6 +83,15 @@
 		<span ng-if="show.riders">
 		  <input type="checkbox" ng-model="show.riding" id="riding"><label for="riding">Fahrer auf der Strecke</label>
 		</span>
+	    </td>
+	  </tr>
+	  <tr><th>Vorangemeldet</th>
+	    <td>
+	      <select ng-model="show.any_start" yes-no-null>
+		<option value="-"></option>
+		<!-- <option value="no">Nein</option> -->
+		<option value="yes">Ja</option>
+	      </select>
 	    </td>
 	  </tr>
 	  <tr ng-repeat="ranking in [1,2,3,4]" ng-if="features['ranking' + ranking] && ((show.riders && event.rankings[ranking - 1].riders) || (show.groups && event.rankings[ranking - 1].groups))">
@@ -194,6 +208,7 @@
     </form>
   </p>
 </div>
+<h2>{{show.subtitle}}</h2>
 
 <style type="text/css">
 table.liste td, table.liste th {

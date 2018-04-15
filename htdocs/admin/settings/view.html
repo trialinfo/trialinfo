@@ -35,11 +35,11 @@
       </tr>
       <tr>
 	<th><label for="title">Titel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="event.rankings[0].title" id="title" name="title" nullable></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="event.rankings[0].title" id="title" nullable></td>
       </tr>
       <tr>
 	<th><label for="subtitle">Subtitel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="event.rankings[0].subtitle" id="subtitle nullable"></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="event.rankings[0].subtitle" id="subtitle" nullable></td>
       </tr>
       <tr>
 	<th><label for="date">Datum</label></th>
@@ -80,7 +80,7 @@
     </p>
     <p>
       <label for="equal_marks_resolution">Bei Gleichstand zählt das Rundenergebnis
-      <select name="equal_marks_resolution" ng-model="event.equal_marks_resolution" numeric>
+      <select id="equal_marks_resolution" ng-model="event.equal_marks_resolution" numeric>
 	<option value="0">nicht</option>
 	<option value="1">der ersten besseren Runde</option>
 	<option value="2">der letzten besseren Runde</option>
@@ -138,7 +138,7 @@
     <legend>Klassen</legend>
     <!--
     <p>
-      <input type="checkbox" name="classes_identical" id="classes_identical"><label for="classes_identical">Alle Klassen haben die gleiche Rundenanzahl, Fahrzeit, und befahren die gleichen Sektionen.</label>
+      <input type="checkbox" id="classes_identical" id="classes_identical"><label for="classes_identical">Alle Klassen haben die gleiche Rundenanzahl, Fahrzeit, und befahren die gleichen Sektionen.</label>
     </p>
     -->
     <table>
