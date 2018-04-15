@@ -399,6 +399,14 @@ var eventListController = [
       return field_list;
     })();
 
+    function any_start(rider) {
+      return rider.start ||
+	event.future_events.find(function(future_event) {
+	  return future_event.active &&
+	    rider.future_starts[future_event.fid];
+        }) != undefined;
+    }
+
     function filter(rider) {
       var show = $scope.show;
       if (show.verified !== null &&
@@ -417,7 +425,7 @@ var eventListController = [
 	  !rider.start == show.start)
 	return false;
       if (show.any_start !== null &&
-	  !(rider.start || Object.values(rider.future_starts).indexOf(true) >= 0) == show.any_start)
+	  !any_start(rider) == show.any_start)
 	return false;
       for (var ranking = 1; ranking <= 4; ranking++) {
 	if (show['ranking' + ranking] !== null &&
