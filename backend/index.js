@@ -1339,19 +1339,19 @@ async function event_tag_to_id(connection, tag, email) {
   return result[0].id;
 }
 
-async function admin_reset_event(connection, id, reset, email, version) {
+async function admin_reset_event(connection, id, query, email) {
   await cache.begin(connection);
   var event = await get_event(connection, id);
   var riders = await get_riders(connection, id);
 
-  if (version && event.version != version)
+  if (query.version && event.version != query.version)
     throw new HTTPError(409, 'Conflict');
 
   event = cache.modify_event(id);
   riders = cache.modify_riders(id);
 
   try {
-    if (reset == 'master') {
+    if (query.reset == 'master') {
       let min_number = Math.min(0, Math.min.apply(this, Object.keys(riders)));
       for (let number of Object.keys(riders)) {
 	if (number >= 0) {
@@ -1363,15 +1363,15 @@ async function admin_reset_event(connection, id, reset, email, version) {
 
     let base_event, base_riders;
 
-    if (reset == 'register' && event.base && event.base_fid) {
+    if (query.reset == 'register' && event.base && event.base_fid) {
       let base_id = await event_tag_to_id(connection, event.base, email);
       base_event = await get_event(connection, base_id);
       base_riders = await get_riders(connection, base_id);
     }
 
-    reset_event(base_event, base_riders, event, riders, reset);
+    reset_event(base_event, base_riders, event, riders, query.reset);
 
-    if (reset == 'master') {
+    if (query.reset == 'master') {
       await connection.queryAsync(`
 	DELETE FROM new_numbers
 	WHERE id = ?`, [id]);
@@ -4289,9 +4289,7 @@ app.post('/api/event/:id/rider', will_write_event, async function(req, res, next
 });
 
 app.post('/api/event/:id/reset', will_write_event, async function(req, res, next) {
-  admin_reset_event(req.conn, req.params.id,
-		    req.query.reset, req.user.email,
-		    req.query)
+  admin_reset_event(req.conn, req.params.id, req.query, req.user.email)
   .then(() => {
     res.json({});
   }).catch(next);
