@@ -140,6 +140,13 @@ var settingsController = [
       }
     }
 
+    $scope.future_name = function(future_event) {
+      var name = future_event.title;
+      if (future_event.series)
+	name += ' (' + future_event.series + ')';
+      return name;
+    }
+
     function assign_event(event, modify) {
       if (event === undefined)
 	event = $scope.old_event;
