@@ -14,7 +14,7 @@
       <tr ng-if="!event.id && internal.base && future_events.length">
 	<th><label for="title">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="event.base_fid" ng-options="fe.fid as fe.title for fe in future_events">
+	  <select ng-model="event.base_fid" ng-options="fe.fid as future_name(fe) for fe in future_events">
 	    <option value=""></option>
 	  </select>
 	</td>
