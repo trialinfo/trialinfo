@@ -135,6 +135,7 @@ our $spalten_map = {
   geburtsdatum => 'date_of_birth',
   bundesland => 'province',
   land => 'country',
+  startzeit => 'start_time',
 };
 
 our $result_columns_map = {
