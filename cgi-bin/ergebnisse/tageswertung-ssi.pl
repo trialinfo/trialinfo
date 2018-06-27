@@ -1,6 +1,6 @@
 #! /usr/bin/perl -w -I../../lib
 
-# Copyright 2012-2014  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
+# Copyright 2012-2018  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free Software
@@ -133,10 +133,12 @@ while (my $row = $sth->fetchrow_hashref) {
     $cfg->{klassen}[$klasse - 1] = $row;
 }
 
-my $ergebnis_vorhanden;
 my $nur_vorangemeldete;
+my $startzeit_vergeben;
 
 for(;;) {
+    my $ergebnis_vorhanden;
+
     $sth = $dbh->prepare(q{
 	SELECT class AS klasse, } . ($wertung == 1 ? "riders.rank AS rang" : "rider_rankings.rank AS rang") . ", " . q{
 	       number AS startnummer, last_name AS nachname, first_name AS vorname, additional_marks AS zusatzpunkte,
@@ -166,12 +168,23 @@ for(;;) {
 	       defined $fahrer->{land} && $fahrer->{land} eq 'A';
 
 	$ergebnis_vorhanden = 1
-	    if $fahrer->{start} && defined($fahrer->{rang});
+	    if $fahrer->{start} && defined $fahrer->{punkte};
+
+	$startzeit_vergeben = 1
+	    if defined $fahrer->{startzeit};
+    }
+
+    if ($features->{startzeit} && !$startzeit_vergeben) {
+	@spalten = grep { $_ ne 'startzeit' } @spalten;
     }
 
     last
 	if $ergebnis_vorhanden || $nur_vorangemeldete || !$features->{registriert};
     $nur_vorangemeldete = 1;
+    if ($features->{startzeit}) {
+	    push @spalten, 'startzeit';
+	    push @db_spalten, "$spalten_map->{startzeit} AS startzeit";
+    }
 }
 
 $sth = $dbh->prepare(q{
@@ -316,10 +329,14 @@ if ($nur_vorangemeldete) {
 	    }
 	}
 
-	return [undef,
-		$startnummer,
-		$fahrer->{nachname} . ' ' . $fahrer->{vorname} .
+	my $row = [
+	    undef,
+	    $startnummer,
+	    $fahrer->{nachname} . ' ' . $fahrer->{vorname} .
 		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '')];
+	push @$row, $fahrer->{startzeit}
+		if $startzeit_vergeben;
+	return $row;
     }
 
     foreach my $startnummer (keys %$fahrer_nach_startnummer) {
@@ -340,8 +357,12 @@ if ($nur_vorangemeldete) {
             $farbe = "<span style=\"display:block; width:10pt; height:10pt; background-color:$klassenfarben->{$klasse}\"></span>";
         }
 
+	my $header = [[ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name"];
+	push @$header, "Startzeit"
+	    if $startzeit_vergeben;
+
 	doc_h3 $cfg->{klassen}[$klasse - 1]{bezeichnung};
-	doc_table header => [[ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name"],
+	doc_table header => $header,
 	    body => [map {fahrer_info $_} sortiert_nach_name(@$fahrer_in_klasse)],
 	    format => ['r','r','l'];
     }
