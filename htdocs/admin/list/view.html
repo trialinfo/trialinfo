@@ -85,7 +85,8 @@
 		</span>
 	    </td>
 	  </tr>
-	  <tr><th>Vorangemeldet</th>
+	  <tr ng-if="features.registered">
+	    <th>Vorangemeldet</th>
 	    <td>
 	      <select ng-model="show.any_start" yes-no-null>
 		<option value="-"></option>
