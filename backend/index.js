@@ -3462,7 +3462,8 @@ async function index(req, res, next) {
       JOIN rankings USING (id)
       WHERE ranking = 1 AND enabled
       AND (registration_ends IS NOT NULL OR
-	  id IN (SELECT DISTINCT id FROM marks))`);
+	  id IN (SELECT DISTINCT id FROM marks) OR
+	  id IN (SELECT DISTINCT id FROM riders WHERE start_time AND verified AND start))`);
     events = events.reduce((hash, event) => {
       var date = common.parse_timestamp(event.date);
       if (date)
