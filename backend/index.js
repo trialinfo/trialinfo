@@ -2633,6 +2633,11 @@ function set_start_times(event, riders) {
   if (tree == null)
     throw new HTTPError(400, 'Startklassen in Einstellungen nicht korrekt gesetzt.');
 
+  function ranking_class(class_) {
+    if (class_ != null && event.classes[class_ - 1])
+      return event.classes[class_ - 1].ranking_class;
+  }
+
   function riders_in_classes(riders, classes) {
     classes = classes.reduce(function(result, cls) {
       result[cls] = true;
@@ -2641,9 +2646,8 @@ function set_start_times(event, riders) {
     var numbers = [];
     for (let number of Object.keys(riders)) {
       let rider = riders[number];
-      if (rider.verified &&
-	  // (rider.registered || !event.features.registered) &&
-	  rider.start && classes[rider['class']])
+      if (rider.verified && rider.start &&
+	  classes[ranking_class(rider['class'])])
 	numbers.push(number);
     };
     return numbers;
