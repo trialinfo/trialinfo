@@ -2633,6 +2633,11 @@ function set_start_times(event, riders) {
   if (tree == null)
     throw new HTTPError(400, 'Startklassen in Einstellungen nicht korrekt gesetzt.');
 
+  function ranking_class(class_) {
+    if (class_ != null && event.classes[class_ - 1])
+      return event.classes[class_ - 1].ranking_class;
+  }
+
   function riders_in_classes(riders, classes) {
     classes = classes.reduce(function(result, cls) {
       result[cls] = true;
@@ -2641,9 +2646,8 @@ function set_start_times(event, riders) {
     var numbers = [];
     for (let number of Object.keys(riders)) {
       let rider = riders[number];
-      if (rider.verified &&
-	  // (rider.registered || !event.features.registered) &&
-	  rider.start && classes[rider['class']])
+      if (rider.verified && rider.start &&
+	  classes[ranking_class(rider['class'])])
 	numbers.push(number);
     };
     return numbers;
@@ -3458,7 +3462,8 @@ async function index(req, res, next) {
       JOIN rankings USING (id)
       WHERE ranking = 1 AND enabled
       AND (registration_ends IS NOT NULL OR
-	  id IN (SELECT DISTINCT id FROM marks))`);
+	  id IN (SELECT DISTINCT id FROM marks) OR
+	  id IN (SELECT DISTINCT id FROM riders WHERE start_time AND verified AND start))`);
     events = events.reduce((hash, event) => {
       var date = common.parse_timestamp(event.date);
       if (date)
