@@ -849,7 +849,8 @@ var eventListController = [
 	$scope.show.registered = null;
 	$scope.show.start = null;
       } else {
-	$scope.show.registered = true;
+	if (features.registered)
+	  $scope.show.registered = true;
 	$scope.show.start = true;
       }
     });
