@@ -552,6 +552,19 @@ var ridersController = [
       };
     }
 
+    $scope.clone = function() {
+      let rider = angular.copy($scope.rider);
+      delete rider.rider_tag;
+      angular.extend(rider, {
+	'number': null,
+	'class': null,
+	'registered': false,
+	'start': false,
+	'future_starts': {}
+      });
+      assign_rider(rider);
+    };
+
     $scope.remove = function() {
       if (confirm((groups ? 'Gruppe' : 'Fahrer') + ' ' + $scope.rider_name($scope.rider) + ' wirklich löschen?')) {
 	var old_rider = $scope.old_rider;
