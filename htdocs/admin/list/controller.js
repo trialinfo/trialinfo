@@ -868,6 +868,7 @@ var eventListController = [
 	});
 	if (!current_round)
 	  $scope.show.fields.push('current_round');
+	  $scope.show.subtitle = 'Fahrer auf der Strecke';
       }
     });
     $scope.$watch('show.verified', function(value) {
