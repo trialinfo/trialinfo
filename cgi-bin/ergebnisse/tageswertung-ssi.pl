@@ -321,8 +321,6 @@ if ($nur_vorangemeldete) {
 	    if $startnummer < 0;
 
 	my $args = [];
-	push @$args, $cfg->{klassen}[$fahrer->{klasse} - 1]{bezeichnung}
-	    if $fahrer->{klasse} != $fahrer->{wertungsklasse};
 	if (@{$fahrer->{alle_starts}} != keys %$alle_starts) {
 	    foreach my $fid (@{$fahrer->{alle_starts}}) {
 		push @$args, $alle_starts->{$fid};
@@ -346,8 +344,13 @@ if ($nur_vorangemeldete) {
     }
     doc_p scalar(values %$fahrer_nach_startnummer) . " vorangemeldete Fahrer.";
 
-    wertungsklassen_setzen $fahrer_nach_startnummer, $cfg;
-    my $fahrer_nach_klassen = fahrer_nach_klassen($fahrer_nach_startnummer);
+    my $fahrer_nach_klassen = {};
+    foreach my $fahrer (values %$fahrer_nach_startnummer) {
+	my $klasse = $fahrer->{gruppe} ? 0 : $fahrer->{klasse};
+	push @{$fahrer_nach_klassen->{$klasse}}, $fahrer
+	    if defined $klasse;
+    }
+
     delete $fahrer_nach_klassen->{0};  # Gruppen
     foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
