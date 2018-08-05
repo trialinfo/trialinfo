@@ -117,7 +117,7 @@ my @db_spalten =
 $sth = $dbh->prepare(q{
     SELECT class AS klasse, rounds AS runden, name AS bezeichnung,
 	   color AS farbe, ranking_class AS wertungsklasse,
-	   non_competing AS ausser_konkurrenz
+	   non_competing AS ausser_konkurrenz, `order` AS reihenfolge
     FROM classes
     WHERE id = ?
     ORDER BY class

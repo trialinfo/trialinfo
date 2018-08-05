@@ -1,3 +1,18 @@
+<style>
+a.updown {
+  text-decoration: none;
+}
+a:link.updown {
+  color: #c0c0c0;
+}
+a:visited.updown {
+  color: #c0c0c0;
+}
+a:hover.updown {
+  color: #000000;
+}
+</style>
+
 <h1>{{event.rankings[0].title}} – Einstellungen</h1>
 <form name="form" ng-keydown="keydown($event)">
   <fieldset style="display:inline">
@@ -157,14 +172,14 @@
 	<th style="text-align:center">Keine<br>Wertung&nbsp;1</th>
 	<th style="text-align:center">Außer<br>Konkurrenz</th>
       </tr>
-      <tr ng-repeat="class_ in event.classes track by $index">
-	<th style="text-align:center">{{$index + 1}}</th>
+      <tr ng-repeat="index in class_order" ng-init="class_ = event.classes[index]">
+	<th style="text-align:center"><a href="" ng-click="class_up($index)" class="updown">▴</a>{{index + 1}}<a href="" ng-click="class_down($index)" class="updown">▾</a></th>
 	<td style="text-align:center">
 	  <input type="text" size="30" maxlengh="60" ng-model="class_.name">
 	</td>
 	<td style="text-align:center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <select ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].color" id="class{{$index + 1}}_color" ng-disabled="!class_active[$index + 1]">
+	  <select ng-model="event.classes[class_active[index + 1] ? index : class_.ranking_class - 1].color" id="class{{index + 1}}_color" ng-disabled="!class_active[index + 1]">
 	    <option value=""></option>
 	    <option value="#0000ff">Blau</option>
 	    <option value="#ff0000">Rot</option>
@@ -176,14 +191,14 @@
 	  </select>
 	</td>
 	<td style="text-align:center">
-	  <input type="text" numeric size="1" maxlength="1" min="1" max="5" ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].rounds" style="text-align: center" ng-disabled="!class_active[$index + 1]">
+	  <input type="text" numeric size="1" maxlength="1" min="1" max="5" ng-model="event.classes[class_active[index + 1] ? index : class_.ranking_class - 1].rounds" style="text-align: center" ng-disabled="!class_active[index + 1]">
 	</td>
 	<td style="text-align:center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <input type="text" size="5" maxlength="8" ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].riding_time" iso-time style="text-align: center" ng-disabled="!class_active[$index + 1]">
+	  <input type="text" size="5" maxlength="8" ng-model="event.classes[class_active[index + 1] ? index : class_.ranking_class - 1].riding_time" iso-time style="text-align: center" ng-disabled="!class_active[index + 1]">
 	</td>
 	<td style="text-align:center">
-	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{$index + 1}}" ng-model="class_.ranking_class" ng-blur="blur_ranking_class($index + 1, $event)" style="text-align: center">
+	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{index + 1}}" ng-model="class_.ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
 	</td>
 	<td style="text-align:center">
 	  <input type="checkbox" ng-model="class_.no_ranking1">
@@ -201,7 +216,7 @@
 	<th>Klasse</th>
 	<th ng-repeat="zone in zones_list track by $index" style="text-align:center"><span title="Sektion {{zone}}">{{zone}}</span></th>
       </tr>
-      <tr ng-repeat="class_ in event.classes track by $index" ng-init="k = $index + 1">
+      <tr ng-repeat="index in class_order" ng-init="class_ = event.classes[index]; k = index + 1">
 	<th style="text-align:center">{{k}}</th>
 	<td ng-repeat="zone in zones_list track by $index" style="text-align:center;padding:0.35em">
 	  <input type="checkbox" ng-model="zones[class_.ranking_class - 1][$index]" title="Sektion {{zone}}" ng-disabled="!class_active[k]">

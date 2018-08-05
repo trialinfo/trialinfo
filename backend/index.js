@@ -150,6 +150,19 @@ async function update_database(connection) {
       ADD accept_conditions BOOLEAN NOT NULL DEFAULT 0
     `);
   }
+
+  if (!await column_exists(connection, 'classes', 'order')) {
+    let bt = '`';
+    console.log('Adding column `order` to table `classes`');
+    await connection.queryAsync(`
+      ALTER TABLE classes
+      ADD ${bt}order${bt} INT NOT NULL
+    `);
+    await connection.queryAsync(`
+      UPDATE classes
+      SET ${bt}order${bt} = ${bt}class${bt}
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1953,7 +1966,7 @@ async function get_event_scores(connection, id) {
   Object.keys(riders_per_class).forEach((class_) => {
     let hash_event_class = hash.event.classes[class_ - 1] = {};
     let event_class = event.classes[class_ - 1];
-    ['rounds', 'color', 'name'].forEach((field) => {
+    ['rounds', 'color', 'name', 'order'].forEach((field) => {
       hash_event_class[field] = event_class[field];
     });
     hash_event_class.groups = false;

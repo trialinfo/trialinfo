@@ -35,7 +35,9 @@ var eventListController = [
 
     $scope.starting_classes =
       Object.keys(starting_classes())
-      .sort(function(a, b) { return a - b; });
+      .sort(function(a, b) {
+	return event.classes[a - 1].order - event.classes[b - 1].order;
+      });
 
     var insurances = {
       1: 'ADAC-Versicherung',
@@ -479,7 +481,7 @@ var eventListController = [
 
     function class_other(rider) {
       return $scope.show.classes[rider.ranking_class] !== undefined ?
-	rider.ranking_class : null;
+	event.classes[rider.ranking_class - 1].order : null;
     }
 
     var group_by_functions = {

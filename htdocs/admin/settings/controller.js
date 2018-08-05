@@ -178,11 +178,21 @@ var settingsController = [
 
       $scope.zones_list = zones_list(max_zone(event));
       for (var class_ = 1; class_ <= 15; class_++) {
-	if (!event.classes[class_ - 1])
-	  event.classes[class_ - 1] = {ranking_class: class_};
+	if (!event.classes[class_ - 1]) {
+	  event.classes[class_ - 1] = {
+	    ranking_class: class_,
+	    order: class_
+	  };
+        }
 	if (!event.zones[class_ - 1])
 	  event.zones[class_ - 1] = [];
       }
+      $scope.class_order = event.classes.reduce(function(indexes, value, index) {
+	indexes.push(index);
+	return indexes;
+      }, []).sort(function(a, b) {
+	return event.classes[a].order - event.classes[b].order;
+      });
       for (var ranking = 1; ranking <= 4; ranking++)
 	if (!event.rankings[ranking - 1])
 	  event.rankings[ranking - 1] = {
@@ -202,6 +212,28 @@ var settingsController = [
 	$scope.features_alt = angular.copy($scope.features);
       }
     }
+
+    function swap_classes(index) {
+      var class_order = $scope.class_order;
+      var a = class_order[index - 1], b = class_order[index];
+      class_order[index - 1] = b;
+      class_order[index] = a;
+
+      var classes = $scope.event.classes;
+      tmp = classes[a].order;
+      classes[a].order = classes[b].order;
+      classes[b].order = tmp;
+    }
+
+    $scope.class_up = function(index) {
+      if (index > 0)
+	swap_classes(index);
+    };
+
+    $scope.class_down = function(index) {
+      if (index < $scope.class_order.length - 1)
+	swap_classes(index + 1);
+    };
 
     $scope.save = function() {
       if ($scope.busy)
