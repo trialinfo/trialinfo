@@ -333,17 +333,9 @@
     </fieldset>
   </fieldset><br>
   <fieldset style="display:inline">
-    <legend>Fahrerliste und Auswertung</legend>
-    <table>
-      <tr>
-        <th><label for="class_order">Klassenreihenfolge</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="40" ng-pattern="/^[\d\s]*$/" ng-model="event.class_order">
-	</td>
-      </tr>
-    </table>
+    <legend>Auswertung</legend>
     <fieldset style="display:inline">
-      <legend>Auswertung</legend>
+      <legend>Zusätzliche Informationen</legend>
 	<p>
 	  <input type="checkbox" ng-model="features.individual_points" id="feature_einzelpunkte">
 	    <label for="feature_einzelpunkte">Einzelpunkte statt Punkteverteilung</label><br>

@@ -55,8 +55,7 @@ print "Content-type: text/html; charset=utf-8\n\n";
 
 $sth = $dbh->prepare(q{
     SELECT id, NULL, ranking, title, date, mtime,
-	   equal_marks_resolution, four_marks, split_score, type,
-	   class_order
+	   equal_marks_resolution, four_marks, split_score, type
     FROM rankings
     JOIN events USING (id)
     WHERE id = ? AND ranking = ?
@@ -74,7 +73,6 @@ if (my @row = $sth->fetchrow_array) {
     $cfg->{vierpunktewertung} = $row[7];
     $cfg->{punkteteilung} = $row[8];
     $cfg->{art} = $row[9];
-    $cfg->{class_order} = $row[10];
 }
 
 unless (defined $cfg) {

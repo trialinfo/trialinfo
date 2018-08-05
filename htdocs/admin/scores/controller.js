@@ -40,7 +40,7 @@ var eventScoresController = [
 	  if (value)
 	    classes.push(index + 1);
 	});
-	return classes.sort(compareNumberFactory(event.class_order));
+	return classes;
       })();
       angular.forEach($scope.classes, function(class_) {
 	if ($scope.show.classes[class_ - 1] === undefined)

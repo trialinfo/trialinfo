@@ -212,29 +212,3 @@ function rider_does_not_start(rider, event) {
   }
   return reasons.join(' ');
 }
-
-/*
- * Create a compare function for numbers that puts certain numbers in front:
- * for example, compareNumberFactory('11 1 12 2 13') will return a compare
- * function that will sort numbers in the following order:
- *   11 < 1 < 12 < 2 < 13 < 3 < 4 < ...
- * (Numbers equal to null will come before the first number.)
- */
-function compareNumberFactory(spec) {
-  var order = [];
-  if (spec != null) {
-    spec.trim(/\s+/).split(/\s+/).forEach(function(n, idx) {
-      order[n] = idx;
-    });
-  }
-
-  function o(x) {
-    return (x in order) ?
-      order[x] : x + order.length;
-  }
-
-  return function(a, b) {
-    var cmp = (b == null) - (a == null);
-    return cmp ? cmp : o(a) - o(b);
-  }
-}
