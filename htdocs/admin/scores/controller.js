@@ -736,7 +736,7 @@ var eventScoresController = [
 	show_all();
     });
     $scope.$watch('show.ranking', function(ranking) {
-      show.subtitle = event.rankings[(ranking || 1) - 1].subtitle;
+      $scope.show.subtitle = event.rankings[(ranking || 1) - 1].subtitle;
     });
 
     $scope.rank = function(rider) {
