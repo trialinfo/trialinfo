@@ -349,8 +349,14 @@ if ($nur_vorangemeldete) {
 	    if defined $klasse;
     }
 
+    my $klassen = $cfg->{klassen};
+    my $klassen_vergleich = sub ($$) {
+        my ($a, $b) = @_;
+        return $klassen->[$a - 1]{reihenfolge} <=> $klassen->[$b - 1]{reihenfolge};
+    };
+
     delete $fahrer_nach_klassen->{0};  # Gruppen
-    foreach my $klasse (sort {$a <=> $b} keys %$fahrer_nach_klassen) {
+    foreach my $klasse (sort $klassen_vergleich keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
 
 	my $farbe = '';
