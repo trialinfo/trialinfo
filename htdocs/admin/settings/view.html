@@ -1,3 +1,18 @@
+<style>
+a.updown {
+  text-decoration: none;
+}
+a:link.updown {
+  color: #c0c0c0;
+}
+a:visited.updown {
+  color: #c0c0c0;
+}
+a:hover.updown {
+  color: #000000;
+}
+</style>
+
 <h1>{{event.rankings[0].title}} – Einstellungen</h1>
 <form name="form" ng-keydown="keydown($event)">
   <fieldset style="display:inline">
@@ -65,7 +80,8 @@
       <tr>
 	<th>Aktiv</th>
 	<td>
-	  <input type="checkbox" ng-model="event.enabled" id="enabled"><label for="enabled">Veranstaltung anzeigen und in Wertungen berücksichtigen</label>
+	  <input type="checkbox" ng-model="event.enabled" id="enabled">
+	    <label for="enabled">Veranstaltung anzeigen und in Wertungen berücksichtigen</label>
 	</td>
       </tr>
     </table>
@@ -76,7 +92,8 @@
       <label for="marks_skipped_zone">Für das Auslassen einer Sektion gibt es <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.marks_skipped_zone" id="marks_skipped_zone" style="text-align: center"> Punkte.</label>
     </p>
     <p>
-      <input type="checkbox" ng-model="event.four_marks" id="four_marks"><label for="four_marks">Es gilt die Vierpunktewertung (Fahrradtrial).</label>
+      <input type="checkbox" ng-model="event.four_marks" id="four_marks">
+        <label for="four_marks">Es gilt die Vierpunktewertung (Fahrradtrial).</label>
     </p>
     <p>
       <label for="equal_marks_resolution">Bei Gleichstand zählt das Rundenergebnis
@@ -118,7 +135,7 @@
 	  <th>Rang</th>
 	  <th>Punkte</th>
 	<tr ng-repeat="punkte in event.scores track by $index">
-	  <th>
+	  <th style="text-align:center">
 	    <span title="{{$last ? 'Ab dem ' : ''}}{{$index + 1}}. Platz">{{$index + 1}}{{$last ? '+' : ''}}</span>
 	  </th>
 	  <td>
@@ -127,10 +144,12 @@
 	</tr>
       </table>
       <p>
-	<input type="checkbox" ng-model="event.score_234" id="score_234"><label for="score_234">Wertungspunkte auch in den Wertungen 2, 3, und 4 vergeben.</label>
+	<input type="checkbox" ng-model="event.score_234" id="score_234">
+	  <label for="score_234">Wertungspunkte auch in den Wertungen 2, 3, und 4 vergeben.</label>
       </p>
       <p>
-	<input type="checkbox" ng-model="event.split_score" id="split_score"><label for="split_score">Punkteteilung bei gleicher Platzierung.</label>
+	<input type="checkbox" ng-model="event.split_score" id="split_score">
+	  <label for="split_score">Punkteteilung bei gleicher Platzierung.</label>
       </p>
     </fieldset>
   </fieldset><br>
@@ -138,7 +157,8 @@
     <legend>Klassen</legend>
     <!--
     <p>
-      <input type="checkbox" id="classes_identical" id="classes_identical"><label for="classes_identical">Alle Klassen haben die gleiche Rundenanzahl, Fahrzeit, und befahren die gleichen Sektionen.</label>
+      <input type="checkbox" id="classes_identical" id="classes_identical">
+        <label for="classes_identical">Alle Klassen haben die gleiche Rundenanzahl, Fahrzeit, und befahren die gleichen Sektionen.</label>
     </p>
     -->
     <table>
@@ -152,14 +172,14 @@
 	<th style="text-align:center">Keine<br>Wertung&nbsp;1</th>
 	<th style="text-align:center">Außer<br>Konkurrenz</th>
       </tr>
-      <tr ng-repeat="class_ in event.classes track by $index">
-	<th>{{$index + 1}}</th>
+      <tr ng-repeat="index in class_order" ng-init="class_ = event.classes[index]">
+	<th style="text-align:center"><a href="" ng-click="class_up($index)" class="updown">▴</a>{{index + 1}}<a href="" ng-click="class_down($index)" class="updown">▾</a></th>
 	<td style="text-align:center">
 	  <input type="text" size="30" maxlengh="60" ng-model="class_.name">
 	</td>
 	<td style="text-align:center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <select ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].color" id="class{{$index + 1}}_color" ng-disabled="!class_active[$index + 1]">
+	  <select ng-model="event.classes[class_active[index + 1] ? index : class_.ranking_class - 1].color" id="class{{index + 1}}_color" ng-disabled="!class_active[index + 1]">
 	    <option value=""></option>
 	    <option value="#0000ff">Blau</option>
 	    <option value="#ff0000">Rot</option>
@@ -171,14 +191,14 @@
 	  </select>
 	</td>
 	<td style="text-align:center">
-	  <input type="text" numeric size="1" maxlength="1" min="1" max="5" ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].rounds" style="text-align: center" ng-disabled="!class_active[$index + 1]">
+	  <input type="text" numeric size="1" maxlength="1" min="1" max="5" ng-model="event.classes[class_active[index + 1] ? index : class_.ranking_class - 1].rounds" style="text-align: center" ng-disabled="!class_active[index + 1]">
 	</td>
 	<td style="text-align:center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
-	  <input type="text" size="5" maxlength="8" ng-model="event.classes[class_active[$index + 1] ? $index : class_.ranking_class - 1].riding_time" iso-time style="text-align: center" ng-disabled="!class_active[$index + 1]">
+	  <input type="text" size="5" maxlength="8" ng-model="event.classes[class_active[index + 1] ? index : class_.ranking_class - 1].riding_time" iso-time style="text-align: center" ng-disabled="!class_active[index + 1]">
 	</td>
 	<td style="text-align:center">
-	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{$index + 1}}" ng-model="class_.ranking_class" ng-blur="blur_ranking_class($index + 1, $event)" style="text-align: center">
+	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{index + 1}}" ng-model="class_.ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
 	</td>
 	<td style="text-align:center">
 	  <input type="checkbox" ng-model="class_.no_ranking1">
@@ -196,8 +216,8 @@
 	<th>Klasse</th>
 	<th ng-repeat="zone in zones_list track by $index" style="text-align:center"><span title="Sektion {{zone}}">{{zone}}</span></th>
       </tr>
-      <tr ng-repeat="class_ in event.classes track by $index" ng-init="k = $index + 1">
-	<th>{{k}}</th>
+      <tr ng-repeat="index in class_order" ng-init="class_ = event.classes[index]; k = index + 1">
+	<th style="text-align:center">{{k}}</th>
 	<td ng-repeat="zone in zones_list track by $index" style="text-align:center;padding:0.35em">
 	  <input type="checkbox" ng-model="zones[class_.ranking_class - 1][$index]" title="Sektion {{zone}}" ng-disabled="!class_active[k]">
 	</td>
@@ -229,51 +249,86 @@
     <fieldset style="display:inline">
       <legend>Sichtbare Felder</legend>
 	<p>
-	  <input type="checkbox" ng-model="features.number" id="feature_nummer"><label for="feature_nummer">Startnummer</label><br>
-	  <input type="checkbox" ng-model="features['class']" id="feature_class" disabled="disabled"><label for="feature_class">Klasse</label><br>
-	  <input type="checkbox" ng-model="features.last_name" id="feature_last_name" disabled="disabled"><label for="feature_last_name">Nachname</label><br>
-	  <input type="checkbox" ng-model="features.first_name" id="feature_first_name" disabled="disabled"><label for="feature_first_name">Vorname</label><br>
-	  <input type="checkbox" ng-model="features.ranking1" id="feature_ranking1"><label for="feature_ranking1">Wertung 1</label><br>
-	  <input type="checkbox" ng-model="features.registered" id="feature_registered"><label for="feature_registered">Nennungseingang</label><br>
-	  <input type="checkbox" ng-model="features.start" id="feature_start" disabled="disabled"><label for="feature_start">Start</label><br>
-	  <input type="checkbox" ng-model="features.guardian" id="feature_guardian"><label for="feature_guardian">Gesetzlicher Vertreter</label><br>
-	  <input type="checkbox" ng-model="features.minder" id="feature_minder"><label for="feature_minder">Minder</label>
+	  <input type="checkbox" ng-model="features.number" id="feature_nummer">
+	    <label for="feature_nummer">Startnummer</label><br>
+	  <input type="checkbox" ng-model="features['class']" id="feature_class" disabled="disabled">
+	    <label for="feature_class">Klasse</label><br>
+	  <input type="checkbox" ng-model="features.last_name" id="feature_last_name" disabled="disabled">
+	    <label for="feature_last_name">Nachname</label><br>
+	  <input type="checkbox" ng-model="features.first_name" id="feature_first_name" disabled="disabled">
+	    <label for="feature_first_name">Vorname</label><br>
+	  <input type="checkbox" ng-model="features.ranking1" id="feature_ranking1">
+	    <label for="feature_ranking1">Wertung 1</label><br>
+	  <input type="checkbox" ng-model="features.registered" id="feature_registered">
+	    <label for="feature_registered">Nennungseingang</label><br>
+	  <input type="checkbox" ng-model="features.start" id="feature_start" disabled="disabled">
+	    <label for="feature_start">Start</label><br>
+	  <input type="checkbox" ng-model="features.guardian" id="feature_guardian">
+	    <label for="feature_guardian">Gesetzlicher Vertreter</label><br>
+	  <input type="checkbox" ng-model="features.minder" id="feature_minder">
+	    <label for="feature_minder">Minder</label>
 	</p>
 
 	<p>
-	  <input type="checkbox" ng-model="features.registration" id="feature_registration"><label for="feature_registration">Pol. Kennzeichen</label><br>
-	  <input type="checkbox" ng-model="features.country" id="feature_country"><label for="feature_country">Staatsangehörigkeit</label><br>
-	  <input type="checkbox" ng-model="features.frame_number" id="feature_frame_number"><label for="feature_frame_number">Rahmennummer</label><br>
-	  <input type="checkbox" ng-model="features.license" id="feature_license"><label for="feature_license">Lizenznummer</label><br>
-	  <input type="checkbox" ng-model="features.displacement" id="feature_displacement"><label for="feature_displacement">Hubraum</label><br>
-	  <input type="checkbox" ng-model="features.email" id="feature_email"><label for="feature_email">E-Mail</label><br>
-	  <input type="checkbox" ng-model="features.comment" id="feature_comment"><label for="feature_comment">Bemerkungen</label><br>
-	  <input type="checkbox" ng-model="features.rider_comment" id="feature_rider_comment"><label for="feature_rider_comment">Anmerkungen und Wünsche</label><br>
-	  <input type="checkbox" ng-model="features.street" id="feature_street"><label for="feature_street">Straße</label><br>
-	  <input type="checkbox" ng-model="features.zip" id="feature_zip"><label for="feature_zip">Postleitzahl</label><br>
-	  <input type="checkbox" ng-model="features.city" id="feature_city"><label for="feature_city">Wohnort</label><br>
-	  <input type="checkbox" ng-model="features.phone" id="feature_phone"><label for="feature_phone">Telefon</label><br>
-	  <input type="checkbox" ng-model="features.emergency_phone" id="feature_emergency_phone"><label for="feature_emergency_phone">Notfall-Telefon</label><br>
-	  <input type="checkbox" ng-model="features.date_of_birth" id="feature_date_of_birth"><label for="feature_date_of_birth">Geburtsdatum</label><br>
-	  <input type="checkbox" ng-model="features.applicant" id="feature_applicant"><label for="feature_applicant">Bewerber</label><br>
-	  <input type="checkbox" ng-model="features.club" id="feature_club"><label for="feature_club">Club</label><br>
-	  <input type="checkbox" ng-model="features.vehicle" id="feature_vehicle"><label for="feature_vehicle">Fahrzeug</label><br>
-	  <input type="checkbox" ng-model="features.start_time" id="feature_start_time"><label for="feature_start_time">Startzeit</label><br>
-	  <input type="checkbox" ng-model="features.finish_time" id="feature_finish_time"><label for="feature_finish_time">Zielzeit</label><br>
-	  <input type="checkbox" ng-model="features.ranking2" id="feature_ranking2"><label for="feature_ranking2">Wertung 2</label><br>
-	  <input type="checkbox" ng-model="features.ranking3" id="feature_ranking3"><label for="feature_ranking3">Wertung 3</label><br>
-	  <input type="checkbox" ng-model="features.ranking4" id="feature_ranking4"><label for="feature_ranking4">Wertung 4</label><br>
-	  <input type="checkbox" ng-model="features.entry_fee" id="feature_entry_fee"><label for="feature_entry_fee">Nenngeld</label><br>
-	  <input type="checkbox" ng-model="features.insurance" id="feature_insurance"><label for="feature_insurance">Versicherung</label>
+	  <input type="checkbox" ng-model="features.registration" id="feature_registration">
+	    <label for="feature_registration">Pol. Kennzeichen</label><br>
+	  <input type="checkbox" ng-model="features.country" id="feature_country">
+	    <label for="feature_country">Staatsangehörigkeit</label><br>
+	  <input type="checkbox" ng-model="features.frame_number" id="feature_frame_number">
+	    <label for="feature_frame_number">Rahmennummer</label><br>
+	  <input type="checkbox" ng-model="features.license" id="feature_license">
+	    <label for="feature_license">Lizenznummer</label><br>
+	  <input type="checkbox" ng-model="features.displacement" id="feature_displacement">
+	    <label for="feature_displacement">Hubraum</label><br>
+	  <input type="checkbox" ng-model="features.email" id="feature_email">
+	    <label for="feature_email">E-Mail</label><br>
+	  <input type="checkbox" ng-model="features.comment" id="feature_comment">
+	    <label for="feature_comment">Bemerkungen</label><br>
+	  <input type="checkbox" ng-model="features.rider_comment" id="feature_rider_comment">
+	    <label for="feature_rider_comment">Anmerkungen und Wünsche</label><br>
+	  <input type="checkbox" ng-model="features.street" id="feature_street">
+	    <label for="feature_street">Straße</label><br>
+	  <input type="checkbox" ng-model="features.zip" id="feature_zip">
+	    <label for="feature_zip">Postleitzahl</label><br>
+	  <input type="checkbox" ng-model="features.city" id="feature_city">
+	    <label for="feature_city">Wohnort</label><br>
+	  <input type="checkbox" ng-model="features.phone" id="feature_phone">
+	    <label for="feature_phone">Telefon</label><br>
+	  <input type="checkbox" ng-model="features.emergency_phone" id="feature_emergency_phone">
+	    <label for="feature_emergency_phone">Notfall-Telefon</label><br>
+	  <input type="checkbox" ng-model="features.date_of_birth" id="feature_date_of_birth">
+	    <label for="feature_date_of_birth">Geburtsdatum</label><br>
+	  <input type="checkbox" ng-model="features.applicant" id="feature_applicant">
+	    <label for="feature_applicant">Bewerber</label><br>
+	  <input type="checkbox" ng-model="features.club" id="feature_club">
+	    <label for="feature_club">Club</label><br>
+	  <input type="checkbox" ng-model="features.vehicle" id="feature_vehicle">
+	    <label for="feature_vehicle">Fahrzeug</label><br>
+	  <input type="checkbox" ng-model="features.start_time" id="feature_start_time">
+	    <label for="feature_start_time">Startzeit</label><br>
+	  <input type="checkbox" ng-model="features.finish_time" id="feature_finish_time">
+	    <label for="feature_finish_time">Zielzeit</label><br>
+	  <input type="checkbox" ng-model="features.ranking2" id="feature_ranking2">
+	    <label for="feature_ranking2">Wertung 2</label><br>
+	  <input type="checkbox" ng-model="features.ranking3" id="feature_ranking3">
+	    <label for="feature_ranking3">Wertung 3</label><br>
+	  <input type="checkbox" ng-model="features.ranking4" id="feature_ranking4">
+	    <label for="feature_ranking4">Wertung 4</label><br>
+	  <input type="checkbox" ng-model="features.entry_fee" id="feature_entry_fee">
+	    <label for="feature_entry_fee">Nenngeld</label><br>
+	  <input type="checkbox" ng-model="features.insurance" id="feature_insurance">
+	    <label for="feature_insurance">Versicherung</label>
 	</p>
 	<p>
-	  <input type="checkbox" ng-model="features.province" id="feature_province"><label for="feature_province">Bundesland</label>
+	  <input type="checkbox" ng-model="features.province" id="feature_province">
+	    <label for="feature_province">Bundesland</label>
 	</p>
     </fieldset><br>
     <fieldset style="display:inline">
       <legend>Voreinstellungen für neue Fahrer</legend>
       <p>
-	<input type="checkbox" ng-model="event.ranking1_enabled" id="ranking1_enabled"><label for="ranking1_enabled">Der Fahrer nimmt an Wertung 1 teil.</label>
+	<input type="checkbox" ng-model="event.ranking1_enabled" id="ranking1_enabled">
+	  <label for="ranking1_enabled">Der Fahrer nimmt an Wertung 1 teil.</label>
       </p>
       <p>
 	<label for="insurance">Die Versicherungsart ist
@@ -288,24 +343,19 @@
     </fieldset><br>
     <fieldset style="display:inline">
       <legend>Gruppen</legend>
-	<input type="checkbox" ng-model="features.groups" id="groups"><label for="groups">Verwaltung von Gruppen</label>
+	<input type="checkbox" ng-model="features.groups" id="groups">
+	  <label for="groups">Verwaltung von Gruppen</label>
     </fieldset>
   </fieldset><br>
   <fieldset style="display:inline">
-    <legend>Fahrerliste und Auswertung</legend>
-    <table>
-      <tr>
-        <th><label for="class_order">Klassenreihenfolge</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="40" ng-pattern="/^[\d\s]*$/" ng-model="event.class_order">
-	</td>
-      </tr>
-    </table>
+    <legend>Auswertung</legend>
     <fieldset style="display:inline">
-      <legend>Auswertung</legend>
+      <legend>Zusätzliche Informationen</legend>
 	<p>
-	  <input type="checkbox" ng-model="features.individual_points" id="feature_einzelpunkte"><label for="feature_einzelpunkte">Einzelpunkte statt Punkteverteilung</label><br>
-	  <input type="checkbox" ng-model="features.column_5" id="feature_spalte5er"><label for="feature_spalte5er">Spalte für Fünfer in Punkteverteilung</label><br>
+	  <input type="checkbox" ng-model="features.individual_points" id="feature_einzelpunkte">
+	    <label for="feature_einzelpunkte">Einzelpunkte statt Punkteverteilung</label><br>
+	  <input type="checkbox" ng-model="features.column_5" id="feature_spalte5er">
+	    <label for="feature_spalte5er">Spalte für Fünfer in Punkteverteilung</label><br>
 	</p>
     </fieldset>
   </fieldset><br>

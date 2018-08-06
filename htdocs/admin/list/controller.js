@@ -33,10 +33,11 @@ var eventListController = [
       return classes;
     }
 
-    var class_compare = compareNumberFactory(event.class_order);
     $scope.starting_classes =
       Object.keys(starting_classes())
-      .sort(class_compare);
+      .sort(function(a, b) {
+	return event.classes[a - 1].order - event.classes[b - 1].order;
+      });
 
     var insurances = {
       1: 'ADAC-Versicherung',
@@ -480,7 +481,7 @@ var eventListController = [
 
     function class_other(rider) {
       return $scope.show.classes[rider.ranking_class] !== undefined ?
-	rider.ranking_class : null;
+	event.classes[rider.ranking_class - 1].order : null;
     }
 
     var group_by_functions = {
@@ -498,7 +499,7 @@ var eventListController = [
 		 'Andere Klassen';
 	},
 	compare: function(f1, f2) {
-	  return class_compare(class_other(f1), class_other(f2));
+	  return generic_compare(class_other(f1), class_other(f2));
 	}
       },
       city: {

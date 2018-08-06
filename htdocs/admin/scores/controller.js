@@ -40,7 +40,9 @@ var eventScoresController = [
 	  if (value)
 	    classes.push(index + 1);
 	});
-	return classes.sort(compareNumberFactory(event.class_order));
+	return classes.sort(function(a, b) {
+	  return event.classes[a - 1].order - event.classes[b - 1].order;
+	});
       })();
       angular.forEach($scope.classes, function(class_) {
 	if ($scope.show.classes[class_ - 1] === undefined)
@@ -736,7 +738,7 @@ var eventScoresController = [
 	show_all();
     });
     $scope.$watch('show.ranking', function(ranking) {
-      show.subtitle = event.rankings[(ranking || 1) - 1].subtitle;
+      $scope.show.subtitle = event.rankings[(ranking || 1) - 1].subtitle;
     });
 
     $scope.rank = function(rider) {

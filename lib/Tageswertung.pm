@@ -110,27 +110,6 @@ sub punkte_in_runde($) {
     return "";
 }
 
-sub compareNumberFactory($) {
-    my ($spec) = @_;
-    my @spec = split(/\s/, $spec);
-
-    my $order = [];
-    while (my ($idx, $n) = each(@spec)) {
-	$order->[$n] = $idx;
-    }
-
-    my $o = sub($) {
-	my ($x) = @_;
-	return $order->[$x] // $x + @$order;
-    };
-
-    return sub($$) {
-	my ($a, $b) = @_;
-	my $cmp = defined($b) - defined($a);
-	return $cmp ? $cmp : &$o($a) - &$o($b);
-    }
-}
-
 sub tageswertung(@) {
   # cfg fahrer_nach_startnummer wertung spalten klassenfarben alle_punkte
   # nach_relevanz klassen statistik_pro_klasse statistik_gesamt
@@ -166,14 +145,18 @@ sub tageswertung(@) {
 	    if $fahrer->{zusatzpunkte};
     }
 
-    my $class_compare = compareNumberFactory($args{cfg}{class_order} // '');
+    my $klassen = $args{cfg}{klassen};
+    my $klassen_vergleich = sub ($$) {
+	my ($a, $b) = @_;
+	return $klassen->[$a - 1]{reihenfolge} <=> $klassen->[$b - 1]{reihenfolge};
+    };
 
     my $fahrer_nach_klassen = fahrer_nach_klassen($args{fahrer_nach_startnummer});
     doc_p fahrerstatistik($fahrer_nach_klassen, undef, $args{cfg})
 	if $args{statistik_gesamt};
-    foreach my $klasse (sort $class_compare keys %$fahrer_nach_klassen) {
+    foreach my $klasse (sort $klassen_vergleich keys %$fahrer_nach_klassen) {
 	my $fahrer_in_klasse = $fahrer_nach_klassen->{$klasse};
-	my $runden = $args{cfg}{klassen}[$klasse - 1]{runden};
+	my $runden = $klassen->[$klasse - 1]{runden};
 	my ($header, $body, $format);
 	my $farbe = "";
 
@@ -203,7 +186,7 @@ sub tageswertung(@) {
 
 	print "\n<div class=\"klasse\" id=\"klasse$klasse\">\n"
 	    if $RenderOutput::html;
-	doc_h3 "$args{cfg}{klassen}[$klasse - 1]{bezeichnung}";
+	doc_h3 "$klassen->[$klasse - 1]{bezeichnung}";
 	push @$format, "r3", "r3", "l";
 	push @$header, [ "$farbe", "c" ];
 	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
