@@ -3776,8 +3776,6 @@ async function import_event(connection, existing_id, data, email) {
 	SELECT COALESCE(MAX(id), 0) + 1 AS id
 	FROM events`);
       id = result[0].id;
-
-      await add_event_write_access(connection, id, email);
     }
 
     if (event.bases) {
@@ -3802,6 +3800,10 @@ async function import_event(connection, existing_id, data, email) {
 	  }
 	}
       }
+    }
+
+    if (!existing_id) {
+      await add_event_write_access(connection, id, email);
     }
 
     if (existing_id) {
