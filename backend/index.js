@@ -351,6 +351,39 @@ var cache = {
   }
 };
 
+function hash_future_starts(future_starts, rider) {
+  if (rider) {
+    let rider_tag = rider.rider_tag;
+    for (let fid in rider.future_starts) {
+      if (rider.future_starts[fid]) {
+	future_starts[fid + ' ' + rider_tag] = {
+	  fid: fid,
+	  rider_tag: rider_tag
+	};
+      }
+    }
+  }
+}
+
+async function update_future_starts(connection, id) {
+  let numbers = Object.keys(cache.saved_riders[id]);
+  let old_future_starts = {}, new_future_starts = {};
+  for (let number of numbers) {
+    let old_rider = cache.saved_riders[id][number];
+    let new_rider = cache.cached_riders[id][number];
+    hash_future_starts(old_future_starts, old_rider);
+    hash_future_starts(new_future_starts, new_rider);
+  }
+
+  await zipHashAsync(old_future_starts, new_future_starts,
+    async function(a, b) {
+      await update(connection, 'future_starts',
+	Object.assign({id: id}, a || b),
+	[],
+	a != null && {}, b != null && {});
+    });
+}
+
 async function commit_world(connection) {
   var ids = Object.keys(cache.saved_riders);
   for (let id of ids) {
@@ -361,6 +394,18 @@ async function commit_world(connection) {
       await update_rider(connection, id, number,
 			 old_rider, new_rider);
     }
+    /*
+     * The 'future_starts' table uses 'rider_tag' as the rider key instead of
+     * 'number'.  We cannot simply update it in update_rider() which processes
+     * the riders per number because otherwise number changes would lead to
+     * duplicate key errors in 'future_starts'.  (The 'rider_tag' doesn't
+     * change when 'number' changes).
+     *
+     * FIXME: Change 'future_starts' table to use 'number' as key instead of
+     * 'rider_tag' and revert this change.  (May conflict with
+     * pre-registration.)
+     */
+    await update_future_starts(connection, id);
   }
 
   ids = Object.keys(cache.saved_events);
@@ -2227,15 +2272,8 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
       && (changed = true);
     });
 
-  let rider_tag = old_rider.rider_tag || new_rider.rider_tag;
-  await zipHashAsync(old_rider.future_starts, new_rider.future_starts,
-    async function(a, b, fid) {
-      await update(connection, 'future_starts',
-	{id: id, rider_tag: rider_tag, fid: fid},
-	[],
-	a != null && {}, b != null && {})
-      && (changed = true);
-    });
+  if (!deepEqual(old_rider.future_starts, new_rider.future_starts))
+    changed = true;
 
   return changed;
 }
