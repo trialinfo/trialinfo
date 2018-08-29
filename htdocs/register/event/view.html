@@ -179,6 +179,12 @@
 	  </datalist>
 	</td>
       </tr>
+      <tr ng-if="features.year_of_manufacture">
+	<th><label for="year_of_manufacture">Baujahr</label></th>
+	<td>
+	  <input type="text" numeric size="4" maxlength="4" ng-model="rider.year_of_manufacture" id="year_of_manufacture">
+	</td>
+      </tr>
       <tr ng-if="features.frame_number">
 	<th><label for="frame_number">Rahmennummer</label></th>
 	<td>

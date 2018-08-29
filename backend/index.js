@@ -151,6 +151,14 @@ async function update_database(connection) {
     `);
   }
 
+  if (!await column_exists(connection, 'riders', 'year_of_manufacture')) {
+    console.log('Adding column `year_of_manufacture` to table `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD year_of_manufacture INT AFTER vehicle
+    `);
+  }
+
   if (!await column_exists(connection, 'classes', 'order')) {
     let bt = '`';
     console.log('Adding column `order` to table `classes`');
@@ -1942,8 +1950,8 @@ async function get_riders_list(connection, id) {
     ['city', 'class', 'club', 'country', 'date_of_birth', 'email', 'entry_fee',
     'failure', 'finish_time', 'first_name', 'group', 'insurance', 'last_name',
     'license', 'non_competing', 'number', 'phone', 'province', 'registered',
-    'riders', 'rounds', 'start', 'start_time', 'street',
-    'vehicle', 'zip', 'guardian', 'comment', 'rider_comment', 'verified',
+    'riders', 'rounds', 'start', 'start_time', 'street', 'vehicle',
+    'year_of_manufacture', 'zip', 'guardian', 'comment', 'rider_comment', 'verified',
     'future_starts'].forEach(
       (field) => { r[field] = rider[field]; }
     );
@@ -1982,7 +1990,8 @@ async function get_event_scores(connection, id) {
 
     var r = {};
 
-    ['number', 'last_name', 'first_name', 'club', 'vehicle',
+    ['number', 'last_name', 'first_name', 'club',
+    'vehicle', 'year_of_manufacture',
     'city', 'country', 'province', 'rank', 'failure', 'non_competing',
     'additional_marks', 'marks', 'marks_distribution', 'marks_per_round',
     'marks_per_zone', 'rankings'].forEach(
@@ -2639,6 +2648,7 @@ const register_rider_fields = {
   street: true,
   vehicle: true,
   version: true,
+  year_of_manufacture: true,
   zip: true,
 };
 

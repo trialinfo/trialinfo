@@ -374,6 +374,7 @@ CREATE TABLE `riders` (
   `zip` varchar(5) DEFAULT NULL,
   `club` varchar(40) DEFAULT NULL,
   `vehicle` varchar(30) DEFAULT NULL,
+  `year_of_manufacture` int(11) DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `emergency_phone` varchar(20) DEFAULT NULL,

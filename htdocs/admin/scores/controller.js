@@ -398,6 +398,12 @@ var eventScoresController = [
 	  expr: "vehicle",
 	  style: { 'text-align': 'left' },
 	  when: function() { return features.vehicle } },
+      year_of_manufacture:
+	{ name: 'Baujahr',
+	  heading: '<span title="Baujahr">Bj.</span>',
+	  expr: "year_of_manufacture",
+	  style: { 'text-align': 'center' },
+	  when: function() { return features.year_of_manufacture } },
       club:
 	{ name: 'Club',
 	  heading: 'Club',
