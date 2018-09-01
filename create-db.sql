@@ -403,6 +403,7 @@ CREATE TABLE `riders` (
   `s5` int(11) DEFAULT NULL,
   `non_competing` tinyint(1) DEFAULT NULL,
   `failure` int(11) DEFAULT '0',
+  `penalty_marks` float DEFAULT NULL,
   `additional_marks` float DEFAULT NULL,
   `marks` float DEFAULT NULL,
   `rank` int(11) DEFAULT NULL,

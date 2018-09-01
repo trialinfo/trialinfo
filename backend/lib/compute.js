@@ -367,7 +367,7 @@ function compute(cache, id, event) {
 	     (cached_rider.registered || !event.features.registered),
       'class': class_,
       ranking_class: ranking_class,
-      additional_marks: cached_rider.additional_marks,
+      additional_marks: cached_rider.penalty_marks || null,
       rankings: cached_rider.rankings.map(
 	(ranking) => ranking && {rank: null, score: null}
       ),
@@ -430,6 +430,8 @@ function compute(cache, id, event) {
     let number = rider.number;
     let cached_rider = cached_riders[number];
 
+    if (rider.additional_marks != cached_rider.additional_marks)
+      cache.modify_rider(id, number).additional_marks = rider.additional_marks;
     if (rider.marks != cached_rider.marks)
       cache.modify_rider(id, number).marks = rider.marks;
     if (rider.rank != cached_rider.rank)

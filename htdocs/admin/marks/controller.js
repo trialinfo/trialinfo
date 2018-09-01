@@ -238,6 +238,8 @@ var marksController = [
     function calculate_marks() {
       var rider = $scope.rider;
       if (rider) {
+	rider.additional_marks = rider.penalty_marks;
+
 	if (rider.group) {
 	  rider.marks = rider.additional_marks;
 	  for (round = 1; round <= rider.marks_per_zone.length; round++) {
@@ -301,7 +303,7 @@ var marksController = [
     $scope.$watch('rider.marks_per_zone', function() {
       calculate_marks();
     }, true);
-    $scope.$watch('rider.additional_marks', function() {
+    $scope.$watch('rider.penalty_marks', function() {
       calculate_marks();
     });
 

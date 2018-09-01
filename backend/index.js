@@ -151,6 +151,18 @@ async function update_database(connection) {
     `);
   }
 
+  if (!await column_exists(connection, 'riders', 'penalty_marks')) {
+    console.log('Adding column `penalty_marks` to table `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD penalty_marks FLOAT AFTER failure;
+    `);
+    await connection.queryAsync(`
+      UPDATE riders
+      SET penalty_marks = additional_marks
+    `);
+  }
+
   if (!await column_exists(connection, 'riders', 'year_of_manufacture')) {
     console.log('Adding column `year_of_manufacture` to table `riders`');
     await connection.queryAsync(`
