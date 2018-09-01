@@ -9,8 +9,6 @@ var eventScoresController = [
       classes: [],
       subtitle: scores.event.rankings[0].subtitle
     };
-    var features = scores.event.features;
-    $scope.features = features;
 
     fractional.enabled = scores.event.split_score;
 
@@ -21,6 +19,8 @@ var eventScoresController = [
       scores = a;
       event = scores.event;
       $scope.event = event;
+      features = event.features;
+      $scope.features = features;
       $scope.$root.context((event.rankings[($scope.show.ranking || 1) - 1] || {}).title);
 
       if (event.type && event.type.match(/^otsv/)) {
@@ -32,6 +32,24 @@ var eventScoresController = [
 	      rider.country = null;
 	  });
 	});
+      }
+
+      $scope.distribution = [];
+      $scope.marks_distribution_columns = 0;
+      if (!features.individual_marks) {
+	$scope.distribution[0] = true;
+	$scope.distribution[1] = true;
+	$scope.distribution[2] = true;
+	$scope.distribution[3] = true;
+	$scope.marks_distribution_columns += 4;
+	if (event.four_marks) {
+	  $scope.distribution[4] = true;
+	  $scope.marks_distribution_columns++;
+	}
+	if (features.column_5) {
+	  $scope.distribution[5] = true;
+	  $scope.marks_distribution_columns++;
+	}
       }
 
       $scope.classes = (function() {
