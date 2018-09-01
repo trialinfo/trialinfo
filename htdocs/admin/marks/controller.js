@@ -237,53 +237,55 @@ var marksController = [
 
     function calculate_marks() {
       var rider = $scope.rider;
-      if (rider && rider.group) {
-	rider.marks = rider.additional_marks;
-	for (round = 1; round <= rider.marks_per_zone.length; round++) {
-	  rider.marks += rider.marks_per_round[round - 1];
-	}
-      } else if (rider) {
-	rider.marks_per_round = [];
-	if (rider.start) {
-	  var rc = ranking_class(rider);
-	  var zones = event.zones[rc - 1] || [];
+      if (rider) {
+	if (rider.group) {
 	  rider.marks = rider.additional_marks;
-	  rider.rounds = 0;
-	  rider.marks_distribution = [0, 0, 0, 0, 0, 0];
-	  delete $scope.zones_skipped;
-	  var skipped = false;
-	  var round;
 	  for (round = 1; round <= rider.marks_per_zone.length; round++) {
-	    var marks_in_round = 0;
-	    var round_used = false;
-	    for (var index = 0; index < zones.length; index++) {
-	      var zone = zones[index];
-	      if (!zone_skipped(rc, round, zone)) {
-		var marks = rider.marks_per_zone[round - 1][zone - 1];
-		if (marks == null)
-		  skipped = true;
-		else if (!skipped) {
-		  if (marks == -1)
-		    marks_in_round += event.marks_skipped_zone;
-		  else {
-		    marks_in_round += marks;
-		    rider.marks_distribution[marks]++;
-		  }
-		  round_used = true;
-		} else
-		  $scope.zones_skipped = true;
-	      }
-	    }
-	    if (round_used) {
-	      rider.marks_per_round[round - 1] = marks_in_round;
-	      rider.marks += marks_in_round;
-	      rider.rounds = round;
-	    }
+	    rider.marks += rider.marks_per_round[round - 1];
 	  }
 	} else {
-	  rider.marks = null;
-	  rider.rounds = null;
-	  rider.marks_distribution = [null, null, null, null, null, null];
+	  rider.marks_per_round = [];
+	  if (rider.start) {
+	    var rc = ranking_class(rider);
+	    var zones = event.zones[rc - 1] || [];
+	    rider.marks = rider.additional_marks;
+	    rider.rounds = 0;
+	    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
+	    delete $scope.zones_skipped;
+	    var skipped = false;
+	    var round;
+	    for (round = 1; round <= rider.marks_per_zone.length; round++) {
+	      var marks_in_round = 0;
+	      var round_used = false;
+	      for (var index = 0; index < zones.length; index++) {
+		var zone = zones[index];
+		if (!zone_skipped(rc, round, zone)) {
+		  var marks = rider.marks_per_zone[round - 1][zone - 1];
+		  if (marks == null)
+		    skipped = true;
+		  else if (!skipped) {
+		    if (marks == -1)
+		      marks_in_round += event.marks_skipped_zone;
+		    else {
+		      marks_in_round += marks;
+		      rider.marks_distribution[marks]++;
+		    }
+		    round_used = true;
+		  } else
+		    $scope.zones_skipped = true;
+		}
+	      }
+	      if (round_used) {
+		rider.marks_per_round[round - 1] = marks_in_round;
+		rider.marks += marks_in_round;
+		rider.rounds = round;
+	      }
+	    }
+	  } else {
+	    rider.marks = null;
+	    rider.rounds = null;
+	    rider.marks_distribution = [null, null, null, null, null, null];
+	  }
 	}
       }
     }
