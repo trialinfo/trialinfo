@@ -216,17 +216,17 @@ sub tageswertung(@) {
 	push @$header, [ "Ges", "r1", "title=\"Gesamtpunkte\"" ];
 	unless ($features->{einzelpunkte}) {
 	    push @$format, "r2", "r2", "r2", "r2";
-	    push @$header, [ "0S", "r1", "title=\"Nuller\"" ];
-	    push @$header, [ "1S", "r1", "title=\"Einser\"" ];
-	    push @$header, [ "2S", "r1", "title=\"Zweier\"" ];
-	    push @$header, [ "3S", "r1", "title=\"Dreier\"" ];
+	    push @$header, [ "0ₛ", "r1", "title=\"Nuller\"" ];
+	    push @$header, [ "1ₛ", "r1", "title=\"Einser\"" ];
+	    push @$header, [ "2ₛ", "r1", "title=\"Zweier\"" ];
+	    push @$header, [ "3ₛ", "r1", "title=\"Dreier\"" ];
 	    if ($vierpunktewertung) {
 		push @$format, "r2";
-		push @$header, [ "4S", "r1", "title=\"Vierer\"" ];
+		push @$header, [ "4ₛ", "r1", "title=\"Vierer\"" ];
 	    }
 	    if ($features->{spalte5er}) {
 		push @$format, "r2";
-		push @$header, [ "5S", "r1", "title=\"Fünfer\"" ];
+		push @$header, [ "5ₛ", "r1", "title=\"Fünfer\"" ];
 	    }
 	}
 	if ($stechen) {

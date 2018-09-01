@@ -154,12 +154,12 @@ Keine Fahrer oder Gruppen.
 	<th style="text-align:right" ng-repeat-end ng-if="rounds > 1"><span title="Runde {{round}}">R{{round}}</span></th>
 	<th style="text-align:right" ng-if="columns[class - 1].additional_marks"><span title="Zeit- und Zusatzpunkte">ZP</span></th>
 	<th style="text-align:right"><span title="Gesamtpunkte">Ges</span></th>
-	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Nuller">0S</span></th>
-	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Einser">1S</span></th>
-	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Zweier">2S</span></th>
-	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Dreier">3S</span></th>
-	<th style="text-align:right" ng-if="!features.individual_marks && event.four_marks"><span title="Vierer">4S</span></th>
-	<th style="text-align:right" ng-if="!features.individual_marks && features.column_5"><span title="Fünfer">5S</span></th>
+	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Nuller">0ₛ</span></th>
+	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Einser">1ₛ</span></th>
+	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Zweier">2ₛ</span></th>
+	<th style="text-align:right" ng-if="!features.individual_marks"><span title="Dreier">3ₛ</span></th>
+	<th style="text-align:right" ng-if="!features.individual_marks && event.four_marks"><span title="Vierer">4ₛ</span></th>
+	<th style="text-align:right" ng-if="!features.individual_marks && features.column_5"><span title="Fünfer">5ₛ</span></th>
 	<th style="text-align:right" ng-if="columns[class - 1].tie_break"><span title="Stechen">ST</span></th>
 	<th style="text-align:right" ng-if="columns[class - 1].score"><span title="Wertungspunkte {{event.rankings[show.ranking - 1].name}}">WP</span></th>
       </tr>
