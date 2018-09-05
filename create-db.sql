@@ -476,6 +476,7 @@ CREATE TABLE `series` (
   `name` varchar(40) DEFAULT NULL,
   `abbreviation` varchar(10) DEFAULT NULL,
   `closed` tinyint(1) DEFAULT NULL,
+  `mtime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`serie`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -553,6 +554,25 @@ CREATE TABLE `series_groups` (
   `group` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`serie`,`group`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `series_scores`
+--
+
+DROP TABLE IF EXISTS `series_scores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `series_scores` (
+  `serie` int(11) NOT NULL,
+  `class` int(11) NOT NULL,
+  `number` int(11) NOT NULL,
+  `last_id` int(11) NOT NULL,
+  `rank` int(11) DEFAULT NULL,
+  `drop_score` double DEFAULT NULL,
+  `score` double DEFAULT NULL,
+  PRIMARY KEY (`serie`,`class`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

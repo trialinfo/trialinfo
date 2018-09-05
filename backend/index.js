@@ -211,6 +211,22 @@ async function update_database(connection) {
       DROP title, DROP subtitle
     `);
   }
+
+  if (!await column_exists(connection, 'series_scores', 'serie')) {
+    console.log('Creating table `series_scores`');
+    await connection.queryAsync(`
+      CREATE TABLE series_scores (
+	serie INT DEFAULT NULL,
+	class INT DEFAULT NULL,
+	number INT DEFAULT NULL,
+	last_id INT NOT NULL,
+	rank INT,
+	drop_score double,
+	score double,
+	PRIMARY KEY (serie, class, number)
+      )
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1846,7 +1862,8 @@ async function save_serie(connection, serie_id, serie, version, email) {
     return serie_id;
   } else {
     for (let table of ['series', 'series_classes', 'series_events',
-		       'series_admins', 'series_groups']) {
+		       'series_admins', 'series_groups',
+		       'series_scores']) {
       let query =
 	'DELETE FROM ' + connection.escapeId(table) +
 	' WHERE serie = ' + connection.escape(serie_id);

@@ -67,7 +67,7 @@ if (my @row = $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT DISTINCT id, date, ranking, title, subtitle, mtime, split_score, type
+    SELECT DISTINCT id, date, ranking, title, subtitle, events.mtime, split_score, type
     FROM series_events
     JOIN series USING (serie)
     JOIN events USING (id)
