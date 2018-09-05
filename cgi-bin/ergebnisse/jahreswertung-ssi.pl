@@ -286,7 +286,7 @@ while (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung veranstaltungen => $veranstaltungen,
+my $w = jahreswertung veranstaltungen => $veranstaltungen,
 	      wertung => $wertung,
 	      laeufe_gesamt => $laeufe,
 	      streichresultate => $streichresultate,
@@ -295,6 +295,31 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      nach_relevanz => 1,
 	      @klassen ? (klassen => \@klassen ) : (),
 	      tie_break => $tie_break;
+
+if ($ENV{DUMP}) {
+    $sth = $dbh->prepare(q{
+	DELETE FROM series_scores
+	WHERE serie = ?
+    });
+    $sth->execute($vareihe);
+    $sth = $dbh->prepare(q{
+	INSERT INTO series_scores
+	SET serie = ?, class = ?, number = ?, last_id = ?, rank = ?, drop_score = ?, score = ?
+    });
+    foreach my $klasse (keys %$w) {
+	my $klassenwertung = $w->{$klasse};
+	foreach my $startnummer (keys %$klassenwertung) {
+	    my $fahrerwertung = $klassenwertung->{$startnummer};
+	    $sth->execute($vareihe, $klasse, $startnummer, $fahrerwertung->{letzte_id}, $fahrerwertung->{rang}, $fahrerwertung->{streichpunkte}, $fahrerwertung->{gesamtpunkte});
+	}
+    }
+    $sth = $dbh->prepare(q{
+	UPDATE series
+	SET mtime = NULL
+	WHERE serie = ?
+    });
+    $sth->execute($vareihe);
+}
 
 print "<p>Letzte Änderung: $mtime</p>\n"
     if $mtime;

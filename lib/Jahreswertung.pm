@@ -321,6 +321,7 @@ sub jahreswertung(@) {
     #}
 
     my $alle_fahrer;
+    my $letzte_ids;
 
     my $jahreswertung;
     foreach my $veranstaltung (@{$args{veranstaltungen}}) {
@@ -328,8 +329,8 @@ sub jahreswertung(@) {
 
 	foreach my $fahrer (values %$fahrer_nach_startnummer) {
 	    my $startnummer = $fahrer->{startnummer};
+	    my $klasse = $fahrer->{wertungsklasse};
 	    if (defined $fahrer->{wertungen}[$wertung - 1]{punkte}) {
-		my $klasse = $fahrer->{wertungsklasse};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungspunkte}},
 		    $fahrer->{wertungen}[$wertung - 1]{punkte};
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungsrang}},
@@ -339,6 +340,7 @@ sub jahreswertung(@) {
 	    # bei der der Fahrer Punkte gemacht hat.
 	    if ($fahrer->{wertungen}[$wertung - 1]{punkte}) {
 		$alle_fahrer->{$startnummer} = $fahrer;
+		$letzte_ids->{$klasse}{$startnummer} = $veranstaltung->[0]{id};
 	    }
 	}
     }
@@ -487,6 +489,26 @@ sub jahreswertung(@) {
 	push @$body, [ $label, $cfg->{wertungen}[$wertung - 1]{titel} ];
     }
     doc_table header => ["", "Name"], body => $body, format => ["r", "l"];
+
+    my $w;
+
+    foreach my $klasse (keys %$jahreswertung) {
+	my $klassenwertung = $jahreswertung->{$klasse};
+	foreach my $startnummer (keys %$klassenwertung) {
+	    my $fahrerwertung = $klassenwertung->{$startnummer};
+	    my $ww = {
+		rang => $fahrerwertung->{gesamtrang},
+	    };
+	    $ww->{streichpunkte} = $fahrerwertung->{streichpunkte}
+		if exists $fahrerwertung->{streichpunkte};
+	    $ww->{gesamtpunkte} = $fahrerwertung->{gesamtpunkte}
+		if exists $fahrerwertung->{gesamtpunkte};
+	    $ww->{letzte_id} = $letzte_ids->{$klasse}{$startnummer};
+	    $w->{$klasse}{$startnummer} = $ww;
+	}
+    }
+
+    return $w;
 }
 
 1;
