@@ -2004,7 +2004,7 @@ async function get_event_scores(connection, id) {
 
     ['number', 'last_name', 'first_name', 'club',
     'vehicle', 'year_of_manufacture',
-    'city', 'country', 'province', 'rank', 'failure', 'non_competing',
+    'country', 'province', 'rank', 'failure', 'non_competing',
     'additional_marks', 'marks', 'marks_distribution', 'marks_per_round',
     'marks_per_zone', 'rankings'].forEach(
       (field) => { r[field] = rider[field]; }

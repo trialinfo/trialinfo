@@ -413,12 +413,6 @@ var eventScoresController = [
 	  expr: "club",
 	  style: { 'text-align': 'left' },
 	  when: function() { return features.club } },
-      city:
-	{ name: 'Wohnort',
-	  heading: 'Wohnort',
-	  expr: "city",
-	  style: { 'text-align': 'left' },
-	  when: function() { return features.city } },
       country_province:
 	{ name: 'Land (Bundesland)',
 	  heading: '<span title="Land (Bundesland)">Land</span>',
