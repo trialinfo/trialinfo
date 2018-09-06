@@ -1977,6 +1977,11 @@ async function get_riders_list(connection, id) {
   return list;
 }
 
+var rider_public_fields = [
+  'club', 'country', 'first_name', 'last_name', 'province', 'vehicle',
+  'year_of_manufacture'
+];
+
 async function get_event_scores(connection, id) {
   let revalidate_riders = make_revalidate_riders(connection, id);
   let revalidate_event = make_revalidate_event(connection, id);
@@ -2002,11 +2007,11 @@ async function get_event_scores(connection, id) {
 
     var r = {};
 
-    ['number', 'last_name', 'first_name', 'club',
-    'vehicle', 'year_of_manufacture',
-    'country', 'province', 'rank', 'failure', 'non_competing',
-    'additional_marks', 'marks', 'marks_distribution', 'marks_per_round',
-    'marks_per_zone', 'rankings'].forEach(
+    rider_public_fields.concat([
+      'additional_marks', 'failure', 'marks', 'marks_distribution',
+      'marks_per_round', 'marks_per_zone', 'non_competing', 'number', 'rank',
+      'rankings'
+    ]).forEach(
       (field) => { r[field] = rider[field]; }
     );
     active_riders[rider.number] = r;
