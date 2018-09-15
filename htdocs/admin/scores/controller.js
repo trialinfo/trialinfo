@@ -7,7 +7,7 @@ var eventScoresController = [
     $scope.show = {
       fields: [],
       classes: [],
-      subtitle: scores.event.rankings[0].subtitle
+      subtitle: scores.event.subtitle
     };
 
     fractional.enabled = scores.event.split_score;
@@ -21,7 +21,7 @@ var eventScoresController = [
       $scope.event = event;
       features = event.features;
       $scope.features = features;
-      $scope.$root.context((event.rankings[($scope.show.ranking || 1) - 1] || {}).title);
+      $scope.$root.context(event.title);
 
       if (event.type && event.type.match(/^otsv/)) {
 	scores.riders.forEach(function(class_) {
@@ -196,7 +196,7 @@ var eventScoresController = [
 	  delete search[key];
       });
 
-      if (search.subtitle == event.rankings[($scope.show.ranking || 1) - 1].subtitle)
+      if (search.subtitle == event.subtitle)
 	delete search.subtitle;
       else if (search.subtitle == null)
 	search.subtitle = '';
@@ -256,7 +256,7 @@ var eventScoresController = [
     function update() {
       var ranking = $scope.show.ranking;
 
-      $scope.$root.context((event.rankings[(ranking || 1) - 1] || {}).title);
+      $scope.$root.context(event.title);
       if (ranking == null)
 	$scope.show.all = true;
       else if ((event.rankings[ranking - 1] || {}).groups)
@@ -756,7 +756,7 @@ var eventScoresController = [
 	show_all();
     });
     $scope.$watch('show.ranking', function(ranking) {
-      $scope.show.subtitle = event.rankings[(ranking || 1) - 1].subtitle;
+      $scope.show.subtitle = event.subtitle;
     });
 
     $scope.rank = function(rider) {

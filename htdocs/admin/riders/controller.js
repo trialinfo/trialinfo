@@ -5,7 +5,7 @@ var ridersController = [
   'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
   function ($scope, $sce, $http, $timeout, $q, $route, $location, $window,
 	    event, suggestions, groups, riders_hash, groups_hash) {
-    $scope.$root.context(event.rankings[0].title);
+    $scope.$root.context(event.title);
 
     /* Im Fahrer-Nennformular Gruppenwertungen herausfiltern und im
        Gruppen-Nennformular Fahrerwertungen herausfiltern.  Eine Wertung ist eine

@@ -25,7 +25,7 @@
 <style type="text/css" ng-bind-html="print_style()">
 </style>
 
-<h1><a href="" ng-click="settings($event)">{{event.rankings[0].title}}</a></h1>
+<h1><a href="" ng-click="settings($event)">{{event.title}}</a></h1>
 <div ng-if="fold.settings" class="no-print">
   <p>
     <form name="form">
@@ -203,7 +203,7 @@
 	  </tr>
 	</table>
       </fieldset>
-      <input type="hidden" name="filename" value="Fahrerliste {{event.rankings[0].title}}.pdf">
+      <input type="hidden" name="filename" value="Fahrerliste {{event.title}}.pdf">
       <input type="hidden" name="url" value="{{url}}">
       <input type="hidden" name="html" value="{{html}}">
     </form>

@@ -13,7 +13,7 @@ a:hover.updown {
 }
 </style>
 
-<h1>{{event.rankings[0].title}} – Einstellungen</h1>
+<h1>{{event.title}} – Einstellungen</h1>
 <form name="form" ng-keydown="keydown($event)">
   <fieldset style="display:inline">
     <legend>Allgemein</legend>
@@ -50,11 +50,11 @@ a:hover.updown {
       </tr>
       <tr>
 	<th><label for="title">Titel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="event.rankings[0].title" id="title" nullable></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="event.title" id="title" nullable></td>
       </tr>
       <tr>
 	<th><label for="subtitle">Subtitel</label></th>
-	<td><input type="text" size="40" maxlength="70" ng-model="event.rankings[0].subtitle" id="subtitle" nullable></td>
+	<td><input type="text" size="40" maxlength="70" ng-model="event.subtitle" id="subtitle" nullable></td>
       </tr>
       <tr>
 	<th><label for="date">Datum</label></th>
@@ -108,18 +108,6 @@ a:hover.updown {
       <fieldset style="display:inline">
 	<legend>Wertung {{$index + 1}}</legend>
 	<table>
-	  <tr>
-	    <th><label for="ranking{{$index + 1}}_title">Titel</label></th>
-	    <td>
-	      <input type="text" size="40" maxlength="70" ng-model="ranking.title" id="ranking{{$index + 1}}_title" nullable>
-	    </td>
-	  </tr>
-	  <tr>
-	    <th><label for="ranking{{$index + 1}}_subtitle">Subtitel</label></th>
-	    <td>
-	      <input type="text" size="40" maxlength="70" ng-model="ranking.subtitle" id="ranking{{$index + 1}}_subtitle" nullable>
-	    </td>
-	  </tr>
 	  <tr>
 	    <th><label for="ranking{{$index + 1}}_name">Bezeichnung</label></th>
 	    <td>

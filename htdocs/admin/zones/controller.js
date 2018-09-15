@@ -3,7 +3,7 @@
 var zonesController = [
   '$scope', '$http', '$timeout', 'event',
   function ($scope, $http, $timeout, event) {
-    $scope.$root.context(event.rankings[0].title);
+    $scope.$root.context(event.title);
 
     $scope.starting_classes = function() {
       var starting_classes = {};

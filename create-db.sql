@@ -93,6 +93,8 @@ CREATE TABLE `events` (
   `id` int(11) NOT NULL DEFAULT '0',
   `base` char(16) DEFAULT NULL,
   `base_fid` int(11) DEFAULT NULL,
+  `title` varchar(70) DEFAULT NULL,
+  `subtitle` varchar(70) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `mtime` timestamp NULL DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
@@ -311,8 +313,6 @@ DROP TABLE IF EXISTS `rankings`;
 CREATE TABLE `rankings` (
   `id` int(11) NOT NULL DEFAULT '0',
   `ranking` int(11) NOT NULL,
-  `title` varchar(70) DEFAULT NULL,
-  `subtitle` varchar(70) DEFAULT NULL,
   `name` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

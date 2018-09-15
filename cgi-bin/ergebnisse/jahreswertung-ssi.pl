@@ -68,9 +68,8 @@ my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
     SELECT DISTINCT id, date, ranking, title, subtitle, mtime, split_score, type
-    FROM rankings
-    JOIN series_events USING (id)
-    JOIN series USING (serie, ranking)
+    FROM series_events
+    JOIN series USING (serie)
     JOIN events USING (id)
     WHERE serie = ? AND enabled
     ORDER BY date

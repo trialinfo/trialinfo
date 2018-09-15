@@ -173,7 +173,7 @@ var syncController = [
 	.then(function(response) {
 	  let dump = response.data;
 	  $scope.source_dump = dump;
-	  $scope.title = dump.event.rankings[0].title;
+	  $scope.title = dump.event.title;
 	  delete $scope.source_error;
 	  sync()
 	    .then(function() {

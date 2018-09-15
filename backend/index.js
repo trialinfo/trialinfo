@@ -171,6 +171,26 @@ async function update_database(connection) {
       DROP class_order
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'title')) {
+    console.log('Moving column `title` to table `event`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD title VARCHAR(70) AFTER base_fid,
+      ADD subtitle VARCHAR(70) AFTER title
+    `);
+    await connection.queryAsync(`
+      UPDATE events
+      JOIN rankings USING (id)
+      SET events.title = rankings.title,
+        events.subtitle = rankings.subtitle
+      WHERE ranking = 1
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      DROP title, DROP subtitle
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -621,8 +641,7 @@ async function get_events(connection, email) {
     SELECT DISTINCT id, tag, date, title, enabled
     FROM events
     JOIN events_all_admins USING (id)
-    LEFT JOIN rankings USING (id)
-    WHERE email = ? AND ranking = 1
+    WHERE email = ?
     ORDER BY date, title, id`, [email]);
 
   events.forEach((row) => {
@@ -2010,8 +2029,8 @@ async function get_event_scores(connection, id) {
   })();
 
   hash.event = {};
-  ['equal_marks_resolution', 'mtime', 'four_marks', 'date',
-  'split_score', 'features', 'type', 'result_columns'].forEach(
+  ['title', 'subtitle', 'equal_marks_resolution', 'mtime', 'four_marks',
+   'date', 'split_score', 'features', 'type', 'result_columns'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
 
@@ -2036,10 +2055,6 @@ async function get_event_scores(connection, id) {
       });
     });
   });
-
-  /* FIXME: Hack to get the event title into the result. */
-  if (!active_rankings.length)
-    active_rankings[0] = true;
 
   hash.event.rankings = [];
   active_rankings.forEach((ranking, index) => {
@@ -2578,7 +2593,7 @@ async function register_get_event(connection, id, user) {
   var event = await get_event(connection, id);
   var result = {
     id: id,
-    title: event.rankings[0].title,
+    title: event.title,
   };
   Object.keys(register_event_fields).forEach((field) => {
     result[field] = event[field];
@@ -3431,9 +3446,8 @@ async function check_number(connection, id, query) {
       result = await connection.queryAsync(`
 	SELECT id, title, number, class, last_name, first_name, date_of_birth
 	FROM events
-	JOIN rankings USING (id)
 	JOIN riders USING (id)
-	WHERE number = ? AND id IN (` + events + `) AND ranking = 1
+	WHERE number = ? AND id IN (` + events + `)
 	ORDER BY date DESC
 	LIMIT 1`, [query.number]);
     }
@@ -3480,9 +3494,8 @@ async function admin_event_get_as_base(connection, tag, email) {
   var result = await connection.queryAsync(`
     SELECT title, id, tag
     FROM events
-    LEFT JOIN rankings USING (id)
     JOIN events_all_admins USING (id)
-    WHERE tag = ? AND email = ? AND ranking = 1`, [tag, email]);
+    WHERE tag = ? AND email = ?`, [tag, email]);
   if (result.length == 1) {
     result = result[0];
     result.starters = {};
@@ -3518,8 +3531,7 @@ async function index(req, res, next) {
       SELECT id, date, title,
 	     CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends
       FROM events
-      JOIN rankings USING (id)
-      WHERE ranking = 1 AND enabled
+      WHERE enabled
       AND (registration_ends IS NOT NULL OR
 	  id IN (SELECT DISTINCT id FROM marks) OR
 	  id IN (SELECT DISTINCT id FROM riders WHERE start_time AND verified AND start))`);
@@ -3664,8 +3676,8 @@ async function export_event(connection, id, email) {
 }
 
 function basename(event) {
-  if (event.rankings[0].title)
-    return event.rankings[0].title.replace(/[:\/\\]/g, '');
+  if (event.title)
+    return event.title.replace(/[:\/\\]/g, '');
   else if (event.date)
     return 'Trial ' + event.date;
   else
@@ -3781,7 +3793,7 @@ async function title_of_copy(connection, event) {
     FROM information_schema.columns
     WHERE table_schema = Database() AND table_name = 'rankings' AND column_name = 'title'`);
 
-  let title = event.rankings[0].title;
+  let title = event.title;
   var match = title.match(/(.*) \(Kopie(?: (\d+))?\)?$/);
   if (match)
     title = match[1] + '(Kopie ' + ((match[2] || 1) + 1) + ')';
@@ -3811,8 +3823,8 @@ async function import_event(connection, existing_id, data, email) {
 	WHERE tag = ?`, [event.tag]);
       if (result.length) {
 	event.tag = random_tag();
-	event.rankings[0].title += ' (Kopie)';
-	// event.rankings[0].title = await title_of_copy(connection, event);
+	event.title += ' (Kopie)';
+	// event.title = await title_of_copy(connection, event);
       }
 
       result = await connection.queryAsync(`

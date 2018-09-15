@@ -3,7 +3,7 @@
 var settingsController = [
   '$scope', '$http', '$timeout', '$location', 'event', 'events',
   function ($scope, $http, $timeout, $location, event, events) {
-    $scope.$root.context(event ? event.rankings[0].title : 'Neue Veranstaltung');
+    $scope.$root.context(event ? event.title : 'Neue Veranstaltung');
     $scope.internal = {
       base: null,
       reset: null
@@ -152,6 +152,7 @@ var settingsController = [
 	event = $scope.old_event;
       if (event === null) {
 	event = {
+	  title: 'Neue Veranstaltung',
 	  type: null,
 	  enabled: true,
 	  classes: [],
@@ -165,7 +166,7 @@ var settingsController = [
 	    start: true,
 	    skipped_zones: true,
 	  },
-	  rankings: [{title: 'Neue Veranstaltung'}],
+	  rankings: [],
 	  scores: [],
 	  equal_marks_resolution: 0,
 	  insurance: 0,
@@ -196,8 +197,6 @@ var settingsController = [
       for (var ranking = 1; ranking <= 4; ranking++)
 	if (!event.rankings[ranking - 1])
 	  event.rankings[ranking - 1] = {
-	      title: null,
-	      subtitle: null,
 	      name: null,
 	  };
 
@@ -340,7 +339,7 @@ var settingsController = [
 	      let event = response.data;
 	      delete event.id;
 	      $scope.unique_title =
-		unique_title(event.rankings[0].title, $scope.events);
+		unique_title(event.title, $scope.events);
 	      event.registration_ends = null;
 	      event.base = base;
 	      let future_events = angular.copy(event.future_events);
@@ -375,7 +374,7 @@ var settingsController = [
 	  return;
 
 	if (fid == null) {
-	  event.rankings[0].title = $scope.unique_title;
+	  event.title = $scope.unique_title;
 	  event.date = $scope.$eval('today | date:"yyyy-MM-dd"', {today: Date.now()});
 	} else {
 	  var future_event = $scope.future_events.find(
@@ -383,7 +382,7 @@ var settingsController = [
 	      return future_event.fid == fid;
 	    }) || {};
 	  if (future_event.title)
-	    event.rankings[0].title = future_event.title;
+	    event.title = future_event.title;
 	  if (future_event.date)
 	    event.date = future_event.date;
 	}

@@ -4,7 +4,7 @@ var eventListController = [
   '$scope', '$sce', '$route', '$location', '$window', '$timeout', 'event', 'list',
   function eventListController($scope, $sce, $route, $location, $window, $timeout, event, list) {
     $scope.config = config;
-    $scope.$root.context(event.rankings[0].title);
+    $scope.$root.context(event.title);
 
     $scope.event = event;
     var features = event.features;
@@ -12,7 +12,7 @@ var eventListController = [
     $scope.fold = {};
     $scope.show = {
       fields: [],
-      subtitle: event.rankings[0].subtitle
+      subtitle: event.subtitle
     };
 
     if (event.type && event.type.match(/^otsv/)) {
@@ -692,7 +692,7 @@ var eventListController = [
 	  delete search[key];
       });
 
-      if (search.subtitle == event.rankings[0].subtitle)
+      if (search.subtitle == event.subtitle)
 	delete search.subtitle;
       else if (search.subtitle == null)
 	search.subtitle = '';

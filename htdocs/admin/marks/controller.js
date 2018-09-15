@@ -3,7 +3,7 @@
 var marksController = [
   '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'event',
   function ($scope, $sce, $http, $timeout, $route, $location, event) {
-    $scope.$root.context(event.rankings[0].title);
+    $scope.$root.context(event.title);
 
     $scope.event = event;
     $scope.features = event.features;
