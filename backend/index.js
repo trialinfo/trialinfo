@@ -108,7 +108,7 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 /*
  * Local things
  */
-var compute = require('./lib/compute.js');
+var compute_event = require('./lib/compute_event.js');
 String.prototype.latinize = require('./lib/latinize');
 
 /*
@@ -1312,7 +1312,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    compute(cache, id, event);
+    compute_event(cache, id, event);
 
     /* When verifying a rider, also verify the user so that future changes by
        that user will not need verification in the future.  */
@@ -1684,7 +1684,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	await reduce_future_starts(event, riders);
       }
 
-      compute(cache, id, event);
+      compute_event(cache, id, event);
     } else {
       await delete_event(connection, id);
     }

@@ -20,7 +20,7 @@
 var deepEqual = require('deep-equal');
 var common = require('../htdocs/js/common');
 
-function compute(cache, id, event) {
+function compute_event(cache, id, event) {
   function compute_active_zones(riders) {
     let active_zones = {};
 
@@ -472,6 +472,6 @@ function compute(cache, id, event) {
   });
 }
 
-module.exports = compute;
+module.exports = compute_event;
 
 /* ex:set shiftwidth=2: */
