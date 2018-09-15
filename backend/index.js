@@ -44,7 +44,7 @@ var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
 var start_times = require('./start_times');
-var random_shuffle = require('./random_shuffle');
+var random_shuffle = require('./lib/random_shuffle');
 
 var config = JSON.parse(fs.readFileSync('config.json'));
 
