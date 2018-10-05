@@ -163,6 +163,14 @@ async function update_database(connection) {
       SET ${bt}order${bt} = ${bt}class${bt}
     `);
   }
+
+  if (await column_exists(connection, 'events', 'class_order')) {
+    console.log('Removing column `class_order` from table `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP class_order
+    `);
+  }
 }
 
 pool.getConnectionAsync()
