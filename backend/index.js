@@ -1133,7 +1133,8 @@ async function find_riders(connection, id, params) {
       var last_name = (rider.last_name || '').latinize();
 
       if ((first_name + ' ' + last_name).match(term) ||
-	  (last_name + ' ' + first_name).match(term))
+	  (last_name + ' ' + first_name).match(term) ||
+	  (rider.email || '').latinize().match(term))
 	found.push(rider.number);
     });
   }
