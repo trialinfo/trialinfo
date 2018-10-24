@@ -303,6 +303,9 @@
 		  <span ng-if="rider.license && !amf_license(rider) && rider_in_ranking1(rider)" style="display:block">
 		    Fahrer hat keine AMF-Lizenznummer (IJM / JM / JMJ)<br>und darf an der Jahreswertung nicht teilnehmen.
 		  </span>
+		  <span ng-if="(rider.class == 5 || rider.class == 12 || rider.class == 13) && rider.displacement > 125" style="display:block">
+		    Maximaler Hubraum von 125 cm³ überschritten.
+		  </span>
 		</span>
 	      </span>
 	    </span>

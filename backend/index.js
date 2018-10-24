@@ -163,6 +163,14 @@ async function update_database(connection) {
       SET ${bt}order${bt} = ${bt}class${bt}
     `);
   }
+
+  if (await column_exists(connection, 'events', 'class_order')) {
+    console.log('Removing column `class_order` from table `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP class_order
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1125,7 +1133,8 @@ async function find_riders(connection, id, params) {
       var last_name = (rider.last_name || '').latinize();
 
       if ((first_name + ' ' + last_name).match(term) ||
-	  (last_name + ' ' + first_name).match(term))
+	  (last_name + ' ' + first_name).match(term) ||
+	  (rider.email || '').latinize().match(term))
 	found.push(rider.number);
     });
   }

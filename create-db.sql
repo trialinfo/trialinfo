@@ -61,6 +61,7 @@ CREATE TABLE `classes` (
   `ranking_class` int(11) NOT NULL,
   `no_ranking1` tinyint(1) DEFAULT NULL,
   `non_competing` tinyint(1) DEFAULT NULL,
+  `order` int(11) NOT NULL,
   PRIMARY KEY (`id`,`class`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
