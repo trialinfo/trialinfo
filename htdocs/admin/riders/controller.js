@@ -365,7 +365,7 @@ var ridersController = [
 	'group': groups,
 	'class': null,
 	'number': null,
-	'rankings': [ event.ranking1_enabled ],
+	'rankings': features.ranking1 ? [ event.ranking1_enabled ] : [],
 	'insurance': event.insurance,
 	'verified': true,
 	'future_starts': {}
