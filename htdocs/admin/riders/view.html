@@ -183,7 +183,7 @@
 		<textarea ng-disabled="!enabled.rider" rows="2" cols="70" maxlength="150" nullable ng-model="rider.rider_comment" id="rider_comment"></textarea>
 	      </td>
 	    </tr>
-	    <tr ng-if="features.rankings">
+	    <tr ng-if="features.rankings.length">
 	      <th><label for="ranking{{features.rankings[0]}}">Wertungen</label></th>
 	      <td>
 		<span ng-repeat="ranking in features.rankings">
