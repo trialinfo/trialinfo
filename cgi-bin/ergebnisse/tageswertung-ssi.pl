@@ -325,11 +325,12 @@ if ($nur_vorangemeldete) {
 	    }
 	}
 
-	my $row = [
-	    undef,
-	    $startnummer,
+	my $row = [ undef ];
+	push @$row, $startnummer
+	    if $features->{number};
+	push @$row,
 	    $fahrer->{nachname} . ' ' . $fahrer->{vorname} .
-		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '')];
+		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '');
 	push @$row, $fahrer->{startzeit}
 		if $startzeit_vergeben;
 	return $row;
@@ -364,7 +365,10 @@ if ($nur_vorangemeldete) {
             $farbe = "<span style=\"display:block; width:10pt; height:10pt; background-color:$klassenfarben->{$klasse}\"></span>";
         }
 
-	my $header = [[ $farbe, "c" ], [ "Nr.", "r1", "title=\"Startnummer\"" ], "Name"];
+	my $header = [[ $farbe, "c" ]];
+	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
+	    if $features->{number};
+	push @$header, "Name";
 	push @$header, "Startzeit"
 	    if $startzeit_vergeben;
 
