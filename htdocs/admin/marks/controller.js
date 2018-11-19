@@ -235,10 +235,20 @@ var marksController = [
       }
     }
 
+    let year_of_event = (date_of_event(event)).getFullYear();
+
     function calculate_marks() {
       var rider = $scope.rider;
       if (rider) {
 	rider.additional_marks = rider.penalty_marks;
+
+	if (event.type == 'otsv-acup') {
+	  if (rider.class >= 4 && rider.class <= 11) {
+	   let year = rider.year_of_manufacture || year_of_event;
+	   let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	   rider.additional_marks += m;
+	  }
+	}
 
 	if (rider.group) {
 	  rider.marks = rider.additional_marks;

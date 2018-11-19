@@ -18,6 +18,7 @@
 'use strict';
 
 var deepEqual = require('deep-equal');
+var common = require('../htdocs/js/common');
 
 function compute(cache, id, event) {
   function compute_active_zones(riders) {
@@ -253,6 +254,17 @@ function compute(cache, id, event) {
     if (cmp)
       return cmp;
 
+    if (event.type == 'otsv-acup') {
+      /* We only care about the number of clean sections. */
+      cmp = b.marks_distribution[0] - a.marks_distribution[0];
+      if (cmp)
+	return cmp;
+
+      let _a = a.date_of_birth || '9999-99-99';
+      let _b = b.date_of_birth || '9999-99-99';
+      return _a.localeCompare(_b);
+    }
+
     /* Fewer cleaned sections win, etc. */
     for (let n = 0; n < 5; n++) {
       cmp = b.marks_distribution[n] - a.marks_distribution[n];
@@ -362,11 +374,13 @@ function compute(cache, id, event) {
     riders[cached_rider.number] = {
       number: cached_rider.number,
       group: cached_rider.group,
+      date_of_birth: cached_rider.date_of_birth,
       start: (cached_rider.group || ranking_class) &&
 	     cached_rider.verified && cached_rider.start &&
 	     (cached_rider.registered || !event.features.registered),
       'class': class_,
       ranking_class: ranking_class,
+      year_of_manufacture: cached_rider.year_of_manufacture,
       additional_marks: cached_rider.penalty_marks || null,
       rankings: cached_rider.rankings.map(
 	(ranking) => ranking && {rank: null, score: null}
@@ -381,6 +395,17 @@ function compute(cache, id, event) {
     };
     return riders;
   }, {});
+
+  if (event.type == 'otsv-acup') {
+    let year_of_event = (common.date_of_event(event)).getFullYear();
+    for (let rider of Object.values(riders)) {
+      if (rider.class >= 4 && rider.class <= 11) {
+	let year = rider.year_of_manufacture || year_of_event;
+	let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	rider.additional_marks += m;
+      }
+    }
+  }
 
   compute_rider_marks(riders);
   if (event.features.groups)
