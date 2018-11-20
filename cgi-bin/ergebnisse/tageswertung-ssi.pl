@@ -326,12 +326,13 @@ if ($nur_vorangemeldete) {
 	}
 
 	my $row = [ undef ];
-	push @$row, $startnummer
-	    if $features->{number};
+	push @$row, [ $startnummer, "r" ]
+	    if $features->{startnummer};
 	push @$row,
-	    $fahrer->{nachname} . ' ' . $fahrer->{vorname} .
-		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : '');
-	push @$row, $fahrer->{startzeit}
+	    [ $fahrer->{nachname} . ' ' . $fahrer->{vorname} .
+		(@$args ? ' <span style="color:gray">(' . join(', ', @$args) . ')</span>' : ''),
+	      "l" ];
+	push @$row, [ $fahrer->{startzeit}, "c" ]
 		if $startzeit_vergeben;
 	return $row;
     }
@@ -366,10 +367,10 @@ if ($nur_vorangemeldete) {
         }
 
 	my $header = [[ $farbe, "c" ]];
-	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
-	    if $features->{number};
-	push @$header, "Name";
-	push @$header, "Startzeit"
+	push @$header, [ "Nr.", "r", "title=\"Startnummer\"" ]
+	    if $features->{startnummer};
+	push @$header, [ "Name", "l" ];
+	push @$header, [ "Startzeit", "c" ]
 	    if $startzeit_vergeben;
 
 	doc_h3 $cfg->{klassen}[$klasse - 1]{bezeichnung};
