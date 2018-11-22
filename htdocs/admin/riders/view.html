@@ -324,7 +324,7 @@
 	    <span ng-if="features.number">
 	      <button type="button" ng-disabled="!enabled.rider || enabled.number || busy" ng-click="change_number()" accesskey="ä" tabindex="-1">Startnummer <span class="accesskey">ä</span>ndern</button><br>
 	    </span>
-	    <button type="button" ng-disabled="modified() || !enabled.rider || (rider.class == null && (!features.number || rider.number == null)) || busy" ng-click="clone()" tabindex="-1">{{groups ? 'Gruppe' : 'Fahrer'}} kopieren</button><br>
+	    <button type="button" ng-disabled="modified() || !enabled.rider || (rider.class == null && (!features.number || rider.number == null)) || busy" ng-click="clone()" accesskey="p" tabindex="-1">{{groups ? 'Gruppe' : 'Fahrer'}} ko<span class="accesskey">p</span>ieren</button><br>
 	    <button type="button" ng-disabled="modified() || !enabled.remove || busy" ng-disabled="!enabled.rider" ng-click="remove()" accesskey="l" tabindex="-1">
 	      {{groups ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
 	  </p>
