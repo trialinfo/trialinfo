@@ -757,7 +757,7 @@ var ridersController = [
 
     function create_ranking_labels() {
       /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-      var accesskeys = 'aknvpsuäl' + groups ? 'g' : 'f';
+      var accesskeys = 'aknvpsuäl' + (groups ? 'g' : 'f');
       $scope.rankings = [];
       angular.forEach(features.rankings, function(ranking) {
 	var name = event.rankings[ranking - 1].name || '';
