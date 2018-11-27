@@ -3719,31 +3719,27 @@ async function admin_export_csv(connection, id) {
     ORDER BY date
   `, [id])).map((row, index) => row.fid);
 
-  let extra_columns =
-    rankings.map((n) => `COALESCE(ranking${n}, 0) AS ranking${n}`);
-  extra_columns = extra_columns.concat(
-    future_events.map((fid, index) => `COALESCE(start${index + 2}, 0) AS start${index + 2}`)
-  );
+  let columns = ['riders.*']
+    .concat(rankings.map((n) => `COALESCE(ranking${n}, 0) AS ranking${n}`))
+    .concat(future_events.map((fid, index) =>
+	    `COALESCE(start${index + 2}, 0) AS start${index + 2}`));
 
   return await new Promise(function(fulfill, reject) {
     let query =
-      `SELECT riders.*, ` +
-      extra_columns.join(', ') + `
+      `SELECT ` + columns.join(', ') + `
       FROM riders` +
       rankings.map((n) => `
       LEFT JOIN (
         SELECT id, number, 1 AS ranking${n}
 	FROM rider_rankings
 	WHERE ranking = ${n}
-      ) AS ranking${n} USING (id, number)
-      `).join('') +
+      ) AS ranking${n} USING (id, number)`).join('') +
       future_events.map((fid, index) => `
       LEFT JOIN (
         SELECT id, rider_tag, 1 AS start${index + 2}
 	FROM future_starts
 	WHERE fid = ${fid}
-      ) AS start${index + 2} USING (id, rider_tag)
-      `).join('') + `
+      ) AS start${index + 2} USING (id, rider_tag)`).join('') + `
       WHERE id = ${connection.escape(id)} AND
 	(number > 0 OR registered OR start OR number IN (
 	  SELECT number
