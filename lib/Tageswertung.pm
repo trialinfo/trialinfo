@@ -191,7 +191,7 @@ sub tageswertung(@) {
 	push @$header, [ "$farbe", "c" ];
 	push @$header, [ "Nr.", "r1", "title=\"Startnummer\"" ]
 		if $features->{startnummer};
-	push @$header, "Name";
+	push @$header, [ "Name", "l"];
 	foreach my $spalte (@{$args{spalten}}) {
 	    push @$format, "l";
 	    push @$header, spaltentitel($spalte);
@@ -296,7 +296,7 @@ sub tageswertung(@) {
 	    }
 	    my $startnummer = $fahrer->{startnummer};
 	    push @$row, $startnummer < 0 ? undef : $startnummer
-		if $startnummer;
+		if $features->{startnummer};
 	    push @$row, [ $fahrer->{nachname} . " " . $fahrer->{vorname}, 'l', 'style="padding-right:1em"' ];
 	    foreach my $spalte (@{$args{spalten}}) {
 		push @$row, spaltenwert($spalte, $fahrer);
