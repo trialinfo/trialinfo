@@ -12,7 +12,7 @@ var eventScoresController = [
 
     fractional.enabled = scores.event.split_score;
 
-    var old_scores, event;
+    var old_scores, event, features;
 
     function assign_scores(a) {
       old_scores = angular.copy(a);

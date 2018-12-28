@@ -1,0 +1,138 @@
+<style type="text/css">
+  a:link,a:visited { text-decoration:none; color:black; }
+  a:hover,a:active { text-decoration:underline; color:#551a8b; }
+</style>
+
+<style type="text/css" ng-bind-html="print_style()">
+</style>
+
+<h1><a href="" ng-click="settings($event)">{{serie.name}}</a></h1>
+<div ng-if="fold.settings" class="no-print">
+  <p>
+    <form name="form" ng-model="show.filter">
+      <fieldset style="display:inline">
+	<legend>Anzeige einstellen</legend>
+	<table>
+	  <tr><th>Felder</th>
+            <td>
+              <span ng-repeat="_ in show.fields track by $index">
+                <select ng-model="show.fields[$index]" ng-options="field.key as field.name for field in field_list">
+                </select>
+              </span>
+            </td></tr>
+	</table>
+      </fieldset><br>
+    </form>
+    <form id="pdf" action="/api/to-pdf" method="POST" ng-if="config.weasyprint">
+      <fieldset style="display:inline">
+	<legend>Drucken</legend>
+	<table>
+	  <tr><th>Seitenformat</th>
+	    <td>
+	      <select ng-model="show['page-size']">
+		<option value="A4">A4 Hochformat</option>
+		<option value="A4 landscape">A4 Querformat</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th>Ränder</th>
+	    <td>
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-left']" title="Links" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-top']" title="Oben" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-right']" title="Rechts" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-bottom']" title="Unten" style="text-align:center">
+	    </td>
+	  </tr>
+	  <tr><th>Schriftgröße</th>
+	    <td>
+	      <input type="text" numeric min="6" max="20" size="2" maxlength="2" ng-model="show['font-size']" style="text-align:center"> Punkt
+	    </td>
+	  </tr>
+	  <tr><th></th>
+	    <td>
+	      <input type="checkbox" ng-model="show['page-break']" id="page-break"><label for="page-break">Seitenumbruch zwischen den Klassen</label>
+	    </td>
+	  </tr>
+	  <tr><th></th>
+	    <td><button type="submit" ng-click="create_pdf($event)">PDF</button></td>
+	  </tr>
+	</table>
+      </fieldset>
+      <input type="hidden" name="filename" value="{{event.title}}.pdf">
+      <input type="hidden" name="url" value="{{url}}">
+      <input type="hidden" name="html" value="{{html}}">
+    </form>
+  </p>
+</div>
+<h2>{{show.subtitle}}</h2>
+
+<style type="text/css">
+table.ranking {
+  border-collapse:collapse;
+}
+table.ranking td, table.ranking th {
+  border:1px solid #98bf21;
+}
+table.ranking td {
+  padding: 0.1em 0.2em 0.1em 0.2em;
+}
+table.ranking th {
+  padding: 0.2em 0.3em 0.2em 0.3em;
+  font-weight:bolder;
+  background-color:#A7C942;
+  color:#ffffff;
+}
+table.ranking tr.alt td {
+  background-color:#EAF2D3;
+}
+table.ranking tr td.individual-marks, table.ranking tr td.distribution {
+  color:#A0A0A0;
+}
+table.ranking tr td.round {
+  color:#A0A0A0;
+}
+table.ranking tr td.important {
+  color:#A11111;
+}
+</style>
+
+<p>{{scores.summary}}</p>
+<div ng-repeat="ranking in scores.rankings">
+  <h2>{{ranking.name}}</h2>
+  <div ng-repeat="class_ranking in ranking.classes" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
+    <h3>{{class_ranking.class.name}}</h3>
+    <p>{{class_ranking.summary}}</p>
+    <!-- summary -->
+    <table class="ranking">
+      <thead>
+        <th style="text-align:center" ng-bind-html="class_symbol(class_ranking.class)"></th>
+	<th ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.heading"></th>
+	<th style="text-align:right" ng-repeat="event in class_ranking.events track by $index" ng-bind-html="event_heading(event)"></th>
+	<th style="text-align:right" ng-if="have_drop_score(class_ranking)"><span title="Streichpunkte">Str</span></th><!-- XXX Hide when always empty! -->
+	<th style="text-align:right"><span title="Gesamtpunkte">Ges</span></th>
+      </thead>
+      <tbody ng-repeat="rider in class_ranking.riders">
+        <tr ng-class-even="'alt'">
+          <td style="text-align:right">{{rank(rider)}}</td>
+	  <td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+	  <td style="text-align:right" ng-repeat="event_score in rider.scores track by $index">{{event_score | fractional}}</td>
+	  <td style="text-align:right" ng-if="have_drop_score(class_ranking)">{{rider.drop_score | fractional}}</td>
+	  <td style="text-align:right">{{rider.score | fractional}}</td>
+	</tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p style="font-weight:bold;padding-top:1em">Veranstaltungen:</p>
+<table class="ranking">
+  <tr>
+    <th style="text-align:right"></th>
+    <th style="text-align:left">Name</th>
+  </tr>
+  <tr ng-repeat="event in scores.events" ng-class-even="'alt'">
+    <td style="text-align:right">{{event.date | date:"d.M."}}</td>
+    <td style="text-align:left">{{event.name}}</td>
+  </tr>
+</table>
+<p ng-if="serie.mtime && same_day(serie.date)">Letzte Änderung: {{serie.mtime}}</p>

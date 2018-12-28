@@ -19,6 +19,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/angular/angular-locale_de-at.js"></script>
     <script src="../js/angular/angular-route.js"></script>
     <script src="../js/angular/angular-cookies.js"></script>
+    <script src="../js/angular/angular-sanitize.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="../js/directives.js"></script>
     <script src="../js/common.js"></script>
@@ -30,14 +31,15 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="marks/controller.js"></script>
     <script src="settings/controller.js"></script>
     <script src="zones/controller.js"></script>
-    <script src="scores/controller.js"></script>
+    <script src="event/scores/controller.js"></script>
+    <script src="serie/scores/controller.js"></script>
     <script src="list/controller.js"></script>
     <script src="serie/controller.js"></script>
     <script src="import/controller.js"></script>
     <script src="sync/controller.js"></script>
     <script>
 
-      var application = angular.module('application', ['ngRoute', 'ngCookies']);
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'ngSanitize']);
 
       application.directive('isoDate', isoDateDirective);
       application.directive('isoTime', isoTimeDirective);
@@ -132,7 +134,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    }).when('/event/:id/scores', {
 	      title: 'Auswertung',
 	      controller: eventScoresController,
-	      templateUrl: 'scores/view.html',
+	      templateUrl: 'event/scores/view.html',
 	      resolve: eventScoresController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/list', {
@@ -150,6 +152,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      controller: 'serieController',
 	      templateUrl: 'serie/view.html',
 	      resolve: serieController.resolve,
+	      reloadOnSearch: false
+	    }).when('/serie/:serie/scores', {
+	      title: 'Auswertung',
+	      controller: serieScoresController,
+	      templateUrl: 'serie/scores/view.html',
+	      resolve: serieScoresController.resolve,
 	      reloadOnSearch: false
 	    }).when('/import', {
 	      title: 'Import',

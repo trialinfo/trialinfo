@@ -16,6 +16,7 @@ DOWNLOAD_FILES = \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular.min.js.map \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-route.js \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-cookies.js \
+	htdocs/js/angular-$(ANGULAR_VERSION)/angular-sanitize.js \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js \
 	htdocs/js/json-diff.js
 
