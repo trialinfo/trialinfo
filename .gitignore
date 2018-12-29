@@ -1,3 +1,4 @@
 /trialinfo-*.tar.gz
 /lib/Auswertung.pm
 /debs
+/backend/package-lock.json
