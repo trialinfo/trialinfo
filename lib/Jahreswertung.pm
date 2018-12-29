@@ -341,7 +341,11 @@ sub jahreswertung(@) {
 		push @{$jahreswertung->{$klasse}{$startnummer}{wertungsrang}},
 		    $fahrer->{wertungen}[$wertung - 1]{rang};
 	    }
-	    $alle_fahrer->{$startnummer} = $fahrer;
+	    # Es interessieren uns die Fahrerdaten der letzten Veranstaltung,
+	    # bei der der Fahrer Punkte gemacht hat.
+	    if ($fahrer->{wertungen}[$wertung - 1]{punkte}) {
+		$alle_fahrer->{$startnummer} = $fahrer;
+	    }
 	}
     }
 
