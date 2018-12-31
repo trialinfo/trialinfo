@@ -109,6 +109,7 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
  * Local things
  */
 var compute_event = require('./lib/compute_event.js');
+var compute_serie = require('./lib/compute_serie.js');
 String.prototype.latinize = require('./lib/latinize');
 
 /*
@@ -225,6 +226,14 @@ async function update_database(connection) {
 	score double,
 	PRIMARY KEY (serie, class, number)
       )
+    `);
+  }
+
+  if (!await column_exists(connection, 'series', 'mtime')) {
+    console.log('Adding column `mtime` to table `series`');
+    await connection.queryAsync(`
+      ALTER TABLE series
+      ADD mtime TIMESTAMP NULL DEFAULT NULL
     `);
   }
 }
@@ -2164,6 +2173,72 @@ async function get_event_scores(connection, id) {
   return hash;
 }
 
+async function get_serie_scores(connection, serie_id) {
+  let scores = {};
+
+  (await connection.queryAsync(`
+    SELECT series.ranking, series_scores.*
+    FROM series
+    JOIN series_scores USING (serie)
+    WHERE serie = ?
+  `, [serie_id])).forEach((row) => {
+    delete row.serie;
+
+    let ranking = scores[row.ranking];
+    if (!ranking)
+      ranking = scores[row.ranking] = {};
+    delete row.ranking;
+
+    let ranking_class = ranking[row.class];
+    if (!ranking_class)
+      ranking_class = ranking[row.class] = {};
+    delete row.class;
+
+    let rider = ranking_class[row.number];
+    if (!rider)
+      rider = ranking_class[row.number] = {};
+    delete row.number;
+
+    Object.assign(rider, row);
+  });
+
+  return scores;
+}
+
+async function compute_and_update_serie(connection, serie_id, serie_mtime) {
+  await connection.queryAsync(`BEGIN`);
+
+  let old_rankings = await get_serie_scores(connection, serie_id);
+  let rankings = await compute_serie(connection, serie_id);
+  if (!deepEqual(old_rankings, rankings)) {
+    /*
+    await zipHashAsync(old_rankings, rankings,
+      async function(a, b, ranking_nr) {
+      });
+    */
+
+    let ranking_nr = Object.keys(old_rankings)[0] || Object.keys(rankings)[0];
+    await zipHashAsync(old_rankings[ranking_nr], rankings[ranking_nr],
+      async function(a, b, ranking_class_nr) {
+	await zipHashAsync(a, b,
+	  async function(a, b, number) {
+	    await update(connection, 'series_scores',
+	      {serie: serie_id, class: ranking_class_nr, number: number},
+	      Object.keys(b || {}),
+	      a, b);
+	  });
+      });
+  }
+
+  let query = 'UPDATE series ' +
+    'SET mtime = ' + connection.escape(serie_mtime) + ' ' +
+    'WHERE serie = ' + connection.escape(serie_id);
+  log_sql(query);
+  await connection.queryAsync(query);
+
+  await connection.queryAsync(`COMMIT`);
+}
+
 let event_public_features = [
   'number'
 ].concat(rider_public_fields);
@@ -2195,8 +2270,8 @@ async function admin_serie_scores(connection, serie_id) {
     return Object.keys(active_classes);
   }
 
-  let events = [];
   let events_by_id = {};
+  let active_events = [];
   let events_in_class = [];
   for (let id of serie.events) {
     let event = await get_event(connection, id);
@@ -2204,15 +2279,39 @@ async function admin_serie_scores(connection, serie_id) {
       continue;
 
     events_by_id[event.id] = event;
-    let classes = active_classes(event);
-    if (classes.length) {
-      events.push(event);
-      for (let class_ of classes) {
+    let active = active_classes(event);
+    if (active.length) {
+      active_events.push(event);
+      for (let class_ of active) {
 	if (!events_in_class[class_ - 1])
 	  events_in_class[class_ - 1] = [];
 	events_in_class[class_ - 1].push(event.id);
       }
     }
+  }
+
+  let serie_mtime;
+  (await connection.queryAsync(`
+    SELECT mtime
+    FROM series
+    WHERE serie = ?
+  `, [serie_id])).forEach((row) => {
+    serie_mtime = row.mtime;
+  });
+  if (serie_mtime === undefined)
+    throw new HTTPError(404, 'Not Found');
+
+  let needs_recompute =
+    serie_mtime == null ||
+    Object.values(events_by_id).some((event) => event.mtime > serie_mtime);
+
+  if (needs_recompute) {
+    serie_mtime = '0000-00-00 00:00:00';
+    Object.values(events_by_id).forEach((event) => {
+      if (event.mtime > serie_mtime)
+	serie_mtime = event.mtime;
+    });
+    await compute_and_update_serie(connection, serie_id, serie_mtime);
   }
 
   let result = {
@@ -2224,8 +2323,8 @@ async function admin_serie_scores(connection, serie_id) {
     rankings: []
   };
 
-  if (events.length) {
-    let last_event = events[events.length - 1];
+  if (active_events.length) {
+    let last_event = active_events[active_events.length - 1];
 
     for (let key of ['type', 'split_score', 'result_columns'])
       result.serie[key] = last_event[key];
@@ -2236,7 +2335,7 @@ async function admin_serie_scores(connection, serie_id) {
     result.serie.features = features;
 
     let max_ts = 0;
-    for (let event of events) {
+    for (let event of active_events) {
       if (event.mtime) {
 	let ts = common.parse_timestamp(event.mtime).getTime();
 	if (ts > max_ts)
@@ -2247,7 +2346,7 @@ async function admin_serie_scores(connection, serie_id) {
       result.serie.mtime =
 	moment(max_ts).format('YYYY-MM-DD HH:mm:ss');
 
-    for (let event of events) {
+    for (let event of active_events) {
       result.events.push({
 	id: event.id,
 	name: event.title,
