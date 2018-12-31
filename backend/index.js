@@ -236,6 +236,55 @@ async function update_database(connection) {
       ADD mtime TIMESTAMP NULL DEFAULT NULL
     `);
   }
+
+  if (await column_exists(connection, 'series', 'ranking')) {
+    console.log('Moving column `ranking` from `series` to `series_classes` and `series_scores`');
+    if (!await column_exists(connection, 'series_classes', 'ranking')) {
+      await connection.queryAsync(`
+	DELETE series_classes
+	FROM series_classes
+	JOIN series USING (serie)
+	WHERE series.ranking IS NULL
+      `);
+
+      await connection.queryAsync(`
+	ALTER TABLE series_classes
+	ADD ranking INT NULL DEFAULT NULL AFTER serie
+      `);
+      await connection.queryAsync(`
+	UPDATE series_classes
+	JOIN series USING (serie)
+	SET series_classes.ranking = series.ranking
+      `);
+      await connection.queryAsync(`
+	ALTER TABLE series_classes
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (serie, ranking, ranking_class)
+      `);
+    }
+
+    if (!await column_exists(connection, 'series_scores', 'ranking')) {
+      await connection.queryAsync(`
+	ALTER TABLE series_scores
+	ADD ranking INT NULL DEFAULT NULL AFTER serie
+      `);
+      await connection.queryAsync(`
+	UPDATE series_scores
+	JOIN series USING (serie)
+	SET series_scores.ranking = series.ranking
+      `);
+      await connection.queryAsync(`
+	ALTER TABLE series_scores
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (serie, ranking, class, number)
+      `);
+    }
+
+    await connection.queryAsync(`
+      ALTER TABLE series
+      DROP ranking
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -538,7 +587,7 @@ async function get_serie(connection, serie_id) {
   ).map((row) => row.id);
 
   serie.classes = await connection.queryAsync(`
-    SELECT ranking_class AS class, events, drop_events
+    SELECT ranking, ranking_class AS class, events, drop_events
     FROM series_classes
     WHERE serie = ?`, [serie_id]);
 
@@ -811,7 +860,7 @@ async function read_event(connection, id, revalidate) {
     JOIN series USING (serie)
     JOIN classes USING (id)
     JOIN series_classes USING (serie, ranking_class)
-    WHERE id = ? AND ranking
+    WHERE id = ?
     ORDER BY abbreviation`, [id])
   ).reduce((series, row) => {
     if (series)
@@ -1758,20 +1807,27 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
   function hash_classes(classes) {
     if (!classes)
       return {};
-    return classes.reduce((hash, cls) => {
-      hash[cls['class']] = cls;
-      return hash;
-    }, {});
+    let hash = {};
+    classes.forEach((cls) => {
+      let ranking = hash[cls.ranking];
+      if (!ranking)
+	ranking = hash[cls.ranking] = {};
+      ranking[cls.class] = cls;
+    });
+    return hash;
   }
 
   await zipHashAsync(
     hash_classes(old_serie.classes), hash_classes(new_serie.classes),
-    async function(a, b, ranking_class) {
-      await update(connection, 'series_classes',
-        {serie: serie_id, ranking_class: ranking_class},
-        ['events', 'drop_events'],
-        a, b)
-      && (changed = true);
+    async function(a, b, ranking) {
+      await zipHashAsync(a, b,
+	async function(a, b, ranking_class) {
+	  await update(connection, 'series_classes',
+	    {serie: serie_id, ranking: ranking, ranking_class: ranking_class},
+	    ['events', 'drop_events'],
+	    a, b)
+	  && (changed = true);
+	});
     });
 
   await zipHashAsync(old_serie.new_numbers, new_serie.new_numbers,
@@ -1830,6 +1886,8 @@ async function update_serie(connection, serie_id, old_serie, new_serie) {
 
   if (new_serie) {
     if (changed) {
+      new_serie.mtime = null;  /* enforce recomputing the scores */
+
       nonkeys.push('version');
       new_serie.version = old_serie ? old_serie.version + 1 : 1;
     }
@@ -2177,9 +2235,8 @@ async function get_serie_scores(connection, serie_id) {
   let scores = {};
 
   (await connection.queryAsync(`
-    SELECT series.ranking, series_scores.*
-    FROM series
-    JOIN series_scores USING (serie)
+    SELECT *
+    FROM series_scores
     WHERE serie = ?
   `, [serie_id])).forEach((row) => {
     delete row.serie;
@@ -2211,21 +2268,17 @@ async function compute_and_update_serie(connection, serie_id, serie_mtime) {
   let old_rankings = await get_serie_scores(connection, serie_id);
   let rankings = await compute_serie(connection, serie_id);
   if (!deepEqual(old_rankings, rankings)) {
-    /*
     await zipHashAsync(old_rankings, rankings,
       async function(a, b, ranking_nr) {
-      });
-    */
-
-    let ranking_nr = Object.keys(old_rankings)[0] || Object.keys(rankings)[0];
-    await zipHashAsync(old_rankings[ranking_nr], rankings[ranking_nr],
-      async function(a, b, ranking_class_nr) {
 	await zipHashAsync(a, b,
-	  async function(a, b, number) {
-	    await update(connection, 'series_scores',
-	      {serie: serie_id, class: ranking_class_nr, number: number},
-	      Object.keys(b || {}),
-	      a, b);
+	  async function(a, b, ranking_class_nr) {
+	    await zipHashAsync(a, b,
+	      async function(a, b, number) {
+		await update(connection, 'series_scores',
+		  {serie: serie_id, ranking: ranking_nr, class: ranking_class_nr, number: number},
+		  Object.keys(b || {}),
+		  a, b);
+	      });
 	  });
       });
   }
@@ -2247,27 +2300,44 @@ async function admin_serie_scores(connection, serie_id) {
   let serie = await get_serie(connection, serie_id);
   let classes_in_serie = [];
   for (let class_ of serie.classes) {
-    classes_in_serie[class_.class - 1] = class_;
+    let ranking_in_serie = classes_in_serie[class_.ranking - 1];
+    if (!ranking_in_serie)
+      ranking_in_serie = classes_in_serie[class_.ranking - 1] = [];
+    ranking_in_serie[class_.class - 1] = class_;
   }
 
-  function active_classes(event) {
-    let active_classes = {};
+  function event_active_classes(event) {
+    let classes = event.classes;
+
+    let active_classes = [];
     if (event.enabled) {
-      let classes = event.classes;
-      for (let idx = 0; idx < classes.length; idx++) {
-	if (!classes[idx])
+      let rankings = event.rankings;
+      for (let ranking_idx = 0; ranking_idx < rankings.length; ranking_idx++) {
+	let active_in_ranking = {};
+
+	if (!rankings[ranking_idx] || rankings[ranking_idx].name == null)
 	  continue;
-	let ridx = classes[idx].ranking_class - 1;
-	if (!classes_in_serie[ridx] || !classes[ridx])
-	  continue;
-	if ((serie.ranking != 1 || !classes[idx].no_ranking1) &&
-	    !classes[idx].non_competing &&
-	    classes[ridx].rounds > 0 &&
-	    event.zones[ridx])
-	  active_classes[ridx + 1] = true;
+	for (let idx = 0; idx < classes.length; idx++) {
+	  if (!classes[idx])
+	    continue;
+	  let ridx = classes[idx].ranking_class - 1;
+	  if (!classes_in_serie[ranking_idx] ||
+	      !classes_in_serie[ranking_idx][ridx] ||
+	      !classes[ridx])
+	    continue;
+	  if ((ranking_idx != 0 || !classes[idx].no_ranking1) &&
+	      !classes[idx].non_competing &&
+	      classes[ridx].rounds > 0 &&
+	      event.zones[ridx])
+	    active_in_ranking[ridx + 1] = true;
+	  }
+
+	  active_in_ranking = Object.keys(active_in_ranking);
+	  if (active_in_ranking.length)
+	    active_classes[ranking_idx] = active_in_ranking;
+	}
       }
-    }
-    return Object.keys(active_classes);
+      return active_classes;
   }
 
   let events_by_id = {};
@@ -2279,13 +2349,18 @@ async function admin_serie_scores(connection, serie_id) {
       continue;
 
     events_by_id[event.id] = event;
-    let active = active_classes(event);
-    if (active.length) {
+    let active_classes = event_active_classes(event);
+    if (active_classes.length) {
       active_events.push(event);
-      for (let class_ of active) {
-	if (!events_in_class[class_ - 1])
-	  events_in_class[class_ - 1] = [];
-	events_in_class[class_ - 1].push(event.id);
+      for (let ranking_idx in active_classes) {
+	for (let class_ of active_classes[ranking_idx]) {
+	  let ranking = events_in_class[ranking_idx];
+	  if (!ranking)
+	    ranking = events_in_class[ranking_idx] = [];
+	  if (!ranking[class_ - 1])
+	    ranking[class_ - 1] = [];
+	  ranking[class_ - 1].push(event.id);
+	}
       }
     }
   }
@@ -2357,21 +2432,47 @@ async function admin_serie_scores(connection, serie_id) {
 
     let event_scores = {};
     (await connection.queryAsync(`
-      SELECT id, ranking_class, COALESCE(new_number, number) AS number, score
+      SELECT ranking, id, ranking_class,
+	     COALESCE(new_number, number) AS number, score
       FROM series_events
       JOIN rider_rankings USING (id)
       JOIN riders USING (id, number)
       JOIN classes USING (id, class)
       LEFT JOIN new_numbers USING (serie, id, number)
-      WHERE serie = ? AND ranking = ? AND score IS NOT NULL
-    `, [serie_id, serie.ranking])).forEach((row) => {
-      let ranking_class = event_scores[row.ranking_class];
-      if (!ranking_class)
-	ranking_class = event_scores[row.ranking_class] = {};
-      let rider_scores = ranking_class[row.number];
+      WHERE serie = ? AND score IS NOT NULL
+    `, [serie_id])).forEach((row) => {
+      let ranking_scores = event_scores[row.ranking];
+      if (!ranking_scores)
+	ranking_scores = event_scores[row.ranking] = {};
+
+      let ranking_class_scores = ranking_scores[row.ranking_class];
+      if (!ranking_class_scores)
+	ranking_class_scores = ranking_scores[row.ranking_class] = {};
+
+      let rider_scores = ranking_class_scores[row.number];
       if (!rider_scores)
-	rider_scores = ranking_class[row.number] = {};
+	rider_scores = ranking_class_scores[row.number] = {};
+
       rider_scores[row.id] = row.score;
+    });
+
+    let classes_in_rankings = [];
+    (await connection.queryAsync(`
+      SELECT ranking, ranking_class
+      FROM series_classes
+      JOIN (
+        SELECT class AS ranking_class, ` + '`order`' + `
+	FROM classes
+	WHERE id = ?
+      ) AS _class USING (ranking_class)
+      WHERE serie = ?
+      ORDER BY ranking, ` + '`order`' + `
+    `, [last_event.id, serie_id])).forEach((row) => {
+      let classes_in_ranking = classes_in_rankings[row.ranking - 1];
+      if (!classes_in_ranking)
+	classes_in_ranking = classes_in_rankings[row.ranking - 1] = [];
+
+      classes_in_ranking.push(row.ranking_class);
     });
 
     let rider_public = {};
@@ -2396,8 +2497,7 @@ async function admin_serie_scores(connection, serie_id) {
       rider_public[row.number] = row;
     });
 
-    let classes_in_ranking = [];
-    let ranking_by_class = [];
+    let rankings = [];
     (await connection.queryAsync(`
       SELECT series_scores.*
       FROM series_scores
@@ -2409,44 +2509,54 @@ async function admin_serie_scores(connection, serie_id) {
       WHERE serie = ${connection.escape(serie_id)}
       ORDER BY _classes.order, rank, number
     `)).forEach((row) => {
-      let scores_in_class = ranking_by_class[row.class - 1];
+      let ranking_classes = rankings[row.ranking - 1];
+      if (!ranking_classes)
+	ranking_classes = rankings[row.ranking - 1] = [];
+
+      let scores_in_class = ranking_classes[row.class - 1];
       if (!scores_in_class) {
-	classes_in_ranking.push(row.class);
 	let class_ = {
 	  class: row.class
 	};
 	for (let key of ['name', 'color'])
 	  class_[key] = last_event.classes[row.class - 1][key];
 	for (let key of ['events', 'drop_events'])
-	  class_[key] = classes_in_serie[row.class - 1][key];
+	  class_[key] = classes_in_serie[row.ranking - 1][row.class - 1][key];
 
-	scores_in_class = ranking_by_class[row.class - 1] = {
+	scores_in_class = ranking_classes[row.class - 1] = {
 	  class: class_,
-	  events: events_in_class[row.class - 1],
+	  events: events_in_class[row.ranking - 1][row.class - 1],
 	  riders: []
 	};
       }
 
       row.scores = [];
-      let rider_scores = event_scores[row.class][row.number] || {};
+      let rider_scores = event_scores[row.ranking][row.class][row.number] || {};
       for (let id of scores_in_class.events)
 	row.scores.push(rider_scores[id]);
 
-      for (let key of ['serie', 'class'])
+      for (let key of ['serie', 'ranking', 'class'])
         delete row[key];
       Object.assign(row, rider_public[row.number]);
       scores_in_class.riders.push(row);
     });
 
-    let classes = [];
-    for (let class_ of classes_in_ranking)
-      classes.push(ranking_by_class[class_ - 1]);
-
-    if (classes.length) {
-      result.rankings.push({
-	name: last_event.rankings[serie.ranking - 1].name,
-	classes: classes
-      });
+    for (let ranking_idx in classes_in_rankings) {
+      let classes_in_ranking = classes_in_rankings[ranking_idx];
+      let classes = [];
+      for (let class_ of classes_in_ranking) {
+	if (!rankings[ranking_idx])
+	  continue;
+	let class_ranking = rankings[ranking_idx][class_ - 1];
+	if (class_ranking)
+	  classes.push(class_ranking);
+      }
+      if (classes.length) {
+	result.rankings.push({
+	  name: last_event.rankings[ranking_idx].name,
+	  classes: classes
+	});
+      }
     }
   }
   return result;
@@ -3759,8 +3869,8 @@ async function check_number(connection, id, query) {
     JOIN series_classes USING (serie)
     JOIN series USING (serie)
     WHERE enabled AND serie in (
-	SELECT serie FROM series_events WHERE id = ?
-      ) AND ranking IS NOT NULL
+      SELECT serie FROM series_events WHERE id = ?
+    )
 
     UNION
 

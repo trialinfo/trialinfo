@@ -42,7 +42,7 @@ my @klassen = $q->param('klasse');
 my $bezeichnung;
 my $laeufe;
 my $streichresultate;
-my $wertung;
+my $wertung = 1;
 my $mtime;
 my $abgeschlossen;
 my $fahrer_nach_startnummer;
@@ -67,7 +67,7 @@ if (my @row = $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT DISTINCT id, date, ranking, title, subtitle, events.mtime, split_score, type
+    SELECT DISTINCT id, date, title, subtitle, events.mtime, split_score, type
     FROM series_events
     JOIN series USING (serie)
     JOIN events USING (id)
@@ -81,7 +81,6 @@ my $letzte_id;
 while (my @row = $sth->fetchrow_array) {
     my $cfg;
     my $id = $row[0];
-    $wertung = $row[2];
     $cfg->{id} = $id;
     if ($row[1] =~ /^(\d{4})-0*(\d+)-0*(\d+)$/) {
 	$cfg->{label} = "$3.<br>$2.";
@@ -90,12 +89,12 @@ while (my @row = $sth->fetchrow_array) {
 	$cfg->{label} = $n;
     }
     $n++;
-    $cfg->{wertungen}[$wertung - 1] = { titel => $row[3], subtitel => $row[4] };
+    $cfg->{wertungen}[$wertung - 1] = { titel => $row[2], subtitel => $row[3] };
     $veranstaltungen->{$id}{cfg} = $cfg;
-    $mtime = max_timestamp($mtime, $row[5])
+    $mtime = max_timestamp($mtime, $row[4])
 	unless defined $row[1] && !same_day($row[1]);
-    $cfg->{punkteteilung} = $row[6];
-    $cfg->{art} = $row[7];
+    $cfg->{punkteteilung} = $row[5];
+    $cfg->{art} = $row[6];
     push @$veranstaltungen_reihenfolge, $row[0];
     $letzte_id = $row[0];
 }
@@ -147,12 +146,12 @@ $sth = $dbh->prepare(q{
     JOIN riders USING (id, number)
     JOIN classes USING (id, class)
     JOIN series_events USING (id)
-    JOIN series USING (serie, ranking)
-    JOIN series_classes USING (serie, ranking_class)
+    JOIN series USING (serie)
+    JOIN series_classes USING (serie, ranking, ranking_class)
     JOIN events USING (id)
-    WHERE enabled AND series_events.serie = ?
+    WHERE enabled AND series_events.serie = ? AND ranking = ?
 });
-$sth->execute($vareihe);
+$sth->execute($vareihe, $wertung);
 while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
@@ -169,7 +168,7 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $veranstaltung = $veranstaltungen->{$id};
     if ($veranstaltung) {
 	$fahrer->{land} = undef
-	    if $veranstaltung->{cfg}{art} =~ /^otsv/ &&
+	    if ($veranstaltung->{cfg}{art} // '') =~ /^otsv/ &&
 	       defined $fahrer->{land} && $fahrer->{land} eq 'A';
 
 	my $startnummer = $fahrer->{startnummer};
@@ -304,13 +303,13 @@ if ($ENV{DUMP}) {
     $sth->execute($vareihe);
     $sth = $dbh->prepare(q{
 	INSERT INTO series_scores
-	SET serie = ?, class = ?, number = ?, last_id = ?, rank = ?, drop_score = ?, score = ?
+	SET serie = ?, ranking = ?, class = ?, number = ?, last_id = ?, rank = ?, drop_score = ?, score = ?
     });
     foreach my $klasse (keys %$w) {
 	my $klassenwertung = $w->{$klasse};
 	foreach my $startnummer (keys %$klassenwertung) {
 	    my $fahrerwertung = $klassenwertung->{$startnummer};
-	    $sth->execute($vareihe, $klasse, $startnummer, $fahrerwertung->{letzte_id}, $fahrerwertung->{rang}, $fahrerwertung->{streichpunkte}, $fahrerwertung->{gesamtpunkte});
+	    $sth->execute($vareihe, $wertung, $klasse, $startnummer, $fahrerwertung->{letzte_id}, $fahrerwertung->{rang}, $fahrerwertung->{streichpunkte}, $fahrerwertung->{gesamtpunkte});
 	}
     }
     $sth = $dbh->prepare(q{

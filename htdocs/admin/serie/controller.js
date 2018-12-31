@@ -45,16 +45,19 @@ var serieController = [
 
     function normalize_classes(serie) {
       var classes = serie.classes;
-      if (!classes.length ||
-	  classes[classes.length - 1]['class'] !== null)
-	classes.push({'class': null});
+      if (!classes.length)
+	classes.push({ranking: 1, 'class': null});
+      else if (classes[classes.length - 1]['class'] !== null)
+	classes.push({ranking: classes[classes.length - 1].ranking, 'class': null});
       else {
 	for (var n = 0; n < classes.length - 1; n++)
 	  if (classes[n]['class'] === null)
 	    classes = classes.splice(n, 1);
       }
       var sorted = sort_uniq(classes, function(a, b) {
-	return cmp_null(a['class'], b['class']);
+	return (a.class == null) - (b.class == null) ||
+	       cmp_null(a.ranking, b.ranking) ||
+	       cmp_null(a['class'], b['class']);
       });
       if (!angular.equals(classes, sorted))
 	serie.classes = sorted;
@@ -211,7 +214,6 @@ var serieController = [
 	    classes: [],
 	    events: [],
 	    new_numbers: {},
-	    ranking: 1,
 	    tie_break: {}
 	  };
 	}

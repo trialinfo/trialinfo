@@ -472,7 +472,6 @@ CREATE TABLE `series` (
   `tag` char(16) NOT NULL,
   `version` int(11) NOT NULL DEFAULT '1',
   `serie` int(11) NOT NULL,
-  `ranking` int(11) DEFAULT NULL,
   `name` varchar(40) DEFAULT NULL,
   `abbreviation` varchar(10) DEFAULT NULL,
   `closed` tinyint(1) DEFAULT NULL,
@@ -521,10 +520,11 @@ DROP TABLE IF EXISTS `series_classes`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `series_classes` (
   `serie` int(11) NOT NULL,
+  `ranking` int(11) NOT NULL,
   `ranking_class` int(11) NOT NULL,
   `events` int(11) DEFAULT NULL,
   `drop_events` int(11) DEFAULT NULL,
-  PRIMARY KEY (`serie`,`ranking_class`)
+  PRIMARY KEY (`serie`,`ranking`,`ranking_class`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -566,13 +566,14 @@ DROP TABLE IF EXISTS `series_scores`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `series_scores` (
   `serie` int(11) NOT NULL,
+  `ranking` int(11) NOT NULL,
   `class` int(11) NOT NULL,
   `number` int(11) NOT NULL,
   `last_id` int(11) NOT NULL,
   `rank` int(11) DEFAULT NULL,
   `drop_score` double DEFAULT NULL,
   `score` double DEFAULT NULL,
-  PRIMARY KEY (`serie`,`class`,`number`)
+  PRIMARY KEY (`serie`,`ranking`,`class`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

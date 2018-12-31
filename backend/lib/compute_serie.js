@@ -52,7 +52,7 @@ async function compute_serie(connection, serie_id) {
     JOIN classes USING (id, class)
     JOIN events USING (id)
     JOIN series_events USING (id)
-    JOIN series_classes USING (serie, ranking_class)
+    JOIN series_classes USING (serie, ranking, ranking_class)
     LEFT JOIN new_numbers USING (serie, id, number)
     WHERE serie = ? AND enabled AND rider_rankings.score IS NOT NULL AND
 	  (new_numbers.number IS NULL OR new_numbers.new_number IS NOT NULL)
@@ -96,9 +96,6 @@ async function compute_serie(connection, serie_id) {
     FROM series_classes
     WHERE serie = ?
   `, [serie_id])).forEach((row) => {
-    /* FIXME: For now, all ranking classes are in the same ranking. */
-    row.ranking = Object.keys(rankings)[0];
-
     let ranking = rankings[row.ranking];
     if (ranking) {
       let ranking_class = rankings[row.ranking][row.ranking_class];
