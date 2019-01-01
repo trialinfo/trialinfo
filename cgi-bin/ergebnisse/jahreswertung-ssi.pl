@@ -303,7 +303,7 @@ if ($ENV{DUMP}) {
     $sth->execute($vareihe);
     $sth = $dbh->prepare(q{
 	INSERT INTO series_scores
-	SET serie = ?, ranking = ?, class = ?, number = ?, last_id = ?, rank = ?, drop_score = ?, score = ?
+	SET serie = ?, ranking = ?, class = ?, number = ?, last_id = ?, rank = ?, drop_score = ?, score = ?, ranked = 1
     });
     foreach my $klasse (keys %$w) {
 	my $klassenwertung = $w->{$klasse};

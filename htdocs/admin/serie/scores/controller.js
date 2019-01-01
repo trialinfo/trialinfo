@@ -92,6 +92,11 @@ var serieScoresController = [
 	  summary += ' von ' + class_.max_events
 	summary += ' Läufen';
 
+	if (class_.min_events) {
+	  summary += ', Wertung ab ' + class_.min_events + ' ' +
+		     (class_.min_events == 1 ?  'Lauf' : 'Läufen');
+	}
+
 	if (class_.drop_events) {
 	  let drop_events = class_ranking.events.length -
 			    (class_.max_events - class_.drop_events);
@@ -362,7 +367,7 @@ var serieScoresController = [
     })();
 
     $scope.rank = function(rider) {
-      if (rider.rank != null)
+      if (rider.ranked && rider.rank != null)
 	return rider.rank + '.';
     };
 

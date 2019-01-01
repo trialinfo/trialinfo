@@ -293,6 +293,22 @@ async function update_database(connection) {
       CHANGE events max_events INT
     `);
   }
+
+  if (!await column_exists(connection, 'series_classes', 'min_events')) {
+    console.log('Adding column `min_events` to table `series_classes`');
+    await connection.queryAsync(`
+      ALTER TABLE series_classes
+      ADD min_events INT NULL DEFAULT NULL AFTER max_events
+    `);
+  }
+
+  if (!await column_exists(connection, 'series_scores', 'ranked')) {
+    console.log('Adding column `ranked` to table `series_scores`');
+    await connection.queryAsync(`
+      ALTER TABLE series_scores
+      ADD ranked BOOLEAN NOT NULL
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -595,9 +611,14 @@ async function get_serie(connection, serie_id) {
   ).map((row) => row.id);
 
   serie.classes = await connection.queryAsync(`
-    SELECT ranking, ranking_class AS class, max_events, drop_events
+    SELECT *
     FROM series_classes
-    WHERE serie = ?`, [serie_id]);
+    WHERE serie = ?`, [serie_id]).map((row) => {
+      delete row.serie;
+      row.class = row.ranking_class;
+      delete row.ranking_class;
+      return row;
+    });
 
   serie.new_numbers = {};
   (await connection.queryAsync(`
@@ -1832,7 +1853,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
 	async function(a, b, ranking_class) {
 	  await update(connection, 'series_classes',
 	    {serie: serie_id, ranking: ranking, ranking_class: ranking_class},
-	    ['max_events', 'drop_events'],
+	    ['max_events', 'min_events', 'drop_events']
 	    a, b)
 	  && (changed = true);
 	});
@@ -2528,7 +2549,7 @@ async function admin_serie_scores(connection, serie_id) {
 	};
 	for (let key of ['name', 'color'])
 	  class_[key] = last_event.classes[row.class - 1][key];
-	for (let key of ['max_events', 'drop_events'])
+	for (let key of ['max_events', 'min_events', 'drop_events'])
 	  class_[key] = classes_in_serie[row.ranking - 1][row.class - 1][key];
 
 	scores_in_class = ranking_classes[row.class - 1] = {

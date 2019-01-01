@@ -39,6 +39,7 @@
 	<th>Wertung</th>
 	<th>Klasse</th>
 	<th>Läufe</th>
+	<th>Minimum</th>
 	<th>Streich-<br>resultate</th>
       </tr>
       <tr ng-repeat="class in serie.classes">
@@ -54,7 +55,8 @@
 	    <option value=""></option>
 	  </select>
 	</td>
-	<td style="text-align:center"><input type="text" numeric size="2" maxlength="2" min="1" max="99" ng-model="class.events" style="text-align:center"></td>
+	<td style="text-align:center"><input type="text" numeric size="2" maxlength="2" min="1" max="99" ng-model="class.max_events" style="text-align:center"></td>
+	<td style="text-align:center"><input type="text" numeric size="2" maxlength="2" min="1" max="99" ng-model="class.min_events" style="text-align:center"></td>
 	<td style="text-align:center"><input type="text" numeric size="2" maxlength="2" min="0" max="99" ng-model="class.drop_events" style="text-align:center"></td>
       </tr>
     </table>

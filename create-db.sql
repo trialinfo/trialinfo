@@ -523,6 +523,7 @@ CREATE TABLE `series_classes` (
   `ranking` int(11) NOT NULL,
   `ranking_class` int(11) NOT NULL,
   `max_events` int(11) DEFAULT NULL,
+  `min_events` int(11) DEFAULT NULL,
   `drop_events` int(11) DEFAULT NULL,
   PRIMARY KEY (`serie`,`ranking`,`ranking_class`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -573,6 +574,7 @@ CREATE TABLE `series_scores` (
   `rank` int(11) DEFAULT NULL,
   `drop_score` double DEFAULT NULL,
   `score` double DEFAULT NULL,
+  `ranked` tinyint(1) NOT NULL,
   PRIMARY KEY (`serie`,`ranking`,`class`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

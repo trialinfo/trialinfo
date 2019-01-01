@@ -42,6 +42,27 @@ async function compute_serie(connection, serie_id) {
     return event_order;
   }, {});
 
+  let events_so_far = [];
+  (await connection.queryAsync(`
+    SELECT ranking, ranking_class, COUNT(*) AS events
+    FROM (
+      SELECT DISTINCT ranking_class, MID(feature, 8) + 0 AS ranking, id
+      FROM series_events
+      JOIN events USING (id)
+      JOIN event_features USING (id)
+      JOIN classes USING (id)
+      JOIN series_classes USING (serie, ranking_class)
+      WHERE serie = ? AND enabled AND feature LIKE 'ranking%' AND
+            (ranking <> 'ranking1' OR NOT COALESCE(no_ranking1, 0))
+    ) AS _
+    GROUP BY ranking, ranking_class
+  `, [serie_id])).forEach((row) => {
+    let esf = events_so_far[row.ranking - 1];
+    if (!esf)
+      esf = events_so_far[row.ranking - 1] = [];
+    esf[row.ranking_class - 1] = row.events;
+  });
+
   let rankings = {};
   (await connection.queryAsync(`
     SELECT ranking, ranking_class,
@@ -124,8 +145,11 @@ async function compute_serie(connection, serie_id) {
         (drop, _) => drop + _.score, 0);
   }
 
-  Object.values(rankings).forEach((ranking) => {
-    Object.values(ranking).forEach((ranking_class) => {
+  for (let ranking_nr of Object.keys(rankings)) {
+    let ranking = rankings[ranking_nr];
+    for (let ranking_class_nr of Object.keys(ranking)) {
+      let ranking_class = ranking[ranking_class_nr];
+
       if (ranking_class.max_events && ranking_class.drop_events) {
 	let drop_limit = ranking_class.max_events - ranking_class.drop_events;
 	ranking_class.riders.forEach((rider) => {
@@ -136,12 +160,25 @@ async function compute_serie(connection, serie_id) {
 	  }
 	});
       }
-    });
-  });
+
+      ranking_class.riders.forEach((rider) => {
+	/* Assume the rider will participate in all events still taking place. */
+	let events_to_come = 0;
+	if (ranking_class.min_events > 1 && ranking_class.max_events) {
+	  let esf = (events_so_far[ranking_nr - 1] || [])[ranking_class_nr - 1] || 0;
+	  events_to_come = Math.max(0, ranking_class.max_events - esf);
+	}
+	rider.ranked = rider.events.length + events_to_come >= ranking_class.min_events;
+      });
+    }
+  }
 
   let resolve_harder;
 
   function rank_order(a, b) {
+    if (a.ranked != b.ranked)
+      return b.ranked - a.ranked;
+
     // Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
     if (a.score != b.score)
       return b.score - a.score;
