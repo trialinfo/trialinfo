@@ -1714,8 +1714,8 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
     async function(a, b, id) {
       await zipHashAsync(a, b, async function(a, b, number) {
 	await update(connection, 'new_numbers',
-	  {serie: serie_id, id: id},
-	  ['number', 'new_number'],
+	  {serie: serie_id, id: id, number: number},
+	  ['new_number'],
 	  a, b,
 	  (new_number) => (new_number !== undefined &&
 			   {number: number, new_number: new_number}))
