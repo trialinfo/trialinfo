@@ -615,8 +615,6 @@ async function get_serie(connection, serie_id) {
     FROM series_classes
     WHERE serie = ?`, [serie_id]).map((row) => {
       delete row.serie;
-      row.class = row.ranking_class;
-      delete row.ranking_class;
       return row;
     });
 
@@ -1841,7 +1839,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
       let ranking = hash[cls.ranking];
       if (!ranking)
 	ranking = hash[cls.ranking] = {};
-      ranking[cls.class] = cls;
+      ranking[cls.ranking_class] = cls;
     });
     return hash;
   }
@@ -1853,7 +1851,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
 	async function(a, b, ranking_class) {
 	  await update(connection, 'series_classes',
 	    {serie: serie_id, ranking: ranking, ranking_class: ranking_class},
-	    ['max_events', 'min_events', 'drop_events']
+	    ['max_events', 'min_events', 'drop_events'],
 	    a, b)
 	  && (changed = true);
 	});
