@@ -4232,6 +4232,7 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
 });
 
 app.post('/api/to-pdf', async function(req, res, next) {
+  let keep_html_on_error = false;
   var baseurl = (req.body.url || '.').replace(/\/admin\/.*/, '/admin/');
   var html = req.body.html
     .replace(/<!--.*?-->\s?/g, '')
@@ -4241,19 +4242,27 @@ app.post('/api/to-pdf', async function(req, res, next) {
     })*/
 
   var tmp_html = tmp.fileSync();
-  console.log(tmp_html.name);
   await fsp.write(tmp_html.fd, html);
 
   var tmp_pdf = tmp.fileSync();
-  console.log(tmp_pdf.name);
-  var child = child_process.spawn('weasyprint',
-				  ['-f', 'pdf', '--base-url', baseurl,
-				   tmp_html.name, tmp_pdf.name]);
-  child.on('close', (code) => {
-    tmp_html.removeCallback();
+  let args = ['-f', 'pdf', '--base-url', baseurl, tmp_html.name, tmp_pdf.name];
+  console.log('weasyprint' + ' ' + args.join(' '));
+  var child = child_process.spawn('weasyprint', args);
 
-    if (code)
-      next(new HTTPError(500, 'Internal Error'));
+  child.stderr.on('data', (data) => {
+    console.log(`${data}`);
+  });
+
+  child.on('close', (code) => {
+    if (!(code && keep_html_on_error))
+      tmp_html.removeCallback();
+
+    if (code) {
+      console.log('weasyprint failed with status ' + code +
+	(keep_html_on_error ? ' (keeping ' + tmp_html.name + ')' : ''));
+      tmp_pdf.removeCallback();
+      return next(new HTTPError(500, 'Internal Error'));
+    }
 
     var filename = req.body.filename || 'print.pdf';
     res.setHeader('Content-Type', 'application/pdf');
