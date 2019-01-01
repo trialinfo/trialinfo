@@ -309,6 +309,14 @@ async function update_database(connection) {
       ADD ranked BOOLEAN NOT NULL
     `);
   }
+
+  if (await column_exists(connection, 'series_scores', 'class')) {
+    console.log('Renaming column `class` in `series_scores` to `ranking_class`');
+    await connection.queryAsync(`
+      ALTER TABLE series_scores
+      CHANGE class ranking_class INT
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -2273,10 +2281,10 @@ async function get_serie_scores(connection, serie_id) {
       ranking = scores[row.ranking] = {};
     delete row.ranking;
 
-    let ranking_class = ranking[row.class];
+    let ranking_class = ranking[row.ranking_class];
     if (!ranking_class)
-      ranking_class = ranking[row.class] = {};
-    delete row.class;
+      ranking_class = ranking[row.ranking_class] = {};
+    delete row.ranking_class;
 
     let rider = ranking_class[row.number];
     if (!rider)
@@ -2302,7 +2310,7 @@ async function compute_and_update_serie(connection, serie_id, serie_mtime) {
 	    await zipHashAsync(a, b,
 	      async function(a, b, number) {
 		await update(connection, 'series_scores',
-		  {serie: serie_id, ranking: ranking_nr, class: ranking_class_nr, number: number},
+		  {serie: serie_id, ranking: ranking_nr, ranking_class: ranking_class_nr, number: number},
 		  Object.keys(b || {}),
 		  a, b);
 	      });
@@ -2330,7 +2338,7 @@ async function admin_serie_scores(connection, serie_id) {
     let ranking_in_serie = classes_in_serie[class_.ranking - 1];
     if (!ranking_in_serie)
       ranking_in_serie = classes_in_serie[class_.ranking - 1] = [];
-    ranking_in_serie[class_.class - 1] = class_;
+    ranking_in_serie[class_.ranking_class - 1] = class_;
   }
 
   function event_active_classes(event) {
@@ -2529,10 +2537,10 @@ async function admin_serie_scores(connection, serie_id) {
       SELECT series_scores.*
       FROM series_scores
       JOIN (
-        SELECT *
+        SELECT class AS ranking_class, ` + '`order`' + `
 	FROM classes
 	WHERE id = ${connection.escape(last_event.id)}
-      ) AS _classes USING (class)
+      ) AS _classes USING (ranking_class)
       WHERE serie = ${connection.escape(serie_id)}
       ORDER BY _classes.order, rank, number
     `)).forEach((row) => {
@@ -2540,29 +2548,29 @@ async function admin_serie_scores(connection, serie_id) {
       if (!ranking_classes)
 	ranking_classes = rankings[row.ranking - 1] = [];
 
-      let scores_in_class = ranking_classes[row.class - 1];
+      let scores_in_class = ranking_classes[row.ranking_class - 1];
       if (!scores_in_class) {
 	let class_ = {
-	  class: row.class
+	  class: row.ranking_class
 	};
 	for (let key of ['name', 'color'])
-	  class_[key] = last_event.classes[row.class - 1][key];
+	  class_[key] = last_event.classes[row.ranking_class - 1][key];
 	for (let key of ['max_events', 'min_events', 'drop_events'])
-	  class_[key] = classes_in_serie[row.ranking - 1][row.class - 1][key];
+	  class_[key] = classes_in_serie[row.ranking - 1][row.ranking_class - 1][key];
 
-	scores_in_class = ranking_classes[row.class - 1] = {
+	scores_in_class = ranking_classes[row.ranking_class - 1] = {
 	  class: class_,
-	  events: events_in_class[row.ranking - 1][row.class - 1],
+	  events: events_in_class[row.ranking - 1][row.ranking_class - 1],
 	  riders: []
 	};
       }
 
       row.scores = [];
-      let rider_scores = event_scores[row.ranking][row.class][row.number] || {};
+      let rider_scores = event_scores[row.ranking][row.ranking_class][row.number] || {};
       for (let id of scores_in_class.events)
 	row.scores.push(rider_scores[id]);
 
-      for (let key of ['serie', 'ranking', 'class'])
+      for (let key of ['serie', 'ranking', 'ranking_class'])
         delete row[key];
       Object.assign(row, rider_public[row.number]);
       scores_in_class.riders.push(row);

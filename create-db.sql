@@ -568,14 +568,14 @@ DROP TABLE IF EXISTS `series_scores`;
 CREATE TABLE `series_scores` (
   `serie` int(11) NOT NULL,
   `ranking` int(11) NOT NULL,
-  `class` int(11) NOT NULL,
+  `ranking_class` int(11) NOT NULL,
   `number` int(11) NOT NULL,
   `last_id` int(11) NOT NULL,
   `rank` int(11) DEFAULT NULL,
   `drop_score` double DEFAULT NULL,
   `score` double DEFAULT NULL,
   `ranked` tinyint(1) NOT NULL,
-  PRIMARY KEY (`serie`,`ranking`,`class`,`number`)
+  PRIMARY KEY (`serie`,`ranking`,`ranking_class`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
