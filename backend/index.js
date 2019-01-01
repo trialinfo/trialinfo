@@ -285,6 +285,14 @@ async function update_database(connection) {
       DROP ranking
     `);
   }
+
+  if (await column_exists(connection, 'series_classes', 'events')) {
+    console.log('Renaming column `events` in `series_classes` to `max_events`');
+    await connection.queryAsync(`
+      ALTER TABLE series_classes
+      CHANGE events max_events INT
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -587,7 +595,7 @@ async function get_serie(connection, serie_id) {
   ).map((row) => row.id);
 
   serie.classes = await connection.queryAsync(`
-    SELECT ranking, ranking_class AS class, events, drop_events
+    SELECT ranking, ranking_class AS class, max_events, drop_events
     FROM series_classes
     WHERE serie = ?`, [serie_id]);
 
@@ -1824,7 +1832,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
 	async function(a, b, ranking_class) {
 	  await update(connection, 'series_classes',
 	    {serie: serie_id, ranking: ranking, ranking_class: ranking_class},
-	    ['events', 'drop_events'],
+	    ['max_events', 'drop_events'],
 	    a, b)
 	  && (changed = true);
 	});
@@ -2520,7 +2528,7 @@ async function admin_serie_scores(connection, serie_id) {
 	};
 	for (let key of ['name', 'color'])
 	  class_[key] = last_event.classes[row.class - 1][key];
-	for (let key of ['events', 'drop_events'])
+	for (let key of ['max_events', 'drop_events'])
 	  class_[key] = classes_in_serie[row.ranking - 1][row.class - 1][key];
 
 	scores_in_class = ranking_classes[row.class - 1] = {

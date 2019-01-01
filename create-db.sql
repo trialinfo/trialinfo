@@ -522,7 +522,7 @@ CREATE TABLE `series_classes` (
   `serie` int(11) NOT NULL,
   `ranking` int(11) NOT NULL,
   `ranking_class` int(11) NOT NULL,
-  `events` int(11) DEFAULT NULL,
+  `max_events` int(11) DEFAULT NULL,
   `drop_events` int(11) DEFAULT NULL,
   PRIMARY KEY (`serie`,`ranking`,`ranking_class`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

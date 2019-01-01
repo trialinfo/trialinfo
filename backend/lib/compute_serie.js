@@ -126,12 +126,12 @@ async function compute_serie(connection, serie_id) {
 
   Object.values(rankings).forEach((ranking) => {
     Object.values(ranking).forEach((ranking_class) => {
-      if (ranking_class.events && ranking_class.drop_events) {
-	let max_events = ranking_class.events - ranking_class.drop_events;
+      if (ranking_class.max_events && ranking_class.drop_events) {
+	let drop_limit = ranking_class.max_events - ranking_class.drop_events;
 	ranking_class.riders.forEach((rider) => {
 	  let events = rider.events;
-	  if (events.length > max_events) {
-	    rider.drop_score = drop_score(events, events.length - max_events);
+	  if (events.length > drop_limit) {
+	    rider.drop_score = drop_score(events, events.length - drop_limit);
 	    rider.score -= rider.drop_score;
 	  }
 	});

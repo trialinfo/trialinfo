@@ -245,7 +245,7 @@ $veranstaltungen = [ map { exists $veranstaltungen->{$_} ?
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 $sth = $dbh->prepare(q{
-    SELECT class, name, color, events, drop_events
+    SELECT class, name, color, max_events, drop_events
     FROM classes
     JOIN series_classes USING (ranking_class)
     WHERE serie = ? AND id = ?

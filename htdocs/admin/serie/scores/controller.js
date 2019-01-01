@@ -33,7 +33,7 @@ var serieScoresController = [
     $scope.have_drop_score = function(class_ranking) {
       if (class_ranking.class.drop_events) {
 	let drop_events = class_ranking.events.length -
-			  (class_ranking.class.events -
+			  (class_ranking.class.max_events -
 			   class_ranking.class.drop_events);
 	return drop_events > 0;
       }
@@ -88,13 +88,13 @@ var serieScoresController = [
 	let class_ = class_ranking.class;
 
 	let summary = 'Stand nach ' + class_ranking.events.length;
-	if (class_.events)
-	  summary += ' von ' + class_.events
+	if (class_.max_events)
+	  summary += ' von ' + class_.max_events
 	summary += ' Läufen';
 
 	if (class_.drop_events) {
 	  let drop_events = class_ranking.events.length -
-			    (class_.events - class_.drop_events);
+			    (class_.max_events - class_.drop_events);
 	  if (drop_events > 0) {
 	    summary += ', ' + drop_events + ' von ' + class_.drop_events +
 		       ' ' + (class_.drop_events == 1 ?
