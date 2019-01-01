@@ -43,7 +43,7 @@ var child_process = require('child_process');
 var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
-var start_times = require('./start_times');
+var start_times = require('./lib/start_times');
 var random_shuffle = require('./lib/random_shuffle');
 
 var config = JSON.parse(fs.readFileSync('config.json'));
