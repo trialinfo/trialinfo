@@ -1859,7 +1859,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
 	async function(a, b, ranking_class) {
 	  await update(connection, 'series_classes',
 	    {serie: serie_id, ranking: ranking, ranking_class: ranking_class},
-	    ['max_events', 'min_events', 'drop_events'],
+	    undefined,
 	    a, b)
 	  && (changed = true);
 	});
@@ -1870,7 +1870,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
       await zipHashAsync(a, b, async function(a, b, number) {
 	await update(connection, 'new_numbers',
 	  {serie: serie_id, id: id, number: number},
-	  ['new_number'],
+	  undefined,
 	  a, b,
 	  (new_number) => (new_number !== undefined &&
 			   {number: number, new_number: new_number}))
@@ -1883,7 +1883,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
     async function(a, b, number) {
       await update(connection, 'series_tie_break',
         {serie: serie_id, number: number},
-        ['tie_break'],
+        undefined,
         a, b,
 	(x) => (x != null ? {tie_break: x} : null))
       && (changed = true);
@@ -2311,7 +2311,7 @@ async function compute_and_update_serie(connection, serie_id, serie_mtime) {
 	      async function(a, b, number) {
 		await update(connection, 'series_scores',
 		  {serie: serie_id, ranking: ranking_nr, ranking_class: ranking_class_nr, number: number},
-		  Object.keys(b || {}),
+		  undefined,
 		  a, b);
 	      });
 	  });
@@ -2659,6 +2659,9 @@ async function update(connection, table, keys, nonkeys, old_values, new_values, 
     new_values = map_func(new_values);
   }
 
+  if (!nonkeys && new_values)
+    nonkeys = Object.keys(new_values).filter((key) => !(key in keys));
+
   var query;
   if (!old_values) {
     if (!new_values)
@@ -2727,7 +2730,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
     async function(a, b, index) {
       await update(connection, 'rider_rankings',
 	{id: id, number: number, ranking: index + 1},
-	['rank', 'score'],
+	undefined,
 	a, b);
     });
 
@@ -2736,7 +2739,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
       await zipAsync(a, b, async function(a, b, zone_index) {
 	await update(connection, 'marks',
 	  {id: id, number: number, round: round_index + 1, zone: zone_index + 1},
-	  ['marks'],
+	  undefined,
 	  a, b,
 	  (x) => (x != null ? {marks: x} : null))
 	&& (changed = true);
@@ -2747,7 +2750,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
     async function(a, b, index) {
       await update(connection, 'rounds',
 	{id: id, number: number, round: index + 1},
-	['marks'],
+	undefined,
 	a, b,
 	(x) => (x != null ? {marks: x} : null))
       && (changed = true);
@@ -2848,7 +2851,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'classes',
 	{id: id, 'class': index + 1},
-	b ? Object.keys(b) : [],
+	undefined,
 	a, b)
       && (changed = true);
     });
@@ -2857,7 +2860,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'rankings',
 	{id: id, ranking: index + 1},
-	b ? Object.keys(b) : [],
+	undefined,
 	a, b)
       && (changed = true);
     });
@@ -2866,7 +2869,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'card_colors',
 	{id: id, round: index + 1},
-	['color'],
+	undefined,
 	a, b,
 	(color) => (color != null && {color: color}))
       && (changed = true);
@@ -2876,7 +2879,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'scores',
 	{id: id, rank: index + 1},
-	['score'],
+	undefined,
 	a, b,
 	(score) => (score != null && {score: score}))
       && (changed = true);
@@ -2886,7 +2889,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'result_columns',
 	{id: id, n: index + 1},
-	['name'],
+	undefined,
 	a, b,
 	(name) => (name != null && {name: name}))
       && (changed = true);
@@ -2922,7 +2925,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, fid) {
       await update(connection, 'future_events',
 		   {id: id, fid: fid},
-		   ['active', 'date', 'title', 'series'],
+		   undefined,
 		   a, b)
       && (changed = true);
     });
