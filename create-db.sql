@@ -103,8 +103,6 @@ CREATE TABLE `events` (
   `equal_marks_resolution` int(11) DEFAULT NULL,
   `split_score` tinyint(1) DEFAULT NULL,
   `marks_skipped_zone` int(11) DEFAULT NULL,
-  `score_234` tinyint(1) DEFAULT NULL,
-  `ranking1_enabled` tinyint(1) DEFAULT NULL,
   `insurance` int(11) DEFAULT NULL,
   `registration_ends` timestamp NULL DEFAULT NULL,
   `registration_email` varchar(60) DEFAULT NULL,
@@ -314,6 +312,8 @@ CREATE TABLE `rankings` (
   `id` int(11) NOT NULL DEFAULT '0',
   `ranking` int(11) NOT NULL,
   `name` varchar(20) DEFAULT NULL,
+  `default` tinyint(1) NOT NULL DEFAULT 0,
+  `assign_scores` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -341,6 +341,46 @@ async function update_database(connection) {
       WHERE feature LIKE 'ranking%'
     `);
   }
+
+  if (!await column_exists(connection, 'rankings', 'default')) {
+    console.log('Converting `events`.`ranking1_enabled` to `rankings`.`default`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD ` + '`default`' + ` BOOLEAN NOT NULL DEFAULT 0
+    `);
+
+    await connection.queryAsync(`
+      UPDATE rankings
+      JOIN events USING (id)
+      SET `+'`default`'+` = COALESCE(ranking1_enabled, 0)
+      WHERE ranking = 1
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP ranking1_enabled
+    `);
+  }
+
+  if (!await column_exists(connection, 'rankings', 'assign_scores')) {
+    console.log('Converting `events`.`score_234` to `rankings`.`assign_scores`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD assign_scores BOOLEAN NOT NULL DEFAULT 0
+    `);
+
+    await connection.queryAsync(`
+      UPDATE rankings
+      JOIN events USING (id)
+      SET assign_scores = 1
+      WHERE ranking = 1 OR score_234
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP score_234
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1435,8 +1475,10 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
       rider.rider_tag = random_tag();
 
     if (rider) {
-      if (!old_rider && !rider.rankings && event.ranking1_enabled)
-	rider.rankings = [{"rank":null, "score":null}];
+      if (!old_rider && !rider.rankings)
+	rider.rankings = event.rankings.map((ranking) =>
+	  (ranking && ranking.default) ?
+	    {"rank": null, "score": null} : null);
       rider = Object.assign(cache.modify_rider(id, number), rider);
     } else {
       await delete_rider(connection, id, number);
@@ -3866,8 +3908,9 @@ async function register_save_rider(connection, id, number, rider, user, query) {
 	  }
 	}
       } else {
-	if (event.ranking1_enabled)
-	  rider.rankings = [{"rank":null, "score":null}];
+	rider.rankings = event.rankings.map((ranking) =>
+	  (ranking && ranking.default) ?
+	    {"rank": null, "score": null} : null);
       }
 
       delete rider.non_competing;

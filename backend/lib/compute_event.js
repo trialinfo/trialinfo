@@ -310,7 +310,7 @@ function compute_event(cache, id, event) {
     return ranks;
   }
 
-  function assign_score(riders_in_class, ranking, ranks) {
+  function assign_scores(riders_in_class, ranking, ranks) {
     function skip_rider(rider) {
       return rider.non_competing || rider.failure || rider.zones_todo;
     }
@@ -446,8 +446,8 @@ function compute_event(cache, id, event) {
 	rider.rankings[ranking - 1].rank = ranks[number];
       }
 
-      if (ranking == 1 || event.score_234)
-	assign_score(riders_in_class, ranking, ranks);
+      if (event.rankings[ranking - 1].assign_scores)
+	assign_scores(riders_in_class, ranking, ranks);
     }
   }
 

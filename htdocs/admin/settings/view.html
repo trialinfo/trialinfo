@@ -115,6 +115,19 @@ a:hover.updown {
 	      <input type="text" size="20" maxlength="20" ng-model="ranking.name" id="ranking{{$index + 1}}_name" nullable>
 	    </td>
 	  </tr>
+	  <tr>
+	    <th rowspan="2">Eigenschaften</th>
+	    <td>
+	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
+	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>
+	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
+	        <label for="ranking{{$index + 1}}_default">Für neue Fahrer aktiviert</label>
+	    </td>
+	  </tr>
 	</table>
       </fieldset><br>
     </span>
@@ -134,12 +147,8 @@ a:hover.updown {
 	</tr>
       </table>
       <p>
-	<input type="checkbox" ng-model="event.score_234" id="score_234">
-	  <label for="score_234">Wertungspunkte auch in den Wertungen 2, 3, und 4 vergeben.</label>
-      </p>
-      <p>
 	<input type="checkbox" ng-model="event.split_score" id="split_score">
-	  <label for="split_score">Punkteteilung bei gleicher Platzierung.</label>
+	  <label for="split_score">Punkteteilung bei gleicher Platzierung</label>
       </p>
     </fieldset>
   </fieldset><br>
@@ -308,12 +317,8 @@ a:hover.updown {
 	    <label for="feature_province">Bundesland</label>
 	</p>
     </fieldset><br>
-    <fieldset style="display:inline">
+    <fieldset style="display:inline" ng-if="features.insurance">
       <legend>Voreinstellungen für neue Fahrer</legend>
-      <p>
-	<input type="checkbox" ng-model="event.ranking1_enabled" id="ranking1_enabled">
-	  <label for="ranking1_enabled">Der Fahrer nimmt an Wertung 1 teil.</label>
-      </p>
       <p>
 	<label for="insurance">Die Versicherungsart ist
 	<select ng-model="event.insurance" id="insurance" numeric>
