@@ -2371,11 +2371,11 @@ async function get_serie_scores(connection, serie_id) {
   return scores;
 }
 
-async function compute_and_update_serie(connection, serie_id, serie_mtime) {
+async function compute_and_update_serie(connection, serie_id, serie_mtime, last_event) {
   await connection.queryAsync(`BEGIN`);
 
   let old_rankings = await get_serie_scores(connection, serie_id);
-  let rankings = await compute_serie(connection, serie_id);
+  let rankings = await compute_serie(connection, serie_id, last_event);
   if (!deepEqual(old_rankings, rankings)) {
     await zipHashAsync(old_rankings, rankings,
       async function(a, b, ranking_nr) {
@@ -2407,6 +2407,7 @@ let event_public_features = [
 
 async function admin_serie_scores(connection, serie_id) {
   let serie = await get_serie(connection, serie_id);
+
   let classes_in_serie = [];
   for (let class_ of serie.classes) {
     let ranking_in_serie = classes_in_serie[class_.ranking - 1];
@@ -2474,6 +2475,10 @@ async function admin_serie_scores(connection, serie_id) {
     }
   }
 
+  let last_event;
+  if (active_events.length)
+    last_event = active_events[active_events.length - 1];
+
   let serie_mtime;
   (await connection.queryAsync(`
     SELECT mtime
@@ -2495,7 +2500,7 @@ async function admin_serie_scores(connection, serie_id) {
       if (event.mtime > serie_mtime)
 	serie_mtime = event.mtime;
     });
-    await compute_and_update_serie(connection, serie_id, serie_mtime);
+    await compute_and_update_serie(connection, serie_id, serie_mtime, last_event);
   }
 
   let result = {
@@ -2507,9 +2512,7 @@ async function admin_serie_scores(connection, serie_id) {
     rankings: []
   };
 
-  if (active_events.length) {
-    let last_event = active_events[active_events.length - 1];
-
+  if (last_event) {
     for (let key of ['type', 'split_score', 'result_columns'])
       result.serie[key] = last_event[key];
 
@@ -2660,6 +2663,64 @@ async function admin_serie_scores(connection, serie_id) {
 	if (class_ranking)
 	  classes.push(class_ranking);
       }
+
+      if ((last_event.rankings[ranking_idx] || {}).joint) {
+	if (classes.length > 1) {
+	  let joint = {
+	    class: {
+	      name: classes.map((class_) => class_.class.name).join (' + ')
+	    },
+	    riders: classes[0].riders
+	  };
+
+	  for (let key of ['color', 'max_events', 'min_events', 'drop_events']) {
+	    if (classes.slice(1).every((class_) => classes[0].class[key] == class_.class[key]))
+	      joint.class[key] = classes[0].class[key];
+	  }
+
+	  joint.events = (function() {
+	    let events = {};
+	    for (let class_ of classes) {
+	      for (let id of class_.events)
+		events[id] = true;
+	    }
+
+	    return active_events.reduce((list, event) => {
+	      if (event.id in events)
+		list.push(event.id);
+	      return list;
+	    }, []);
+	  })();
+
+	  let class_scores = {}
+	  for (let class_ of classes) {
+	    let events = [];
+	    class_.events.forEach((id) => {
+	      events.push(id);
+	    });
+
+	    for (let rider of class_.riders) {
+	      let rider_scores = class_scores[rider.number];
+	      if (!rider_scores)
+		rider_scores = class_scores[rider.number] = {};
+	      rider.scores.forEach((score, index) => {
+		if (score != null) {
+		  let id = class_.events[index];
+		  rider_scores[id] = (rider_scores[id] || 0) + score;
+		}
+	      });
+	    }
+	  }
+
+	  for (let rider of joint.riders) {
+	    let rider_scores = class_scores[rider.number];
+	    rider.scores = joint.events.map((id) => rider_scores[id] || null);
+	  }
+
+	  classes = [joint];
+	}
+      }
+
       if (classes.length) {
 	result.rankings.push({
 	  name: last_event.rankings[ranking_idx].name,

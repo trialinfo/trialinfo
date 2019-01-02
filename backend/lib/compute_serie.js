@@ -17,7 +17,15 @@
 
 'use strict';
 
-async function compute_serie(connection, serie_id) {
+function new_rider(number) {
+  return {
+    number: number,
+    events: [],
+    drop_score: null
+  };
+}
+
+async function compute_serie(connection, serie_id, last_event) {
   let tie_break = {};
   (await connection.queryAsync(`
     SELECT *
@@ -41,6 +49,10 @@ async function compute_serie(connection, serie_id) {
     event_order[id] = index;
     return event_order;
   }, {});
+
+  function higher_event_id(a, b) {
+    return event_order[a] > event_order[b] ? a : b;
+  }
 
   let events_so_far = [];
   (await connection.queryAsync(`
@@ -90,17 +102,15 @@ async function compute_serie(connection, serie_id) {
 
     let rider = ranking_class.riders[row.number];
     if (!rider) {
-      rider = ranking_class.riders[row.number] = {
-	number: row.number,
-	events: [],
-	drop_score: null
-      };
+      rider = ranking_class.riders[row.number] = new_rider(row.number);
       if (tie_break[row.number])
 	rider.tie_break = tie_break[row.number];
     }
     delete row.number;
 
-    if (!rider.last_id || event_order[rider.last_id] < event_order[row.id])
+    if (rider.last_id)
+      rider.last_id = higher_event_id(rider.last_id, row.id);
+    else
       rider.last_id = row.id;
 
     rider.events.push(row);
@@ -119,7 +129,7 @@ async function compute_serie(connection, serie_id) {
   `, [serie_id])).forEach((row) => {
     let ranking = rankings[row.ranking];
     if (ranking) {
-      let ranking_class = rankings[row.ranking][row.ranking_class];
+      let ranking_class = ranking[row.ranking_class];
       if (ranking_class) {
 	for (let key of ['serie', 'ranking', 'ranking_class'])
 	  delete row[key];
@@ -128,116 +138,71 @@ async function compute_serie(connection, serie_id) {
     }
   });
 
-  Object.values(rankings).forEach((ranking) => {
-    Object.values(ranking).forEach((ranking_class) => {
-      ranking_class.riders.forEach((rider) => {
-	rider.score = rider.events.reduce(
-	  (score, _) => score + _.score, 0);
-      });
-    });
-  });
+  function compute_ranking(ranking_class) {
+    let riders = ranking_class.riders;
+    let resolve_harder;
 
-  function drop_score(events, count) {
-    return Object.values(events)
-      .sort((a, b) => a.score - b.score)
-      .slice(0, count)
-      .reduce(
-        (drop, _) => drop + _.score, 0);
-  }
+    function rank_order(a, b) {
+      if (a.ranked != b.ranked)
+	return b.ranked - a.ranked;
 
-  for (let ranking_nr of Object.keys(rankings)) {
-    let ranking = rankings[ranking_nr];
-    for (let ranking_class_nr of Object.keys(ranking)) {
-      let ranking_class = ranking[ranking_class_nr];
+      // Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
+      if (a.score != b.score)
+	return b.score - a.score;
 
-      if (ranking_class.max_events && ranking_class.drop_events) {
-	let drop_limit = ranking_class.max_events - ranking_class.drop_events;
-	ranking_class.riders.forEach((rider) => {
-	  let events = rider.events;
-	  if (events.length > drop_limit) {
-	    rider.drop_score = drop_score(events, events.length - drop_limit);
-	    rider.score -= rider.drop_score;
-	  }
-	});
-      }
+      // Eine explizite Reihung von Fahrern bei Punktegleichstand überschreibt
+      // den Vergleich der Platzierungen, usw.:
+      if (a.tie_break != null && b.tie_break != null)
+	return a.tie_break - b.tie_break;
 
-      ranking_class.riders.forEach((rider) => {
-	/* Assume the rider will participate in all events still taking place. */
-	let events_to_come = 0;
-	if (ranking_class.min_events > 1 && ranking_class.max_events) {
-	  let esf = (events_so_far[ranking_nr - 1] || [])[ranking_class_nr - 1] || 0;
-	  events_to_come = Math.max(0, ranking_class.max_events - esf);
+      // Laut Telefonat am 22.10.2014 mit Martin Suchy (OSK): Wenn Fahrer
+      // punktegleich sind, werden sie in der Ergebnisliste anhand der besseren
+      // Platzierungen gereiht.  Der Rang wird allerdings nur dann "aufgelöst",
+      // wenn es den ersten Platz betrifft; sonst gibt es Ex Aequo-Platzierungen.
+      //
+      // Das ist so implementiert, dass resolve_harder zunächst true ist, bei der
+      // Zuweisung der Ränge wird es aber nach den Fahrern mit Platz 1 auf false
+      // gesetzt.
+
+      if (resolve_harder) {
+	function event_ranks(x) {
+	  return x.events.map((event) => event.rank).sort((a, b) => a - b);
 	}
-	rider.ranked = rider.events.length + events_to_come >= ranking_class.min_events;
-      });
-    }
-  }
 
-  let resolve_harder;
+	let a_ranks = event_ranks(a);
+	let b_ranks = event_ranks(b);
+	for (let n = 0; n < Math.min(a_ranks.length, b_ranks.length); n++) {
+	  if (a_ranks[n] != b_ranks[n])
+	    return a_ranks[n] - b_ranks[n];
+	}
 
-  function rank_order(a, b) {
-    if (a.ranked != b.ranked)
-      return b.ranked - a.ranked;
+	if (a_ranks.length != b_ranks.length)
+	  return b_ranks.length - a_ranks.length;
 
-    // Höhere Gesamtpunkte (nach Abzug der Streichpunkte) gewinnen
-    if (a.score != b.score)
-      return b.score - a.score;
+	// Fahrer mit höheren Streichpunkten gewinnt
+	if (a.drop_score != b.drop_score)
+	  return b.drop_score - a.drop_score;
 
-    // Eine explizite Reihung von Fahrern bei Punktegleichstand überschreibt
-    // den Vergleich der Platzierungen, usw.:
-    if (a.tie_break != null && b.tie_break != null)
-      return a.tie_break - b.tie_break;
-
-    // Laut Telefonat am 22.10.2014 mit Martin Suchy (OSK): Wenn Fahrer
-    // punktegleich sind, werden sie in der Ergebnisliste anhand der besseren
-    // Platzierungen gereiht.  Der Rang wird allerdings nur dann "aufgelöst",
-    // wenn es den ersten Platz betrifft; sonst gibt es Ex Aequo-Platzierungen.
-    //
-    // Das ist so implementiert, dass resolve_harder zunächst true ist, bei der
-    // Zuweisung der Ränge wird es aber nach den Fahrern mit Platz 1 auf false
-    // gesetzt.
-
-    if (resolve_harder) {
-      function event_ranks(x) {
-	return x.events.map((event) => event.rank).sort((a, b) => a - b);
+	// Folgende Regel ist nicht implementiert, und muss als explizite
+	// Reihung definiert werden (Tabelle series_tie_break):
+	//
+	// Ist auch dann noch keine Differenzierung möglich, wird der
+	// OSK-Prädikatstitel dem Fahrer zuerkannt, der den letzten wertbaren
+	// Lauf zu dem entsprechenden Bewerb gewonnen hat.
+	//
+	// Im Jahr 2017 ist dieser Fall für die beiden Besten in der roten Spur
+	// eingetreten.  Nach Intervention hat die AMF diese Regelung für Trial
+	// gestrichen; es gibt im Jahr 2017 zwei Staatsmeister (16.11.2017).
       }
-
-      let a_ranks = event_ranks(a);
-      let b_ranks = event_ranks(b);
-      for (let n = 0; n < Math.min(a_ranks.length, b_ranks.length); n++) {
-	if (a_ranks[n] != b_ranks[n])
-	  return a_ranks[n] - b_ranks[n];
-      }
-
-      if (a_ranks.length != b_ranks.length)
-        return b_ranks.length - a_ranks.length;
-
-      // Fahrer mit höheren Streichpunkten gewinnt
-      if (a.drop_score != b.drop_score)
-	return b.drop_score - a.drop_score;
-
-      // Folgende Regel ist nicht implementiert, und muss als explizite
-      // Reihung definiert werden (Tabelle series_tie_break):
-      //
-      // Ist auch dann noch keine Differenzierung möglich, wird der
-      // OSK-Prädikatstitel dem Fahrer zuerkannt, der den letzten wertbaren
-      // Lauf zu dem entsprechenden Bewerb gewonnen hat.
-      //
-      // Im Jahr 2017 ist dieser Fall für die beiden Besten in der roten Spur
-      // eingetreten.  Nach Intervention hat die AMF diese Regelung für Trial
-      // gestrichen; es gibt im Jahr 2017 zwei Staatsmeister (16.11.2017).
     }
-  }
 
-
-  Object.values(rankings).forEach((ranking) => {
-    Object.values(ranking).forEach((ranking_class) => {
+    function assign_ranks(riders) {
       resolve_harder = true;
-      ranking_class.riders.sort(rank_order);
+      riders.sort(rank_order);
 
       let rank = 1;
       let previous_rider;
-      ranking_class.riders.forEach((rider) => {
+      riders.forEach((rider) => {
 	rider.rank =
 	  (previous_rider && !rank_order(previous_rider, rider)) ?
 	     previous_rider.rank : rank;
@@ -246,25 +211,122 @@ async function compute_serie(connection, serie_id) {
 	previous_rider = rider;
 	rank++;
       });
-    });
-  });
+    }
 
-  for (let ranking_nr of Object.keys(rankings)) {
-    let ranking = rankings[ranking_nr];
-    rankings[ranking_nr] =
-      Object.keys(ranking).reduce((new_ranking, ranking_class_nr) => {
-	let ranking_class = ranking[ranking_class_nr];
-	new_ranking[ranking_class_nr] =
-	  ranking_class.riders.reduce((riders, rider) => {
-	    riders[rider.number] = rider;
-	    delete rider.number;
-	    delete rider.events;
-	    delete rider.tie_break;
-	    return riders;
-	  }, {});
-	return new_ranking;
-      }, {});
+    function drop_score(events, count) {
+      return Object.values(events)
+	.sort((a, b) => a.score - b.score)
+	.slice(0, count)
+	.reduce(
+	  (drop, _) => drop + _.score, 0);
+    }
+
+    riders.forEach((rider) => {
+      rider.score = rider.events.reduce(
+	(score, _) => score + _.score, 0);
+    });
+
+    if (ranking_class.max_events && ranking_class.drop_events) {
+      let drop_limit = ranking_class.max_events - ranking_class.drop_events;
+      riders.forEach((rider) => {
+	let events = rider.events;
+	if (events.length > drop_limit) {
+	  rider.drop_score = drop_score(events, events.length - drop_limit);
+	  rider.score -= rider.drop_score;
+	}
+      });
+    }
+
+    riders.forEach((rider) => {
+      /* Assume the rider will participate in all events still taking place. */
+      let events_to_come = 0;
+      if (ranking_class.min_events > 1 && ranking_class.max_events) {
+	let esf = (events_so_far[ranking_nr - 1] || [])[ranking_class_nr - 1] || 0;
+	events_to_come = Math.max(0, ranking_class.max_events - esf);
+      }
+      rider.ranked = rider.events.length + events_to_come >= ranking_class.min_events;
+    });
+
+    assign_ranks(riders);
+
+    return riders.reduce((riders, rider) => {
+      let rider_copy = riders[rider.number] = {};
+      let ignore_keys = {
+	number: true,
+	events: true,
+	tie_break: true
+      };
+      for (let key of Object.keys(rider)) {
+	if (!(key in ignore_keys))
+	  rider_copy[key] = rider[key];
+      }
+      return riders;
+    }, {});
   }
+
+  Object.keys(rankings).forEach((ranking_nr) => {
+    let ranking = rankings[ranking_nr];
+
+    let joint;
+    if (last_event) {
+      let event_ranking = last_event.rankings[ranking_nr - 1];
+      if (event_ranking)
+	joint = event_ranking.joint;
+    }
+
+    if (joint) {
+      /*
+       * Collapse all the classes in the ranking into one, but keep the joint
+       * result attached to each of the original ranking classes.  That way,
+       * the series_scores table will end up with a copy of the joint ranking
+       * for each of the contained ranking classes, making database queries
+       * much easier.
+       */
+
+      let joint_ranking_class;
+      let joint_riders = {};
+      let placeholder = {};
+      Object.keys(ranking).forEach((ranking_class_nr) => {
+	let ranking_class = ranking[ranking_class_nr];
+
+	ranking_class.riders.forEach((rider) => {
+	  let joint_rider = joint_riders[rider.number];
+	  if (!joint_rider) {
+	    joint_rider = joint_riders[rider.number] = new_rider(rider.number);
+	  }
+	  joint_rider.events =
+	    joint_rider.events.concat(rider.events);
+	  if (rider.last_id) {
+	    if (!joint_rider.last_id) {
+	      joint_rider.last_id = rider.last_id;
+	    } else {
+	      joint_rider.last_id =
+		higher_event_id(joint_rider.last_id, rider.last_id);
+	    }
+	  }
+	});
+
+	if (joint_ranking_class) {
+	  for (let key of ['max_events', 'min_events', 'drop_events']) {
+	    if (joint_ranking_class[key] != ranking_class[key])
+	      console.log(`Collapsed ranking ${ranking_nr}: ${key} differs`);
+	  }
+	} else {
+	  joint_ranking_class = Object.assign({}, ranking_class);
+	}
+	ranking[ranking_class_nr] = placeholder;
+      });
+      if (joint_ranking_class) {
+	joint_ranking_class.riders = Object.values(joint_riders);
+	Object.assign(placeholder, compute_ranking(joint_ranking_class));
+      }
+    } else {
+      Object.keys(ranking).forEach((ranking_class_nr) => {
+	let ranking_class = ranking[ranking_class_nr];
+	ranking[ranking_class_nr] = compute_ranking(ranking_class);
+      });
+    }
+  });
 
   return rankings;
 }
