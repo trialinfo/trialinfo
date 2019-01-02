@@ -28,7 +28,7 @@ var ridersController = [
     var features = event.features;
     features.rankings = [];
     for (var n = 1; n <= event.rankings.length; n++) {
-      if ('ranking' + n in features)
+      if (event.rankings[n - 1])
 	features.rankings.push(n);
     }
     if (groups) {
@@ -310,7 +310,7 @@ var ridersController = [
 	 Gruppenwertungen, und für Gruppen die Fahrerwertungen. */
       if (rider.start) {
 	angular.forEach(rider.rankings, function(ranking, index) {
-	  if (ranking && !features['ranking' + (index + 1)])
+	  if (ranking && !event.rankings[index])
 	    rider.rankings[index] = false;
 	});
       }
@@ -365,7 +365,7 @@ var ridersController = [
 	'group': groups,
 	'class': null,
 	'number': null,
-	'rankings': features.ranking1 ? [ event.ranking1_enabled ] : [],
+	'rankings': event.rankings[0] ? [ event.ranking1_enabled ] : [],
 	'insurance': event.insurance,
 	'verified': true,
 	'future_starts': {}

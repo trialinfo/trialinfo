@@ -384,7 +384,7 @@ var eventListController = [
 	heading: name,
 	expr: "rankings[" + (ranking - 1) + "] ? 'Ja' : ''",
 	style: { 'text-align': 'center' },
-	when: function() { return features['ranking' + ranking]; }
+	when: function() { return event.rankings[ranking - 1]; }
       };
     });
     angular.forEach(defined_fields, function(field) {

@@ -107,8 +107,14 @@ if ($letzte_id) {
 	SELECT feature
 	FROM event_features
 	WHERE id = ?
+
+	UNION
+
+	SELECT CONCAT('ranking', ranking) AS feature
+	FROM rankings
+	WHERE id = ?
     });
-    $sth->execute($letzte_id);
+    $sth->execute($letzte_id, $letzte_id);
     while (my @row = $sth->fetchrow_array) {
 	$features->{$features_map->{$row[0]}} = 1
 	    if exists $features_map->{$row[0]};

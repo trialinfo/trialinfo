@@ -428,7 +428,7 @@ function compute_event(cache, id, event) {
      score are stored in rider.rankings[ranking - 1] as:
      {rank: rank, score: score}.  */
   for (let ranking = 1; ranking <= 4; ranking++) {
-    if (!event.features['ranking' + ranking])
+    if (!event.rankings[ranking - 1])
       continue;
 
     for (let ranking_class in riders_per_class) {

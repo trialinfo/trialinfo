@@ -46,14 +46,14 @@ async function compute_serie(connection, serie_id) {
   (await connection.queryAsync(`
     SELECT ranking, ranking_class, COUNT(*) AS events
     FROM (
-      SELECT DISTINCT ranking_class, MID(feature, 8) + 0 AS ranking, id
+      SELECT DISTINCT ranking_class, ranking, id
       FROM series_events
       JOIN events USING (id)
-      JOIN event_features USING (id)
+      JOIN rankings USING (id)
       JOIN classes USING (id)
-      JOIN series_classes USING (serie, ranking_class)
-      WHERE serie = ? AND enabled AND feature LIKE 'ranking%' AND
-            (ranking <> 'ranking1' OR NOT COALESCE(no_ranking1, 0))
+      JOIN series_classes USING (serie, ranking, ranking_class)
+      WHERE serie = ? AND enabled AND
+            (ranking <> 1 OR NOT COALESCE(no_ranking1, 0))
     ) AS _
     GROUP BY ranking, ranking_class
   `, [serie_id])).forEach((row) => {

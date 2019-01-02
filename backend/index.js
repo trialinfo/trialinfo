@@ -317,6 +317,30 @@ async function update_database(connection) {
       CHANGE class ranking_class INT
     `);
   }
+
+  let ranking_features;
+  (await connection.queryAsync(`
+    SELECT COUNT(*) AS count
+    FROM event_features
+    WHERE feature LIKE 'ranking%'
+  `)).forEach((row) => {
+    ranking_features = row.count;
+  });
+
+  if (ranking_features) {
+    console.log('Converting rankings');
+    await connection.queryAsync(`
+      DELETE rankings
+      FROM rankings
+      LEFT JOIN event_features ON rankings.id = event_features.id AND ranking = MID(feature, 8)
+      WHERE event_features.id IS NULL
+    `);
+
+    await connection.queryAsync(`
+      DELETE FROM event_features
+      WHERE feature LIKE 'ranking%'
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -4200,7 +4224,7 @@ async function admin_export_csv(connection, id) {
 
   let rankings = [];
   for (let n = 1; n <= 4; n++) {
-    if (event.features['ranking' + n])
+    if (event.rankings[n - 1])
       rankings.push(n);
   }
 
@@ -4250,7 +4274,8 @@ async function admin_export_csv(connection, id) {
       }
 
       fields = fields.reduce(function(fields, field) {
-	  if (event.features[field.name])
+	  if (field.name.match(/^ranking\d+$/) ||
+	      event.features[field.name])
 	    fields.push(field.name);
 	  return fields;
 	}, []);

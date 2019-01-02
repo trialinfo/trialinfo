@@ -85,8 +85,14 @@ $sth = $dbh->prepare(q{
     SELECT feature
     FROM event_features
     WHERE id = ?
+
+    UNION
+
+    SELECT CONCAT('ranking', ranking) AS feature
+    FROM rankings
+    WHERE id = ?
 });
-$sth->execute($id);
+$sth->execute($id, $id);
 while (my @row = $sth->fetchrow_array) {
     $features->{$features_map->{$row[0]}} = 1
 	if exists $features_map->{$row[0]};

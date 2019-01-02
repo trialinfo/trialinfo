@@ -78,7 +78,7 @@ var eventScoresController = [
       $scope.rankings = (function() {
 	var rankings = [];
 	angular.forEach(event.rankings, function(ranking, index) {
-	  if (features['ranking' + (index + 1)])
+	  if (event.rankings[index])
 	    rankings.push({ ranking: index + 1, name: ranking.name });
 	});
 	return rankings;
@@ -576,7 +576,7 @@ var eventScoresController = [
 
       var search = $location.search();
       var defaults = {
-	ranking: features.ranking1 ? 1 : null,
+	ranking: event.rankings[0] ? 1 : null,
 	field: fields,
 	'page-size': 'A4',
 	'font-size': 8,

@@ -243,6 +243,17 @@ var settingsController = [
       event.features = $scope.features;
       collapse_scores(event.scores);
 
+      function trim_array(array) {
+	while (array.length && array[array.length - 1] == null)
+	  array.pop()
+      }
+
+      event.rankings.forEach(function(ranking, index) {
+	if (ranking.name === null || ranking.name === '')
+	  delete event.rankings[index];
+      });
+      trim_array(event.rankings);
+
       var future_events = event.future_events;
       var future_event = future_events[future_events.length - 1];
       if (future_event &&
