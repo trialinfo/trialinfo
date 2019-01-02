@@ -26,7 +26,7 @@ function compute(cache, id, event) {
     Object.values(riders).forEach((rider) => {
       if (rider.start && rider.ranking_class) {
 	let marks_per_zone = rider.marks_per_zone;
-	for (round = 1; round <= marks_per_zone.length; round++) {
+	for (let round = 1; round <= marks_per_zone.length; round++) {
 	  let marks_in_round =
 	    rider.marks_per_zone[rider.ranking_class - 1] || [];
 	  marks_in_round.forEach((marks, index) => {
