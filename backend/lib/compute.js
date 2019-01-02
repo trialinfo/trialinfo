@@ -41,6 +41,7 @@ function compute(cache, id, event) {
 	}
       }
     });
+    return active_zones;
   }
 
   function compute_rider_marks(riders) {
