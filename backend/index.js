@@ -4356,6 +4356,7 @@ async function admin_export_csv(connection, id) {
       LEFT JOIN (
         SELECT id, number, 1 AS ranking${n}
 	FROM rider_rankings
+	JOIN rankings USING (id, ranking)
 	WHERE ranking = ${n}
       ) AS ranking${n} USING (id, number)`).join('') +
       future_events.map((fid, index) => `
@@ -4382,7 +4383,7 @@ async function admin_export_csv(connection, id) {
       }
 
       fields = fields.reduce(function(fields, field) {
-	  if (field.name.match(/^ranking\d+$/) ||
+	  if (field.name.match(/^(start|ranking)\d+$/) ||
 	      event.features[field.name])
 	    fields.push(field.name);
 	  return fields;
