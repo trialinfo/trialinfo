@@ -245,6 +245,14 @@ function compute_event(cache, id, event) {
   }
 
   function rank_order(a, b) {
+    if (a.ranking_class != b.ranking_class) {
+      try {
+	return event.classes[a.ranking_class - 1].order -
+	       event.classes[b.ranking_class - 1].order;
+      } catch (_) {}
+      return a.ranking_class - b.ranking_class;
+    }
+
     let cmp =
       (a.non_competing - b.non_competing) ||
       (!b.failure - !a.failure) ||
@@ -310,7 +318,17 @@ function compute_event(cache, id, event) {
     return ranks;
   }
 
-  function assign_scores(riders_in_class, ranking, ranks) {
+  function ranking_assign_ranks(riders, ranking, ranks) {
+    for (let number in ranks) {
+      let rider = riders[number];
+      rider.rankings[ranking - 1].rank = ranks[number];
+    }
+  }
+
+  function ranking_assign_scores(riders_in_class, ranking, ranks) {
+    if (!(event.rankings[ranking - 1].assign_scores))
+      return;
+
     function skip_rider(rider) {
       return rider.non_competing || rider.failure || rider.zones_todo;
     }
@@ -431,23 +449,31 @@ function compute_event(cache, id, event) {
     if (!event.rankings[ranking - 1])
       continue;
 
-    for (let ranking_class in riders_per_class) {
-      let riders_in_class = riders_per_class[ranking_class].filter(
-        (rider) =>
-	  rider.rankings[ranking - 1] &&
-	  (ranking_class == 'G' ||
-	   (ranking > 1 ||
-	    !(event.classes[rider.class - 1] || {}).no_ranking1))
-      );
+    function rider_in_ranking(rider) {
+      return rider.rankings[ranking - 1] &&
+	     (rider.ranking_class == 'G' ||
+	      ranking > 1 ||
+	      !(event.classes[rider.class - 1] || {}).no_ranking1);
+    }
 
-      let ranks = compute_ranks(riders_in_class);
-      for (let number in ranks) {
-	let rider = riders[number];
-	rider.rankings[ranking - 1].rank = ranks[number];
+    if (event.rankings[ranking - 1].joint) {
+      let riders_in_ranking = [];
+      for (let ranking_class in riders_per_class) {
+	riders_in_ranking = riders_in_ranking.concat(
+	  riders_per_class[ranking_class].filter(rider_in_ranking)
+	);
       }
-
-      if (event.rankings[ranking - 1].assign_scores)
-	assign_scores(riders_in_class, ranking, ranks);
+      let ranks = compute_ranks(riders_in_ranking);
+      ranking_assign_ranks(riders, ranking, ranks);
+      ranking_assign_scores(riders_in_ranking, ranking, ranks);
+    } else {
+      for (let ranking_class in riders_per_class) {
+	let riders_in_class = riders_per_class[ranking_class]
+	  .filter(rider_in_ranking);
+	let ranks = compute_ranks(riders_in_class);
+	ranking_assign_ranks(riders, ranking, ranks);
+	ranking_assign_scores(riders_in_class, ranking, ranks);
+      }
     }
   }
 
