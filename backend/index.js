@@ -397,6 +397,21 @@ async function update_database(connection) {
       ADD split BOOLEAN NOT NULL DEFAULT 0
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'main_ranking')) {
+    console.log('Adding column `main_ranking` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD main_ranking INT
+    `);
+
+    await connection.queryAsync(`
+      UPDATE events
+      JOIN rankings USING (id)
+      SET main_ranking = ranking
+      WHERE ranking = 1
+    `);
+  }
 }
 
 pool.getConnectionAsync()

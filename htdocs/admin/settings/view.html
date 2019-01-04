@@ -115,28 +115,34 @@ a:hover.updown {
 	      <input type="text" size="20" maxlength="20" ng-model="ranking.name" id="ranking{{$index + 1}}_name" nullable>
 	    </td>
 	  </tr>
-	  <tr>
-	    <th rowspan="4">Eigenschaften</th>
+	  <tr ng-if="ranking.name != null">
+	    <th rowspan="5">Eigenschaften</th>
 	    <td>
-	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
+	      <input type="checkbox" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
 	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
 	    </td>
 	  </tr>
-	  <tr>
+	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
+	      <input type="checkbox" ng-disabled="nonsplit_rankings().length <= 1" ng-model="internal.main_ranking[$index]" id="ranking{{$index + 1}}_main">
+	        <label for="ranking{{$index + 1}}_main">In Gesamtwertung anzeigen</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="checkbox" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
 	        <label for="ranking{{$index + 1}}_split">Getrennt von der Gesamtwertung</label>
 	    </td>
 	  </tr>
-	  <tr>
+	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
+	      <input type="checkbox" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
 	        <label for="ranking{{$index + 1}}_joint">Reihung über alle Klassen</label>
 	    </td>
 	  </tr>
-	  <tr>
+	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
+	      <input type="checkbox" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
 	        <label for="ranking{{$index + 1}}_default">Für neue Fahrer aktiviert</label>
 	    </td>
 	  </tr>
