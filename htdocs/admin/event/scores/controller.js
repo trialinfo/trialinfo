@@ -164,7 +164,9 @@ var eventScoresController = [
     });
 
     $scope.show_class = function(class_) {
-      return $scope.show.classes[class_ - 1] && $scope.riders_in_classes[class_ - 1] &&
+      return $scope.show.classes[class_ - 1] &&
+	     $scope.riders_in_classes[class_ - 1] &&
+	     $scope.riders_in_classes[class_ - 1].filter($scope.show_rider).length &&
 	     (($scope.show.riders && !event.classes[class_ - 1].groups) ||
 	      ($scope.show.groups && event.classes[class_ - 1].groups));
     };
@@ -309,6 +311,10 @@ var eventScoresController = [
 	      } else {
 		rank_a = a.rankings[ranking - 1].rank;
 		rank_b = b.rankings[ranking - 1].rank;
+	      }
+	      if (rank_a == null || rank_b == null) {
+		rank_a = (rank_a == null);
+		rank_b = (rank_a == null);
 	      }
 	      if (rank_a != rank_b)
 		return rank_a - rank_b;
@@ -767,6 +773,12 @@ var eventScoresController = [
       if (rank != null)
 	return rank + '.';
     }
+
+    $scope.show_rider = function(rider) {
+      if ($scope.show.ranking == null || $scope.show.all)
+	return rider.rank != null;
+      return rider.rankings[$scope.show.ranking - 1];
+    };
 
     $scope.same_day = same_day;
   }];

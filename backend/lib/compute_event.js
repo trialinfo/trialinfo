@@ -429,11 +429,22 @@ function compute_event(cache, id, event) {
   if (event.features.groups)
     compute_group_marks(riders);
 
+  function rider_not_split(rider) {
+    for (let n = 0; n < event.rankings.length; n++) {
+      try {
+	if (event.rankings[n].split && rider.rankings[n])
+	  return false;
+      } catch (_) {}
+    }
+    return true;
+  }
+
   /* Compute overall ranking including all starters. The rank is stored in
      rider.rank, with no associated score.  */
   let riders_per_class = group_riders_per_class(riders);
   for (let ranking_class in riders_per_class) {
-    let riders_in_class = riders_per_class[ranking_class];
+    let riders_in_class = riders_per_class[ranking_class]
+      .filter(rider_not_split);
 
     let ranks = compute_ranks(riders_in_class);
     for (let number in ranks) {

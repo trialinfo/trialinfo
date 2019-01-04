@@ -166,7 +166,7 @@ Keine Fahrer oder Gruppen.
     </thead>
       <!-- Spaltenbreiten? -->
       <!-- Druckbarkeit? Kontrollierter Seitenumbruch zwischen Klassen? -->
-    <tbody ng-repeat="rider in riders_in_classes[class - 1] track by rider.number" class="rider">
+    <tbody ng-repeat="rider in riders_in_classes[class - 1] | filter:show_rider track by rider.number" class="rider">
       <tr ng-class-even="'alt'" ng-if="rider.failure || rider.non_competing">
 	<td style="text-align:right"></td>
 	<td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>

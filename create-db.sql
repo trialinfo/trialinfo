@@ -315,6 +315,7 @@ CREATE TABLE `rankings` (
   `default` tinyint(1) NOT NULL DEFAULT 0,
   `assign_scores` tinyint(1) NOT NULL DEFAULT 0,
   `joint` tinyint(1) NOT NULL DEFAULT 0,
+  `split` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

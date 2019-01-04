@@ -389,6 +389,14 @@ async function update_database(connection) {
       ADD joint BOOLEAN NOT NULL DEFAULT 0
     `);
   }
+
+  if (!await column_exists(connection, 'rankings', 'split')) {
+    console.log('Adding column `split` to `rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD split BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
 }
 
 pool.getConnectionAsync()
