@@ -219,8 +219,8 @@ DROP TABLE IF EXISTS `future_starts`;
 CREATE TABLE `future_starts` (
   `id` int(11) NOT NULL,
   `fid` int(11) NOT NULL,
-  `rider_tag` char(16) NOT NULL,
-  PRIMARY KEY (`id`,`fid`,`rider_tag`)
+  `number` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`fid`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

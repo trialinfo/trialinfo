@@ -412,6 +412,27 @@ async function update_database(connection) {
       WHERE ranking = 1
     `);
   }
+
+  if (!await column_exists(connection, 'future_starts', 'number')) {
+    console.log('Converting table `future_starts`');
+    await connection.queryAsync(`
+      ALTER TABLE future_starts
+      ADD number INT
+    `);
+
+    await connection.queryAsync(`
+      UPDATE future_starts
+      JOIN riders USING (id, rider_tag)
+      SET future_starts.number = riders.number
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE future_starts
+      DROP PRIMARY KEY,
+      DROP rider_tag,
+      ADD PRIMARY KEY (id, fid, number);
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -600,39 +621,6 @@ var cache = {
   }
 };
 
-function hash_future_starts(future_starts, rider) {
-  if (rider) {
-    let rider_tag = rider.rider_tag;
-    for (let fid in rider.future_starts) {
-      if (rider.future_starts[fid]) {
-	future_starts[fid + ' ' + rider_tag] = {
-	  fid: fid,
-	  rider_tag: rider_tag
-	};
-      }
-    }
-  }
-}
-
-async function update_future_starts(connection, id) {
-  let numbers = Object.keys(cache.saved_riders[id]);
-  let old_future_starts = {}, new_future_starts = {};
-  for (let number of numbers) {
-    let old_rider = cache.saved_riders[id][number];
-    let new_rider = cache.cached_riders[id][number];
-    hash_future_starts(old_future_starts, old_rider);
-    hash_future_starts(new_future_starts, new_rider);
-  }
-
-  await zipHashAsync(old_future_starts, new_future_starts,
-    async function(a, b) {
-      await update(connection, 'future_starts',
-	Object.assign({id: id}, a || b),
-	[],
-	a != null && {}, b != null && {});
-    });
-}
-
 async function commit_world(connection) {
   var ids = Object.keys(cache.saved_riders);
   for (let id of ids) {
@@ -643,18 +631,6 @@ async function commit_world(connection) {
       await update_rider(connection, id, number,
 			 old_rider, new_rider);
     }
-    /*
-     * The 'future_starts' table uses 'rider_tag' as the rider key instead of
-     * 'number'.  We cannot simply update it in update_rider() which processes
-     * the riders per number because otherwise number changes would lead to
-     * duplicate key errors in 'future_starts'.  (The 'rider_tag' doesn't
-     * change when 'number' changes).
-     *
-     * FIXME: Change 'future_starts' table to use 'number' as key instead of
-     * 'rider_tag' and revert this change.  (May conflict with
-     * pre-registration.)
-     */
-    await update_future_starts(connection, id);
   }
 
   ids = Object.keys(cache.saved_events);
@@ -1164,7 +1140,6 @@ async function read_riders(connection, id, revalidate, number) {
   (await connection.queryAsync(`
     SELECT fid, number
     FROM future_starts
-    JOIN riders using (id, rider_tag)
     WHERE ` + filters)
   ).forEach((row) => {
     var rider = riders[row.number];
@@ -1229,7 +1204,7 @@ async function get_rider(connection, id, number, params, direction, event) {
     if (event) {
       if (event.features.registered)
 	or.push('registered');
-      or.push('rider_tag IN (SELECT rider_tag FROM future_events ' +
+      or.push('number IN (SELECT number FROM future_events ' +
 	        'JOIN future_starts USING (id, fid) ' +
 		'WHERE id = ' + connection.escape(id) + ' AND active)');
     }
@@ -1403,16 +1378,8 @@ async function find_riders(connection, id, params) {
 async function delete_rider(connection, id, number) {
   let query;
 
-  query = 'DELETE future_starts ' +
-          'FROM future_starts ' +
-	  'JOIN riders USING (id, rider_tag) ' +
-	  'WHERE id = ' + connection.escape(id) +
-	    ' AND number = ' + connection.escape(number);
-  log_sql(query);
-  await connection.queryAsync(query);
-
   for (let table of ['riders', 'riders_groups', 'rider_rankings', 'marks',
-		     'rounds', 'new_numbers']) {
+		     'rounds', 'new_numbers', 'future_starts']) {
     query = 'DELETE FROM ' + connection.escapeId(table) +
 	    ' WHERE id = ' + connection.escape(id) +
 	      ' AND number = ' + connection.escape(number);
@@ -1432,7 +1399,7 @@ async function rider_change_number(connection, id, old_number, new_number) {
   let query;
 
   for (let table of ['riders', 'riders_groups', 'rider_rankings', 'marks',
-		     'rounds']) {
+		     'rounds', 'future_starts']) {
     query = 'UPDATE ' + connection.escapeId(table) +
 	    ' SET number = ' + connection.escape(new_number) +
 	    ' WHERE id = ' + connection.escape(id) +
@@ -2933,8 +2900,14 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
       && (changed = true);
     });
 
-  if (!deepEqual(old_rider.future_starts, new_rider.future_starts))
-    changed = true;
+  await zipHashAsync(old_rider.future_starts, new_rider.future_starts,
+    async function(a, b, fid) {
+      await update(connection, 'future_starts',
+	{id: id, number: number, fid: fid},
+	[],
+	a != null && {}, b != null && {})
+      && (changed = true);
+    });
 
   return changed;
 }
@@ -4387,10 +4360,10 @@ async function admin_export_csv(connection, id) {
       ) AS ranking${n} USING (id, number)`).join('') +
       future_events.map((fid, index) => `
       LEFT JOIN (
-        SELECT id, rider_tag, 1 AS start${index + 2}
+        SELECT id, number, 1 AS start${index + 2}
 	FROM future_starts
 	WHERE fid = ${fid}
-      ) AS start${index + 2} USING (id, rider_tag)`).join('') + `
+      ) AS start${index + 2} USING (id, number)`).join('') + `
       WHERE id = ${connection.escape(id)} AND
 	(number > 0 OR registered OR start OR number IN (
 	  SELECT number
