@@ -116,10 +116,16 @@ a:hover.updown {
 	    </td>
 	  </tr>
 	  <tr>
-	    <th rowspan="2">Eigenschaften</th>
+	    <th rowspan="3">Eigenschaften</th>
 	    <td>
 	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
 	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>
+	      <input type="checkbox" ng-disabled="ranking.name == null" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
+	        <label for="ranking{{$index + 1}}_joint">Reihung über alle Klassen</label>
 	    </td>
 	  </tr>
 	  <tr>

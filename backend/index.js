@@ -381,6 +381,14 @@ async function update_database(connection) {
       DROP score_234
     `);
   }
+
+  if (!await column_exists(connection, 'rankings', 'joint')) {
+    console.log('Adding column `joint` to `rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD joint BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
 }
 
 pool.getConnectionAsync()
