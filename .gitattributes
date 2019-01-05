@@ -1,6 +1,7 @@
 /* export-ignore
 .gitignore export-ignore
 .gitattributes export-ignore
+Makefile !export-ignore
 backend !export-ignore
 htdocs !export-ignore
 create-db.sql !export-ignore

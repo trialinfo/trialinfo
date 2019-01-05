@@ -1,0 +1,13 @@
+[trialinfo]
+name=TrialInfo
+baseurl=https://www.trialinfo.at/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-trialinfo
+
+[trialinfo-source]
+name=TrialInfo - Source
+baseurl=https://www.trialinfo.at/srpm/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-trialinfo
