@@ -4646,6 +4646,7 @@ app.get('/', conn(pool), index);
 app.get('/login/', function(req, res, next) {
   var params = {
     mode: 'login',
+    email: ''
   };
   if (req.query)
     params.query = query_string(req.query);
