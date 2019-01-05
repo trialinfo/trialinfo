@@ -1,8 +1,0 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: trialinfo
-Source: <url://example.com>
-
-Files: *
-Copyright: 2012-2017 Andreas Gruenbacher <andreas.gruenbacher@gmail.com>
-License: AGPL-3+
- GNU Affero General Public License version 3, or any later version

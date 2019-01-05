@@ -2,7 +2,7 @@
 Description=TrialInfo
 
 [Service]
-ExecStart=/usr/bin/nodejs index.js
+ExecStart=/usr/bin/node index.js
 WorkingDirectory=/var/lib/trialinfo/backend
 StandardOutput=journal
 SyslogIdentifier=trialinfo
