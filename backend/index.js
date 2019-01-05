@@ -4611,7 +4611,7 @@ if (app.get('env') != 'production')
 if (!config.session)
   config.session = {};
 if (!config.session.secret)
-  config.session.secret = require('crypto').randomBytes(64).toString('hex');
+  config.session.secret = crypto.randomBytes(64).toString('hex');
 
 app.use(logger(app.get('env') == 'production' ? production_log_format : 'dev'));
 if (app.get('env') == 'production')
