@@ -800,8 +800,9 @@ async function admin_regform(res, connection, id, numbers) {
   var headers_sent;
   child.stdout.on('data', (chunk) => {
     if (!headers_sent) {
+      let filename = Array.isArray(numbers) ? 'Nennformulare.pdf' : 'Nennformular.pdf';
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${Array.isArray(numbers) ? 'Nennformulare' : 'Nennformular'}.pdf"`);
+      res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(filename)}`);
       res.setHeader('Transfer-Encoding', 'chunked');
     }
     res.write(chunk);
@@ -4837,7 +4838,7 @@ app.post('/api/to-pdf', async function(req, res, next) {
 
     var filename = req.body.filename || 'print.pdf';
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.sendFile(tmp_pdf.name, {}, () => {
       tmp_pdf.removeCallback();
     });
@@ -4874,10 +4875,9 @@ app.get('/api/event/:id', will_read_event, function(req, res, next) {
 app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
   admin_export_event(req.conn, req.params.id, req.user.email)
   .then((result) => {
+    let filename = req.query.filename || result.filename;
     res.type('application/octet-stream');
-    res.setHeader('Content-Disposition',
-		  "attachment; filename*=UTF-8''" +
-		  encodeURIComponent(req.query.filename || result.filename));
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(result.data);
   }).catch(next);
 });
@@ -4885,10 +4885,9 @@ app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
 app.get('/api/event/:tag/csv', will_read_event, function(req, res, next) {
   admin_export_csv(req.conn, req.params.id)
   .then((result) => {
+    let filename = req.query.filename || 'Fahrerliste.csv';
     res.type('text/comma-separated-values');
-    res.setHeader('Content-Disposition',
-		  "attachment; filename*=UTF-8''" +
-		  encodeURIComponent(req.query.filename || 'Fahrerliste.csv'));
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(result);
   }).catch(next);
 });
