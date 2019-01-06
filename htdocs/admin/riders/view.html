@@ -334,8 +334,8 @@
 	    <button type="button" ng-disabled="modified() || !enabled.remove || busy" ng-disabled="!enabled.rider" ng-click="remove()" accesskey="l" tabindex="-1">
 	      {{groups ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
 	  </p>
-	  <p ng-if="config.existing_regforms[event.type]">
-	    <button type="button" ng-if="!groups" ng-disabled="modified() || !enabled.rider" ng-click="regform()">Nennformular</button>
+	  <p>
+	    <button ng-repeat="name in config.existing_regforms[event.type]" type="button" ng-if="!groups" ng-disabled="modified() || !enabled.rider" ng-click="regform(name)" style="display:block">{{name}}</button>
 	  </p>
 	</fieldset>
       </form>

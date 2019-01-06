@@ -795,10 +795,11 @@ var ridersController = [
 
     warn_before_unload($scope, $scope.modified);
 
-    $scope.regform = function() {
+    $scope.regform = function(name) {
       $window.location.href =
 	'/api/event/' + event.id + '/regform?number=' +
-	encodeURIComponent($scope.rider.number);
+	encodeURIComponent($scope.rider.number) + '&name=' +
+	encodeURIComponent(name);
     };
 
     $scope.$watch("rider.class", function(class_) {

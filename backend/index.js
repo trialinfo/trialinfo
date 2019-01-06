@@ -40,6 +40,7 @@ var zlib = require('zlib');
 var clone = require('clone');
 var jsonpatch = require('json-patch');
 var child_process = require('child_process');
+var spawn = require('child-process-promise').spawn;
 var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
@@ -62,6 +63,28 @@ var emails = {
 };
 
 var regforms_dir = 'pdf/regform';
+
+let regforms = {};
+try {
+  regforms = fs.readdirSync(regforms_dir).reduce(function(regforms, type) {
+    let base_names = {};
+    try {
+      base_names = fs.readdirSync(regforms_dir + '/' + type).reduce(function(base_names, name) {
+	let match = name.match(/(.*)\.pdf$/);
+	if (match) {
+	  let base_name = match[1].replace(/{.+?:.+?}/g, '');
+	  if (!(base_name in base_names))
+	    base_names[base_name] = [];
+	  base_names[base_name].push(name);
+	}
+	return base_names;
+      }, {});
+    } catch (_) {}
+    if (Object.keys(base_names).length)
+      regforms[type] = base_names;
+    return regforms;
+  }, {});
+} catch (_) {}
 
 var object_values = require('object.values');
 if (!Object.values)
@@ -731,14 +754,34 @@ async function rider_regform_data(connection, id, number, event) {
   if (rider.number < 0)
     rider.number = null;
 
+  let name = [];
+  if (rider.last_name)
+    name.push(rider.last_name);
+  if (rider.first_name)
+    name.push(rider.first_name);
+  rider.name = name.join(' ');
+
+  let country_province = [];
+  if (rider.country)
+    country_province.push(rider.country);
+  if (rider.province)
+    country_province.push('(' + rider.province + ')');
+  rider.country_province = country_province.join(' ');
+
   if (rider.class != null) {
     var cls = event.classes[rider.class - 1];
     if (cls) {
+      if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
+	rider.color = match[1];
+      rider['ranking_class'] = cls.ranking_class;
+
       cls = event.classes[cls.ranking_class - 1];
       if (cls) {
 	var match;
-	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
+	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/))) {
+	  rider.ranking_color = match[1];
 	  rider['class_' + match[1].toLowerCase()] = true;
+	}
       }
     }
   }
@@ -772,30 +815,95 @@ async function rider_regform_data(connection, id, number, event) {
   return rider;
 }
 
-async function admin_regform(res, connection, id, numbers) {
+async function admin_regform(res, connection, id, name, numbers) {
   let event = await get_event(connection, id);
-  if (event.type == null)
+  if (event.type == null ||
+      (regforms[event.type] || {})[name] == null)
     throw new HTTPError(404, 'Not Found');
 
-  var riders;
-
-  if (Array.isArray(numbers)) {
-    riders = [];
-    for (let number of numbers) {
-      var rider = await rider_regform_data(connection, id, number, event);
-      riders.push(rider);
+  function regform_for_rider(rider) {
+    let matching_filenames = [];
+    for (let filename of regforms[event.type][name]) {
+      let expressions = filename.match(/({.+?:.+?})/g) || [];
+      let matches = 0;
+      for (let expression of expressions) {
+	let match = expression.match(/{(.+?):(.+?)}/);
+	if (rider[match[1]] != match[2])
+	  break;
+	matches++;
+      }
+      if (matches == expressions.length) {
+	matching_filenames.push({
+	  filename: filename,
+	  matches: matches
+	});
+      }
     }
-  } else {
-    riders = await rider_regform_data(connection, id, numbers, event);
+    if (matching_filenames.length)
+      return matching_filenames.sort((a, b) => b.matches - a.matches)[0].filename;
   }
 
-  var form = regforms_dir + '/' + event.type + '.pdf';
-  var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
-    stdio: ['pipe', 'pipe', process.stderr]
-  });
+  let child;
 
-  child.stdin.write(JSON.stringify(riders));
-  child.stdin.end();
+  if (Array.isArray(numbers)) {
+    let riders = [];
+    for (let number of numbers) {
+      var rider = await rider_regform_data(connection, id, number, event);
+      let filename = regform_for_rider(rider);
+      if (filename == null)
+	throw new HTTPError(404, 'Not Found');
+      rider.filename = filename;
+      riders.push(rider);
+    }
+
+    let tmpfiles = [];
+    for (let rider of riders) {
+      let filename = rider.filename;
+      delete rider.filename;
+
+      var tmpfile = tmp.fileSync();
+      tmpfiles.push(tmpfile);
+
+      var form = `${regforms_dir}/${event.type}/${filename}`;
+      let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+	stdio: ['pipe', tmpfile.fd, process.stderr]
+      });
+      child = promise.childProcess;
+      child.stdin.write(JSON.stringify(rider));
+      child.stdin.end();
+      await promise;
+    }
+
+    let tmpresult = tmp.fileSync();
+    let args = tmpfiles.map((tmpfile) => tmpfile.name);
+    args.push(tmpresult.name);
+    let promise = spawn('pdfunite', args, {
+      stdio: ['pipe', process.stdout, process.stderr]
+    });
+    child = promise.childProcess;
+    child.stdin.end();
+    await promise;
+
+    child = child_process.spawn('cat', [], {
+      stdio: [tmpresult.fd, 'pipe', process.stderr]
+    });
+
+    for (let tmpfile of tmpfiles)
+      tmpfile.removeCallback();
+    tmpresult.removeCallback();
+  } else {
+    let rider = await rider_regform_data(connection, id, numbers, event);
+    let filename = regform_for_rider(rider);
+    if (filename == null)
+      throw new HTTPError(404, 'Not Found');
+
+    var form = `${regforms_dir}/${event.type}/${filename}`;
+    child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
+      stdio: ['pipe', 'pipe', process.stderr]
+    });
+    child.stdin.write(JSON.stringify(rider));
+    child.stdin.end();
+  }
 
   var headers_sent;
   child.stdout.on('data', (chunk) => {
@@ -4582,19 +4690,11 @@ function query_string(query) {
 var client_config = {
   weasyprint: config.weasyprint,
   sync_target: config.sync_target,
-  existing_regforms: (function() {
-    try {
-      return fs.readdirSync(regforms_dir).reduce(
-	function(regforms, name) {
-	  var match = name.match(/(.*)\.pdf$/);
-	  if (match)
-	    regforms[match[1]] = true;
-	  return regforms;
-	}, {});
-    } catch(err) {
-      return {};
-    }
-  })(),
+  existing_regforms: Object.keys(regforms).reduce(
+    function(names, type) {
+      names[type] = Object.keys(regforms[type]).sort();
+      return names;
+    }, {})
 };
 
 var sendFileOptions = {
@@ -4960,7 +5060,7 @@ app.get('/api/event/:id/last-rider', will_read_event, function(req, res, next) {
 
 app.get('/api/event/:id/regform', will_read_event, async function(req, res, next) {
   try {
-    await admin_regform(res, req.conn, req.params.id, req.query.number);
+    await admin_regform(res, req.conn, req.params.id, req.query.name, req.query.number);
   } catch (err) {
     next(err);
   }

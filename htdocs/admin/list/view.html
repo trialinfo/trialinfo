@@ -198,8 +198,10 @@
 	  <tr><th></th>
 	    <td><button type="submit" ng-click="create_pdf($event)">Fahrerliste-PDF</button></td>
 	  </tr>
-	  <tr ng-if="config.existing_regforms[event.type]"><th></th>
-	    <td><button ng-disabled="!num_riders" type="button" ng-click="regforms()">{{num_riders == 1 ? 'Nennformular' : 'Nennformulare'}}</button></td>
+	  <tr ng-repeat="name in config.existing_regforms[event.type]"><th></th>
+	    <td>
+	      <button type="button" ng-if="!groups" ng-disabled="!num_riders" ng-click="regforms(name)" style="display:block">{{name}}</button>
+	    </td>
 	  </tr>
 	</table>
       </fieldset>

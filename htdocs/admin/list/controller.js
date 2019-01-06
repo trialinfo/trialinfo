@@ -817,7 +817,7 @@ var eventListController = [
       $scope.fold.settings = !$scope.fold.settings;
     }
 
-    $scope.regforms = function() {
+    $scope.regforms = function(name) {
       var riders = $scope.resulting_list.reduce(function(riders, group) {
 	group.list.reduce(function(riders, rider) {
 	  if (!rider.group)
@@ -828,9 +828,10 @@ var eventListController = [
       }, []);
 
       $window.location.href = '/api/event/' + event.id + '/regform?' +
+        'name=' + name +
 	riders.map(function(rider) {
-	  return 'number=' + encodeURIComponent(rider.number);
-	}).join('&');
+	  return '&number=' + encodeURIComponent(rider.number);
+	}).join('');
     }
 
     $scope.$watch('show.riders_groups', function(value) {
