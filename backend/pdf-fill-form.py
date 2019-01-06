@@ -81,7 +81,6 @@ def main():
 
     if opt_fill:
         fields = json.load(sys.stdin)
-
         out = sys.stdout
         if opt_out != None:
             out = open(opt_out, "wb")
