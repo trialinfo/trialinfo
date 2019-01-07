@@ -1,16 +1,16 @@
-#! /usr/bin/python2
+#! /usr/bin/python3
 
 import sys
 import getopt
 import json
-from PyQt4.QtCore import QString, QFile, QIODevice
-from popplerqt4 import Poppler
+from PyQt5.QtCore import QFile, QIODevice
+from popplerqt5 import Poppler
 import tempfile
 import subprocess
 import fcntl
 
 def usage(err):
-    print "USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}"
+    print("USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}")
     sys.exit(err)
 
 def get_form_fields(document):
@@ -18,9 +18,9 @@ def get_form_fields(document):
     for n in range(0, document.numPages()):
         page = document.page(n)
         for field in page.formFields():
-            name = str(field.name())
+            name = field.name()
             if field.type() == Poppler.FormField.FormText:
-                fields[name] = str(field.text().toUtf8())
+                fields[name] = field.text()
             elif field.type() == Poppler.FormField.FormButton:
                 fields[name] = field.state()
     return fields
@@ -29,15 +29,15 @@ def set_form_fields(document, fields):
     for n in range(0, document.numPages()):
         page = document.page(n)
         for field in page.formFields():
-            name = str(field.name())
+            name = field.name()
             if name in fields:
                 value = fields[name]
                 if field.type() == Poppler.FormField.FormText:
                     if value == None:
                         value = ''
-                    elif not isinstance(value, basestring):
+                    elif not isinstance(value, str):
                         value = str(value)
-                    field.setText(QString.fromUtf8(value))
+                    field.setText(value)
                 elif field.type() == Poppler.FormField.FormButton:
                     field.setState(value)
 
@@ -62,7 +62,7 @@ def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "o:", ["fill", "out="])
     except getopt.GetoptError as err:
-        print str(err)
+        print(str(err))
         sys.exit(2)
 
     opt_fill = False

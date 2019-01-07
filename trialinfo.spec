@@ -7,7 +7,7 @@ Name: trialinfo
 Version: %{VERSION}
 Release: 0%{?dist}
 BuildArch: noarch
-Requires: nodejs mariadb-server python2-poppler-qt4 poppler-utils
+Requires: nodejs mariadb-server python3-poppler-qt5 poppler-utils
 Source0: %{name}-%{version}.tar.gz
 Source1: snapshot.tar.gz
 
