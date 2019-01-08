@@ -456,6 +456,22 @@ async function update_database(connection) {
       ADD PRIMARY KEY (id, fid, number);
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'location')) {
+    console.log('Adding column `location` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD location VARCHAR(40) AFTER subtitle
+    `);
+  }
+
+  if (await column_exists(connection, 'future_events', 'title')) {
+    console.log('Renaming column `title` to `location` in `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      CHANGE title location VARCHAR(40)
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -949,7 +965,7 @@ async function get_events(connection, email) {
   var events_hash = {};
 
   var events = await connection.queryAsync(`
-    SELECT DISTINCT id, tag, date, title, enabled
+    SELECT DISTINCT id, tag, date, title, location, enabled
     FROM events
     JOIN events_all_admins USING (id)
     WHERE email = ?
@@ -1027,7 +1043,7 @@ async function read_event(connection, id, revalidate) {
     SELECT *
     FROM future_events
     WHERE id = ?
-    ORDER BY date, title`, [id]);
+    ORDER BY date, location`, [id]);
   Object.values(event.future_events).forEach((future_event) => {
     delete future_event.id;
   });
@@ -3315,6 +3331,7 @@ async function register_get_event(connection, id, user) {
   var result = {
     id: id,
     title: event.title,
+    location: event.location,
   };
   Object.keys(register_event_fields).forEach((field) => {
     result[field] = event[field];

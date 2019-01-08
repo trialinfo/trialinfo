@@ -254,11 +254,11 @@
 	<td>
 	  <span style="display:block">
 	    <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
-	    <label for="start">{{event.title}}<span ng-if="event.series"> ({{event.series}})</span></label>
+	    <label for="start">{{event_label(event)}}</label>
 	  </span>
 	  <span ng-repeat="future_event in event.future_events" style="display:block">
 	    <input type="checkbox" ng-model="rider.future_starts[future_event.fid]" id="start_{{future_event.fid}}" ng-disabled="rider.registered && future_event.active">
-	      <label for="start_{{future_event.fid}}">{{future_event_label(future_event)}}</label>
+	      <label for="start_{{future_event.fid}}">{{event_label(future_event)}}</label>
 	  </span>
 	</td>
       </tr>

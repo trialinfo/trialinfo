@@ -110,7 +110,10 @@ var settingsController = [
       }
     }
 
-    $scope.event_name = event_name;
+    $scope.event_name = function(event) {
+      return event_name($scope, event);
+    };
+
     $scope.event_visible = function(event) {
       return !event.closed;
     };
@@ -126,11 +129,11 @@ var settingsController = [
       var n, future_event;
       for (n = 0; n < future_events.length - 1; n++) {
 	future_event = future_events[n];
-	if (future_event.date == null && future_event.title == null)
+	if (future_event.date == null && future_event.location == null)
 	  future_events.splice(n, 1);
       }
       future_event = future_events[future_events.length - 1];
-      if (!future_event || future_event.date != null || future_event.title != null) {
+      if (!future_event || future_event.date != null || future_event.location != null) {
 	future_events.push({
 	  fid: null,
 	  active: false,
@@ -142,7 +145,9 @@ var settingsController = [
     }
 
     $scope.future_name = function(future_event) {
-      var name = future_event.title;
+      var name = future_event.location;
+      if (future_event.date)
+	name += ' am ' + $scope.$eval('date | date:"d.M."', future_event);
       if (future_event.series)
 	name += ' (' + future_event.series + ')';
       return name;
@@ -153,7 +158,8 @@ var settingsController = [
 	event = $scope.old_event;
       if (event === null) {
 	event = {
-	  title: 'Neue Veranstaltung',
+	  title: null,
+	  location: null,
 	  type: null,
 	  enabled: true,
 	  classes: [],
@@ -259,7 +265,7 @@ var settingsController = [
       var future_event = future_events[future_events.length - 1];
       if (future_event &&
 	  future_event.date == null &&
-	  future_event.title == null &&
+	  future_event.location == null &&
 	  future_event.series == null)
 	future_events.pop();
 
@@ -393,8 +399,10 @@ var settingsController = [
 	    function(future_event) {
 	      return future_event.fid == fid;
 	    }) || {};
-	  if (future_event.title)
-	    event.title = future_event.title;
+	  if (future_event.location) {
+	    event.title = future_event.location + ' am ' + $scope.$eval('date | date:"d. MMMM"', future_event);
+	    event.location = future_event.location;
+	  }
 	  if (future_event.date)
 	    event.date = future_event.date;
 	}
@@ -539,6 +547,28 @@ var settingsController = [
       } else if (rankings.indexOf(event.main_ranking) == -1)
 	main_ranking[rankings[0] - 1] = true;
     }, true);
+
+    function composed_title(location, date) {
+      if (location == null)
+	return null;
+      if (date == null)
+	return location;
+      return location + ' am ' + $scope.$eval('date | date:"d. MMMM yyyy"', { date: date});
+    }
+
+    $scope.$watch('event.date', function(new_value, old_value) {
+      var event = $scope.event;
+      if (event.title == null ||
+	  event.title == composed_title(event.location, old_value))
+	event.title = composed_title(event.location, new_value);
+    });
+
+    $scope.$watch('event.location', function(new_value, old_value) {
+      var event = $scope.event;
+      if (event.title == null ||
+	  event.title == composed_title(old_value, event.date))
+	event.title = composed_title(new_value, event.date);
+    });
   }];
 
 settingsController.resolve = {

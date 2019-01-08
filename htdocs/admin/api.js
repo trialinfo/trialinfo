@@ -157,14 +157,19 @@ function same_day(date_str) {
   }
 }
 
-function event_name(event) {
-  var abbreviations = [];
+function event_name($scope, event) {
+  var remarks = [];
   angular.forEach(event.series, function(serie) {
     if (serie.abbreviation != null)
-      abbreviations.push(serie.abbreviation);
+      remarks.push(serie.abbreviation);
   });
-  return event.title +
-	 (abbreviations.length ? ' (' + abbreviations.sort().join(', ') + ')' : '');
+  remarks.sort();
+
+  var name = event.title;
+  if (event.location != null && event.date != null)
+    name = event.location + ' am ' + $scope.$eval('date | date:"d.M."', event);
+  return name +
+	 (remarks.length ? ' (' + remarks.join(', ') + ')' : '');
 }
 
 function generic_compare(v1, v2) {

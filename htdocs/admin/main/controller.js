@@ -31,7 +31,10 @@ var mainController = [
 	      !serie.closed;
     };
 
-    $scope.event_name = event_name;
+    $scope.event_name = function(event) {
+      return event_name($scope, event);
+    };
+
 
     $scope.new_event = function() {
       $location.path('/event/new/settings');

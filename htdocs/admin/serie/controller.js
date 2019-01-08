@@ -23,7 +23,10 @@ var serieController = [
     }
     assign_serie(serie);
 
-    $scope.event_name = event_name;
+    $scope.event_name = function(event) {
+      return event_name($scope, event);
+    };
+
     $scope.event_visible = function(event) {
       return $scope.serie.closed || !event.closed;
     };

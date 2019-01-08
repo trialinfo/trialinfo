@@ -354,10 +354,14 @@ var eventController = [
 
     $scope.rider_info = rider_info;
 
-    $scope.future_event_label = function(future_event) {
-      var label = future_event.title;
-      if (future_event.series)
-	label += ' (' + future_event.series + ')';
+    $scope.event_label = function(event) {
+      var label = event.title;
+      if (event.location)
+        label = event.location;
+      if (event.date)
+	label += ' am ' + $scope.$eval('date | date:"d. MMMM"', event);
+      if (event.series)
+	label += ' (' + event.series + ')';
       return label;
     };
 

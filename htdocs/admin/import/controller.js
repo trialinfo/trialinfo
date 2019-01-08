@@ -91,7 +91,10 @@ var importController = [
 	});
     };
 
-    $scope.event_name = event_name;
+    $scope.event_name = function(event) {
+      return event_name($scope, event);
+    };
+
     $scope.event_visible = function(event) {
       return !event.closed;
     };

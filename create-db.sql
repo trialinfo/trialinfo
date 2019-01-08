@@ -95,6 +95,7 @@ CREATE TABLE `events` (
   `base_fid` int(11) DEFAULT NULL,
   `title` varchar(70) DEFAULT NULL,
   `subtitle` varchar(70) DEFAULT NULL,
+  `location` varchar(40) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `mtime` timestamp NULL DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
@@ -202,7 +203,7 @@ CREATE TABLE `future_events` (
   `id` int(11) NOT NULL,
   `fid` int(11) NOT NULL,
   `date` date DEFAULT NULL,
-  `title` varchar(40) DEFAULT NULL,
+  `location` varchar(40) DEFAULT NULL,
   `series` varchar(40) DEFAULT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`fid`)
