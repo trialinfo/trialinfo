@@ -362,6 +362,7 @@ var settingsController = [
 	      event.base = base;
 	      let future_events = angular.copy(event.future_events);
 	      $scope.future_events = future_events;
+	      event.base_fid = null;
 	      if (future_events.length)
 		event.base_fid = future_events[0].fid;
 	      assign_event(event, true);
