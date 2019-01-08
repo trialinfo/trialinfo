@@ -831,6 +831,30 @@ async function rider_regform_data(connection, id, number, event) {
       all_starts[date];
   }
 
+  let event_name = event.location || event.title;
+  let dates = [];
+  if (event.date)
+    dates.push(common.parse_timestamp(event.date));
+  for (let future_event of event.future_events) {
+    if (future_event.active && future_event.date)
+      dates.push(common.parse_timestamp(future_event.date));
+  }
+  if (dates) {
+    if (dates.every((date) => date.getYear() == dates[0].getYear())) {
+      if (dates.every((date) => date.getMonth() == dates[0].getMonth())) {
+	dates = dates.map((date) => moment(date).locale('de').format('D.')).join(' und ') +
+	        ' ' + moment(dates[0]).locale('de').format('MMMM YYYY');
+      } else {
+	dates = dates.map((date) => moment(date).locale('de').format('D. MMMM')).join(' und ') +
+	        ' ' + moment(dates[0]).locale('de').format('YYYY');
+      }
+    } else {
+      dates = dates.map((date) => moment(date).locale('de').format('D. MMMM YYYY')).join(' und ');
+    }
+    event_name += '\n' + dates;
+  }
+  rider.event_name = event_name;
+
   return rider;
 }
 
