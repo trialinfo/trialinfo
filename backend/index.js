@@ -886,7 +886,7 @@ async function admin_regform(res, connection, id, name, numbers) {
       return matching_filenames.sort((a, b) => b.matches - a.matches)[0].filename;
   }
 
-  let child;
+  let tmpresult;
 
   if (Array.isArray(numbers)) {
     let riders = [];
@@ -911,56 +911,46 @@ async function admin_regform(res, connection, id, name, numbers) {
       let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
 	stdio: ['pipe', tmpfile.fd, process.stderr]
       });
-      child = promise.childProcess;
+      let child = promise.childProcess;
       child.stdin.write(JSON.stringify(rider));
       child.stdin.end();
       await promise;
     }
 
-    let tmpresult = tmp.fileSync();
+    tmpresult = tmp.fileSync();
     let args = tmpfiles.map((tmpfile) => tmpfile.name);
     args.push(tmpresult.name);
     let promise = spawn('pdfunite', args, {
       stdio: ['pipe', process.stdout, process.stderr]
     });
-    child = promise.childProcess;
+    let child = promise.childProcess;
     child.stdin.end();
     await promise;
 
-    child = child_process.spawn('cat', [], {
-      stdio: [tmpresult.fd, 'pipe', process.stderr]
-    });
-
     for (let tmpfile of tmpfiles)
       tmpfile.removeCallback();
-    tmpresult.removeCallback();
   } else {
     let rider = await rider_regform_data(connection, id, numbers, event);
     let filename = regform_for_rider(rider);
     if (filename == null)
       throw new HTTPError(404, 'Not Found');
 
+    tmpresult = tmp.fileSync();
     var form = `${regforms_dir}/${event.type}/${filename}`;
-    child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
-      stdio: ['pipe', 'pipe', process.stderr]
+    let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+      stdio: ['pipe', tmpresult.fd, process.stderr]
     });
+    let child = promise.childProcess;
     child.stdin.write(JSON.stringify(rider));
     child.stdin.end();
+    await promise;
   }
 
-  var headers_sent;
-  child.stdout.on('data', (chunk) => {
-    if (!headers_sent) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(name)}.pdf`);
-      res.setHeader('Transfer-Encoding', 'chunked');
-    }
-    res.write(chunk);
-    headers_sent = true;
-  });
-
-  child.stdout.on('end', () => {
-    res.end();
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(name)}.pdf`);
+  res.setHeader('Transfer-Encoding', 'chunked');
+  res.sendFile(tmpresult.name, {}, () => {
+    tmpresult.removeCallback();
   });
 
   /* FIXME: error handling! */
