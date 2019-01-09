@@ -370,10 +370,10 @@ var eventScoresController = [
       update_url();
     }
 
-    $scope.rounds_list = function(class_) {
+    $scope.rounds_list = function(class_, first) {
       var rounds = [];
       try {
-	for (var round = 1; round <= event.classes[class_ - 1].rounds; round++)
+	for (var round = first; round <= event.classes[class_ - 1].rounds; round++)
 	  rounds.push(round);
       } catch(_) { }
       return rounds;
