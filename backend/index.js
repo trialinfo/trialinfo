@@ -4943,6 +4943,12 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
   }
 });
 
+/*
+ * Accessible to admins only:
+ */
+
+app.all('/api/*', may_admin);
+
 app.post('/api/to-pdf', async function(req, res, next) {
   let keep_html_on_error = false;
   var baseurl = (req.body.url || '.').replace(/\/admin\/.*/, '/admin/');
@@ -4984,12 +4990,6 @@ app.post('/api/to-pdf', async function(req, res, next) {
     });
   });
 });
-
-/*
- * Accessible to admins only:
- */
-
-app.all('/api/*', may_admin);
 
 app.get('/api/events', function(req, res, next) {
   get_events(req.conn, req.user.email)
