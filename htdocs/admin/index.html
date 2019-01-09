@@ -27,16 +27,16 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="config.js"></script>
     <script src="main/controller.js"></script>
     <script src="event/controller.js"></script>
-    <script src="riders/controller.js"></script>
-    <script src="marks/controller.js"></script>
-    <script src="settings/controller.js"></script>
-    <script src="zones/controller.js"></script>
+    <script src="event/riders/controller.js"></script>
+    <script src="event/marks/controller.js"></script>
+    <script src="event/settings/controller.js"></script>
+    <script src="event/zones/controller.js"></script>
     <script src="event/results/controller.js"></script>
-    <script src="serie/results/controller.js"></script>
-    <script src="list/controller.js"></script>
+    <script src="event/list/controller.js"></script>
+    <script src="event/sync/controller.js"></script>
     <script src="serie/controller.js"></script>
+    <script src="serie/results/controller.js"></script>
     <script src="import/controller.js"></script>
-    <script src="sync/controller.js"></script>
     <script>
 
       var application = angular.module('application', ['ngRoute', 'ngCookies', 'ngSanitize']);
@@ -98,37 +98,37 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    }).when('/event/:id/riders', {
 	      title: 'Fahrer',
 	      controller: 'ridersController',
-	      templateUrl: 'riders/view.html',
+	      templateUrl: 'event/riders/view.html',
 	      resolve: ridersController.resolveFactory(false),
 	      reloadOnSearch: false
 	    }).when('/event/:id/groups', {
 	      title: 'Gruppen',
 	      controller: 'ridersController',
-	      templateUrl: 'riders/view.html',
+	      templateUrl: 'event/riders/view.html',
 	      resolve: ridersController.resolveFactory(true),
 	      reloadOnSearch: false
 	    }).when('/event/:id/marks', {
 	      title: 'Punktevergabe',
 	      controller: 'marksController',
-	      templateUrl: 'marks/view.html',
+	      templateUrl: 'event/marks/view.html',
 	      resolve: marksController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/new/settings', {
 	      title: 'Einstellungen',
 	      controller: 'settingsController',
-	      templateUrl: 'settings/view.html',
+	      templateUrl: 'event/settings/view.html',
 	      resolve: settingsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/settings', {
 	      title: 'Einstellungen',
 	      controller: 'settingsController',
-	      templateUrl: 'settings/view.html',
+	      templateUrl: 'event/settings/view.html',
 	      resolve: settingsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/zones', {
 	      title: 'Sektionen aus der Wertung',
 	      controller: 'zonesController',
-	      templateUrl: 'zones/view.html',
+	      templateUrl: 'event/zones/view.html',
 	      resolve: zonesController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/results', {
@@ -140,7 +140,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    }).when('/event/:id/list', {
 	      title: 'Fahrerliste',
 	      controller: eventListController,
-	      templateUrl: 'list/view.html',
+	      templateUrl: 'event/list/view.html',
 	      resolve: eventListController.resolve,
 	      reloadOnSearch: false
 	    }).when('/serie/new', {
