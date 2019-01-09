@@ -1,30 +1,30 @@
 'use strict;'
 
-var eventScoresController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'scores',
-  function ($scope, $sce, $route, $location, $timeout, $http, $q, fractional, scores) {
+var eventResultsController = [
+  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'results',
+  function ($scope, $sce, $route, $location, $timeout, $http, $q, fractional, results) {
     $scope.config = config;
     $scope.show = {
       fields: [],
       classes: [],
-      subtitle: scores.event.subtitle
+      subtitle: results.event.subtitle
     };
 
-    fractional.enabled = scores.event.split_score;
+    fractional.enabled = results.event.split_score;
 
-    var old_scores, event, features;
+    var old_results, event, features;
 
-    function assign_scores(a) {
-      old_scores = angular.copy(a);
-      scores = a;
-      event = scores.event;
+    function assign_results(a) {
+      old_results = angular.copy(a);
+      results = a;
+      event = results.event;
       $scope.event = event;
       features = event.features;
       $scope.features = features;
       $scope.$root.context(event.title);
 
       if (event.type && event.type.match(/^otsv/)) {
-	scores.riders.forEach(function(class_) {
+	results.riders.forEach(function(class_) {
 	  if (!class_)
 	    return;
 	  class_.forEach(function(rider) {
@@ -57,7 +57,7 @@ var eventScoresController = [
 
       $scope.classes = (function() {
 	var classes = [];
-	angular.forEach(scores.riders, function(value, index) {
+	angular.forEach(results.riders, function(value, index) {
 	  if (value)
 	    classes.push(index + 1);
 	});
@@ -107,7 +107,7 @@ var eventScoresController = [
 	  }
 	});
 
-	angular.forEach(scores.riders, function(riders_in_class, class_index) {
+	angular.forEach(results.riders, function(riders_in_class, class_index) {
 	  angular.forEach(riders_in_class, function(rider) {
 	    var individual_marks = [];
 	    for (round = 1; round <= event.classes[class_index].rounds; round++) {
@@ -155,7 +155,7 @@ var eventScoresController = [
 	});
       })();
     }
-    assign_scores(scores);
+    assign_results(results);
 
     $scope.$watch('show.riders_groups', function() {
       var riders_groups = $scope.show.riders_groups;
@@ -274,7 +274,7 @@ var eventScoresController = [
       }
 
       var riders_in_classes = [];
-      angular.forEach(scores.riders, function(all_riders_in_class, class_index) {
+      angular.forEach(results.riders, function(all_riders_in_class, class_index) {
 	var riders_in_class = [];
 	if ($scope.show.classes[class_index]) {
 	  angular.forEach(all_riders_in_class, function(rider) {
@@ -742,9 +742,9 @@ var eventScoresController = [
 	    if (http_request) {
 	      http_request
 		.then(function(response) {
-		  let new_scores = response.data;
-		  if (!angular.equals(old_scores, new_scores)) {
-		    assign_scores(new_scores);
+		  let new_results = response.data;
+		  if (!angular.equals(old_results, new_results)) {
+		    assign_results(new_results);
 		    update();
 		  }
 		});
@@ -754,7 +754,7 @@ var eventScoresController = [
 	    position = show_page(position);
 
 	    cancel_http_request = $q.defer();
-	    http_request = $http.get('/api/event/' + $route.current.params.id + '/scores',
+	    http_request = $http.get('/api/event/' + $route.current.params.id + '/results',
 				     {timeout: cancel_http_request.promise});
 
 	    var duration = (position[2] * 1500 + position[3] * 600) * Math.pow(2, $scope.show.duration / 2);
@@ -783,8 +783,8 @@ var eventScoresController = [
     $scope.same_day = same_day;
   }];
 
-eventScoresController.resolve = {
-  scores: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/scores'));
+eventResultsController.resolve = {
+  results: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/results'));
   },
 };

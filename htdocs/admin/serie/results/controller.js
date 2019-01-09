@@ -1,26 +1,26 @@
 'use strict;'
 
-var serieScoresController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', '$sanitize', 'fractional', 'scores',
-  function ($scope, $sce, $route, $location, $timeout, $http, $q, $sanitize, fractional, scores) {
+var serieResultsController = [
+  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', '$sanitize', 'fractional', 'results',
+  function ($scope, $sce, $route, $location, $timeout, $http, $q, $sanitize, fractional, results) {
     $scope.config = config;
     $scope.show = {
       fields: [],
       classes: [],
     };
 
-    $scope.$root.context(scores.serie.name);
-    fractional.enabled = scores.serie.split_score;
+    $scope.$root.context(results.serie.name);
+    fractional.enabled = results.serie.split_score;
 
-    var serie = scores.serie;
+    var serie = results.serie;
     var features = serie.features;
 
-    $scope.scores = scores;
+    $scope.results = results;
     $scope.serie = serie;
     $scope.features = features;
 
     if (serie.type && serie.type.match(/^otsv/)) {
-      scores.rankings.forEach(function(ranking) {
+      results.rankings.forEach(function(ranking) {
 	ranking.classes.forEach(function(class_ranking) {
 	  class_ranking.riders.forEach(function(rider) {
 	    if (rider.country == 'A')
@@ -124,17 +124,17 @@ var serieScoresController = [
 	return last_field;
       }
 
-      for (let ranking of scores.rankings) {
+      for (let ranking of results.rankings) {
 	for (let class_ranking of ranking.classes) {
 	  class_ranking.summary = summary(class_ranking);
 	}
       }
 
-      if (scores.rankings.every(function(ranking) {
+      if (results.rankings.every(function(ranking) {
 	    return all_equal(ranking.classes, 'summary');
 	  })) {
-	scores.summary = scores.rankings[0].classes[0].summary;
-	for (let ranking of scores.rankings) {
+	results.summary = results.rankings[0].classes[0].summary;
+	for (let ranking of results.rankings) {
 	  for (let class_ranking of ranking.classes)
 	    delete class_ranking.summary;
 	}
@@ -351,7 +351,7 @@ var serieScoresController = [
     $scope.$watch('show', hide_settings_later, true);
 
     $scope.event_heading = (function() {
-      let events = scores.events.reduce(function(events, event) {
+      let events = results.events.reduce(function(events, event) {
 	events[event.id] = event;
 	return events;
       }, {});
@@ -374,8 +374,8 @@ var serieScoresController = [
     $scope.same_day = same_day;
   }];
 
-serieScoresController.resolve = {
-  scores: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/serie/' + $route.current.params.serie + '/scores'));
+serieResultsController.resolve = {
+  results: function($q, $http, $route) {
+    return http_request($q, $http.get('/api/serie/' + $route.current.params.serie + '/results'));
   },
 };

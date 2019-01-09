@@ -31,8 +31,8 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="marks/controller.js"></script>
     <script src="settings/controller.js"></script>
     <script src="zones/controller.js"></script>
-    <script src="event/scores/controller.js"></script>
-    <script src="serie/scores/controller.js"></script>
+    <script src="event/results/controller.js"></script>
+    <script src="serie/results/controller.js"></script>
     <script src="list/controller.js"></script>
     <script src="serie/controller.js"></script>
     <script src="import/controller.js"></script>
@@ -73,7 +73,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       application.controller('marksController', marksController);
       application.controller('settingsController', settingsController);
       application.controller('zonesController', zonesController);
-      application.controller('eventScoresController', eventScoresController);
+      application.controller('eventResultsController', eventResultsController);
       application.controller('eventListController', eventListController);
       application.controller('serieController', serieController);
       application.controller('importController', importController);
@@ -131,11 +131,11 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      templateUrl: 'zones/view.html',
 	      resolve: zonesController.resolve,
 	      reloadOnSearch: false
-	    }).when('/event/:id/scores', {
+	    }).when('/event/:id/results', {
 	      title: 'Auswertung',
-	      controller: eventScoresController,
-	      templateUrl: 'event/scores/view.html',
-	      resolve: eventScoresController.resolve,
+	      controller: eventResultsController,
+	      templateUrl: 'event/results/view.html',
+	      resolve: eventResultsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/list', {
 	      title: 'Fahrerliste',
@@ -153,11 +153,11 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      templateUrl: 'serie/view.html',
 	      resolve: serieController.resolve,
 	      reloadOnSearch: false
-	    }).when('/serie/:serie/scores', {
+	    }).when('/serie/:serie/results', {
 	      title: 'Auswertung',
-	      controller: serieScoresController,
-	      templateUrl: 'serie/scores/view.html',
-	      resolve: serieScoresController.resolve,
+	      controller: serieResultsController,
+	      templateUrl: 'serie/results/view.html',
+	      resolve: serieResultsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/import', {
 	      title: 'Import',

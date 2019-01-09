@@ -96,8 +96,8 @@ table.ranking tr td.important {
 }
 </style>
 
-<p>{{scores.summary}}</p>
-<div ng-repeat="ranking in scores.rankings">
+<p>{{results.summary}}</p>
+<div ng-repeat="ranking in results.rankings">
   <h2>{{ranking.name}}</h2>
   <div ng-repeat="class_ranking in ranking.classes" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
     <h3>{{class_ranking.class.name}}</h3>
@@ -130,7 +130,7 @@ table.ranking tr td.important {
     <th style="text-align:right"></th>
     <th style="text-align:left">Name</th>
   </tr>
-  <tr ng-repeat="event in scores.events" ng-class-even="'alt'">
+  <tr ng-repeat="event in results.events" ng-class-even="'alt'">
     <td style="text-align:right">{{event.date | date:"d.M."}}</td>
     <td style="text-align:left">{{event.name}}</td>
   </tr>

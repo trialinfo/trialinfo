@@ -2126,7 +2126,7 @@ async function update_serie(connection, serie_id, old_serie, new_serie) {
 
   if (new_serie) {
     if (changed) {
-      new_serie.mtime = null;  /* enforce recomputing the scores */
+      new_serie.mtime = null;  /* enforce recomputing the results */
 
       nonkeys.push('version');
       new_serie.version = old_serie ? old_serie.version + 1 : 1;
@@ -2306,7 +2306,7 @@ var rider_public_fields = [
   'year_of_manufacture'
 ];
 
-async function get_event_scores(connection, id) {
+async function get_event_results(connection, id) {
   let revalidate_riders = make_revalidate_riders(connection, id);
   let revalidate_event = make_revalidate_event(connection, id);
   let revalidate = async function() {
@@ -2536,7 +2536,7 @@ let event_public_features = [
   'number'
 ].concat(rider_public_fields);
 
-async function admin_serie_scores(connection, serie_id) {
+async function get_serie_results(connection, serie_id) {
   let serie = await get_serie(connection, serie_id);
 
   let classes_in_serie = [];
@@ -4872,8 +4872,15 @@ app.get('/register/*', function(req, res, next) {
 app.use('/api', conn(pool));
 app.all('/api/*', auth);
 
-app.get('/api/event/:id/scores', function(req, res, next) {
-  get_event_scores(req.conn, req.params.id)
+app.get('/api/event/:id/results', function(req, res, next) {
+  get_event_results(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/serie/:serie/results', async function(req, res, next) {
+  get_serie_results(req.conn, req.params.serie)
   .then((result) => {
     res.json(result);
   }).catch(next);
@@ -5243,13 +5250,6 @@ app.delete('/api/serie/:serie', will_write_serie, async function(req, res, next)
   } catch (err) {
     next(err);
   }
-});
-
-app.get('/api/serie/:serie/scores', async function(req, res, next) {
-  admin_serie_scores(req.conn, req.params.serie)
-  .then((result) => {
-    res.json(result);
-  }).catch(next);
 });
 
 app.get('/api/user/:user_tag', async function(req, res, next) {
