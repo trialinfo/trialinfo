@@ -22,7 +22,13 @@ def get_form_fields(document):
             if field.type() == Poppler.FormField.FormText:
                 fields[name] = field.text()
             elif field.type() == Poppler.FormField.FormButton:
-                fields[name] = field.state()
+                if field.buttonType() == Poppler.FormFieldButton.CheckBox:
+                    fields[name] = field.state()
+                elif field.buttonType() == Poppler.FormFieldButton.Radio:
+                    # Poppler currently doesn't have a way to determine the
+                    # field name of a radio button or the name of a group of
+                    # radio buttons.
+                    pass
     return fields
 
 def set_form_fields(document, fields):
@@ -39,7 +45,10 @@ def set_form_fields(document, fields):
                         value = str(value)
                     field.setText(value)
                 elif field.type() == Poppler.FormField.FormButton:
-                    field.setState(value)
+                    if field.buttonType() == Poppler.FormFieldButton.CheckBox:
+                        field.setState(value)
+                    elif field.buttonType() == Poppler.FormFieldButton.Radio:
+                        pass
 
 def write_pdf(fd, document):
     converter = document.pdfConverter()
