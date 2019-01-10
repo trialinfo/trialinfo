@@ -7,7 +7,6 @@ var settingsController = [
     $scope.internal = {
       base: null,
       reset: null,
-      main_ranking: [false, false, false, false],
     };
     min_zones = 8;
 
@@ -505,26 +504,6 @@ var settingsController = [
       normalize_future_events($scope.event);
     }, true);
 
-    var main_ranking = $scope.internal.main_ranking;
-    for (let n in main_ranking) {
-      main_ranking[n] = ($scope.event.main_ranking == +n + 1);
-      $scope.$watch('internal.main_ranking[' + n + ']', function(value, old_value) {
-	var event = $scope.event;
-	if (value != old_value) {
-	  if (value) {
-	    for (let m in main_ranking) {
-	      if (main_ranking[m] && m != n)
-		main_ranking[m] = false;
-	    }
-	    event.main_ranking = +n + 1;
-	  } else {
-	    if (!$scope.internal.main_ranking[event.main_ranking - 1])
-	      event.main_ranking = null;
-	  }
-	}
-      });
-    }
-
     $scope.nonsplit_rankings = function() {
       var nonsplit_rankings = [];
       var rankings = $scope.event.rankings;
@@ -539,14 +518,13 @@ var settingsController = [
     $scope.$watch('event.rankings', function() {
       var event = $scope.event;
       var rankings = $scope.nonsplit_rankings();
-      var main_ranking = $scope.internal.main_ranking;
       if (rankings.length == 0) {
-	for (let n in main_ranking) {
-	  if (main_ranking[n])
-	    main_ranking[n] = false;
-	}
-      } else if (rankings.indexOf(event.main_ranking) == -1)
-	main_ranking[rankings[0] - 1] = true;
+	if (event.main_ranking != null)
+	  event.main_ranking = null;
+      } else if (rankings.indexOf(event.main_ranking) == -1) {
+	if (event.main_ranking != rankings[0])
+	  event.main_ranking = rankings[0];
+      }
     }, true);
 
     function composed_title(location, date) {
