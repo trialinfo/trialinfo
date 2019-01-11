@@ -2380,9 +2380,16 @@ async function get_event_results(connection, id) {
 
   hash.event = {};
   ['title', 'subtitle', 'equal_marks_resolution', 'mtime', 'four_marks',
-   'date', 'split_score', 'features', 'type', 'result_columns'].forEach(
+   'date', 'split_score', 'type', 'result_columns'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
+
+  hash.event.features = {};
+  rider_public_fields.concat([
+    'number', 'individual_marks', 'column_5'
+  ]).forEach((feature) => {
+    hash.event.features[feature] = event.features[feature];
+  });
 
   hash.event.classes = [];
   hash.event.zones = [];
@@ -2532,10 +2539,6 @@ async function compute_and_update_serie(connection, serie_id, serie_mtime, last_
   await connection.queryAsync(`COMMIT`);
 }
 
-let event_public_features = [
-  'number'
-].concat(rider_public_fields);
-
 async function get_serie_results(connection, serie_id) {
   let serie = await get_serie(connection, serie_id);
 
@@ -2648,8 +2651,11 @@ async function get_serie_results(connection, serie_id) {
       result.serie[key] = last_event[key];
 
     let features = {};
-    for (let feature of event_public_features)
+    rider_public_fields.concat([
+      'number'
+    ]).forEach((feature) => {
       features[feature] = last_event.features[feature];
+    });
     result.serie.features = features;
 
     let max_ts = 0;
