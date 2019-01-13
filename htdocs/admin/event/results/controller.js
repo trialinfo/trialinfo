@@ -6,7 +6,7 @@ var eventResultsController = [
     $scope.config = config;
     $scope.show = {
       fields: [],
-      classes: [],
+      classes: {},
       subtitle: results.event.subtitle
     };
 
@@ -14,22 +14,76 @@ var eventResultsController = [
 
     var old_results, event, features;
 
-    function assign_results(a) {
-      old_results = angular.copy(a);
-      results = a;
+    function ranking_class_tag(ranking, class_) {
+      return (ranking.ranking ? ranking.ranking + ':' : '') + class_.class;
+    }
+
+    function filter_rankings(rankings) {
+      let filtered_rankings = [];
+
+      angular.forEach(rankings, function(ranking) {
+	let filtered_classes = [];
+	angular.forEach(ranking.classes, function(class_) {
+	  if ($scope.show.classes[ranking_class_tag(ranking, class_)])
+	    filtered_classes.push(class_);
+	});
+	if (filtered_classes.length) {
+	  filtered_rankings.push(Object.assign({}, ranking, {classes: filtered_classes}));
+	}
+      });
+      return filtered_rankings;
+    }
+
+    function assign_results(r) {
+      old_results = angular.copy(r);
+      results = r;
       event = results.event;
+      $scope.results = results;
       $scope.event = event;
       features = event.features;
       $scope.features = features;
       $scope.$root.context(event.title);
 
+      angular.forEach(results.rankings, function(ranking) {
+	angular.forEach(ranking.classes, function(class_) {
+	  angular.forEach(class_.riders, function(rider) {
+	    for (var round = 1; round <= class_.rounds; round++) {
+	      if (!rider.marks_per_zone[round - 1])
+		rider.marks_per_zone[round - 1] = [];
+	      angular.forEach(class_.zones, function(zone) {
+		if ((class_.skipped_zones[round - 1] || [])[zone - 1])
+		  rider.marks_per_zone[round - 1][zone - 1] = '-';
+		else {
+		  if (rider.marks_per_zone[round - 1][zone - 1] == -1)
+		    rider.marks_per_zone[round - 1][zone - 1] = '-';
+		}
+	      });
+	    }
+
+	    rider.marks_in_round = function(round) {
+	      var marks_in_round = this.marks_per_round[round - 1];
+	      if (marks_in_round === undefined)
+		marks_in_round = this.failure ? '-' : '';
+	      if (features.individual_marks)
+		return $sce.trustAsHtml(marks_in_round + '');
+	      else {
+		var marks = this.marks_per_zone[round - 1];
+		return $sce.trustAsHtml(
+		  '<span title="' + marks.join(' ') + '">' + marks_in_round + '</span>'
+		);
+	      }
+	    };
+	  });
+	});
+      });
+
       if (event.type && event.type.match(/^otsv/)) {
-	results.riders.forEach(function(class_) {
-	  if (!class_)
-	    return;
-	  class_.forEach(function(rider) {
-	    if (rider.country == 'A')
-	      rider.country = null;
+	angular.forEach(results.rankings, function(ranking) {
+	  angular.forEach(ranking.classes, function(class_) {
+	    angular.forEach(class_.riders, function(rider) {
+	      if (rider.country == 'A')
+		rider.country = null;
+	    });
 	  });
 	});
       }
@@ -57,131 +111,31 @@ var eventResultsController = [
 
       $scope.classes = (function() {
 	var classes = [];
-	angular.forEach(results.riders, function(value, index) {
-	  if (value)
-	    classes.push(index + 1);
-	});
-	return classes.sort(function(a, b) {
-	  return event.classes[a - 1].order - event.classes[b - 1].order;
-	});
-      })();
-      angular.forEach($scope.classes, function(class_) {
-	if ($scope.show.classes[class_ - 1] === undefined)
-	  $scope.show.classes[class_ - 1] = true;
-      });
-
-      $scope.is_class_of_riders = function(class_) {
-	return !event.classes[class_ - 1].groups;
-      };
-      $scope.riders_groups = event.classes.some(function(class_) { return class_ && class_.groups; });
-
-      $scope.rankings = (function() {
-	var rankings = [];
-	angular.forEach(event.rankings, function(ranking, index) {
-	  if (event.rankings[index])
-	    rankings.push({ ranking: index + 1, name: ranking.name });
-	});
-	return rankings;
-      })();
-
-      (function() {
-	var skipped_zones = [];
-	angular.forEach(event.zones, function(zones_in_class, class_index) {
-	  if (zones_in_class) {
-	    skipped_zones[class_index] = [];
-	    try {
-	      for (var round = 1; round <= event.classes[class_index].rounds; round++)
-		skipped_zones[class_index][round - 1] = [];
-	    } catch(_) { }
-	  }
-	});
-	angular.forEach(event.skipped_zones, function(zones_in_class, class_index) {
-	  if (zones_in_class) {
-	    angular.forEach(zones_in_class, function(zones_in_round, round_index) {
-	      angular.forEach(zones_in_round, function(zone) {
-		try {
-		  skipped_zones[class_index][round_index][zone - 1] = true;
-		} catch (_) { }
-	      });
-	    });
-	  }
-	});
-
-	angular.forEach(results.riders, function(riders_in_class, class_index) {
-	  angular.forEach(riders_in_class, function(rider) {
-	    var individual_marks = [];
-	    for (round = 1; round <= event.classes[class_index].rounds; round++) {
-	      var marks = [];
-	      try {
-		angular.forEach(event.zones[class_index], function(zone) {
-		  if (skipped_zones[class_index][round - 1][zone - 1])
-		    marks.push('-');
-		  else {
-		    var p = rider.marks_per_zone[round - 1][zone - 1];
-		    if (p == -1)
-		      p = '-';
-		    marks.push(p);
-		  }
-		});
-	      } catch (_) { }
-	      individual_marks.push(marks);
-	    }
-
-	    rider.individual_marks = function(round, zone) {
-	      var e;
-	      try {
-		e = individual_marks[round - 1][zone - 1];
-	      } catch (_) { };
-	      if (e === undefined && this.failure)
-		return '-';
-	      return e;
-	    };
-
-	    rider.marks_in_round = function(round) {
-	      var marks_in_round = this.marks_per_round[round - 1];
-	      if (marks_in_round === undefined)
-		marks_in_round = this.failure ? '-' : '';
-	      if (!features.individual_marks) {
-		var marks = individual_marks[round - 1];
-		if (marks) {
-		  return $sce.trustAsHtml(
-		    '<span title="' + marks.join(' ') + '">' + marks_in_round + '</span>'
-		  );
-		}
-	      }
-	      return $sce.trustAsHtml(marks_in_round + '');
-	    };
+	angular.forEach(results.rankings, function(ranking) {
+	  angular.forEach(ranking.classes, function(class_) {
+	    classes.push(ranking_class_tag(ranking, class_));
 	  });
 	});
+	return classes;
       })();
+
+      angular.forEach($scope.classes, function(class_) {
+	if ($scope.show.classes[class_] === undefined)
+	  $scope.show.classes[class_] = true;
+      });
     }
     assign_results(results);
 
-    $scope.$watch('show.riders_groups', function() {
-      var riders_groups = $scope.show.riders_groups;
-      $scope.show.riders = riders_groups != 'groups';
-      $scope.show.groups = riders_groups != 'rider';
-    });
+    function to_url() {
+      var search = angular.copy($scope.show);
 
-    $scope.show_class = function(class_) {
-      return $scope.show.classes[class_ - 1] &&
-	     $scope.riders_in_classes[class_ - 1] &&
-	     $scope.riders_in_classes[class_ - 1].filter($scope.show_rider).length &&
-	     (($scope.show.riders && !event.classes[class_ - 1].groups) ||
-	      ($scope.show.groups && event.classes[class_ - 1].groups));
-    };
-
-
-    function to_url(show) {
-      var search = angular.copy(show);
-
-      var hidden_classes = [];
-      angular.forEach(search.classes, function(value, index) {
-	if (value === false)
-	  hidden_classes.push(index + 1);
+      var hidden_classes = {};
+      angular.forEach(Object.keys(search.classes), function(tag) {
+	if (!search.classes[tag])
+	  hidden_classes[tag] = true;
       });
-      if (hidden_classes.length)
-	search['hide-class'] = hidden_classes;
+      if (Object.keys(hidden_classes).length)
+	search['hide-class'] = Object.keys(hidden_classes);
       delete search.classes;
 
       var fields = search.fields;
@@ -189,9 +143,6 @@ var eventResultsController = [
 	fields.pop();
       search.field = fields;
       delete search.fields;
-
-      search['not-all'] = !search.all;
-      delete search.all;
 
       if (search.ranking === null)
 	search.ranking = '-';
@@ -213,148 +164,40 @@ var eventResultsController = [
       var url = $location.search();
       if (!url.length || !angular.equals($scope.show, from_url(url))) {
 	$scope.ignoreRouteUpdate = true;
-	$location.search(to_url($scope.show)).replace();
+	$location.search(to_url()).replace();
       }
-    }
-
-    function compare_riders(riders_in_class) {
-      angular.forEach(riders_in_class, function(rider) {
-	rider.distribution_class = [];
-	rider.round_class = [];
-      });
-
-      function compare(a, b) {
-	if (a.marks === b.marks && a.tie_break === b.tie_break &&
-	    !a.failure && !b.failure) {
-	  for (var n = 0; n < 6; n++) {
-	    if (a.marks_distribution[n] !== b.marks_distribution[n]) {
-	      a.distribution_class[n] = 'important';
-	      b.distribution_class[n] = 'important';
-	      return;
-	    }
-	  }
-	  var rounds = Math.min(a.marks_per_round.length, b.marks_per_round.length);
-	  if (event.equal_marks_resolution == 1) {
-	    for (var n = 0; n < rounds; n++) {
-	      if (a.marks_per_round[n] !== b.marks_per_round[n]) {
-		a.round_class[n] = 'important';
-		b.round_class[n] = 'important';
-		break;
-	      }
-	    }
-	  } else if (event.equal_marks_resolution == 2) {
-	    for (var n = rounds - 1; n >= 0; n--) {
-	      if (a.marks_per_round[n] !== b.marks_per_round[n]) {
-		a.round_class[n] = 'important';
-		b.round_class[n] = 'important';
-		break;
-	      }
-	    }
-	  }
-	}
-      }
-
-      for (var n = 0; n < riders_in_class.length - 1; n++)
-	compare(riders_in_class[n], riders_in_class[n + 1]);
     }
 
     function update() {
-      var ranking = $scope.show.ranking;
-
       $scope.$root.context(event.title);
-      if (ranking == null)
-	$scope.show.all = true;
-      else if ((event.rankings[ranking - 1] || {}).groups)
-	$scope.show.all = false;
 
-      $scope.columns = [];
+      var rankings = filter_rankings(results.rankings);
+      if (!angular.equals(rankings, $scope.rankings))
+	$scope.rankings = rankings;
 
-      function rider_visible(rider) {
-	  return ranking == null || rider.rankings[ranking - 1] || $scope.show.all;
-      }
-
-      var riders_in_classes = [];
-      angular.forEach(results.riders, function(all_riders_in_class, class_index) {
-	var riders_in_class = [];
-	if ($scope.show.classes[class_index]) {
-	  angular.forEach(all_riders_in_class, function(rider) {
-	    if (rider_visible(rider))
-	      riders_in_class.push(rider);
-	  });
-	}
-	if (riders_in_class.length == 0)
-	  riders_in_class = null;
-	riders_in_classes.push(riders_in_class);
-      });
-
-      angular.forEach(riders_in_classes, function(riders_in_class, class_index) {
-	if (riders_in_class) {
-	  var columns = $scope.columns[class_index] = {};
-	  angular.forEach(riders_in_class, function(rider) {
-	    if (rider.additional_marks)
-	      columns.additional_marks = true;
-	    if (rider.tie_break)
-	      columns.tie_break = true;
-	    try {
-	      if (rider.rankings[ranking - 1].score)
-		columns.score = true;
-	    } catch (_) { }
-	    /* FIXME: Andere leere Spalten auch unterdrücken ... */
-	    /* Spalte Startnummer für Gruppenwertungen verstecken */
-	  });
-
-	  riders_in_class = riders_in_class.sort(function(a, b) {
-	      var rank_a, rank_b;
-	      if (ranking == null || $scope.show.all) {
-		rank_a = a.rank;
-		rank_b = b.rank;
-	      } else {
-		rank_a = a.rankings[ranking - 1].rank;
-		rank_b = b.rankings[ranking - 1].rank;
-	      }
-	      if (rank_a == null || rank_b == null) {
-		rank_a = (rank_a == null);
-		rank_b = (rank_a == null);
-	      }
-	      if (rank_a != rank_b)
-		return rank_a - rank_b;
-	      if (a.number >= 0 || b.number >= 0)
-		  return a.number - b.number;
-	      else
-		return generic_compare(a.last_name, b.last_name) ||
-		       generic_compare(a.first_name, b.first_name);
-	  });
-
-	  compare_riders(riders_in_class);
-	}
-      });
-      $scope.riders_in_classes = riders_in_classes;
-
-      $scope.summary = (function() {
-	var num_riders = 0, num_groups = 0;
+      var summary = (function() {
+	var num_riders = 0;
 	var failures = [];
 	var non_competing = 0;
-	angular.forEach(riders_in_classes, function(riders_in_class, class_index) {
-	  if (riders_in_class) {
-	    if (event.classes[class_index].groups)
-	      num_groups += riders_in_class.length;
-	    else
-	      num_riders += riders_in_class.length;
-	    angular.forEach(riders_in_class, function(rider) {
+
+	angular.forEach($scope.rankings, function(ranking) {
+	  angular.forEach(ranking.classes, function(class_) {
+	    num_riders += class_.riders.length;
+	    angular.forEach(class_.riders, function(rider) {
 	      if (rider.failure)
 		failures[rider.failure] = (failures[rider.failure] || 0) + 1;
 	      if (rider.non_competing)
 		non_competing++;
 	    });
-	  }
+	  });
 	});
-	var list = [];
+
+	var gesamt = '';
 	if (num_riders)
-	  list.push(num_riders + ' ' + 'Fahrer');
-	if (num_groups)
-	  list.push(num_groups + ' ' + (num_groups == 1 ? 'Gruppe' : 'Gruppen'));
-	var gesamt = list.join(' und ');
-	list = [];
+	  gesamt = num_riders + ' ' + 'Fahrer';
+	else
+	  gesamt = 'Keine Fahrer';
+	var list = [];
 	if (failures[5] || failures[6])
 	  list.push(((failures[5] || 0) + (failures[6] || 0)) + ' nicht gestartet');
 	if (failures[3])
@@ -367,17 +210,24 @@ var eventResultsController = [
 	  gesamt += ' (davon ' + list.join(', ') + ')';
 	return gesamt ? gesamt + '.' : null;
       })();
+      if (summary != $scope.summary)
+	$scope.summary = summary;
       update_url();
     }
 
-    $scope.rounds_list = function(class_, first) {
-      var rounds = [];
-      try {
-	for (var round = first; round <= event.classes[class_ - 1].rounds; round++)
-	  rounds.push(round);
-      } catch(_) { }
-      return rounds;
+    $scope.enumerate = function(from, to) {
+      var list = [];
+      for (; from <= to; from++)
+	list.push(from);
+      return list;
     }
+
+    $scope.class_symbol = function(class_) {
+      if (class_.color) {
+	return $sce.trustAsHtml(
+	  '<span style="display:inline-block; width:10pt; height:10pt; background-color:' + class_.color + '"></span>');
+      }
+    };
 
     $scope.country_province = function(rider) {
       var country_province = [];
@@ -456,16 +306,6 @@ var eventResultsController = [
       return reasons.join(', ');
     };
 
-    $scope.class_symbol = function(class_) {
-      try {
-	var color = event.classes[class_ - 1].color;
-	if (color) {
-	  return $sce.trustAsHtml(
-	    '<span style="display:inline-block; width:10pt; height:10pt; background-color:' + color + '"></span>');
-	}
-      } catch(_) { }
-    };
-
     $scope.fold = {};
     $scope.settings = function(event) {
       event.preventDefault();
@@ -527,15 +367,15 @@ var eventResultsController = [
     function from_url(search) {
       var show = angular.copy(search);
 
-      var classes = [];
-      angular.forEach($scope.classes, function(class_) {
-	classes[class_ - 1] = true;
+      var classes = {};
+      angular.forEach($scope.classes, function(tag) {
+	classes[tag] = true;
       });
       var hidden_classes = show['hide-class'] || [];
       if (typeof hidden_classes === 'string')
 	hidden_classes = [hidden_classes];
-      angular.forEach(hidden_classes, function(class_) {
-	classes[class_ - 1] = false;
+      angular.forEach(hidden_classes, function(tag) {
+	classes[tag] = false;
       });
       show.classes = classes;
       delete show['hide-class'];
@@ -547,9 +387,6 @@ var eventResultsController = [
 	fields.push('');
       show.fields = fields;
       delete show.field;
-
-      show.all = !show['not-all'];
-      delete show['not-all'];
 
       if (show.ranking === '-')
 	show.ranking = null;
@@ -582,7 +419,6 @@ var eventResultsController = [
 
       var search = $location.search();
       var defaults = {
-	ranking: event.rankings[0] ? 1 : null,
 	field: fields,
 	'page-size': 'A4',
 	'font-size': 8,
@@ -599,7 +435,7 @@ var eventResultsController = [
     });
     $scope.$emit('$routeUpdate');
 
-    function seite_zu_lange() {
+    function page_too_long() {
       var body = document.body;
       var doc = document.documentElement;
       var documentHeight = Math.max(
@@ -615,86 +451,86 @@ var eventResultsController = [
 
     function show_page(position) {
       if (!position)
-	position = [undefined, 0];
+	position = [undefined, 0, 0, 0];
       var classes = document.querySelectorAll('.class');
-      var k, rider, num_classes = 0, num_riders = 0;
+      var class_index, riders, num_classes = 0, num_riders = 0;
 
-      for (k = 0; k < classes.length; k++)
-	angular.element(classes[k]).addClass('ng-hide');
+      for (class_index = 0; class_index < classes.length; class_index++)
+	angular.element(classes[class_index]).addClass('ng-hide');
       if (position[0] !== undefined) {
-	for (k = 0; k < classes.length; k++) {
-	  if (k == position[0]) {
-	    rider = classes[k].querySelectorAll('.rider');
-	    if (position[1] >= rider.length) {
-	      rider = undefined;
-	      k++;
+	for (class_index = 0; class_index < classes.length; class_index++) {
+	  if (class_index == position[0]) {
+	    riders = classes[class_index].querySelectorAll('.rider');
+	    if (position[1] >= riders.length) {
+	      riders = undefined;
+	      class_index++;
 	    }
 	    break;
 	  }
 	}
       }
-      if (k == classes.length) {
-	position = [0, 0, 0];
-	k = 0;
+      if (class_index == classes.length) {
+	position = [0, 0, 0, 0];
+	class_index = 0;
       }
 
       var offset = position[1];
       var undo = false;
-      for(; k < classes.length; k++, offset = 0) {
-	if (!rider)
-	  rider = classes[k].querySelectorAll('.rider');
-	for (var f = 0; f < rider.length; f++)
-	  angular.element(rider[f]).addClass('ng-hide');
-	if (offset < rider.length) {
-	  angular.element(classes[k]).removeClass('ng-hide');
+      for(; class_index < classes.length; class_index++, offset = 0) {
+	if (!riders)
+	  riders = classes[class_index].querySelectorAll('.rider');
+	for (var f = 0; f < riders.length; f++)
+	  angular.element(riders[f]).addClass('ng-hide');
+	if (offset < riders.length) {
+	  angular.element(classes[class_index]).removeClass('ng-hide');
 	  num_classes++;
 	}
-	while (offset < rider.length) {
+	while (offset < riders.length) {
 	  var old_offset = offset;
 
 	  offset++;
-	  if (k == position[0] &&
+	  if (class_index == position[0] &&
 	      offset == position[1] + 1 &&
-	      offset < rider.length)
+	      offset < riders.length)
 	    offset++;
-	  while (offset < 5 && offset < rider.length)
+	  while (offset < 5 && offset < riders.length)
 	    offset++;
-	  if (offset + 1 == rider.length)
+	  if (offset + 1 == riders.length)
 	    offset++;
 	  for (var o = old_offset; o < offset; o++)
-	    angular.element(rider[o]).removeClass('ng-hide');
+	    angular.element(riders[o]).removeClass('ng-hide');
 	  num_riders += offset - old_offset;
 
-	  if (seite_zu_lange()) {
+	  if (page_too_long()) {
 	    if (undo) {
 	      num_riders -= offset - old_offset;
 	      if (old_offset == 0) {
-		angular.element(classes[k]).addClass('ng-hide');
+		angular.element(classes[class_index]).addClass('ng-hide');
 		num_classes--;
 		offset = old_offset;
 	      } else {
 		while (offset > old_offset) {
 		  offset--;
-		  angular.element(rider[offset]).addClass('ng-hide');
+		  angular.element(riders[offset]).addClass('ng-hide');
 		}
 	      }
 	    }
-	    return [k, offset, num_classes, num_riders];
+	    return [class_index, offset, num_classes, num_riders];
 	  }
 	  undo = true;
 	}
-	rider = undefined;
+	riders = undefined;
       }
-      return [k, 0, num_classes, num_riders];
+      return [class_index, 0, num_classes, num_riders];
     }
 
     function show_all() {
       var classes = document.querySelectorAll('.class');
 
       angular.forEach(classes, function(class_) {
-	var rider = class_.querySelectorAll('.rider');
+	var riders = class_.querySelectorAll('.rider');
 
-	angular.forEach(rider, function(rider) {
+	angular.forEach(riders, function(rider) {
 	  angular.element(rider).removeClass('ng-hide');
 	});
 	angular.element(class_).removeClass('ng-hide');
@@ -737,7 +573,7 @@ var eventResultsController = [
       if ($scope.show.duration != null) {
 	var position;
 
-	(function animieren() {
+	(function animate() {
 	  if ($scope.show.duration != null) {
 	    if (http_request) {
 	      http_request
@@ -754,31 +590,23 @@ var eventResultsController = [
 	    position = show_page(position);
 
 	    cancel_http_request = $q.defer();
-	    http_request = $http.get('/api/event/' + $route.current.params.id + '/results',
-				     {timeout: cancel_http_request.promise});
+	    http_request = $http
+	      .get('/api/event/' + $route.current.params.id + '/results',
+		   {timeout: cancel_http_request.promise})
+	      .catch(angular.noop);
 
-	    var duration = (position[2] * 1500 + position[3] * 600) * Math.pow(2, $scope.show.duration / 2);
-	    timeout_promise = $timeout(animieren, duration);
+	    var duration = (1500 + position[2] * 500 + position[3] * 500) * Math.pow(2, $scope.show.duration / 2);
+	    timeout_promise = $timeout(animate, duration);
 	  }
 	})();
       } else
 	show_all();
     });
-    $scope.$watch('show.ranking', function(ranking) {
-      $scope.show.subtitle = event.subtitle;
-    });
 
     $scope.rank = function(rider) {
-      var rank = $scope.show.all ? rider.rank : rider.rankings[$scope.show.ranking - 1].rank;
-      if (rank != null)
-	return rank + '.';
+      if (rider.rank != null)
+	return rider.rank + '.';
     }
-
-    $scope.show_rider = function(rider) {
-      if ($scope.show.ranking == null || $scope.show.all)
-	return rider.rank != null;
-      return rider.rankings[$scope.show.ranking - 1];
-    };
 
     $scope.same_day = same_day;
   }];

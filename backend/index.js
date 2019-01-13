@@ -2350,164 +2350,142 @@ async function get_event_results(connection, id) {
   var event = await read_event(connection, id, revalidate);
   var riders = await read_riders(connection, id, revalidate);
 
-  var hash = {};
+  var hash = {
+    event: {
+      features: {}
+    },
+    rankings: []
+  };
 
-  var groups = [];
-  var active_riders = {};
-  var riders_per_class = {};
-  Object.keys(riders).forEach((number) => {
-    var rider = riders[number];
+  function group_by_ranking_class(ranking) {
+    return function(riders) {
+      let riders_by_ranking_class = [];
+      for (let rider of riders) {
+	if (rider.class == null || !event.classes[rider.class - 1])
+	  continue;
+	let ranking_class = event.classes[rider.class - 1].ranking_class;
 
-    if (!rider.start ||
-        (!rider.registered && event.features.registered) ||
-        (!rider.verified && event.features.verified))
-      return;
+	if (!riders_by_ranking_class[ranking_class - 1])
+	  riders_by_ranking_class[ranking_class - 1] = [];
+	riders_by_ranking_class[ranking_class - 1].push(rider);
+      }
 
-    var r = {};
-
-    rider_public_fields.concat([
-      'additional_marks', 'failure', 'marks', 'marks_distribution',
-      'marks_per_round', 'marks_per_zone', 'non_competing', 'number', 'rank',
-      'rankings'
-    ]).forEach(
-      (field) => { r[field] = rider[field]; }
-    );
-    active_riders[rider.number] = r;
-
-    if (rider.group) {
-      r.riders = rider.riders;
-      groups.push(r);
-    } else {
-      let class_ = rider['class'];
-      if (class_ == null)
-	return;
-      if (!riders_per_class[class_])
-	riders_per_class[class_] = [];
-      riders_per_class[class_].push(r);
-    }
-  });
-
-  function ranking_class(class_) {
-    if (class_ != null && event.classes[class_ - 1])
-      return event.classes[class_ - 1].ranking_class;
+      return Object.keys(riders_by_ranking_class)
+      .sort((a, b) => event.classes[a].order - event.classes[b].order)
+      .map((class_index) => {
+	let ranking_class = event.classes[class_index].ranking_class;
+	let hash = {
+	  class: +class_index + 1,
+	  zones: event.zones[ranking_class - 1],
+	  skipped_zones: event.skipped_zones[ranking_class - 1] || [],
+	  scores: ranking != null &&
+		  (event.rankings[ranking - 1] || {}).assign_scores &&
+		  (ranking != 1 ||
+		   !(event.classes[class_index] || {}).no_ranking1),
+	  penalty_marks: riders_by_ranking_class[class_index]
+			 .some((rider) => rider.penalty_marks),
+	};
+	for (let key of ['rounds', 'color', 'name'])
+	  hash[key] = event.classes[class_index][key];
+	hash.riders = riders_by_ranking_class[class_index];
+	return hash;
+      });
+    };
   }
 
-  /*
-   * Convert index of riders_per_class from class to ranking class.
-   * Riders in classes which are not defined are dropped.
-   */
-  riders_per_class = (() => {
-    var rs = {};
-    Object.keys(riders_per_class).forEach((class_) => {
-      let rc = ranking_class(class_);
-      if (rc != null) {
-	if (!rs[rc])
-	  rs[rc] = [];
-	// I'm having trouble getting babel to substitute the spread operator
-	// on node v4.6.1.  Use push.apply instead for now:
-	//rs[rc].push(...riders_per_class[class_]);
-	Array.prototype.push.apply(rs[rc], riders_per_class[class_]);
+  function convert_ranking(ranking, overall) {
+    function convert_rider(rider) {
+      var r = {};
+      rider_public_fields.concat([
+	'additional_marks', 'penalty_marks', 'failure', 'marks',
+	'marks_distribution', 'marks_per_round', 'marks_per_zone',
+	'non_competing', 'number', 'rank', 'decisive_marks',
+	'decisive_round', 'tie_break'
+      ]).forEach(
+	(field) => { r[field] = rider[field]; }
+      );
+      let rx = rider.rankings[ranking - 1];
+      if (rx) {
+	if (!overall) {
+	  for (let field of ['rank', 'decisive_marks', 'decisive_round'])
+	    r[field] = rx[field];
+	}
+	r.score = rx.score;
       }
-    });
-    return rs;
-  })();
 
-  hash.event = {};
-  ['title', 'subtitle', 'equal_marks_resolution', 'mtime', 'four_marks',
-   'date', 'split_score', 'type', 'result_columns'].forEach(
+      return r;
+    }
+
+    return function(ranking_class) {
+      ranking_class.riders =
+        ranking_class.riders.map(convert_rider);
+      if (ranking_class.riders.some((rider) => rider.tie_break))
+	ranking_class.tie_break = true;
+      return ranking_class;
+    }
+  }
+
+  function sort_by_rank(ranking_class) {
+    ranking_class.riders.sort((a, b) =>
+      a.rank - b.rank ||
+      a.number - b.number);
+    ranking_class.riders.forEach((rider) => {
+      if (rider.failure || rider.non_competing)
+	delete rider.rank;
+    });
+    return ranking_class;
+  }
+
+  let result = group_by_ranking_class(event.main_ranking)(
+    Object.values(riders).filter((rider) => rider.rank != null)
+  ).map(convert_ranking(event.main_ranking, true))
+  .map(sort_by_rank);
+
+  if (result.length) {
+    let ranking = {
+      ranking: null,
+      name: null,
+      classes: result
+    };
+    if (event.main_ranking != null) {
+      ranking.main_ranking = event.main_ranking;
+      ranking.main_ranking_name =
+        (event.rankings[event.main_ranking - 1] || {}).name;
+    }
+    hash.rankings.push(ranking);
+  }
+
+  for (let ranking_index in event.rankings) {
+    ranking_index = +ranking_index;
+    if (!event.rankings[ranking_index])
+      continue;
+    if (ranking_index + 1 == event.main_ranking)
+      continue;
+
+    let result = group_by_ranking_class(+ranking_index + 1)(
+	Object.values(riders).filter((rider) => (rider.rankings[ranking_index] || {}).rank != null)
+      ).map(convert_ranking(ranking_index + 1, false))
+      .map(sort_by_rank);
+
+    if (result.length) {
+      hash.rankings.push({
+	ranking: +ranking_index + 1,
+	name: event.rankings[ranking_index].name,
+	classes: result
+      });
+    }
+  }
+
+  ['title', 'subtitle', 'mtime', 'four_marks', 'date', 'split_score', 'type',
+   'result_columns'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
 
-  hash.event.features = {};
   rider_public_fields.concat([
-    'number', 'individual_marks', 'column_5'
+    'number', 'additional_marks', 'individual_marks', 'column_5'
   ]).forEach((feature) => {
     hash.event.features[feature] = event.features[feature];
   });
-
-  hash.event.classes = [];
-  hash.event.zones = [];
-  Object.keys(riders_per_class).forEach((class_) => {
-    let hash_event_class = hash.event.classes[class_ - 1] = {};
-    let event_class = event.classes[class_ - 1];
-    ['rounds', 'color', 'name', 'order'].forEach((field) => {
-      hash_event_class[field] = event_class[field];
-    });
-    hash_event_class.groups = false;
-    hash.event.zones[class_ - 1] = event.zones[class_ - 1];
-  });
-
-  var active_rankings = [];
-  Object.values(riders_per_class).forEach((riders) => {
-    Object.values(riders).forEach((rider) => {
-      rider.rankings.forEach((ranking, index) => {
-	if (ranking)
-	  active_rankings[index] = true;
-      });
-    });
-  });
-
-  hash.event.rankings = [];
-  active_rankings.forEach((ranking, index) => {
-    hash.event.rankings[index] = event.rankings[index];
-  });
-
-  if (event.skipped_zones)
-    hash.event.skipped_zones = skipped_zones_list(event.skipped_zones);
-
-  hash.riders = [];
-  Object.keys(riders_per_class).forEach((class_) => {
-    if (riders_per_class[class_].length)
-      hash.riders[class_ - 1] = riders_per_class[class_];
-  });
-
-  /*
-   * Groups are added as a new pseudo-class ...
-   */
-  if (groups.length) {
-    let classes = {};
-    groups.forEach((group) => {
-      group.riders.forEach((number) => {
-	let rider = riders[number];
-	let rc = ranking_class(rider.class);
-	if (rc != null)
-	  classes[rc] = true;
-      });
-    });
-
-    let rounds;
-    let zones;
-    if (Object.keys(classes).length == 1) {
-      let class_ = Object.keys(classes)[0];
-      rounds = event.classes[class_ - 1].rounds;
-      zones = event.zones[class_ - 1];
-    } else {
-      rounds = 0;
-      zones = {};
-      Object.keys(classes).forEach((class_) => {
-	let rc = ranking_class(class_);
-	if (rc != null) {
-	  rounds = Math.max(rounds, event.classes[rc - 1].rounds);
-	  event.zones[rc - 1].forEach((zone) => {
-	    zones[zone] = true;
-	  });
-	}
-      });
-      zones = Object.keys(zones)
-        .map((_) => +_)
-	.sort((a, b) => a - b);
-    }
-
-    let groups_class = {
-      name: 'Gruppen',
-      rounds: rounds,
-      groups: true,
-    };
-    let n = hash.event.classes.length;
-    hash.riders[n] = groups;
-    hash.event.zones[n] = zones;
-    hash.event.classes[n] = groups_class;
-  }
 
   return hash;
 }
