@@ -755,6 +755,17 @@ var ridersController = [
 	.find(function(_) { return land == _ });
     };
 
+    $scope.class_symbol = function() {
+      if ($scope.rider && $scope.rider.class != null) {
+	var color = event.classes[$scope.rider.class - 1].color;
+	if (color) {
+	  return $sce.trustAsHtml(
+	    `<span style="display:inline-block; width:8pt; height:8pt; background-color:${color}"></span>`
+	  );
+	}
+      }
+    };
+
     function create_ranking_labels() {
       /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
       var accesskeys = 'aknvpsuäl' + (groups ? 'g' : 'f');

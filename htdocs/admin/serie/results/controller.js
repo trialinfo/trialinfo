@@ -206,7 +206,7 @@ var serieResultsController = [
       var color = class_.color
       if (color) {
 	return $sce.trustAsHtml(
-	  '<span style="display:block; width:10pt; height:10pt; background-color:' + color + '"></span>');
+	  '<span style="display:inline-block; width:10pt; height:10pt; background-color:' + color + '"></span>');
       }
     };
 
