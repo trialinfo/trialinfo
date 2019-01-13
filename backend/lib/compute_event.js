@@ -244,7 +244,7 @@ function compute_event(cache, id, event) {
     return riders_per_class;
   }
 
-  function rank_order(a, b) {
+  function rank_order(a, b, decisive) {
     if (a.ranking_class != b.ranking_class) {
       try {
 	return event.classes[a.ranking_class - 1].order -
@@ -273,11 +273,14 @@ function compute_event(cache, id, event) {
       return _a.localeCompare(_b);
     }
 
-    /* Fewer cleaned sections win, etc. */
+    /* More cleaned sections win, etc. */
     for (let n = 0; n < 5; n++) {
       cmp = b.marks_distribution[n] - a.marks_distribution[n];
-      if (cmp)
+      if (cmp) {
+	if (decisive)
+	  decisive.marks((cmp < 0 ? a : b).number, n);
 	return cmp;
+      }
     }
 
     if (event.equal_marks_resolution) {
@@ -287,21 +290,27 @@ function compute_event(cache, id, event) {
 	/* First better round wins */
 	for (let n = 0; n < ra.length; n++) {
 	  cmp = ra[n] - rb[n];
-	  if (cmp)
+	  if (cmp) {
+	    if (decisive)
+	      decisive.round((cmp < 0 ? a : b).number, n + 1);
 	    return cmp;
+	  }
 	}
       } else {
 	/* Last better round wins */
 	for (let n = ra.length - 1; n >= 0; n--) {
 	  cmp = ra[n] - rb[n];
-	  if (cmp)
+	  if (cmp) {
+	    if (decisive)
+	      decisive.round((cmp < 0 ? a : b).number, n + 1);
 	    return cmp;
+	  }
 	}
       }
     }
   }
 
-  function compute_ranks(riders_in_class) {
+  function compute_ranks(riders_in_class, decisive) {
     riders_in_class.sort(rank_order);
 
     let ranks = {};
@@ -309,7 +318,8 @@ function compute_event(cache, id, event) {
     let previous_rider;
     riders_in_class.forEach((rider) => {
       ranks[rider.number] =
-        (previous_rider && !rank_order(previous_rider, rider)) ?
+        (previous_rider &&
+	 !rank_order(previous_rider, rider, decisive)) ?
 	  ranks[previous_rider.number] : rank;
       previous_rider = rider;
       rank++;
@@ -401,7 +411,12 @@ function compute_event(cache, id, event) {
       year_of_manufacture: cached_rider.year_of_manufacture,
       additional_marks: cached_rider.penalty_marks || null,
       rankings: cached_rider.rankings.map(
-	(ranking) => ranking && {rank: null, score: null}
+	(ranking) => ranking && {
+	  rank: null,
+	  score: null,
+	  decisive_marks: null,
+	  decisive_round: null,
+	}
       ),
       non_competing: cached_rider.non_competing ||
 		     (event.classes[class_ - 1] || {}).non_competing,
@@ -409,7 +424,9 @@ function compute_event(cache, id, event) {
       marks_per_zone: cached_rider.marks_per_zone,
       marks_per_round: [],
       marks_distribution: [],
-      marks: null
+      marks: null,
+      decisive_marks: null,
+      decisive_round: null,
     };
     return riders;
   }, {});
@@ -439,6 +456,15 @@ function compute_event(cache, id, event) {
     return true;
   }
 
+  let decisive_overall = {
+    marks: function(number, marks) {
+      riders[number].decisive_marks = marks;
+    },
+    round: function(number, round) {
+      riders[number].decisive_round = round;
+    }
+  };
+
   /* Compute overall ranking including all starters. The rank is stored in
      rider.rank, with no associated score.  */
   let riders_per_class = group_riders_per_class(riders);
@@ -446,7 +472,7 @@ function compute_event(cache, id, event) {
     let riders_in_class = riders_per_class[ranking_class]
       .filter(rider_not_split);
 
-    let ranks = compute_ranks(riders_in_class);
+    let ranks = compute_ranks(riders_in_class, decisive_overall);
     for (let number in ranks) {
       let rider = riders[number];
       rider.rank = ranks[number];
@@ -467,6 +493,15 @@ function compute_event(cache, id, event) {
 	      !(event.classes[rider.class - 1] || {}).no_ranking1);
     }
 
+    let decisive_in_ranking = {
+      marks: function(number, marks) {
+	riders[number].rankings[ranking - 1].decisive_marks = marks;
+      },
+      round: function(number, round) {
+	riders[number].rankings[ranking - 1].decisive_round = round;
+      }
+    }
+
     if (event.rankings[ranking - 1].joint) {
       let riders_in_ranking = [];
       for (let ranking_class in riders_per_class) {
@@ -474,14 +509,14 @@ function compute_event(cache, id, event) {
 	  riders_per_class[ranking_class].filter(rider_in_ranking)
 	);
       }
-      let ranks = compute_ranks(riders_in_ranking);
+      let ranks = compute_ranks(riders_in_ranking, decisive_in_ranking);
       ranking_assign_ranks(riders, ranking, ranks);
       ranking_assign_scores(riders_in_ranking, ranking, ranks);
     } else {
       for (let ranking_class in riders_per_class) {
 	let riders_in_class = riders_per_class[ranking_class]
 	  .filter(rider_in_ranking);
-	let ranks = compute_ranks(riders_in_class);
+	let ranks = compute_ranks(riders_in_class, decisive_in_ranking);
 	ranking_assign_ranks(riders, ranking, ranks);
 	ranking_assign_scores(riders_in_class, ranking, ranks);
       }
@@ -498,6 +533,10 @@ function compute_event(cache, id, event) {
       cache.modify_rider(id, number).marks = rider.marks;
     if (rider.rank != cached_rider.rank)
       cache.modify_rider(id, number).rank = rider.rank;
+    if (!deepEqual(rider.decisive_marks, cached_rider.decisive_marks))
+      cache.modify_rider(id, number).decisive_marks = rider.decisive_marks;
+    if (!deepEqual(rider.decisive_round, cached_rider.decisive_round))
+      cache.modify_rider(id, number).decisive_round = rider.decisive_round;
     if (!deepEqual(rider.marks_per_round, cached_rider.marks_per_round))
       cache.modify_rider(id, number).marks_per_round = rider.marks_per_round;
     if (!deepEqual(rider.marks_distribution, cached_rider.marks_distribution))

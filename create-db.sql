@@ -350,6 +350,8 @@ CREATE TABLE `rider_rankings` (
   `ranking` int(11) NOT NULL,
   `rank` int(11) DEFAULT NULL,
   `score` double DEFAULT NULL,
+  `decisive_marks` INT DEFAULT NULL,
+  `decisive_round` INT DEFAULT NULL,
   PRIMARY KEY (`id`,`number`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -415,6 +417,8 @@ CREATE TABLE `riders` (
   `user_tag` char(16) DEFAULT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '1',
   `accept_conditions` tinyint(1) NOT NULL DEFAULT '0',
+  `decisive_marks` INT DEFAULT NULL,
+  `decisive_round` INT DEFAULT NULL,
   PRIMARY KEY (`id`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -472,6 +472,38 @@ async function update_database(connection) {
       CHANGE title location VARCHAR(40)
     `);
   }
+
+  if (!await column_exists(connection, 'riders', 'decisive_marks')) {
+    console.log('Adding column `decisive_marks` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD decisive_marks INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'riders', 'decisive_round')) {
+    console.log('Adding column `decisive_round` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD decisive_round INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'rider_rankings', 'decisive_marks')) {
+    console.log('Adding column `decisive_marks` to `rider_rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rider_rankings
+      ADD decisive_marks INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'rider_rankings', 'decisive_round')) {
+    console.log('Adding column `decisive_round` to `rider_rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rider_rankings
+      ADD decisive_round INT
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1268,13 +1300,15 @@ async function read_riders(connection, id, revalidate, number) {
   });
 
   (await connection.queryAsync(`
-    SELECT ranking, number, rank, score
+    SELECT *
     FROM rider_rankings
     WHERE ` + filters)
   ).forEach((row) => {
     var rider = riders[row.number];
     if (rider) {
-      rider.rankings[row.ranking - 1] = {rank: row.rank, score: row.score};
+      rider.rankings[row.ranking - 1] = row;
+      delete row.number;
+      delete row.ranking;
     }
   });
 
