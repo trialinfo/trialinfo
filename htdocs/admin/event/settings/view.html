@@ -103,7 +103,7 @@ a:hover.updown {
     </p>
     <p>
       <label for="equal_marks_resolution">Bei Gleichstand zählt das Rundenergebnis
-      <select id="equal_marks_resolution" ng-model="event.equal_marks_resolution" numeric>
+      <select id="equal_marks_resolution" ng-model="event.equal_marks_resolution" ng-disabled="event.type == 'otsv-acup'" numeric>
 	<option value="0">nicht</option>
 	<option value="1">der ersten besseren Runde</option>
 	<option value="2">der letzten besseren Runde</option>

@@ -48,6 +48,12 @@
 		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.penalty_marks" id="penalty_marks">
 		</td>
 	      </tr>
+	      <tr ng-if="features.additional_marks">
+		<th>Zusatzpunkte</th>
+		<td>
+		  <input type="text" size="4" ng-model="rider.additional_marks" disabled="disabled">
+		</td>
+	      </tr>
 	      <tr>
 		<th>Gesamtpunkte</th>
 		<td>
