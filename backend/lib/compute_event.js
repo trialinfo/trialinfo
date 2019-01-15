@@ -148,7 +148,11 @@ function compute_event(cache, id, event) {
 	  last_started_round = 0;
 	if (last_completed_round == null)
 	  last_completed_round = rounds;
-	rider.marks = rider.additional_marks || null;
+
+	if (rider.additional_marks != null)
+	  rider.marks += rider.additional_marks;
+	if (rider.penalty_marks != null)
+	  rider.marks += rider.penalty_marks;
 	for (let marks of rider.marks_per_round)
 	  rider.marks += marks;
       }
@@ -219,8 +223,10 @@ function compute_event(cache, id, event) {
 	  }
 	});
 
-	if (group.additional_marks != 0)
+	if (group.additional_marks != null)
 	  group.marks += group.additional_marks;
+	if (group.penalty_marks != null)
+	  group.marks += group.penalty_marks;
 	for (let marks of group.marks_per_round)
 	  group.marks += marks;
       }
@@ -409,7 +415,8 @@ function compute_event(cache, id, event) {
       'class': class_,
       ranking_class: ranking_class,
       year_of_manufacture: cached_rider.year_of_manufacture,
-      additional_marks: cached_rider.penalty_marks || null,
+      additional_marks: null,
+      penalty_marks: cached_rider.penalty_marks,
       rankings: cached_rider.rankings.map(
 	(ranking) => ranking && {
 	  rank: null,
@@ -437,7 +444,8 @@ function compute_event(cache, id, event) {
       if (rider.class >= 4 && rider.class <= 11) {
 	let year = rider.year_of_manufacture || year_of_event;
 	let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
-	rider.additional_marks += m;
+	if (m)
+	  rider.additional_marks = m;
       }
     }
   }

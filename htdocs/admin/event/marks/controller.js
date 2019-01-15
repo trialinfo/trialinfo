@@ -240,18 +240,24 @@ var marksController = [
     function calculate_marks() {
       var rider = $scope.rider;
       if (rider) {
-	rider.additional_marks = rider.penalty_marks;
+	rider.additional_marks = null;
 
 	if (event.type == 'otsv-acup') {
 	  if (rider.class >= 4 && rider.class <= 11) {
 	   let year = rider.year_of_manufacture || year_of_event;
 	   let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
-	   rider.additional_marks += m;
+	   if (m)
+		   rider.additional_marks = m;
 	  }
 	}
 
+	rider.marks = null;
+	if (rider.additional_marks != null)
+	  rider.marks += rider.additional_marks;
+	if (rider.penalty_marks != null)
+	  rider.marks += rider.penalty_marks;
+
 	if (rider.group) {
-	  rider.marks = rider.additional_marks;
 	  for (round = 1; round <= rider.marks_per_zone.length; round++) {
 	    rider.marks += rider.marks_per_round[round - 1];
 	  }
@@ -260,7 +266,6 @@ var marksController = [
 	  if (rider.start) {
 	    var rc = ranking_class(rider);
 	    var zones = event.zones[rc - 1] || [];
-	    rider.marks = rider.additional_marks;
 	    rider.rounds = 0;
 	    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
 	    delete $scope.zones_skipped;
@@ -294,7 +299,6 @@ var marksController = [
 	      }
 	    }
 	  } else {
-	    rider.marks = null;
 	    rider.rounds = null;
 	    rider.marks_distribution = [null, null, null, null, null, null];
 	  }

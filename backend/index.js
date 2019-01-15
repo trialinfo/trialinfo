@@ -179,11 +179,8 @@ async function update_database(connection) {
     console.log('Adding column `penalty_marks` to table `riders`');
     await connection.queryAsync(`
       ALTER TABLE riders
-      ADD penalty_marks FLOAT AFTER failure;
-    `);
-    await connection.queryAsync(`
-      UPDATE riders
-      SET penalty_marks = additional_marks
+      CHANGE additional_marks penalty_marks FLOAT,
+      ADD additional_marks FLOAT AFTER failure;
     `);
   }
 
@@ -1709,7 +1706,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.tie_break = 0;
       rider.rounds = null;
       rider.failure = 0;
-      rider.additional_marks = null;
+      rider.penalty_marks = null;
       rider.marks = null;
       rider.marks_per_zone = [];
       rider.marks_per_round = [];
@@ -3948,6 +3945,7 @@ function html_diff(old_rider, new_rider) {
     non_competing: true,
     failure: true,
     additional_marks: true,
+    penalty_marks: true,
     user_tag: true,
     verified: true
   };
