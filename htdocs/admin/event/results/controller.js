@@ -225,7 +225,7 @@ var eventResultsController = [
     $scope.class_symbol = function(class_) {
       if (class_.color) {
 	return $sce.trustAsHtml(
-	  '<span style="display:inline-block; width:10pt; height:10pt; background-color:' + class_.color + '"></span>');
+	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + class_.color + '"></span>');
       }
     };
 
@@ -244,36 +244,48 @@ var eventResultsController = [
 	  heading: '<span title="Startnummer">Nr.</span>',
 	  expr: "number < 0 ? null : number",
 	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'number' },
 	  when: function() { return features.number } },
       name:
 	{ name: 'Name',
 	  heading: 'Name',
 	  /* FIXME: <br> nach Bewerber! */
 	  expr: "(bewerber ? bewerber + ': ' : '') + join(' ', last_name, first_name)",
-	  style: { 'text-align': 'left', 'padding-right': '1em' } },
+	  style: { 'text-align': 'left', 'padding-right': '1em' },
+	  attr: { 'adjust-width': 'name' } },
       vehicle:
 	{ name: 'Fahrzeug',
 	  heading: 'Fahrzeug',
 	  expr: "vehicle",
-	  style: { 'text-align': 'left' },
+	  style: { 'text-align': 'left',
+		   'max-width': '10em',
+		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
+		   'overflow': 'hidden' },
+	  attr: { 'adjust-width': 'vehicle' },
 	  when: function() { return features.vehicle } },
       year_of_manufacture:
 	{ name: 'Baujahr',
 	  heading: '<span title="Baujahr">Bj.</span>',
 	  expr: "year_of_manufacture",
 	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'year_of_manufacture' },
 	  when: function() { return features.year_of_manufacture } },
       club:
 	{ name: 'Club',
 	  heading: 'Club',
 	  expr: "club",
-	  style: { 'text-align': 'left' },
+	  style: { 'text-align': 'left',
+		   'max-width': '13em',
+		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
+		   'overflow': 'hidden' },
+	  attr: { 'adjust-width': 'club' },
 	  when: function() { return features.club } },
       country_province:
 	{ name: 'Land (Bundesland)',
 	  heading: '<span title="Land (Bundesland)">Land</span>',
 	  expr: "country_province(rider)",
 	  style: { 'text-align': 'left' },
+	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
     };
     angular.forEach(defined_fields, function(field) {
@@ -301,7 +313,7 @@ var eventResultsController = [
       var reasons = [];
       if (rider.non_competing)
 	reasons.push('außer konkurrenz');
-      if (rider.failure)
+      else if (rider.failure)
 	reasons.push(failures[rider.failure]);
       return reasons.join(', ');
     };
@@ -319,19 +331,20 @@ var eventResultsController = [
 
     $scope.print_style = function() {
       var show = $scope.show;
-      return $sce.trustAsHtml('\n\
-@media print {\n\
-  @page {\n\
-    size:' + (show['page-size'] || 'A4') + ';\n\
-    margin-left:' + (show['margin-left'] || '2cm') + ';\n\
-    margin-top:' + (show['margin-top'] || '2cm') + ';\n\
-    margin-right:' + (show['margin-right'] || '2cm') + ';\n\
-    margin-bottom:' + (show['margin-bottom'] || '2cm') + ';\n\
-  }\n\
-  body { font-size:' + scalefont(show['font-size'] || 10, 0) + 'pt; }\n\
-  h2 { font-size:' + scalefont(show['font-size'] || 10, 1) + 'pt; }\n\
-  h1 { font-size:' + scalefont(show['font-size'] || 10, 2) + 'pt; }\n\
-}\n');
+      return $sce.trustAsHtml(`
+@media print {
+  @page {
+    size:${show['page-size'] || 'A4'};
+    margin-left:${show['margin-left'] || '2cm'};
+    margin-top:${show['margin-top'] || '2cm'};
+    margin-right:${show['margin-right'] || '2cm'};
+    margin-bottom:${show['margin-bottom'] || '2cm'};
+  }
+  body { font-size:${scalefont(show['font-size'] || 10, 0)}pt; }
+  h2 { font-size:${scalefont(show['font-size'] || 10, 1)}pt; }
+  h1 { font-size:${scalefont(show['font-size'] || 10, 2)}pt; }
+}
+`);
     }
 
     $scope.create_pdf = function(event) {
@@ -362,6 +375,7 @@ var eventResultsController = [
 	if (field)
 	  $scope.fields.push(field);
       }
+      $timeout(adjust_width);
     }, true);
 
     function from_url(search) {

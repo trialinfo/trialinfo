@@ -138,26 +138,24 @@ table.ranking tr td.important {
       <table class="ranking">
 	<thead>
 	  <tr>
-	    <th style="text-align:center" ng-bind-html="class_symbol(class_ranking)"></th>
-	    <th ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.heading"></th>
-	    <th style="text-align:right; width:1.2em" ng-if="features.individual_marks" ng-repeat="zone in class_ranking.zones" title="Sektion {{zone}}">S{{zone}}</th>
-	    <th ng-if="features.individual_marks && rounds > 1"><span title="Runde">R</span></th>
-	    <th ng-if="!features.individual_marks && rounds > 1" ng-repeat="round in enumerate(1, class_ranking.rounds)" style="text-align:right"><span title="Runde {{round}}">R{{round}}</span></th>
-	    <th style="text-align:right" ng-if="features.additional_marks"><span title="Zusatzpunkte">ZP</span></th>
-	    <th style="text-align:right" ng-if="class_ranking.penalty_marks"><span title="Zeit- und Strafpunkte">SP</span></th>
-	    <th style="text-align:right"><span title="Gesamtpunkte">Ges</span></th>
-	    <th style="text-align:right" ng-if="distribution[0]"><span title="Nuller">0ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[1]"><span title="Einser">1ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[2]"><span title="Zweier">2ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[3]"><span title="Dreier">3ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[4]"><span title="Vierer">4ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[5]"><span title="Fünfer">5ₛ</span></th>
-	    <th style="text-align:right" ng-if="class_ranking.tie_break"><span title="Stechen">ST</span></th>
-	    <th style="text-align:right" ng-if="class_ranking.scores"><span title="{{'Wertungspunkte' + (ranking.main_ranking ? ' in ' + ranking.main_ranking_name : '')}}">WP</span></th>
+	    <th style="text-align:center" ng-bind-html="class_symbol(class_ranking)" adjust-width="rank"></th>
+	    <th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
+	    <th style="text-align:right; width:1.2em" ng-if="features.individual_marks" ng-repeat="zone in class_ranking.zones" title="Sektion {{zone}}" adjust-width="individual-marks">S{{zone}}</th>
+	    <th ng-if="features.individual_marks && rounds > 1" adjust-width="marks"><span title="Runde">R</span></th>
+	    <th ng-if="!features.individual_marks && rounds > 1" ng-repeat="round in enumerate(1, class_ranking.rounds)" style="text-align:right" adjust-width="marks"><span title="Runde {{round}}">R{{round}}</span></th>
+	    <th style="text-align:right" ng-if="features.additional_marks" adjust-width="marks"><span title="Zusatzpunkte">AP</span></th>
+	    <th style="text-align:right" ng-if="class_ranking.penalty_marks" adjust-width="marks"><span title="Zeit- und Strafpunkte">ZP</span></th>
+	    <th style="text-align:right" adjust-width="total-marks"><span title="Gesamtpunkte">Ges</span></th>
+	    <th style="text-align:right" ng-if="distribution[0]" adjust-width="marks-distribution"><span title="Nuller">0ₛ</span></th>
+	    <th style="text-align:right" ng-if="distribution[1]" adjust-width="marks-distribution"><span title="Einser">1ₛ</span></th>
+	    <th style="text-align:right" ng-if="distribution[2]" adjust-width="marks-distribution"><span title="Zweier">2ₛ</span></th>
+	    <th style="text-align:right" ng-if="distribution[3]" adjust-width="marks-distribution"><span title="Dreier">3ₛ</span></th>
+	    <th style="text-align:right" ng-if="distribution[4]" adjust-width="marks-distribution"><span title="Vierer">4ₛ</span></th>
+	    <th style="text-align:right" ng-if="distribution[5]" adjust-width="marks-distribution"><span title="Fünfer">5ₛ</span></th>
+	    <th style="text-align:right" ng-if="class_ranking.tie_break" adjust-width="tie-break"><span title="Stechen">ST</span></th>
+	    <th style="text-align:right" ng-if="class_ranking.scores" adjust-width="scores"><span title="{{'Wertungspunkte' + (ranking.main_ranking ? ' in ' + ranking.main_ranking_name : '')}}">WP</span></th>
 	  </tr>
 	</thead>
-	  <!-- Spaltenbreiten? -->
-	  <!-- Druckbarkeit? Kontrollierter Seitenumbruch zwischen Klassen? -->
 	<tbody ng-repeat="rider in class_ranking.riders track by rider.number" class="rider" ng-class-even="'alt'">
 	  <tr ng-if="rider.failure || rider.non_competing">
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right"></td>

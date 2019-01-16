@@ -156,36 +156,48 @@ var serieResultsController = [
 	  heading: '<span title="Startnummer">Nr.</span>',
 	  expr: "number < 0 ? null : number",
 	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'number' },
 	  when: function() { return features.number } },
       name:
 	{ name: 'Name',
 	  heading: 'Name',
 	  /* FIXME: <br> nach Bewerber! */
 	  expr: "(bewerber ? bewerber + ': ' : '') + join(' ', last_name, first_name)",
-	  style: { 'text-align': 'left', 'padding-right': '1em' } },
+	  style: { 'text-align': 'left', 'padding-right': '1em' },
+	  attr: { 'adjust-width': 'name' } },
       vehicle:
 	{ name: 'Fahrzeug',
 	  heading: 'Fahrzeug',
 	  expr: "vehicle",
-	  style: { 'text-align': 'left' },
+	  style: { 'text-align': 'left',
+		   'max-width': '10em',
+		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
+		   'overflow': 'hidden' },
+	  attr: { 'adjust-width': 'vehicle' },
 	  when: function() { return features.vehicle } },
       year_of_manufacture:
 	{ name: 'Baujahr',
 	  heading: '<span title="Baujahr">Bj.</span>',
 	  expr: "year_of_manufacture",
 	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'year_of_manufacture' },
 	  when: function() { return features.year_of_manufacture } },
       club:
 	{ name: 'Club',
 	  heading: 'Club',
 	  expr: "club",
-	  style: { 'text-align': 'left' },
+	  style: { 'text-align': 'left',
+		   'max-width': '13em',
+		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
+		   'overflow': 'hidden' },
+	  attr: { 'adjust-width': 'club' },
 	  when: function() { return features.club } },
       country_province:
 	{ name: 'Land (Bundesland)',
 	  heading: '<span title="Land (Bundesland)">Land</span>',
 	  expr: "country_province(rider)",
 	  style: { 'text-align': 'left' },
+	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
     };
     angular.forEach(defined_fields, function(field) {
@@ -206,7 +218,7 @@ var serieResultsController = [
       var color = class_.color
       if (color) {
 	return $sce.trustAsHtml(
-	  '<span style="display:inline-block; width:10pt; height:10pt; background-color:' + color + '"></span>');
+	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + color + '"></span>');
       }
     };
 
@@ -266,6 +278,7 @@ var serieResultsController = [
 	if (field)
 	  $scope.fields.push(field);
       }
+      $timeout(adjust_width);
     }, true);
 
     function from_url(search) {

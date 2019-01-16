@@ -227,7 +227,7 @@ table.liste td, table.liste th {
   <table class="liste">
     <thead>
       <tr>
-	<th ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.heading"></th>
+	<th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
       </tr>
     </thead>
     <tbody ng-repeat="rider in group.list">
