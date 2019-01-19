@@ -958,13 +958,17 @@ var eventListController = [
 	order_by: features.number ? 'number' : 'name',
 	other_classes: 'yes',
 	field: fields,
-	'page-size': 'A4',
-	'font-size': 8,
-	'margin-left': '1cm',
-	'margin-top': '2cm',
-	'margin-right': '1cm',
-	'margin-bottom': '1cm',
       };
+      if (config.weasyprint) {
+	Object.assign(defaults, {
+	  'page-size': 'A4',
+	  'font-size': 8,
+	  'margin-left': '1cm',
+	  'margin-top': '2cm',
+	  'margin-right': '1cm',
+	  'margin-bottom': '1cm',
+	});
+      }
       if (features.registered)
 	defaults.registered = 'yes';
 

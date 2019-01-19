@@ -329,13 +329,17 @@ var serieResultsController = [
       var search = $location.search();
       var defaults = {
 	field: fields,
-	'page-size': 'A4',
-	'font-size': 8,
-	'margin-left': '1cm',
-	'margin-top': '2cm',
-	'margin-right': '1cm',
-	'margin-bottom': '1cm',
       };
+      if (config.weasyprint) {
+	Object.assign(defaults, {
+	  'page-size': 'A4',
+	  'font-size': 8,
+	  'margin-left': '1cm',
+	  'margin-top': '2cm',
+	  'margin-right': '1cm',
+	  'margin-bottom': '1cm',
+	});
+      }
       angular.forEach(defaults, function(value, key) {
 	if (search[key] === undefined)
 	  search[key] = value;
