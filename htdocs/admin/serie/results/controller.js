@@ -1,8 +1,8 @@
 'use strict;'
 
 var serieResultsController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', '$sanitize', 'fractional', 'results',
-  function ($scope, $sce, $route, $location, $timeout, $http, $q, $sanitize, fractional, results) {
+  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'results',
+  function ($scope, $sce, $route, $location, $timeout, $http, $q, fractional, results) {
     $scope.config = config;
     $scope.show = {
       fields: [],
@@ -363,19 +363,16 @@ var serieResultsController = [
     $scope.$watch('fold.settings', hide_settings_later);
     $scope.$watch('show', hide_settings_later, true);
 
-    $scope.event_heading = (function() {
+    $scope.events = (function() {
       let events = results.events.reduce(function(events, event) {
 	events[event.id] = event;
 	return events;
       }, {});
 
-      return function(id) {
-	let event = events[id];
-	let date = event.date;
-	return $sce.trustAsHtml(
-	  '<span title="' + $sanitize(event.name) + '">' +
-	  $scope.$eval('date | date:"d.<br>M."', {date: event.date}) +
-	  '</span>');
+      return function(ids) {
+	return ids.map(function(id) {
+	  return events[id];
+        });
       };
     })();
 

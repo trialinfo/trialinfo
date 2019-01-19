@@ -107,7 +107,9 @@ table.ranking tr td.important {
       <thead>
         <th style="text-align:center" ng-bind-html="class_symbol(class_ranking.class)" adjust-width="rank"></th>
 	<th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
-	<th style="text-align:right" ng-repeat="event in class_ranking.events track by $index" adjust-width="score" ng-bind-html="event_heading(event)"></th>
+	<th style="text-align:right" ng-repeat="event in events(class_ranking.events) track by $index" adjust-width="score">
+	  <span title="{{event.name}}">{{event.date | date:"d."}}<br>{{event.date | date:"M."}}</span>
+	</th>
 	<th style="text-align:right" ng-if="have_drop_score(class_ranking)" adjust-width="total-score"><span title="Streichpunkte">Str</span></th><!-- XXX Hide when always empty! -->
 	<th style="text-align:right" adjust-width="total-score"><span title="Gesamtpunkte">Ges</span></th>
       </thead>
