@@ -626,8 +626,11 @@ var eventResultsController = [
   }];
 
 eventResultsController.resolve = {
-  results: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/results'));
+  results: function($http, $route) {
+    return $http.get('/api/event/' + $route.current.params.id + '/results')
+      .then(function(response) {
+	return response.data;
+      });
   },
 };
 

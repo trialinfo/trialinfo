@@ -386,7 +386,10 @@ var serieResultsController = [
 
 serieResultsController.resolve = {
   results: function($q, $http, $route) {
-    return http_request($q, $http.get('/api/serie/' + $route.current.params.serie + '/results'));
+    return $http.get('/api/serie/' + $route.current.params.serie + '/results')
+      .then(function(response) {
+	return response.data;
+      });
   },
 };
 
