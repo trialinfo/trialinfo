@@ -23,11 +23,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/directives.js"></script>
     <script src="event/controller.js"></script>
     <script>
-      var application = angular.module('application', ['ngRoute', 'ngCookies']);
-
-      application.directive('isoDate', isoDateDirective);
-      application.directive('numeric', numericDirective);
-      application.directive('nullable', nullableDirective);
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'directives']);
 
       application.controller('eventController', eventController);
 

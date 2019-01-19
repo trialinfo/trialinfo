@@ -40,20 +40,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="import/controller.js"></script>
     <script>
 
-      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'fractional', 'admin']);
-
-      application.directive('isoDate', isoDateDirective);
-      application.directive('isoTime', isoTimeDirective);
-      application.directive('isoTimestamp', isoTimestampDirective);
-      application.directive('numeric', numericDirective);
-      application.directive('marks', marksDirective);
-      application.directive('yesNoNull', yesNoNullDirective);
-      application.directive('rankingClass', rankingClassDirective);
-      application.directive('nullable', nullableDirective);
-      application.directive('strikeThrough', strikeThroughDirective);
-
-      application.directive('autofocus', autofocusDirective);
-      application.directive('tabTo', tabTo);
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'fractional', 'directives']);
 
       application.controller('mainController', mainController);
       application.controller('eventController', eventController);
