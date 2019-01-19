@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var mainController = [
   '$scope', '$cookies', '$location', '$window', 'events', 'series',

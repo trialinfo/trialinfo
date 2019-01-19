@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var ridersController = [
   '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window',

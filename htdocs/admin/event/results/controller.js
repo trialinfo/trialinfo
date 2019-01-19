@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var eventResultsController = [
   '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'results',

@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 function parse_iso_date($scope, text) {
   if (typeof text == 'string') {
@@ -64,6 +64,7 @@ function parse_iso_time($scope, text) {
 }
 
 function format_iso_time($scope, value, format1, format2) {
+  var match;
   if (value == null)
     return '';
   if (typeof value == 'string' &&

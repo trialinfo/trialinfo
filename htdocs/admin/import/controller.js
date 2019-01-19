@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var importController = [
   '$scope', '$http', '$location', '$q', '$timeout', 'events',

@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var marksController = [
   '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'event',

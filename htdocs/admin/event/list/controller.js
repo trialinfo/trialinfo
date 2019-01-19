@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var eventListController = [
   '$scope', '$sce', '$route', '$location', '$window', '$timeout', 'event', 'list',
@@ -69,7 +69,7 @@ var eventListController = [
 
     function otsv_fee(event) {
       if (event.type == 'otsv' || event.type == 'otsv+amf') {
-	var now;
+	var now, match;
 	if (event.date &&
 	    (match = event.date.match(/^(\d{4})-(\d{2})-(\d{2})$/)))
 	  now = new Date(match[1], match[2] - 1, match[3]);
@@ -77,7 +77,7 @@ var eventListController = [
 	  now = new Date();
 
 	return function(rider) {
-	  date_of_birth = rider.date_of_birth;
+	  var date_of_birth = rider.date_of_birth;
 	  var age_year;
 	  if (date_of_birth !== null &&
 	      (match = date_of_birth.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {

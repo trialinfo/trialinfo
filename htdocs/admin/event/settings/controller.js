@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var settingsController = [
   '$scope', '$http', '$timeout', '$location', 'event', 'events',
@@ -8,7 +8,7 @@ var settingsController = [
       base: null,
       reset: null,
     };
-    min_zones = 8;
+    var min_zones = 8;
 
     assign_event(event);
     event = undefined;

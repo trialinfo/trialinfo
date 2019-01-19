@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 function starting_classes(event) {
   var starting = [];
@@ -93,12 +93,12 @@ function network_error(response) {
 }
 
 function join(separator) {
-  var args = join.arguments, result = '', first = true;
-  for (var n = 1; n < args.length; n++) {
-    if (args[n] != null && args[n] !== '') {
+  var result = '', first = true;
+  for (var n = 1; n < arguments.length; n++) {
+    if (arguments[n] != null && arguments[n] !== '') {
       if (!first)
 	result = result + separator;
-      result = result + args[n];
+      result = result + arguments[n];
       first = false;
     }
   }

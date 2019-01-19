@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var serieController = [
   '$scope', '$http', '$timeout', '$location', '$window', 'serie', 'events',
