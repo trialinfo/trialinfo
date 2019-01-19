@@ -4851,7 +4851,7 @@ app.get('/admin/config.js', function(req, res, next) {
 
 /*
  * Let Angular handle page-internal routing.  (Static files in /admin/ such as
- * /admin/api.js are already handled by express.static above.)
+ * /admin/misc.js are handled by express.static.)
  */
 app.get('/admin/*', function(req, res, next) {
   if (!(req.user || {}).admin) {
