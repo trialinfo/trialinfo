@@ -238,7 +238,7 @@ function rankingClassDirective() {
 }
 
 // Model: -1 <=> '-', 0, 1, 2, 3, 4 (when allowed), 5, null <=> ''
-function punkteDirective() {
+function marksDirective() {
   return {
     restrict: 'A',
     require: 'ngModel',
@@ -251,16 +251,16 @@ function punkteDirective() {
 
 	if (typeof text == 'string') {
 	  if (text == '') {
-	    ctrl.$setValidity('punkte', true);
+	    ctrl.$setValidity('marks', true);
 	    return null;
 	  } else if (text == '-') {
-	    ctrl.$setValidity('punkte', true);
+	    ctrl.$setValidity('marks', true);
 	    return -1;
 	  } else if (text.match(/^[012345]$/) && (four_marks || text != '4')) {
-	    ctrl.$setValidity('punkte', true);
+	    ctrl.$setValidity('marks', true);
 	    return +text;
 	  } else
-	    ctrl.$setValidity('punkte', false);
+	    ctrl.$setValidity('marks', false);
 	}
       });
       ctrl.$formatters.push(function(value) {
