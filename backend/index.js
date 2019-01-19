@@ -4736,7 +4736,8 @@ function query_string(query) {
   ).join('&');
 }
 
-var client_config = {
+var admin_config = {
+  admin: true,
   weasyprint: config.weasyprint,
   sync_target: config.sync_target,
   existing_regforms: Object.keys(regforms).reduce(
@@ -4745,6 +4746,10 @@ var client_config = {
       return names;
     }, {})
 };
+
+var event_config = {
+  weasyprint: false
+}, serie_config = event_config;
 
 var sendFileOptions = {
   root: __dirname + '/htdocs/'
@@ -4846,7 +4851,7 @@ app.get('/register/event/:id', conn(pool), async function(req, res, next) {
 
 app.get('/admin/config.js', function(req, res, next) {
   res.type('application/javascript');
-  res.send('var config = ' + JSON.stringify(client_config, null, '  ') + ';');
+  res.send('var config = ' + JSON.stringify(admin_config, null, '  ') + ';');
 });
 
 /*
@@ -4871,6 +4876,16 @@ app.get('/register/*', function(req, res, next) {
   next();
 });
 
+app.get('/event/config.js', function(req, res, next) {
+  res.type('application/javascript');
+  res.send('var config = ' + JSON.stringify(event_config, null, '  ') + ';');
+});
+
+app.get('/serie/config.js', function(req, res, next) {
+  res.type('application/javascript');
+  res.send('var config = ' + JSON.stringify(serie_config, null, '  ') + ';');
+});
+
 app.use(express.static('htdocs', {etag: true}));
 
 app.get('/admin/*', function(req, res, next) {
@@ -4881,26 +4896,34 @@ app.get('/register/*', function(req, res, next) {
   res.sendFile('register/index.html', sendFileOptions);
 });
 
-/*
- * Accessible to all registered users:
- */
+app.get('/event/*', function(req, res, next) {
+  res.sendFile('event/index.html', sendFileOptions);
+});
 
-app.use('/api', conn(pool));
-app.all('/api/*', auth);
+app.get('/serie/*', function(req, res, next) {
+  res.sendFile('serie/index.html', sendFileOptions);
+});
 
-app.get('/api/event/:id/results', function(req, res, next) {
+app.get('/api/event/:id/results', conn(pool), function(req, res, next) {
   get_event_results(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
 
-app.get('/api/serie/:serie/results', async function(req, res, next) {
+app.get('/api/serie/:serie/results', conn(pool), async function(req, res, next) {
   get_serie_results(req.conn, req.params.serie)
   .then((result) => {
     res.json(result);
   }).catch(next);
 });
+
+/*
+ * Accessible to all registered users:
+ */
+
+app.use('/api', conn(pool));
+app.all('/api/*', auth);
 
 app.get('/api/register/event/:id', function(req, res, next) {
   register_get_event(req.conn, req.params.id, req.user)

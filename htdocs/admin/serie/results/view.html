@@ -6,7 +6,8 @@
 <style type="text/css" ng-bind-html="print_style()">
 </style>
 
-<h1><a href="" ng-click="settings($event)">{{serie.name}}</a></h1>
+<h1 ng-if="!config.admin">{{serie.name}}</h1>
+<h1 ng-if="config.admin"><a href="" ng-click="settings($event)">{{serie.name}}</a></h1>
 <div ng-if="fold.settings" class="no-print">
   <p>
     <form name="form" ng-model="show.filter">
