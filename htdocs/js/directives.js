@@ -151,39 +151,6 @@
     };
   });
 
-  // Model: number or null, View: text (empty becomes null)
-  module.directive('numeric', function() {
-    return {
-      restrict: 'A',
-      require: 'ngModel',
-      link: function(scope, element, attrs, ctrl) {
-	ctrl.$parsers.push(function(text) {
-	  var match;
-	  if (typeof text == 'string') {
-	    if (text == '') {
-	      ctrl.$setValidity('numeric', true);
-	      return null;
-	    } else if (match = text.match(/^-?[0-9]+$/) &&
-		       (!('min' in attrs) || +text >= +attrs.min) &&
-		       (!('max' in attrs) || +text <= +attrs.max)) {
-	      ctrl.$setValidity('numeric', true);
-	      return +text;
-	    } else
-	      ctrl.$setValidity('numeric', false);
-	  }
-	});
-	ctrl.$formatters.push(function(value) {
-	  if (value == null)
-	    return '';
-	  if (typeof value == 'number')
-	    return value + '';
-	  else
-	    return value;
-	});
-      }
-    };
-  });
-
   // Model: true, false, or null, View: 'yes', 'no', '-'
   module.directive('yesNoNull', function() {
     return {
@@ -273,21 +240,6 @@
 	    return '-';
 	  else
 	    return value + '';
-	});
-      }
-    };
-  });
-
-  module.directive('nullable', function() {
-    return {
-      restrict: 'A',
-      require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
-	  return text === '' ? null : text;
-	});
-	ctrl.$formatters.push(function(value) {
-	  return value === null ? '' : value;
 	});
       }
     };
