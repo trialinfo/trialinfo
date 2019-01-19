@@ -301,13 +301,19 @@ function strikeThroughDirective() {
   };
 }
 
-function set_focus(selector, $timeout) {
-  $timeout(function() {
-    var element = document.querySelector(selector);
-    element.focus();
-    element.select();
-  });
-}
+(function() {
+  var module = angular.module('admin', []);
+
+  module.factory('setFocus', ['$timeout', function($timeout) {
+    return function(selector) {
+      $timeout(function() {
+	var element = document.querySelector(selector);
+	element.focus();
+	element.select();
+      });
+    };
+  }]);
+}());
 
 /* Unter Firefox funktioniert das Attribut autofocus in nachgeladenen Seiten nicht;
    diese Directive korrigiert das.  */

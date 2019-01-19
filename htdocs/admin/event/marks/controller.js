@@ -1,8 +1,8 @@
 'use strict';
 
 var marksController = [
-  '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'event',
-  function ($scope, $sce, $http, $timeout, $route, $location, event) {
+  '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'setFocus', 'event',
+  function ($scope, $sce, $http, $timeout, $route, $location, setFocus, event) {
     $scope.$root.context(event.title);
 
     $scope.event = event;
@@ -111,7 +111,7 @@ var marksController = [
 	      var zone = zones[index];
 	      var marks = marks_per_zone[round - 1][zone - 1];
 	      if (marks == null && !zone_skipped(rc, round, zone)) {
-		set_focus('#marks_' + round + '_' + zone, $timeout);
+		setFocus('#marks_' + round + '_' + zone);
 		return;
 	      }
 	    }
@@ -334,7 +334,7 @@ var marksController = [
 		{params: params})
 	.then(function(response) {
 	  assign_rider(response.data);
-	  set_focus('#search_term', $timeout);
+	  setFocus('#search_term');
 	})
 	.catch(network_error)
 	.finally(function() {

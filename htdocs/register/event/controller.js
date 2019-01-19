@@ -1,8 +1,8 @@
 'use strict';
 
 var eventController = [
-  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', '$anchorScroll', 'event', 'riders', 'suggestions',
-  function ($routeParams, $scope, $cookies, $window, $timeout, $http, $anchorScroll, event, riders, suggestions) {
+  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', '$anchorScroll', 'setFocus', 'event', 'riders', 'suggestions',
+  function ($routeParams, $scope, $cookies, $window, $timeout, $http, $anchorScroll, setFocus, event, riders, suggestions) {
     $scope.context('Voranmeldung');
 
     try {
@@ -255,7 +255,7 @@ var eventController = [
 	if (country != 'A')
 	  rider.province = null;
 	if (country == null)
-	  set_focus('#country', $timeout);
+	  setFocus('#country');
       }
     });
 

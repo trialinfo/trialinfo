@@ -1,9 +1,9 @@
 'use strict';
 
 var ridersController = [
-  '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window',
+  '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window', 'setFocus',
   'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
-  function ($scope, $sce, $http, $timeout, $q, $route, $location, $window,
+  function ($scope, $sce, $http, $timeout, $q, $route, $location, $window, setFocus,
 	    event, suggestions, groups, riders_hash, groups_hash) {
     $scope.$root.context(event.title);
 
@@ -69,19 +69,19 @@ var ridersController = [
       if (rider) {
 	var enabled = $scope.enabled;
 	if (enabled.rider && groups)
-	  set_focus('#member_search_term', $timeout);
+	  setFocus('#member_search_term');
 	else if (enabled.rider && features['class'] && rider['class'] === null)
-	  set_focus('#class', $timeout);
+	  setFocus('#class');
 	else if (features.number && enabled.number &&
 		 rider && !(rider.number > 0))
-	  set_focus('#number', $timeout);
+	  setFocus('#number');
 	else if (enabled.rider) {
 	  var fields = ['first_name', 'last_name', 'date_of_birth'];
 	  for (var n = 0; n < fields.length; n++) {
 	    var field = fields[n];
 	    if ($scope.features[field] &&
 		(rider[field] === null || rider[field] === '')) {
-	      set_focus('#' + field, $timeout);
+	      setFocus('#' + field);
 	      break;
 	    }
 	  }
@@ -333,7 +333,7 @@ var ridersController = [
 	  update_numbers($scope.old_rider.number, new_rider.number);
 	  update_hashes($scope.old_rider, new_rider);
 	  assign_rider(new_rider);
-	  set_focus('#search_term', $timeout);
+	  setFocus('#search_term');
 	})
 	.catch(function (response) {
 	  let data = response.data;
@@ -395,7 +395,7 @@ var ridersController = [
 	remove: false,
 	neu: false
       });
-      set_focus('#number', $timeout);
+      setFocus('#number');
     };
 
     $scope.rider_name = function(rider) {
@@ -578,7 +578,7 @@ var ridersController = [
 	  .then(function() {
 	    assign_rider(undefined);
 	    update_hashes(old_rider, null);
-	    set_focus('#search_term', $timeout);
+	    setFocus('#search_term');
 
 	    if ($scope.riders_list) {
 	      $scope.riders_list = $scope.riders_list.filter(function(rider) {
@@ -656,7 +656,7 @@ var ridersController = [
       $scope.rider.riders = rider.riders.filter(not_equal(number));
       $scope.members_list.push(number);
       $scope.members_list = normalize_riders_list($scope.members_list);
-      set_focus('#member_search_term', $timeout);
+      setFocus('#member_search_term');
     };
 
     $scope.add_member = function(number) {
@@ -670,7 +670,7 @@ var ridersController = [
 	  return;
       rider.riders.push(number);
       rider.riders = normalize_riders_list(rider.riders);
-      set_focus('#member_search_term', $timeout);
+      setFocus('#member_search_term');
     };
 
     function normalize_hash_list(hash, numbers) {
