@@ -335,3 +335,5 @@ serieController.resolve = {
 	return null;
     }]
 };
+
+angular.module('application').controller('serieController', serieController);

@@ -928,3 +928,5 @@ ridersController.resolveFactory = function (groups) {
       }],
   };
 };
+
+angular.module('application').controller('ridersController', ridersController);

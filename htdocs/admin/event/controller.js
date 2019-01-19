@@ -79,3 +79,5 @@ eventController.resolve = {
       return http_request($q, $http.get('/api/event/' + $route.current.params.id));
     }]
 };
+
+angular.module('application').controller('eventController', eventController);

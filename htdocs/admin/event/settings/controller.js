@@ -571,3 +571,5 @@ settingsController.resolve = {
 	return http_request($q, $http.get('/api/events'));
     }]
 };
+
+angular.module('application').controller('settingsController', settingsController);

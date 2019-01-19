@@ -172,3 +172,5 @@ importController.resolve = {
       return http_request($q, $http.get('/api/events'));
     }],
 };
+
+angular.module('application').controller('importController', importController);

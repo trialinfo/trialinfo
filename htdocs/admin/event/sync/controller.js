@@ -261,3 +261,5 @@ var syncController = [
       $scope.start();
     });
   }];
+
+angular.module('application').controller('syncController', syncController);

@@ -67,3 +67,5 @@ mainController.resolve = {
       return http_request($q, $http.get('/api/series'));
     }]
 };
+
+angular.module('application').controller('mainController', mainController);

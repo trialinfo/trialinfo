@@ -444,3 +444,5 @@ eventController.resolve = {
 	});
     }],
 };
+
+angular.module('application').controller('eventController', eventController);

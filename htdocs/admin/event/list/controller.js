@@ -1005,3 +1005,5 @@ eventListController.resolve = {
     return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/list'));
   },
 };
+
+angular.module('application').controller('eventListController', eventListController);

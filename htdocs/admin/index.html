@@ -26,6 +26,9 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/common.js"></script>
     <script src="api.js"></script>
     <script src="config.js"></script>
+    <script>
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'fractional', 'directives']);
+    </script>
     <script src="main/controller.js"></script>
     <script src="event/controller.js"></script>
     <script src="event/riders/controller.js"></script>
@@ -39,21 +42,6 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="serie/results/controller.js"></script>
     <script src="import/controller.js"></script>
     <script>
-
-      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'fractional', 'directives']);
-
-      application.controller('mainController', mainController);
-      application.controller('eventController', eventController);
-      application.controller('ridersController', ridersController);
-      application.controller('marksController', marksController);
-      application.controller('settingsController', settingsController);
-      application.controller('zonesController', zonesController);
-      application.controller('eventResultsController', eventResultsController);
-      application.controller('eventListController', eventListController);
-      application.controller('serieController', serieController);
-      application.controller('importController', importController);
-      application.controller('syncController', syncController);
-
       application.config([
         '$routeProvider',
 	function($routeProvider) {

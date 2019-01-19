@@ -630,3 +630,5 @@ eventResultsController.resolve = {
     return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/results'));
   },
 };
+
+angular.module('application').controller('eventResultsController', eventResultsController);

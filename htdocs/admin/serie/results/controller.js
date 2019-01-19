@@ -389,3 +389,5 @@ serieResultsController.resolve = {
     return http_request($q, $http.get('/api/serie/' + $route.current.params.serie + '/results'));
   },
 };
+
+angular.module('application').controller('serieResultsController', serieResultsController);
