@@ -22,6 +22,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/ng-attr.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="../js/directives.js"></script>
+    <script src="../js/fractional.js"></script>
     <script src="../js/common.js"></script>
     <script src="api.js"></script>
     <script src="config.js"></script>
@@ -39,13 +40,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="import/controller.js"></script>
     <script>
 
-      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr']);
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'fractional']);
 
       application.directive('isoDate', isoDateDirective);
       application.directive('isoTime', isoTimeDirective);
       application.directive('isoTimestamp', isoTimestampDirective);
       application.directive('numeric', numericDirective);
-      application.directive('fractional', fractionalDirective);
       application.directive('punkte', punkteDirective);
       application.directive('yesNoNull', yesNoNullDirective);
       application.directive('rankingClass', rankingClassDirective);
@@ -54,18 +54,6 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 
       application.directive('autofocus', autofocusDirective);
       application.directive('tabTo', tabTo);
-
-      application.filter('fractional', ['fractional', function(fractional) {
-	function fractionalFilter(x) {
-	  if (fractional.enabled)
-	    return fraction(x);
-	  else
-	    return x;
-	}
-	fractionalFilter.$stateful = true;
-	return fractionalFilter;
-      }]);
-      application.value('fractional', {enabled: true});
 
       application.controller('mainController', mainController);
       application.controller('eventController', eventController);

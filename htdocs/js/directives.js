@@ -180,39 +180,6 @@ function numericDirective() {
   };
 }
 
-// Model: number or null, View: text (empty becomes null)
-function fractionalDirective() {
-  return {
-    restrict: 'A',
-    require: 'ngModel',
-    link: function(scope, element, attrs, ctrl) {
-      ctrl.$parsers.push(function(text) {
-	var match;
-	if (typeof text == 'string') {
-	  if (text == '') {
-	    ctrl.$setValidity('fractional', true);
-	    return null;
-	  } else if (match = text.match(/^-?([0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)?$/) &&
-		     (!('min' in attrs) || +text >= +attrs.min) &&
-		     (!('max' in attrs) || +text <= +attrs.max)) {
-	    ctrl.$setValidity('fractional', true);
-	    return +text;
-	  } else
-	    ctrl.$setValidity('fractional', false);
-	}
-      });
-      ctrl.$formatters.push(function(value) {
-	if (value == null)
-	  return '';
-	if (typeof value == 'number')
-	  return value + '';
-	else
-	  return value;
-      });
-    }
-  };
-}
-
 // Model: true, false, or null, View: 'yes', 'no', '-'
 function yesNoNullDirective() {
   return {
@@ -393,3 +360,5 @@ function tabTo() {
     }
   }
 }
+
+/* ex:set shiftwidth=2: */

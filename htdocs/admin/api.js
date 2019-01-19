@@ -92,49 +92,6 @@ function network_error(response) {
 	(error != null ? '\n\n' + error : ''));
 }
 
-var fraction = (function() {
-  var fractions = [
-    [1/6, '⅙'],
-    [1/5, '⅕'],
-    [1/4, '¼'],
-    [1/3, '⅓'],
-    [2/5, '⅖'],
-    [1/2, '½'],
-    [3/5, '⅗'],
-    [2/3, '⅔'],
-    [3/4, '¾'],
-    [4/5, '⅘'],
-    [5/6, '⅚']];
-  var eps = 1 / (1 << 13);
-
-  return function(x) {
-    if (x == null)
-      return null;
-
-    var sign = '';
-    if (x < 0) {
-      sign = '−';  /* Minuszeichen, kein Bindestrich! */
-      x = -x;
-    }
-    var frac = x % 1;
-    if (frac) {
-      var l = 0, u = fractions.length - 1;
-      while (l <= u) {
-	var n = (l + u) >> 1;
-	var wert = fractions[n][0];
-	if (frac - eps > wert)
-	  l = n + 1;
-	else if (frac + eps < wert)
-	  u = n - 1;
-	else
-	  return sign + Math.floor(x) + fractions[n][1];
-      }
-      return sign + x.toFixed(2).replace(/\.?0+$/, '');
-    }
-    return sign + x;
-  };
-})();
-
 function join(separator) {
   var args = join.arguments, result = '', first = true;
   for (var n = 1; n < args.length; n++) {
