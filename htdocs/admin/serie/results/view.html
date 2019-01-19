@@ -126,15 +126,17 @@ table.ranking tr td.important {
   </div>
 </div>
 
-<p style="font-weight:bold;padding-top:1em">Veranstaltungen:</p>
-<table class="ranking">
-  <tr>
-    <th style="text-align:right"></th>
-    <th style="text-align:left">Name</th>
-  </tr>
-  <tr ng-repeat="event in results.events" ng-class-even="'alt'">
-    <td style="text-align:right">{{event.date | date:"d.M."}}</td>
-    <td style="text-align:left">{{event.name}}</td>
-  </tr>
-</table>
+<div ng-if="results.events.length">
+  <p style="font-weight:bold;padding-top:1em">Veranstaltungen:</p>
+  <table class="ranking">
+    <tr>
+      <th style="text-align:right"></th>
+      <th style="text-align:left">Name</th>
+    </tr>
+    <tr ng-repeat="event in results.events" ng-class-even="'alt'">
+      <td style="text-align:right">{{event.date | date:"d.M."}}</td>
+      <td style="text-align:left">{{event.name}}</td>
+    </tr>
+  </table>
+</div>
 <p ng-if="serie.mtime && same_day(serie.date)">Letzte Änderung: {{serie.mtime}}</p>
