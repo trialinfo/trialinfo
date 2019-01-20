@@ -243,7 +243,7 @@ var marksController = [
 	rider.additional_marks = null;
 
 	if (event.type == 'otsv-acup' && !rider.group) {
-	  if (rider.class >= 4 && rider.class <= 11) {
+	  if (rider.class >= 8 && rider.class <= 11) {
 	   let year = rider.year_of_manufacture || year_of_event;
 	   let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
 	   if (m)

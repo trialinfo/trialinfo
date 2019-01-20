@@ -457,7 +457,7 @@ function compute_event(cache, id, event) {
   if (event.type == 'otsv-acup') {
     let year_of_event = (common.date_of_event(event)).getFullYear();
     for (let rider of Object.values(riders)) {
-      if ((rider.class >= 4 && rider.class <= 11) && !rider.group) {
+      if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
 	let year = rider.year_of_manufacture || year_of_event;
 	let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
 	if (m)
