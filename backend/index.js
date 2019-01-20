@@ -2367,14 +2367,22 @@ async function get_event_results(connection, id) {
 	riders_by_ranking_class[ranking_class - 1].push(rider);
       }
 
+      function class_order(a, b) {
+	if (event.classes[a] && event.classes[b])
+	  return event.classes[a].order - event.classes[b].order;
+	return a - b;
+      }
+
       return Object.keys(riders_by_ranking_class)
-      .sort((a, b) => event.classes[a].order - event.classes[b].order)
+      .sort(class_order)
       .map((class_index) => {
-	let ranking_class = event.classes[class_index].ranking_class;
+	let ranking_class = class_index + 1;
+	if (event.classes[class_index])
+	  ranking_class = event.classes[class_index].ranking_class;
 	let hash = {
 	  class: +class_index + 1,
 	  zones: event.zones[ranking_class - 1],
-	  skipped_zones: event.skipped_zones[ranking_class - 1] || [],
+	  skipped_zones: (event.skipped_zones || [])[ranking_class - 1] || [],
 	  scores: ranking != null &&
 		  (event.rankings[ranking - 1] || {}).assign_scores &&
 		  (ranking != 1 ||
@@ -2382,8 +2390,10 @@ async function get_event_results(connection, id) {
 	  penalty_marks: riders_by_ranking_class[class_index]
 			 .some((rider) => rider.penalty_marks),
 	};
-	for (let key of ['rounds', 'color', 'name'])
-	  hash[key] = event.classes[class_index][key];
+	if (event.classes[class_index]) {
+	  for (let key of ['rounds', 'color', 'name'])
+	    hash[key] = event.classes[class_index][key];
+	}
 	hash.riders = riders_by_ranking_class[class_index];
 	return hash;
       });
