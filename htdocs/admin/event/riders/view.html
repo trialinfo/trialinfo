@@ -227,7 +227,7 @@
 	<fieldset style="display:inline" ng-if="groups && rider">
 	  <legend>Fahrer in Gruppe</legend>
 	  <span ng-repeat="number in rider.riders">
-	    <a href="" ng-click="remove_member(number)" strike-through="!member_starts(number)" title="{{member_info(number, 'Aus Gruppe entfernen')}}">{{member_name(number)}}</a><br>
+	    <a href="" ng-click="remove_member(number)" strike-through="!member_starts(number)" title="{{member_info(number, 'Aus Gruppe entfernen')}}">{{memberName(number)}}</a><br>
 	  </span>
 	</fieldset>
       </form>
@@ -249,7 +249,7 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in riders_list">
-	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
+	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{riderInfo(rider)}}">{{riderName(rider)}}</a><br>
 	    </span>
 	    <span ng-if="riders_list && riders_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
 	  </p>
@@ -259,7 +259,7 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="number in members_list">
-	      <a href="" ng-click="add_member(number)" strike-through="!member_starts(number)" title="{{member_info(number, 'Zu Gruppe hinzufügen')}}">{{member_name(number)}}</a><br>
+	      <a href="" ng-click="add_member(number)" strike-through="!member_starts(number)" title="{{member_info(number, 'Zu Gruppe hinzufügen')}}">{{memberName(number)}}</a><br>
 	    </span>
 	  </p>
 	  <p style="color:red">

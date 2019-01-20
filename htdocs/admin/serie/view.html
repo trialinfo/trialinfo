@@ -25,7 +25,7 @@
     <table>
       <tr ng-repeat="_ in serie.events track by $index">
 	<td>
-	  <select ng-model="serie.events[$index]" ng-options="event.id as event_name(event) for event in events | filter:event_visible">
+	  <select ng-model="serie.events[$index]" ng-options="event.id as eventName(event) for event in events | filter:event_visible">
 	    <option value=""></option>
 	  </select>
 	</td>
@@ -65,7 +65,7 @@
     <legend>Startnummernänderungen</legend>
     <span ng-repeat="event in events | filter:in_serie">
       <fieldset style="display:inline">
-	<legend>{{event_name(event)}}</legend>
+	<legend>{{eventName(event)}}</legend>
 	<table>
 	  <tr>
 	    <th></th>

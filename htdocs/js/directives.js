@@ -320,6 +320,50 @@
       }
     }
   });
+
+  module.factory('eventName', ['$rootScope', function($rootScope) {
+    return function(event) {
+      var remarks = [];
+      angular.forEach(event.series, function(serie) {
+	if (serie.abbreviation != null)
+	  remarks.push(serie.abbreviation);
+      });
+      remarks.sort();
+
+      var name = event.title;
+      if (event.location != null && event.date != null)
+	name = event.location + ' am ' + $rootScope.$eval('date | date:"d.M."', event);
+      return name +
+	     (remarks.length ? ' (' + remarks.join(', ') + ')' : '');
+    };
+  }]);
+
+  module.factory('riderName', function() {
+    return function(rider) {
+      var infos = [];
+      if (rider.last_name !== null && rider.last_name !== '')
+	infos.push(rider.last_name);
+      if (rider.first_name !== null && rider.first_name !== '')
+	infos.push(rider.first_name);
+      if (rider.number !== null && rider.number >= 0)
+	infos.push('(' + rider.number + ')');
+      return infos.join(' ');
+    };
+  });
+
+  module.factory('riderInfo', ['$rootScope', function($rootScope) {
+    return function(rider) {
+      var infos = [];
+      if (rider.number >= 0)
+	infos.push('Startnummer: ' + rider.number);
+      if (rider['class'] !== null)
+	infos.push('Klasse: ' + rider['class']);
+      if (rider.date_of_birth)
+	infos.push('Geburtsdatum: ' +
+		   $rootScope.$eval('date_of_birth | date:"d.M.yyyy"', rider));
+      return infos.join('\n');
+    };
+  }]);
 }());
 
 /* ex:set shiftwidth=2: */

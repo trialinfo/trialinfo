@@ -334,7 +334,7 @@ var eventController = [
       delete $scope.internal.index;
     }
 
-    function rider_info(rider) {
+    function riderInfo(rider) {
       var infos = [];
       if (rider.first_name !== null && rider.first_name !== '')
 	infos.push(rider.first_name);
@@ -352,7 +352,7 @@ var eventController = [
       return infos.join(' ');
     }
 
-    $scope.rider_info = rider_info;
+    $scope.riderInfo = riderInfo;
 
     $scope.event_label = function(event) {
       var label = event.title;
@@ -367,7 +367,7 @@ var eventController = [
 
     $scope.remove_rider = function() {
       $timeout(function() {
-	if (confirm('Fahrer ' + rider_info($scope.rider) + ' wirklich löschen?')) {
+	if (confirm('Fahrer ' + riderInfo($scope.rider) + ' wirklich löschen?')) {
 	  if ($scope.busy)
 	    return;
 	  $scope.busy = true;

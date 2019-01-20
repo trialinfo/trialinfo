@@ -2,9 +2,9 @@
 
 var ridersController = [
   '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window', 'setFocus',
-  'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
+  'riderName', 'riderInfo', 'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
   function ($scope, $sce, $http, $timeout, $q, $route, $location, $window, setFocus,
-	    event, suggestions, groups, riders_hash, groups_hash) {
+	    riderName, riderInfo, event, suggestions, groups, riders_hash, groups_hash) {
     $scope.$root.context(event.title);
 
     /* Im Fahrer-Nennformular Gruppenwertungen herausfiltern und im
@@ -398,13 +398,8 @@ var ridersController = [
       setFocus('#number');
     };
 
-    $scope.rider_name = function(rider) {
-      return rider_name(rider, $scope);
-    };
-
-    $scope.rider_info = function(rider) {
-      return rider_info(rider, $scope);
-    }
+    $scope.riderName = riderName;
+    $scope.riderInfo = riderInfo;
 
     $scope.future_events = event.future_events.reduce(
       function(future_events, future_event) {
@@ -566,7 +561,7 @@ var ridersController = [
     };
 
     $scope.remove = function() {
-      if (confirm((groups ? 'Gruppe' : 'Fahrer') + ' ' + $scope.rider_name($scope.rider) + ' wirklich löschen?')) {
+      if (confirm((groups ? 'Gruppe' : 'Fahrer') + ' ' + riderName($scope.rider) + ' wirklich löschen?')) {
 	var old_rider = $scope.old_rider;
 	var number = old_rider.number;
 	var version = old_rider.version;
@@ -602,7 +597,7 @@ var ridersController = [
       return !rider || rider_starts(rider);
     };
 
-    $scope.member_name = function(number) {
+    $scope.memberName = function(number) {
       var name;
       var list = [];
       if (number >= 0)
@@ -635,7 +630,7 @@ var ridersController = [
       var info = '';
       if (action)
 	info = action + ':\n';
-      info += rider_info(rider, $scope);
+      info += riderInfo(rider);
       if (!rider_starts(rider))
 	info += '\n(Fahrer startet nicht)';
       return info;

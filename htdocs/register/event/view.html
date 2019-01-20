@@ -10,7 +10,7 @@
 <form novalidate name="form">
   <div ng-if="!rider">
     <p ng-repeat="rider in riders">
-      <a href="" ng-click="change_rider($index)">{{rider_info(rider)}}</a>
+      <a href="" ng-click="change_rider($index)">{{riderInfo(rider)}}</a>
       <span ng-if="number_of_starts(rider) == 1">
         ist derzeit für einen Start vorangemeldet.
       </span>

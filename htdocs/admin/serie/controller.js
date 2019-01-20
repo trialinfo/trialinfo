@@ -1,8 +1,8 @@
 'use strict';
 
 var serieController = [
-  '$scope', '$http', '$timeout', '$location', '$window', 'serie', 'events',
-  function ($scope, $http, $timeout, $location, $window, serie, events) {
+  '$scope', '$http', '$timeout', '$location', '$window', 'eventName', 'serie', 'events',
+  function ($scope, $http, $timeout, $location, $window, eventName, serie, events) {
     $scope.$root.context(serie ? serie.name : 'Neue Veranstaltungsreihe');
 
     var event_dates = {};
@@ -23,9 +23,7 @@ var serieController = [
     }
     assign_serie(serie);
 
-    $scope.event_name = function(event) {
-      return event_name($scope, event);
-    };
+    $scope.eventName = eventName;
 
     $scope.event_visible = function(event) {
       return $scope.serie.closed || !event.closed;

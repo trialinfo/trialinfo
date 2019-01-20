@@ -1,8 +1,8 @@
 'use strict';
 
 var settingsController = [
-  '$scope', '$http', '$timeout', '$location', 'event', 'events',
-  function ($scope, $http, $timeout, $location, event, events) {
+  '$scope', '$http', '$timeout', '$location', 'eventName', 'event', 'events',
+  function ($scope, $http, $timeout, $location, eventName, event, events) {
     $scope.$root.context(event ? event.title : 'Neue Veranstaltung');
     $scope.internal = {
       base: null,
@@ -109,9 +109,7 @@ var settingsController = [
       }
     }
 
-    $scope.event_name = function(event) {
-      return event_name($scope, event);
-    };
+    $scope.eventName = eventName;
 
     $scope.event_visible = function(event) {
       return !event.closed;

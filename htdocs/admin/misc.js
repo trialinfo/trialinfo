@@ -10,29 +10,6 @@ function starting_classes(event) {
   return starting;
 }
 
-function rider_name(rider, $scope) {
-  var infos = [];
-  if (rider.last_name !== null && rider.last_name !== '')
-    infos.push(rider.last_name);
-  if (rider.first_name !== null && rider.first_name !== '')
-    infos.push(rider.first_name);
-  if (rider.number !== null && rider.number >= 0)
-    infos.push('(' + rider.number + ')');
-  return infos.join(' ');
-}
-
-function rider_info(rider, $scope) {
-  var infos = [];
-  if (rider.number >= 0)
-    infos.push('Startnummer: ' + rider.number);
-  if (rider['class'] !== null)
-    infos.push('Klasse: ' + rider['class']);
-  if (rider.date_of_birth)
-    infos.push('Geburtsdatum: ' +
-	       $scope.$eval('rider.date_of_birth | date:"d.M.yyyy"', {rider: rider}));
-  return infos.join('\n');
-}
-
 function warn_before_unload($scope, modified) {
   var daten_veraendert = 'Die Daten in diesem Formular wurden verändert.';
   window.onbeforeunload = function(e) {
@@ -90,21 +67,6 @@ function network_error(response) {
 	   'Interner Serverfehler.' :
 	   'HTTP-Request ist ' + (status != -1 ? 'mit Status ' + status + ' ' : '') + 'fehlgeschlagen.') +
 	(error != null ? '\n\n' + error : ''));
-}
-
-function event_name($scope, event) {
-  var remarks = [];
-  angular.forEach(event.series, function(serie) {
-    if (serie.abbreviation != null)
-      remarks.push(serie.abbreviation);
-  });
-  remarks.sort();
-
-  var name = event.title;
-  if (event.location != null && event.date != null)
-    name = event.location + ' am ' + $scope.$eval('date | date:"d.M."', event);
-  return name +
-	 (remarks.length ? ' (' + remarks.join(', ') + ')' : '');
 }
 
 function generic_compare(v1, v2) {

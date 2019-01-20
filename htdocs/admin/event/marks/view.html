@@ -133,7 +133,7 @@
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in riders_list">
-	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{rider_info(rider)}}">{{rider_name(rider)}}</a><br>
+	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{riderInfo(rider)}}">{{riderName(rider)}}</a><br>
 	    </span>
 	    <span ng-if="riders_list != null && riders_list.length == 0">Keine Fahrer gefunden.</span>
 	  </p>

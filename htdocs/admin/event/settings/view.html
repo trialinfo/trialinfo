@@ -21,7 +21,7 @@ a:hover.updown {
       <tr ng-if="!event.id && events.length">
 	<th><label for="title">Basierend auf</label></th>
 	<td>
-	  <select ng-model="event.base" ng-options="event.tag as event_name(event) for event in events | filter:event_visible">
+	  <select ng-model="event.base" ng-options="event.tag as eventName(event) for event in events | filter:event_visible">
 	    <option value=""></option>
 	  </select>
 	</td>

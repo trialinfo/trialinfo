@@ -1,8 +1,8 @@
 'use strict';
 
 var marksController = [
-  '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'setFocus', 'event',
-  function ($scope, $sce, $http, $timeout, $route, $location, setFocus, event) {
+  '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'setFocus', 'riderName', 'riderInfo', 'event',
+  function ($scope, $sce, $http, $timeout, $route, $location, setFocus, riderName, riderInfo, event) {
     $scope.$root.context(event.title);
 
     $scope.event = event;
@@ -400,13 +400,8 @@ var marksController = [
       }
     };
 
-    $scope.rider_name = function(rider) {
-      return rider_name(rider, $scope);
-    }
-
-    $scope.rider_info = function(rider) {
-      return rider_info(rider, $scope);
-    }
+    $scope.riderName = riderName;
+    $scope.riderInfo = riderInfo;
 
     $scope.marks_tab_to = function(round, index) {
       var rider = $scope.rider;

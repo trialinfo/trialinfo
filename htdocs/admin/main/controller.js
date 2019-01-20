@@ -1,8 +1,8 @@
 'use strict';
 
 var mainController = [
-  '$scope', '$cookies', '$location', '$window', 'events', 'series',
-  function ($scope, $cookies, $location, $window, events, series) {
+  '$scope', '$cookies', '$location', '$window', 'eventName', 'events', 'series',
+  function ($scope, $cookies, $location, $window, eventName, events, series) {
     try {
       $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
     } catch (_) { }
@@ -31,10 +31,7 @@ var mainController = [
 	      !serie.closed;
     };
 
-    $scope.event_name = function(event) {
-      return event_name($scope, event);
-    };
-
+    $scope.eventName = eventName;
 
     $scope.new_event = function() {
       $location.path('/event/new/settings');

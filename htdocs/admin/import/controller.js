@@ -1,8 +1,8 @@
 'use strict';
 
 var importController = [
-  '$scope', '$http', '$location', '$q', '$timeout', 'events',
-  function ($scope, $http, $location, $q, $timeout, events) {
+  '$scope', '$http', '$location', '$q', '$timeout', 'eventName', 'events',
+  function ($scope, $http, $location, $q, $timeout, eventName, events) {
     $scope.config = config;
     $scope.events = events;
     $scope.settings = {
@@ -91,9 +91,7 @@ var importController = [
 	});
     };
 
-    $scope.event_name = function(event) {
-      return event_name($scope, event);
-    };
+    $scope.eventName = eventName;
 
     $scope.event_visible = function(event) {
       return !event.closed;
