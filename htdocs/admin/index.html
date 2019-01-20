@@ -22,13 +22,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/ng-attr.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="../js/directives.js"></script>
-    <script src="../js/fractional.js"></script>
     <script src="../js/common.js"></script>
     <script src="../js/app-common.js"></script>
     <script src="misc.js"></script>
     <script src="config.js"></script>
     <script>
-      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'fractional', 'directives']);
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'app-common', 'directives']);
     </script>
     <script src="main/controller.js"></script>
     <script src="event/controller.js"></script>
