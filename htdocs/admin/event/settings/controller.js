@@ -141,6 +141,16 @@ var settingsController = [
       }
     }
 
+    function normalize_result_columns(event) {
+      var result_columns = event.result_columns;
+      for (var n = 0; n < result_columns.length - 1; n++) {
+	if (result_columns[n] == null)
+	  result_columns.splice(n, 1);
+      }
+      if (result_columns[result_columns.length - 1] != null)
+	result_columns.push(null);
+    }
+
     $scope.future_name = function(future_event) {
       var name = future_event.location;
       if (future_event.date)
@@ -172,6 +182,7 @@ var settingsController = [
 	  },
 	  rankings: [],
 	  scores: [],
+	  result_columns: [],
 	  equal_marks_resolution: 0,
 	  insurance: 0,
 	  future_events: [],
@@ -206,6 +217,7 @@ var settingsController = [
 
       expand_scores(event.scores);
       normalize_future_events(event);
+      normalize_result_columns(event);
       $scope.event = event;
       $scope.zones = zones_to_bool(event.zones);
       $scope.features = event.features;
@@ -265,6 +277,10 @@ var settingsController = [
 	  future_event.location == null &&
 	  future_event.series == null)
 	future_events.pop();
+
+      var result_columns = event.result_columns;
+      if (result_columns[result_columns.length - 1] == null)
+	result_columns.pop();
 
       $scope.busy = true;
       var event_is_new = !event.id;
@@ -507,6 +523,10 @@ var settingsController = [
       normalize_future_events($scope.event);
     }, true);
 
+    $scope.$watch('event.result_columns', function() {
+      normalize_result_columns($scope.event);
+    }, true);
+
     $scope.main_rankings = function() {
       var main_rankings = [];
       var rankings = $scope.event.rankings;
@@ -531,7 +551,7 @@ var settingsController = [
 	if (event.main_ranking != null)
 	  event.main_ranking = null;
       } else if (main_rankings.indexOf(event.main_ranking) == -1) {
-	if (event.main_ranking != main_rankings[0])
+	ef (event.main_ranking != main_rankings[0])
 	  event.main_ranking = main_rankings[0];
       }
     }, true);

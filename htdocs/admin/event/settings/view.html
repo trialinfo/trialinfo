@@ -367,6 +367,22 @@ a:hover.updown {
   <fieldset style="display:inline">
     <legend>Auswertung</legend>
     <fieldset style="display:inline">
+      <legend>Spalten in der Ergebnisliste</legend>
+      <p>
+        <div ng-repeat="result_column in event.result_columns track by $index">
+	  <select ng-model="event.result_columns[$index]" id="result_columns" nullable>
+	    <option value=""></option>
+	    <option value="year_of_manufacture" ng-disabled="!features.year_of_manufacture">Baujahr</option>
+	    <option value="club" ng-disabled="!features.club">Club</option>
+	    <option value="vehicle" ng-disabled="!features.vehicle">Fahrzeug</option>
+	    <option value="country_province" ng-disabled="!(features.country || features.province)">Land (Bundesland)</option>
+	    <!-- <option value="name">Name</option> -->
+	    <!-- <option value="number" ng-disabled="!features.number">Startnummer</option> -->
+	  </select>
+	</div>
+      </p>
+    </fieldset><br>
+    <fieldset style="display:inline">
       <legend>Zusätzliche Informationen</legend>
 	<p>
 	  <input type="checkbox" ng-model="features.individual_marks" id="feature_einzelpunkte">
