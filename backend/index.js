@@ -1622,7 +1622,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
       var result = await connection.queryAsync(`
         SELECT COALESCE(MIN(number), 0) - 1 AS number
 	FROM riders
-	WHERE id = ?`, [id]);
+	WHERE id = ? AND number < 0`, [id]);
       rider.number = result[0].number;
       if (number == null)
 	number = rider.number;
@@ -4107,7 +4107,7 @@ async function register_save_rider(connection, id, number, rider, user, query) {
       var result = await connection.queryAsync(`
         SELECT COALESCE(MIN(number), 0) - 1 AS number
 	FROM riders
-	WHERE id = ?`, [id]);
+	WHERE id = ? AND number < 0`, [id]);
       number = result[0].number;
     }
 
