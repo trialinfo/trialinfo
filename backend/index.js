@@ -2395,6 +2395,8 @@ async function get_event_results(connection, id) {
 		  (event.rankings[ranking - 1] || {}).assign_scores &&
 		  (ranking != 1 ||
 		   !(event.classes[class_index] || {}).no_ranking1),
+	  additional_marks: riders_by_ranking_class[class_index]
+			    .some((rider) => rider.additional_marks),
 	  penalty_marks: riders_by_ranking_class[class_index]
 			 .some((rider) => rider.penalty_marks),
 	};

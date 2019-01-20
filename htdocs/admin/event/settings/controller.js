@@ -469,11 +469,8 @@ var settingsController = [
 	  $scope.features.start_time = $scope.features.finish_time =
 	    (type == 'otsv+amf');
 	}
-	delete $scope.features.additional_marks;
-	if (type == 'otsv-acup') {
+	if (type == 'otsv-acup')
 	  event.equal_marks_resolution = 0;
-	  $scope.features.additional_marks = true;
-	}
       }
     };
 
