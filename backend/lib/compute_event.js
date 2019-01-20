@@ -19,6 +19,7 @@
 
 var deepEqual = require('deep-equal');
 var common = require('../htdocs/js/common');
+let acup = require('./acup.js');
 
 function compute_event(cache, id, event) {
   function compute_active_zones(riders) {
@@ -250,74 +251,89 @@ function compute_event(cache, id, event) {
     return riders_per_class;
   }
 
-  function rank_order(a, b, decisive) {
-    if (a.ranking_class != b.ranking_class) {
-      try {
-	return event.classes[a.ranking_class - 1].order -
-	       event.classes[b.ranking_class - 1].order;
-      } catch (_) {}
-      return a.ranking_class - b.ranking_class;
-    }
+  function rank_order(ranking, decisive) {
+    return function(a, b) {
+      if (a.ranking_class != b.ranking_class) {
+	if (event.type == 'otsv-acup' && ranking == 2) {
+	  try {
+	    let color_a = event.classes[a.ranking_class - 1].color;
+	    let color_b = event.classes[b.ranking_class - 1].color;
+	    if (color_a != color_b) {
+	      return acup.color_order[color_a] - acup.color_order[color_b];
+	    }
+	  } catch (err) {
+	    throw new Error(`Failed to compare ranking classes ${a.ranking_class} and ${b.ranking_class}`);
+	  }
+	} else {
+	  try {
+	    return event.classes[a.ranking_class - 1].order -
+		   event.classes[b.ranking_class - 1].order;
+	  } catch (_) {}
+	  return a.ranking_class - b.ranking_class;
+	}
+      }
 
-    let cmp =
-      (a.non_competing - b.non_competing) ||
-      (!b.failure - !a.failure) ||
-      (a.zones_todo - b.zones_todo) ||
-      (a.marks - b.marks) ||
-      (a.tie_break - b.tie_break);
-    if (cmp)
-      return cmp;
-
-    if (event.type == 'otsv-acup') {
-      /* We only care about the number of clean sections. */
-      cmp = b.marks_distribution[0] - a.marks_distribution[0];
+      let cmp =
+	(a.non_competing - b.non_competing) ||
+	(!b.failure - !a.failure) ||
+	(a.zones_todo - b.zones_todo) ||
+	(a.marks - b.marks) ||
+	(a.tie_break - b.tie_break);
       if (cmp)
 	return cmp;
 
-      let _a = a.date_of_birth || '9999-99-99';
-      let _b = b.date_of_birth || '9999-99-99';
-      return _a.localeCompare(_b);
-    }
+      if (event.type == 'otsv-acup') {
+	/* We only care about the number of clean sections. */
+	cmp = b.marks_distribution[0] - a.marks_distribution[0];
+	if (cmp)
+	  return cmp;
 
-    /* More cleaned sections win, etc. */
-    for (let n = 0; n < 5; n++) {
-      cmp = b.marks_distribution[n] - a.marks_distribution[n];
-      if (cmp) {
-	if (decisive)
-	  decisive.marks((cmp < 0 ? a : b).number, n);
-	return cmp;
+	let _a = a.date_of_birth || '9999-99-99';
+	let _b = b.date_of_birth || '9999-99-99';
+	return _a.localeCompare(_b);
       }
-    }
 
-    if (event.equal_marks_resolution) {
-      let ra = a.marks_per_round;
-      let rb = b.marks_per_round;
-      if (event.equal_marks_resolution == 1) {
-	/* First better round wins */
-	for (let n = 0; n < ra.length; n++) {
-	  cmp = ra[n] - rb[n];
-	  if (cmp) {
-	    if (decisive)
-	      decisive.round((cmp < 0 ? a : b).number, n + 1);
-	    return cmp;
-	  }
-	}
-      } else {
-	/* Last better round wins */
-	for (let n = ra.length - 1; n >= 0; n--) {
-	  cmp = ra[n] - rb[n];
-	  if (cmp) {
-	    if (decisive)
-	      decisive.round((cmp < 0 ? a : b).number, n + 1);
-	    return cmp;
-	  }
+      /* More cleaned sections win, etc. */
+      for (let n = 0; n < 5; n++) {
+	cmp = b.marks_distribution[n] - a.marks_distribution[n];
+	if (cmp) {
+	  if (decisive)
+	    decisive.marks((cmp < 0 ? a : b).number, n);
+	  return cmp;
 	}
       }
-    }
+
+      if (event.equal_marks_resolution) {
+	let ra = a.marks_per_round;
+	let rb = b.marks_per_round;
+	if (event.equal_marks_resolution == 1) {
+	  /* First better round wins */
+	  for (let n = 0; n < ra.length; n++) {
+	    cmp = ra[n] - rb[n];
+	    if (cmp) {
+	      if (decisive)
+		decisive.round((cmp < 0 ? a : b).number, n + 1);
+	      return cmp;
+	    }
+	  }
+	} else {
+	  /* Last better round wins */
+	  for (let n = ra.length - 1; n >= 0; n--) {
+	    cmp = ra[n] - rb[n];
+	    if (cmp) {
+	      if (decisive)
+		decisive.round((cmp < 0 ? a : b).number, n + 1);
+	      return cmp;
+	    }
+	  }
+	}
+      }
+    };
   }
 
-  function compute_ranks(riders_in_class, decisive) {
-    riders_in_class.sort(rank_order);
+  function compute_ranks(riders_in_class, ranking, decisive) {
+    let decisive_order = rank_order(ranking, decisive);
+    riders_in_class.sort(rank_order(ranking));
 
     let ranks = {};
     let rank = 1;
@@ -325,7 +341,7 @@ function compute_event(cache, id, event) {
     riders_in_class.forEach((rider) => {
       ranks[rider.number] =
         (previous_rider &&
-	 !rank_order(previous_rider, rider, decisive)) ?
+	 !decisive_order(previous_rider, rider)) ?
 	  ranks[previous_rider.number] : rank;
       previous_rider = rider;
       rank++;
@@ -480,7 +496,7 @@ function compute_event(cache, id, event) {
     let riders_in_class = riders_per_class[ranking_class]
       .filter(rider_not_split);
 
-    let ranks = compute_ranks(riders_in_class, decisive_overall);
+    let ranks = compute_ranks(riders_in_class, null, decisive_overall);
     for (let number in ranks) {
       let rider = riders[number];
       rider.rank = ranks[number];
@@ -517,14 +533,14 @@ function compute_event(cache, id, event) {
 	  riders_per_class[ranking_class].filter(rider_in_ranking)
 	);
       }
-      let ranks = compute_ranks(riders_in_ranking, decisive_in_ranking);
+      let ranks = compute_ranks(riders_in_ranking, ranking, decisive_in_ranking);
       ranking_assign_ranks(riders, ranking, ranks);
       ranking_assign_scores(riders_in_ranking, ranking, ranks);
     } else {
       for (let ranking_class in riders_per_class) {
 	let riders_in_class = riders_per_class[ranking_class]
 	  .filter(rider_in_ranking);
-	let ranks = compute_ranks(riders_in_class, decisive_in_ranking);
+	let ranks = compute_ranks(riders_in_class, ranking, decisive_in_ranking);
 	ranking_assign_ranks(riders, ranking, ranks);
 	ranking_assign_scores(riders_in_class, ranking, ranks);
       }

@@ -131,6 +131,7 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 /*
  * Local things
  */
+var acup = require('./lib/acup.js');
 var compute_event = require('./lib/compute_event.js');
 var compute_serie = require('./lib/compute_serie.js');
 String.prototype.latinize = require('./lib/latinize');
@@ -2376,6 +2377,17 @@ async function get_event_results(connection, id) {
       }
 
       function class_order(a, b) {
+	if (event.type == 'otsv-acup' && ranking == 2) {
+	  /* FIXME: Squash together classes with the same order? */
+	  try {
+	    let color_a = event.classes[a].color;
+	    let color_b = event.classes[b].color;
+	    if (color_a != color_b)
+	      return acup.color_order[color_a] - acup.color_order[color_b];
+	  } catch (err) {
+	    throw new Error(`Failed to compare ranking classes ${a.ranking_class} and ${b.ranking_class}`);
+	  }
+	}
 	if (event.classes[a] && event.classes[b])
 	  return event.classes[a].order - event.classes[b].order;
 	return a - b;
