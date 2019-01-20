@@ -333,7 +333,7 @@ DROP TABLE IF EXISTS `result_columns`;
 CREATE TABLE `result_columns` (
   `id` int(11) NOT NULL DEFAULT '0',
   `n` int(11) NOT NULL DEFAULT '0',
-  `name` varchar(20) DEFAULT NULL,
+  `name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`,`n`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
