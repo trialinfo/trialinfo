@@ -120,7 +120,7 @@ a:hover.updown {
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
-	    <th rowspan="5">Eigenschaften</th>
+	    <th rowspan="6">Eigenschaften</th>
 	    <td>
 	      <input type="checkbox" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
 	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
@@ -128,20 +128,26 @@ a:hover.updown {
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="radio" ng-disabled="nonsplit_rankings().length <= 1" ng-model="event.main_ranking" value="{{$index + 1}}" numeric id="ranking{{$index + 1}}_main">
+	      <input type="radio" ng-disabled="main_rankings().length <= 1" ng-model="event.main_ranking" value="{{$index + 1}}" numeric id="ranking{{$index + 1}}_main">
 	        <label for="ranking{{$index + 1}}_main">In Gesamtwertung anzeigen</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
+	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
 	        <label for="ranking{{$index + 1}}_split">Von Gesamtwertung trennen</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
+	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
 	        <label for="ranking{{$index + 1}}_joint">Reihung über alle Klassen</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="checkbox" ng-model="ranking.ignore" id="ranking{{$index + 1}}_ignore">
+	        <label for="ranking{{$index + 1}}_ignore">In Auswertung ignorieren</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">

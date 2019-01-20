@@ -507,26 +507,32 @@ var settingsController = [
       normalize_future_events($scope.event);
     }, true);
 
-    $scope.nonsplit_rankings = function() {
-      var nonsplit_rankings = [];
+    $scope.main_rankings = function() {
+      var main_rankings = [];
       var rankings = $scope.event.rankings;
       for (var n = 0; n < rankings.length; n++) {
 	var ranking = rankings[n];
-	if (ranking.name != null && !ranking.split)
-	  nonsplit_rankings.push(n + 1);
+	if (ranking.name != null && !ranking.split && !ranking.ignore)
+	  main_rankings.push(n + 1);
       }
-      return nonsplit_rankings;
+      return main_rankings;
     }
 
     $scope.$watch('event.rankings', function() {
       var event = $scope.event;
-      var rankings = $scope.nonsplit_rankings();
-      if (rankings.length == 0) {
+
+      angular.forEach(event.rankings, function(ranking) {
+	if (ranking.ignore)
+	  ranking.split = false;
+      });
+
+      var main_rankings = $scope.main_rankings();
+      if (main_rankings.length == 0) {
 	if (event.main_ranking != null)
 	  event.main_ranking = null;
-      } else if (rankings.indexOf(event.main_ranking) == -1) {
-	if (event.main_ranking != rankings[0])
-	  event.main_ranking = rankings[0];
+      } else if (main_rankings.indexOf(event.main_ranking) == -1) {
+	if (event.main_ranking != main_rankings[0])
+	  event.main_ranking = main_rankings[0];
       }
     }, true);
 

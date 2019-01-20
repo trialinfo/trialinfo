@@ -418,6 +418,14 @@ async function update_database(connection) {
     `);
   }
 
+  if (!await column_exists(connection, 'rankings', 'ignore')) {
+    console.log('Adding column `ignore` to `rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD ${'`ignore`'} BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
+
   if (!await column_exists(connection, 'events', 'main_ranking')) {
     console.log('Adding column `main_ranking` to `events`');
     await connection.queryAsync(`
@@ -2464,7 +2472,7 @@ async function get_event_results(connection, id) {
 
   for (let ranking_index in event.rankings) {
     ranking_index = +ranking_index;
-    if (!event.rankings[ranking_index])
+    if ((event.rankings[ranking_index] || {ignore: true}).ignore)
       continue;
     if (ranking_index + 1 == event.main_ranking)
       continue;
