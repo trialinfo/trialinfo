@@ -116,6 +116,16 @@ async function compute_serie(connection, serie_id, last_event) {
     rider.events.push(row);
   });
 
+  Object.keys(rankings).forEach((ranking_nr) => {
+    let ranking = rankings[ranking_nr];
+    Object.keys(ranking).forEach((ranking_class_nr) => {
+      let ranking_class = ranking[ranking_class_nr];
+      ranking_class.events_so_far =
+	(events_so_far[ranking_nr - 1] || [])
+	[ranking_class_nr - 1] || 0;
+    });
+  });
+
   Object.values(rankings).forEach((ranking) => {
     Object.values(ranking).forEach((ranking_class) => {
       ranking_class.riders = Object.values(ranking_class.riders);
@@ -241,8 +251,8 @@ async function compute_serie(connection, serie_id, last_event) {
       /* Assume the rider will participate in all events still taking place. */
       let events_to_come = 0;
       if (ranking_class.min_events > 1 && ranking_class.max_events) {
-	let esf = (events_so_far[ranking_nr - 1] || [])[ranking_class_nr - 1] || 0;
-	events_to_come = Math.max(0, ranking_class.max_events - esf);
+	let events_so_far = ranking_class.events_so_far;
+	events_to_come = Math.max(0, ranking_class.max_events - events_so_far);
       }
       rider.ranked = rider.events.length + events_to_come >= ranking_class.min_events;
     });
@@ -283,6 +293,7 @@ async function compute_serie(connection, serie_id, last_event) {
        * much easier.
        */
 
+      let first_ranking_class;
       let joint_ranking_class;
       let joint_riders = {};
       let placeholder = {};
@@ -307,12 +318,16 @@ async function compute_serie(connection, serie_id, last_event) {
 	});
 
 	if (joint_ranking_class) {
-	  for (let key of ['max_events', 'min_events', 'drop_events']) {
-	    if (joint_ranking_class[key] != ranking_class[key])
-	      console.log(`Collapsed ranking ${ranking_nr}: ${key} differs`);
+	  for (let key of ['max_events', 'min_events',
+			   'drop_events', 'events_so_far']) {
+	    if (first_ranking_class[key] != ranking_class[key]) {
+	      console.log(`Collapsed ranking ${ranking_nr}: ${key} differs; ignoring`);
+	      joint_ranking_class[key] = null;
+	    }
 	  }
 	} else {
 	  joint_ranking_class = Object.assign({}, ranking_class);
+	  first_ranking_class = ranking_class;
 	}
 	ranking[ranking_class_nr] = placeholder;
       });
