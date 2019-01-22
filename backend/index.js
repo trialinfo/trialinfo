@@ -2714,7 +2714,7 @@ async function get_serie_results(connection, serie_id) {
     for (let event of active_events) {
       result.events.push({
 	id: event.id,
-	name: event.title,
+	name: event.location || event.title,
 	// subtitle: event.subtitle,
 	date: event.date,
       });
