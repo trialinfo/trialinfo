@@ -83,7 +83,7 @@ table.ranking th {
   background-color:#A7C942;
   color:#ffffff;
 }
-table.ranking tr.alt td {
+table.ranking tbody.alt td, table.ranking tr.alt td {
   background-color:#EAF2D3;
 }
 table.ranking tr td.individual-marks, table.ranking tr td.distribution {
@@ -109,9 +109,10 @@ table.ranking tr td.important {
         <th style="text-align:center" ng-bind-html="class_symbol(class_ranking.class)" adjust-width="rank"></th>
 	<th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
 	<th style="text-align:right" ng-repeat="event in events(class_ranking.events) track by $index" adjust-width="score">
-	  <span title="{{event.name}}">{{event.date | date:"d."}}<br>{{event.date | date:"M."}}</span>
+	  <span ng-if="event.location" title="{{event.location}} am {{event.date | date:'d.M.'}}">{{event.label}}</span>
+	  <span ng-if="!event.location" title="{{event.title}}">{{event.label}}</span>
 	</th>
-	<th style="text-align:right" ng-if="have_drop_score(class_ranking)" adjust-width="total-score"><span title="Streichpunkte">Str</span></th><!-- XXX Hide when always empty! -->
+	<th style="text-align:right" ng-if="have_drop_score(class_ranking)" adjust-width="drop-score"><span title="Streichpunkte">Str</span></th>
 	<th style="text-align:right" adjust-width="total-score"><span title="Gesamtpunkte">Ges</span></th>
       </thead>
       <tbody ng-repeat="rider in class_ranking.riders">
@@ -130,14 +131,20 @@ table.ranking tr td.important {
 <div ng-if="results.events.length">
   <p style="font-weight:bold;padding-top:1em">Veranstaltungen:</p>
   <table class="ranking">
-    <tr>
-      <th style="text-align:right"></th>
-      <th style="text-align:left">Name</th>
-    </tr>
-    <tr ng-repeat="event in results.events" ng-class-even="'alt'">
-      <td style="text-align:right">{{event.date | date:"d.M."}}</td>
-      <td style="text-align:left">{{event.name}}</td>
-    </tr>
+    <thead>
+      <tr>
+	<th style="text-align:right">Nr.</th>
+	<th style="text-align:right">Datum</th>
+	<th style="text-align:left">Name</th>
+      </tr>
+    </thead>
+    <tbody ng-repeat="group in events_by_location" ng-class-even="'alt'">
+      <tr ng-repeat="event in group">
+	<td style="text-align:right">{{event.label}}</td>
+	<td style="text-align:right">{{event.date | date:"d.M."}}</td>
+	<td ng-if="$index == 0" rowspan="{{group.length}}" style="text-align:left">{{event.location || event.title}}</td>
+      </tr>
+    </tbody>
   </table>
 </div>
 <p ng-if="serie.mtime && same_day(serie.date)">Letzte Änderung: {{serie.mtime}}</p>

@@ -2714,8 +2714,9 @@ async function get_serie_results(connection, serie_id) {
     for (let event of active_events) {
       result.events.push({
 	id: event.id,
-	name: event.location || event.title,
-	// subtitle: event.subtitle,
+	title: event.title,
+	subtitle: event.subtitle,
+	location: event.location,
 	date: event.date,
       });
     }

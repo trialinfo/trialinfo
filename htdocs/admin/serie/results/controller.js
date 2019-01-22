@@ -30,6 +30,22 @@ var serieResultsController = [
       });
     }
 
+    angular.forEach(results.events, function(event, index) {
+      event.label = +index + 1;
+    });
+
+    $scope.events_by_location = (function(events) {
+      let groups = [], last_event;
+      angular.forEach(events, function(event) {
+	if (!last_event || !event.location ||
+	    last_event.location != event.location)
+	  groups.push([]);
+	groups[groups.length - 1].push(event);
+	last_event = event;
+      });
+      return groups;
+    }(results.events));
+
     $scope.have_drop_score = function(class_ranking) {
       if (class_ranking.class.drop_events) {
 	let drop_events = class_ranking.events.length -
