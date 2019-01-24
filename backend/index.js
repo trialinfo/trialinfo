@@ -510,6 +510,22 @@ async function update_database(connection) {
       ADD decisive_round INT
     `);
   }
+
+  if (await column_exists(connection, 'future_events', 'series')) {
+    console.log('Dropping column `series` of `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      DROP series
+    `);
+  }
+
+  if (!await column_exists(connection, 'future_events', 'type')) {
+    console.log('Adding column `type` to `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      ADD type VARCHAR(20) AFTER location
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -3383,7 +3399,6 @@ const register_event_fields = {
   insurance: true,
   registration_ends: true,
   registration_info: true,
-  series: true,
   type: true,
   version: true
 };

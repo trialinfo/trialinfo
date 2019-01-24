@@ -10,6 +10,8 @@ var settingsController = [
     };
     var min_zones = 8;
 
+    $scope.event_types = event_types;
+
     assign_event(event);
     event = undefined;
 
@@ -135,8 +137,8 @@ var settingsController = [
 	  fid: null,
 	  active: false,
 	  date: null,
-	  title: null,
-	  series: null
+	  location: null,
+	  type: null
 	});
       }
     }
@@ -155,8 +157,13 @@ var settingsController = [
       var name = future_event.location;
       if (future_event.date)
 	name += ' am ' + $scope.$eval('date | date:"d.M."', future_event);
-      if (future_event.series)
-	name += ' (' + future_event.series + ')';
+      if (future_event.type) {
+	var event_type = event_types.find(function(event_type) {
+	  return event_type.value == future_event.type;
+	});
+	if (event_type)
+	  name += ' (' + event_type.name + ')';
+      }
       return name;
     }
 
@@ -275,7 +282,7 @@ var settingsController = [
       if (future_event &&
 	  future_event.date == null &&
 	  future_event.location == null &&
-	  future_event.series == null)
+	  future_event.type == null)
 	future_events.pop();
 
       var result_columns = event.result_columns;
@@ -338,18 +345,18 @@ var settingsController = [
       //events.reverse();
       $scope.events = events;
 
-      function unique_title(title, events) {
-	var vergeben = {};
+      function unique_location(location, events) {
+	var used = {};
 	var n = 1;
 	angular.forEach(events, function(event) {
-	  vergeben[event.title] = true;
+	  used[event.location] = true;
 	});
-	while (title in vergeben) {
-	  title = title.replace(/ \(Kopie( \d+)?\)$/, '');
-	  title += ' (Kopie' + (n == 1 ? '' : ' ' + n) + ')';
+	while (location in used) {
+	  location = location.replace(/ \(Kopie( \d+)?\)$/, '');
+	  location += ' (Kopie' + (n == 1 ? '' : ' ' + n) + ')';
 	  n++;
 	}
-	return title;
+	return location;
       }
 
       $scope.$watch('event.base', function() {
@@ -369,8 +376,8 @@ var settingsController = [
 	    .then(function(response) {
 	      let event = response.data;
 	      delete event.id;
-	      $scope.unique_title =
-		unique_title(event.title, $scope.events);
+	      $scope.unique_location =
+		unique_location(event.location, $scope.events);
 	      event.registration_ends = null;
 	      event.base = base;
 	      let future_events = angular.copy(event.future_events);
@@ -406,19 +413,22 @@ var settingsController = [
 	  return;
 
 	if (fid == null) {
-	  event.title = $scope.unique_title;
+	  event.location = $scope.unique_location;
 	  event.date = $scope.$eval('today | date:"yyyy-MM-dd"', {today: Date.now()});
+	  event.title = event.location + ' am ' + $scope.$eval('date | date:"d. MMMM yyyy"', event);
 	} else {
 	  var future_event = $scope.future_events.find(
 	    function(future_event) {
 	      return future_event.fid == fid;
 	    }) || {};
 	  if (future_event.location) {
-	    event.title = future_event.location + ' am ' + $scope.$eval('date | date:"d. MMMM"', future_event);
+	    event.title = future_event.location + ' am ' + $scope.$eval('date | date:"d. MMMM yyyy"', future_event);
 	    event.location = future_event.location;
 	  }
 	  if (future_event.date)
 	    event.date = future_event.date;
+	  if (future_event.type)
+	    event.type = future_event.type;
 	}
 	event.future_events =
 	  angular.copy($scope.future_events).reduce(

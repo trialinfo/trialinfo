@@ -360,8 +360,13 @@ var eventController = [
         label = event.location;
       if (event.date)
 	label += ' am ' + $scope.$eval('date | date:"d. MMMM"', event);
-      if (event.series)
-	label += ' (' + event.series + ')';
+      if (event.type != null) {
+	var event_type = event_types.find(function(event_type) {
+	  return event_type.value == event.type;
+	});
+	if (event_type)
+	  label += ' (' + event_type.name + ')';
+      }
       return label;
     };
 

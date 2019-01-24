@@ -61,7 +61,7 @@
       </tr>
     </table>
   </fieldset><br>
-  <fieldset style="display:inline">
+  <fieldset ng-if="serie.classes.length > 1 && serie.events.length > 1" style="display:inline">
     <legend>Startnummernänderungen</legend>
     <span ng-repeat="event in events | filter:in_serie">
       <fieldset style="display:inline">
@@ -87,7 +87,7 @@
       </fieldset><br>
     </span>
   </fieldset><br>
-  <fieldset style="display:inline">
+  <fieldset ng-if="serie.classes.length > 1 && serie.events.length > 1" style="display:inline">
     <legend>Reihung bei Punktegleichstand</legend>
     <table>
       <tr>

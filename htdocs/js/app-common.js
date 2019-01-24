@@ -237,4 +237,13 @@ function join(separator) {
   }());
 }());
 
+var event_types = [
+  {value: 'otsv', name: 'ÖTSV'},
+  {value: 'otsv+amf', name: 'ÖTSV + AMF'},
+  {value: 'otsv-bike', name: 'ÖTSV Fahrrad'},
+  {value: 'otsv-ecup', name: 'ÖTSV Kids e-Cup'},
+  {value: 'otsv-acup', name: 'ÖTSV A-Cup'},
+  {value: 'otsv-x', name: 'ÖTSV Einzelveranstaltung'},
+];
+
 /* ex:set shiftwidth=2: */

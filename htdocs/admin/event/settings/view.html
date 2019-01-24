@@ -73,14 +73,8 @@ a:hover.updown {
       <tr>
 	<th><label for="type">Art</label></th>
 	<td>
-	  <select ng-model="event.type" id="type" ng-click="type_blur()" ng-blur="type_blur()" nullable>
+	  <select ng-model="event.type" id="type" ng-options="event_type.value as event_type.name for event_type in event_types" ng-click="type_blur()" ng-blur="type_blur()" nullable>
 	    <option value=""></option>
-	    <option value="otsv">ÖTSV</option>
-	    <option value="otsv+amf">ÖTSV + AMF</option>
-	    <option value="otsv-bike">ÖTSV Fahrrad</option>
-	    <option value="otsv-ecup">ÖTSV Kids e-Cup</option>
-	    <option value="otsv-acup">ÖTSV A-Cup</option>
-	    <option value="otsv-x">ÖTSV Einzelveranstaltung</option>
 	  </select>
       </tr>
       <tr>
@@ -422,7 +416,7 @@ a:hover.updown {
 	<th style="text-align:center">Aktiv</th>
         <th style="text-align:center">Datum</th>
 	<th style="text-align:center">Ort</th>
-	<th style="text-align:center">Veranstaltungsreihen</th>
+	<th style="text-align:center">Art</th>
       </tr>
       <tr ng-repeat="future_event in event.future_events">
 	<td style="text-align:center">
@@ -435,7 +429,9 @@ a:hover.updown {
 	  <input type="text" size="30" maxlength="40" ng-model="future_event.location" nullable>
 	</td>
 	<td>
-	  <input type="text" size="30" maxlength="40" ng-model="future_event.series" nullable>
+	  <select ng-model="future_event.type" ng-options="event_type.value as event_type.name for event_type in event_types" nullable>
+	    <option value=""></option>
+	  </select>
 	</td>
       </tr>
     </table>

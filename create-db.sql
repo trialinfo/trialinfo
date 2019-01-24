@@ -204,7 +204,7 @@ CREATE TABLE `future_events` (
   `fid` int(11) NOT NULL,
   `date` date DEFAULT NULL,
   `location` varchar(40) DEFAULT NULL,
-  `series` varchar(40) DEFAULT NULL,
+  `type` varchar(20) DEFAULT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`fid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
