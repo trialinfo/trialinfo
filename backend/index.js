@@ -646,6 +646,14 @@ var cache = {
     delete this.saved_riders[id];
     delete this.cached_riders[id];
   },
+  check_for_new_riders: function(id) {
+    if (!this.saved_riders[id])
+      this.saved_riders[id] = {};
+    for (let number in this.cached_riders[id]) {
+      if (!(number in this.saved_riders[id]))
+	this.saved_riders[id][number] = undefined;
+    }
+  },
   delete_rider: function(id, number) {
     if (this.saved_riders[id])
       delete this.saved_riders[id][number];
@@ -2045,6 +2053,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	  await get_riders(connection, id);
 	let riders = cache.modify_riders(id);
 	reset_event(base_event, base_riders, event, riders, reset);
+	cache.check_for_new_riders(id);
       }
 
       if (!future_event_ids_equal(old_event, event)) {
