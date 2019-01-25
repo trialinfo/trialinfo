@@ -146,7 +146,8 @@ var serieResultsController = [
 	}
       }
 
-      if (results.rankings.every(function(ranking) {
+      if (results.rankings.length &&
+	  results.rankings.every(function(ranking) {
 	    return all_equal(ranking.classes, 'summary');
 	  })) {
 	results.summary = results.rankings[0].classes[0].summary;
