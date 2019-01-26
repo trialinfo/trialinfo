@@ -15,7 +15,9 @@ var eventResultsController = [
     var old_results, event, features;
 
     function ranking_class_tag(ranking, class_) {
-      return (ranking.ranking ? ranking.ranking + ':' : '') + class_.class;
+      return (ranking.ranking ? ranking.ranking + ':' : '') +
+             (Array.isArray(class_.ranking_class) ?
+	      class_.ranking_class : [class_.ranking_class]).join('+');
     }
 
     function filter_rankings(rankings) {

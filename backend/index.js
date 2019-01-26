@@ -2388,7 +2388,28 @@ async function get_event_results(connection, id) {
     rankings: []
   };
 
-  function group_by_ranking_class(ranking) {
+  function ranking_classes(ranking) {
+    function class_info(class_nr) {
+      let ranking_class = class_nr;
+      if (event.classes[class_nr - 1])
+	ranking_class = event.classes[class_nr - 1].ranking_class;
+      let hash = {
+	ranking_class: class_nr,
+	zones: event.zones[ranking_class - 1],
+	skipped_zones: (event.skipped_zones || [])[ranking_class - 1] || [],
+	scores: ranking != null &&
+		(event.rankings[ranking - 1] || {}).assign_scores &&
+		(ranking != 1 ||
+		 !(event.classes[class_nr - 1] || {}).no_ranking1),
+	riders: [],
+      };
+      if (event.classes[class_nr - 1]) {
+	for (let key of ['rounds', 'color', 'name'])
+	  hash[key] = event.classes[class_nr - 1][key];
+      }
+      return hash;
+    }
+
     return function(riders) {
       let riders_by_ranking_class = [];
       for (let rider of riders) {
@@ -2396,54 +2417,70 @@ async function get_event_results(connection, id) {
 	  continue;
 	let ranking_class = event.classes[rider.class - 1].ranking_class;
 
-	if (!riders_by_ranking_class[ranking_class - 1])
-	  riders_by_ranking_class[ranking_class - 1] = [];
-	riders_by_ranking_class[ranking_class - 1].push(rider);
+	if (!riders_by_ranking_class[ranking_class - 1]) {
+	  riders_by_ranking_class[ranking_class - 1] =
+	    class_info(ranking_class);
+	}
+	riders_by_ranking_class[ranking_class - 1].riders.push(rider);
       }
 
-      function class_order(a, b) {
-	if (event.type == 'otsv-acup' && ranking == 2) {
-	  /* FIXME: Squash together classes with the same order? */
+      let ranking_classes = Object.values(riders_by_ranking_class);
+      if (event.type == 'otsv-acup' && ranking == 2) {
+	function color_order(a, b) {
 	  try {
-	    let color_a = event.classes[a].color;
-	    let color_b = event.classes[b].color;
+	    let color_a = event.classes[a.ranking_class - 1].color;
+	    let color_b = event.classes[b.ranking_class - 1].color;
 	    if (color_a != color_b)
 	      return acup.color_order[color_a] - acup.color_order[color_b];
 	  } catch (err) {
 	    throw new Error(`Failed to compare ranking classes ${a.ranking_class} and ${b.ranking_class}`);
 	  }
 	}
-	if (event.classes[a] && event.classes[b])
-	  return event.classes[a].order - event.classes[b].order;
-	return a - b;
+
+	let last_ranking_class;
+	ranking_classes = ranking_classes
+	  .sort(color_order)
+	  .reduce((ranking_classes, ranking_class) => {
+	    if (last_ranking_class && !color_order(last_ranking_class, ranking_class)) {
+	      let merged = ranking_classes[ranking_classes.length - 1];
+	      if (merged === last_ranking_class) {
+		merged = ranking_classes[ranking_classes.length - 1] =
+		  Object.assign({}, merged);
+	        merged.ranking_class = [last_ranking_class.ranking_class];
+	      }
+
+	      merged.ranking_class.push(ranking_class.ranking_class);
+	      for (let key of ['zones', 'skipped_zones', 'rounds', 'color']) {
+		if (!deepEqual(last_ranking_class[key], ranking_class[key]))
+		  delete merged[key];
+	      }
+	      merged.name += ' + ' + ranking_class.name;
+	      merged.scores |= ranking_class.scores;
+	      merged.riders = merged.riders.concat(ranking_class.riders);
+	    } else {
+	      ranking_classes.push(ranking_class);
+	    }
+	    last_ranking_class = ranking_class;
+	    return ranking_classes;
+	  }, []);
+      } else {
+	function class_order(a, b) {
+	  if (event.classes[a] && event.classes[b])
+	    return event.classes[a].order - event.classes[b].order;
+	  return a - b;
+	}
+
+        ranking_classes.sort(class_order);
       }
 
-      return Object.keys(riders_by_ranking_class)
-      .sort(class_order)
-      .map((class_index) => {
-	let ranking_class = class_index + 1;
-	if (event.classes[class_index])
-	  ranking_class = event.classes[class_index].ranking_class;
-	let hash = {
-	  class: +class_index + 1,
-	  zones: event.zones[ranking_class - 1],
-	  skipped_zones: (event.skipped_zones || [])[ranking_class - 1] || [],
-	  scores: ranking != null &&
-		  (event.rankings[ranking - 1] || {}).assign_scores &&
-		  (ranking != 1 ||
-		   !(event.classes[class_index] || {}).no_ranking1),
-	  additional_marks: riders_by_ranking_class[class_index]
-			    .some((rider) => rider.additional_marks),
-	  penalty_marks: riders_by_ranking_class[class_index]
-			 .some((rider) => rider.penalty_marks),
-	};
-	if (event.classes[class_index]) {
-	  for (let key of ['rounds', 'color', 'name'])
-	    hash[key] = event.classes[class_index][key];
-	}
-	hash.riders = riders_by_ranking_class[class_index];
-	return hash;
+      ranking_classes.forEach((ranking_class) => {
+	ranking_class.additional_marks =
+	  ranking_class.riders.some((rider) => rider.additional_marks);
+	ranking_class.penalty_marks =
+	  ranking_class.riders.some((rider) => rider.penalty_marks);
       });
+
+      return ranking_classes;
     };
   }
 
@@ -2453,20 +2490,22 @@ async function get_event_results(connection, id) {
       rider_public_fields.concat([
 	'additional_marks', 'penalty_marks', 'failure', 'marks',
 	'marks_distribution', 'marks_per_round', 'marks_per_zone',
-	'non_competing', 'number', 'rank', 'decisive_marks',
-	'decisive_round', 'tie_break'
+	'non_competing', 'number', 'tie_break'
       ]).forEach(
 	(field) => { r[field] = rider[field]; }
       );
-      let rx = rider.rankings[ranking - 1];
-      if (rx) {
-	if (!overall) {
-	  for (let field of ['rank', 'decisive_marks', 'decisive_round'])
-	    r[field] = rx[field];
-	}
-	r.score = rx.score;
+      let rx;
+      if (ranking) {
+        rx = rider.rankings[ranking - 1];
+	if (rx)
+	  r.score = rx.score;
       }
-
+      if (overall)
+	rx = rider;
+      if (rx) {
+	for (let field of ['rank', 'decisive_marks', 'decisive_round'])
+	  r[field] = rx[field];
+      }
       return r;
     }
 
@@ -2490,7 +2529,7 @@ async function get_event_results(connection, id) {
     return ranking_class;
   }
 
-  let result = group_by_ranking_class(event.main_ranking)(
+  let result = ranking_classes(event.main_ranking)(
     Object.values(riders).filter((rider) => rider.rank != null)
   ).map(convert_ranking(event.main_ranking, true))
   .map(sort_by_rank);
@@ -2511,12 +2550,12 @@ async function get_event_results(connection, id) {
 
   for (let ranking_index in event.rankings) {
     ranking_index = +ranking_index;
-    if ((event.rankings[ranking_index] || {ignore: true}).ignore)
+    if (event.rankings[ranking_index].ignore)
       continue;
     if (ranking_index + 1 == event.main_ranking)
       continue;
 
-    let result = group_by_ranking_class(+ranking_index + 1)(
+    let result = ranking_classes(ranking_index + 1)(
 	Object.values(riders).filter((rider) => (rider.rankings[ranking_index] || {}).rank != null)
       ).map(convert_ranking(ranking_index + 1, false))
       .map(sort_by_rank);
