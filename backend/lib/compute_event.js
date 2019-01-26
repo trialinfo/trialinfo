@@ -414,7 +414,7 @@ function compute_event(cache, id, event) {
     }
   }
 
-  let cached_riders = cache.get_riders(id) || {};
+  let cached_riders = cache.get_riders(id);
   let riders = Object.values(cached_riders).reduce((riders, cached_rider) => {
     let class_ = cached_rider['class'];
     let ranking_class;

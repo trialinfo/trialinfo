@@ -612,7 +612,7 @@ var cache = {
   cached_riders: {},
   saved_riders: {},
   get_riders: function(id) {
-    return this.cached_riders[id];
+    return this.cached_riders[id] || {};
   },
   set_riders: function(id, riders) {
     delete this.saved_riders[id];
@@ -2276,7 +2276,7 @@ function make_revalidate_riders(connection, id) {
     });
 
     let cached_versions = {};
-    Object.values(cache.get_riders(id) || {}).forEach((rider) => {
+    Object.values(cache.get_riders(id)).forEach((rider) => {
       cached_versions[rider.number] = rider.version;
     });
 
