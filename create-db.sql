@@ -421,6 +421,7 @@ CREATE TABLE `riders` (
   `accept_conditions` tinyint(1) NOT NULL DEFAULT '0',
   `decisive_marks` INT DEFAULT NULL,
   `decisive_round` INT DEFAULT NULL,
+  `unfinished_zones` INT DEFAULT NULL,
   PRIMARY KEY (`id`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

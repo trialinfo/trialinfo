@@ -21,7 +21,7 @@ var deepEqual = require('deep-equal');
 var common = require('../htdocs/js/common');
 let acup = require('./acup.js');
 
-function compute_event(cache, id, event) {
+function compute_event(cached_riders, event) {
   function compute_active_zones(riders) {
     let active_zones = {};
 
@@ -88,11 +88,13 @@ function compute_event(cache, id, event) {
     Object.values(riders).forEach((rider) => {
       if (rider.group)
 	return;
+      if (!rider.marks_per_zone)
+	return;
 
       let last_started_round, last_completed_round;
 
       if (rider.start && rider.ranking_class) {
-	rider.zones_todo = 0;
+	rider.unfinished_zones = 0;
 	let zone_skipped;
 
 	let zones = event.zones[rider.ranking_class - 1] || [];
@@ -110,7 +112,7 @@ function compute_event(cache, id, event) {
 	    let marks = marks_in_round[zone - 1];
 	    if (marks != null) {
 	      if (zone_skipped) {
-		rider.zones_todo++;
+		rider.unfinished_zones++;
 	      } else {
 		rider.marks_per_round[round - 1] +=
 		  (marks == -1) ? marks_skipped_zone : marks;
@@ -126,13 +128,13 @@ function compute_event(cache, id, event) {
 		active_zones = compute_active_zones(riders);
 	      if (((active_zones[rider.ranking_class] || {})[round] || {})[zone]) {
 		zone_skipped = true;
-		rider.zones_todo++;
+		rider.unfinished_zones++;
 	      }
 	      if (last_completed_round == null)
 		last_completed_round = round - 1;
 	    } else {
 	      zone_skipped = true;
-	      rider.zones_todo++;
+	      rider.unfinished_zones++;
 	      if (last_completed_round == null)
 		last_completed_round = round - 1;
 	    }
@@ -169,11 +171,17 @@ function compute_event(cache, id, event) {
       if (!group.group)
 	return;
 
-      group.marks_per_zone = [];
+      let marks_per_zone = [];
 
       if (group.start) {
 	group.riders.forEach((number) => {
 	  let rider = riders[number];
+	  if (marks_per_zone == undefined)
+	    return;
+	  else if (!rider.marks_per_zone) {
+	    marks_per_zone = undefined;
+	    return;
+	  }
 	  if (rider && rider.start && rider.ranking_class) {
 	    let zones = event.zones[rider.ranking_class - 1] || [];
 	    let rounds = event.classes[rider.ranking_class - 1].rounds;
@@ -185,12 +193,12 @@ function compute_event(cache, id, event) {
 		  continue;
 		marks = (rider.marks_per_zone[round - 1] || [])[zone - 1];
 		if (marks != null) {
-		  if (!group.marks_per_zone[round - 1])
-		    group.marks_per_zone[round - 1] = [];
-		  if (group.marks_per_zone[round - 1][zone - 1] == undefined)
-		    group.marks_per_zone[round - 1][zone - 1] = 0;
+		  if (!marks_per_zone[round - 1])
+		    marks_per_zone[round - 1] = [];
+		  if (marks_per_zone[round - 1][zone - 1] == undefined)
+		    marks_per_zone[round - 1][zone - 1] = 0;
 
-		  group.marks_per_zone[round - 1][zone - 1] +=
+		  marks_per_zone[round - 1][zone - 1] +=
 		    (marks == -1) ? marks_skipped_zone : marks;
 		}
 	      }
@@ -216,10 +224,10 @@ function compute_event(cache, id, event) {
 	      if (rider.rounds > (group.rounds || -1))
 		groups.rounds = rider.rounds;
 	    }
-	    if (rider.zones_todo) {
-	      if (group.zones_todo == null)
-		group.zones_todo = 0;
-	      group.zones_todo += rider.zones_todo;
+	    if (rider.unfinished_zones) {
+	      if (group.unfinished_zones == null)
+		group.unfinished_zones = 0;
+	      group.unfinished_zones += rider.unfinished_zones;
 	    }
 	  }
 	});
@@ -231,6 +239,9 @@ function compute_event(cache, id, event) {
 	for (let marks of group.marks_per_round)
 	  group.marks += marks;
       }
+
+      if (marks_per_zone != undefined)
+	group.marks_per_zone = marks_per_zone;
     });
   }
 
@@ -258,9 +269,8 @@ function compute_event(cache, id, event) {
 	  try {
 	    let color_a = event.classes[a.ranking_class - 1].color;
 	    let color_b = event.classes[b.ranking_class - 1].color;
-	    if (color_a != color_b) {
+	    if (color_a != color_b)
 	      return acup.color_order[color_a] - acup.color_order[color_b];
-	    }
 	  } catch (err) {
 	    throw new Error(`Failed to compare ranking classes ${a.ranking_class} and ${b.ranking_class}`);
 	  }
@@ -276,7 +286,7 @@ function compute_event(cache, id, event) {
       let cmp =
 	(a.non_competing - b.non_competing) ||
 	(!b.failure - !a.failure) ||
-	(a.zones_todo - b.zones_todo) ||
+	(a.unfinished_zones - b.unfinished_zones) ||
 	(a.marks - b.marks) ||
 	(a.tie_break - b.tie_break);
       if (cmp)
@@ -306,24 +316,26 @@ function compute_event(cache, id, event) {
       if (event.equal_marks_resolution) {
 	let ra = a.marks_per_round;
 	let rb = b.marks_per_round;
-	if (event.equal_marks_resolution == 1) {
-	  /* First better round wins */
-	  for (let n = 0; n < ra.length; n++) {
-	    cmp = ra[n] - rb[n];
-	    if (cmp) {
-	      if (decisive)
-		decisive.round((cmp < 0 ? a : b).number, n + 1);
-	      return cmp;
+	if (ra && rb) {
+	  if (event.equal_marks_resolution == 1) {
+	    /* First better round wins */
+	    for (let n = 0; n < ra.length; n++) {
+	      cmp = ra[n] - rb[n];
+	      if (cmp) {
+		if (decisive)
+		  decisive.round((cmp < 0 ? a : b).number, n + 1);
+		return cmp;
+	      }
 	    }
-	  }
-	} else {
-	  /* Last better round wins */
-	  for (let n = ra.length - 1; n >= 0; n--) {
-	    cmp = ra[n] - rb[n];
-	    if (cmp) {
-	      if (decisive)
-		decisive.round((cmp < 0 ? a : b).number, n + 1);
-	      return cmp;
+	  } else {
+	    /* Last better round wins */
+	    for (let n = ra.length - 1; n >= 0; n--) {
+	      cmp = ra[n] - rb[n];
+	      if (cmp) {
+		if (decisive)
+		  decisive.round((cmp < 0 ? a : b).number, n + 1);
+		return cmp;
+	      }
 	    }
 	  }
 	}
@@ -362,7 +374,7 @@ function compute_event(cache, id, event) {
       return;
 
     function skip_rider(rider) {
-      return rider.non_competing || rider.failure || rider.zones_todo;
+      return rider.non_competing || rider.failure || rider.unfinished_zones;
     }
 
     if (event.split_score) {
@@ -414,8 +426,7 @@ function compute_event(cache, id, event) {
     }
   }
 
-  let cached_riders = cache.get_riders(id);
-  let riders = Object.values(cached_riders).reduce((riders, cached_rider) => {
+  let riders = cached_riders.reduce((riders, cached_rider) => {
     let class_ = cached_rider['class'];
     let ranking_class;
     if (!cached_rider.group && class_ != null)
@@ -450,6 +461,7 @@ function compute_event(cache, id, event) {
       marks: null,
       decisive_marks: null,
       decisive_round: null,
+      unfinished_zones: null,
     };
     return riders;
   }, {});
@@ -548,28 +560,9 @@ function compute_event(cache, id, event) {
   }
 
   Object.values(riders).forEach((rider) => {
-    let number = rider.number;
-    let cached_rider = cached_riders[number];
-
-    if (rider.additional_marks != cached_rider.additional_marks)
-      cache.modify_rider(id, number).additional_marks = rider.additional_marks;
-    if (rider.marks != cached_rider.marks)
-      cache.modify_rider(id, number).marks = rider.marks;
-    if (rider.rank != cached_rider.rank)
-      cache.modify_rider(id, number).rank = rider.rank;
-    if (!deepEqual(rider.decisive_marks, cached_rider.decisive_marks))
-      cache.modify_rider(id, number).decisive_marks = rider.decisive_marks;
-    if (!deepEqual(rider.decisive_round, cached_rider.decisive_round))
-      cache.modify_rider(id, number).decisive_round = rider.decisive_round;
-    if (!deepEqual(rider.marks_per_round, cached_rider.marks_per_round))
-      cache.modify_rider(id, number).marks_per_round = rider.marks_per_round;
-    if (!deepEqual(rider.marks_distribution, cached_rider.marks_distribution))
-      cache.modify_rider(id, number).marks_distribution = rider.marks_distribution;
-    if (!deepEqual(rider.rankings, cached_rider.rankings))
-      cache.modify_rider(id, number).rankings = rider.rankings;
-    if (rider.group && !deepEqual(rider.marks_per_zone, cached_rider.marks_per_zone))
-      cache.modify_rider(id, number).marks_per_zone = rider.marks_per_zone;
+    delete rider.ranking_class;
   });
+  return riders;
 }
 
 module.exports = compute_event;

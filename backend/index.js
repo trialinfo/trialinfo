@@ -555,6 +555,14 @@ async function update_database(connection) {
       ADD combine BOOLEAN NOT NULL DEFAULT 0
     `);
   }
+
+  if (!await column_exists(connection, 'riders', 'unfinished_zones')) {
+    console.log('Adding column `unfinished_zones` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD unfinished_zones INT
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1603,6 +1611,19 @@ async function rider_change_number(connection, id, old_number, new_number) {
   }
 }
 
+function compute_update_event(id, event) {
+  let cached_riders = cache.get_riders(id);
+  let riders = compute_event(Object.values(cached_riders), event);
+
+  Object.values(riders).forEach((rider) => {
+    let number = rider.number;
+    let cached_rider = cached_riders[number];
+
+    if (Object.keys(rider).some((key) => !deepEqual(rider[key], cached_rider[key])))
+      Object.assign(cache.modify_rider(id, number), rider);
+  });
+}
+
 async function admin_save_rider(connection, id, number, rider, tag, query) {
   rider = admin_rider_from_api(rider);
 
@@ -1661,7 +1682,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    compute_event(cache, id, event);
+    compute_update_event(id, event);
 
     /* When verifying a rider, also verify the user so that future changes by
        that user will not need verification in the future.  */
@@ -2032,7 +2053,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	await reduce_future_starts(event, riders);
       }
 
-      compute_event(cache, id, event);
+      compute_update_event(id, event);
     } else {
       await delete_event(connection, id);
     }
