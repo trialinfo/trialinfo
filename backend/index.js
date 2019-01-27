@@ -539,6 +539,22 @@ async function update_database(connection) {
       CHANGE registration_info registration_info VARCHAR(2048)
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'combine')) {
+    console.log('Adding column `combine` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD combine BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
+
+  if (!await column_exists(connection, 'future_events', 'combine')) {
+    console.log('Adding column `combine` to `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      ADD combine BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
 }
 
 pool.getConnectionAsync()

@@ -112,6 +112,7 @@ CREATE TABLE `events` (
   `start_interval` int(11) DEFAULT NULL,
   `start_spec` varchar(40) DEFAULT NULL,
   `main_ranking` int(11) DEFAULT NULL,
+  `combine` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

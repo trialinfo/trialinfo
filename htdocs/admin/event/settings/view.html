@@ -103,6 +103,10 @@ a:hover.updown {
 	<option value="2">der letzten besseren Runde</option>
       </select>.</label>
     </p>
+    <p>
+      <input type="checkbox" ng-model="event.combine" ng-disabled="!event.base" id="combine">
+        <label for="combine">Kombinierte Wertung mit der vorigen Veranstaltung.</label>
+    </p>
     <span ng-repeat="ranking in event.rankings track by $index">
       <fieldset style="display:inline">
 	<legend>Wertung {{$index + 1}}</legend>
@@ -417,6 +421,7 @@ a:hover.updown {
         <th style="text-align:center">Datum</th>
 	<th style="text-align:center">Ort</th>
 	<th style="text-align:center">Art</th>
+	<th style="text-align:center"><span title="Kombinierte Wertung mit der vorigen Veranstaltung">Kombinierte<br>Wertung</span></th>
       </tr>
       <tr ng-repeat="future_event in event.future_events">
 	<td style="text-align:center">
@@ -433,6 +438,9 @@ a:hover.updown {
 	    <option value=""></option>
 	  </select>
 	</td>
+        <td style="text-align:center">
+	  <input type="checkbox" ng-model="future_event.combine">
+        </td>
       </tr>
     </table>
   </fieldset><br>
