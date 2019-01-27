@@ -53,7 +53,7 @@ var eventResultsController = [
 	      if (!rider.marks_per_zone[round - 1])
 		rider.marks_per_zone[round - 1] = [];
 	      angular.forEach(class_.zones, function(zone) {
-		if ((class_.skipped_zones[round - 1] || [])[zone - 1])
+		if ((class_.skipped_zones[round] || {})[zone])
 		  rider.marks_per_zone[round - 1][zone - 1] = '-';
 		else {
 		  if (rider.marks_per_zone[round - 1][zone - 1] == -1)

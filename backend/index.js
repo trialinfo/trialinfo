@@ -1182,65 +1182,9 @@ async function read_event(connection, id, revalidate) {
   return event;
 }
 
-/* FIXME: The current admin skipped_zones representation is pretty horrible.  */
-function skipped_zones_list(skipped_zones_hash) {
-  var skipped_zones_list = [];
-  Object.keys(skipped_zones_hash).forEach((_) => {
-    skipped_zones_list[_ - 1] = ((event_class) => {
-      var rounds = [];
-      Object.keys(event_class).forEach((_) => {
-	rounds[_ - 1] = ((event_round) => {
-	  var sections = Object.keys(event_round)
-	    .map((s) => +s)
-	    .sort();
-	  return sections;
-	})(event_class[_]);
-      });
-      return rounds;
-    })(skipped_zones_hash[_]);
-  });
-  return skipped_zones_list;
-}
-
-function skipped_zones_hash(skipped_zones_list) {
-  return skipped_zones_list.reduce(function(classes, v, i) {
-    if (v) {
-      classes[i + 1] = v.reduce(function(rounds, v, i) {
-	if (v) {
-	  rounds[i + 1] = v.reduce(function(zones, zone) {
-	    zones[zone] = true;
-	    return zones;
-	  }, {});
-	}
-	return rounds;
-      }, {});
-    }
-    return classes;
-  }, {});
-}
-
 async function get_event(connection, id) {
   var revalidate = make_revalidate_event(connection, id);
   return await read_event(connection, id, revalidate);
-}
-
-function admin_event_to_api(event) {
-  var copy = Object.assign({}, event);
-
-  if (event.skipped_zones)
-    copy.skipped_zones = skipped_zones_list(event.skipped_zones);
-
-  return copy;
-}
-
-function admin_event_from_api(event) {
-  if (event)
-    event.skipped_zones = skipped_zones_hash(event.skipped_zones || []);
-}
-
-async function admin_get_event(connection, id) {
-  var event = await get_event(connection, id);
-  return admin_event_to_api(event);
 }
 
 function make_revalidate_rider(id, number, version) {
@@ -1749,7 +1693,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
         (ranking) => ranking && {rank: null, score: null}
       );
     });
-    event.skipped_zones = [];
+    event.skipped_zones = {};
   }
 
   if (reset == 'start_times') {
@@ -2010,8 +1954,6 @@ async function reduce_future_starts(event, riders) {
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
-  admin_event_from_api(event);
-
   await cache.begin(connection);
   try {
     var old_event;
@@ -2074,8 +2016,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       event = await read_event(connection, id, () => {});
     }
 
-    if (event)
-      return admin_event_to_api(event);
+    return event;
   } catch (err) {
     await cache.rollback(connection);
     throw err;
@@ -2396,7 +2337,7 @@ async function get_event_results(connection, id) {
       let hash = {
 	ranking_class: class_nr,
 	zones: event.zones[ranking_class - 1],
-	skipped_zones: (event.skipped_zones || [])[ranking_class - 1] || [],
+	skipped_zones: (event.skipped_zones || {})[ranking_class] || {},
 	scores: ranking != null &&
 		(event.rankings[ranking - 1] || {}).assign_scores &&
 		(ranking != 1 ||
@@ -3342,7 +3283,10 @@ async function __update_event(connection, id, old_event, new_event) {
 	  await zipHashAsync(a, b,
 	    async function(a, b, zone) {
 	      await update(connection, 'skipped_zones',
-		{id: id, 'class': class_, round: round, zone: zone},
+		{id: id,
+		 'class': class_,
+		 round: round,
+		 zone: zone},
 		[],
 		a && {}, b && {})
 	      && (changed = true);
@@ -5141,7 +5085,7 @@ app.get('/api/series', function(req, res, next) {
 });
 
 app.get('/api/event/:id', will_read_event, function(req, res, next) {
-  admin_get_event(req.conn, req.params.id)
+  get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);

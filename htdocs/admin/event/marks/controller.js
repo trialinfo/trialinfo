@@ -15,26 +15,6 @@ var marksController = [
       return event.classes[rider['class'] - 1].ranking_class;
     }
 
-    $scope.skipped_zones = function (event) {
-      var s = [];
-      angular.forEach(event.skipped_zones, function(zones, index) {
-	var class_ = index + 1;
-	if (zones) {
-	  s[class_ - 1] = [];
-	  angular.forEach(zones, function(zones, index) {
-	    var round = index + 1;
-	    if (zones) {
-	      s[class_ - 1][round - 1] = [];
-	      angular.forEach(zones, function(zone) {
-		s[class_ - 1][round - 1][zone - 1] = true;
-	      });
-	    }
-	  });
-	}
-      });
-      return s;
-    }(event);
-
     /* Um die Maske sinnvoll darstellen zu können, Felder für die befahrenen
      * Sektionen und Runden der ersten startenden Klasse anzeigen.  Das
      * stimmt zumindest bei allen Veranstaltungen, bei denen alle Klassen
@@ -229,7 +209,7 @@ var marksController = [
 
     function zone_skipped(class_, round, zone) {
       try {
-	return $scope.skipped_zones[class_ - 1][round - 1][zone - 1];
+	return $scope.event.skipped_zones[class_][round][zone];
       } catch (_) {
 	return false;
       }

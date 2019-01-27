@@ -11,7 +11,7 @@
 	<tr ng-repeat="round in rounds(class_)">
 	  <th class="punktespalte"><span title="Runde {{round}}">R{{round}}</span></th>
 	  <td class="punktespalte" ng-repeat="zone in event.zones[class_ - 1]">
-	    <input type="checkbox" ng-model="skipped_zones[class_ - 1][round - 1][zone - 1]"></td>
+	    <input type="checkbox" ng-model="event.skipped_zones[class_][round][zone]"></td>
 	</tr>
       </table>
     </fieldset>
