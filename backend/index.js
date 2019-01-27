@@ -4358,7 +4358,7 @@ async function check_number(connection, id, query) {
 
 async function admin_event_get_as_base(connection, tag, email) {
   var result = await connection.queryAsync(`
-    SELECT title, id, tag
+    SELECT title, location, date, id, tag
     FROM events
     JOIN events_all_admins USING (id)
     WHERE tag = ? AND email = ?`, [tag, email]);
