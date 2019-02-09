@@ -51,6 +51,10 @@ var config = JSON.parse(fs.readFileSync('config.json'));
 
 var views = {
   'index': require('./views/index.marko.js'),
+  'otsv.html': require('./views/otsv.marko.js'),
+  'acup.html': require('./views/acup.marko.js'),
+  'bike.html': require('./views/bike.marko.js'),
+  'ekids.html': require('./views/ekids.marko.js'),
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
@@ -4335,86 +4339,88 @@ async function admin_event_get_as_base(connection, tag, email) {
   }
 }
 
-async function index(req, res, next) {
-  try {
-    var events = await req.conn.queryAsync(`
-      SELECT id, date, title,
-	     CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends
-      FROM events
-      WHERE enabled
-      AND (registration_ends IS NOT NULL OR
-	  id IN (SELECT DISTINCT id FROM marks) OR
-	  id IN (SELECT DISTINCT id FROM riders WHERE start_time AND verified AND start))`);
-    events = events.reduce((hash, event) => {
-      var date = common.parse_timestamp(event.date);
-      if (date)
-	event.ts = date.getTime();
-      event.series = {};
-      hash[event.id] = event;
-      return hash;
-    }, {});
+function serie_index(view) {
+  return async function serie_index(req, res, next) {
+    try {
+      var events = await req.conn.queryAsync(`
+	SELECT id, date, title,
+	       CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends
+	FROM events
+	WHERE enabled
+	AND (registration_ends IS NOT NULL OR
+	    id IN (SELECT DISTINCT id FROM marks) OR
+	    id IN (SELECT DISTINCT id FROM riders WHERE start_time AND verified AND start))`);
+      events = events.reduce((hash, event) => {
+	var date = common.parse_timestamp(event.date);
+	if (date)
+	  event.ts = date.getTime();
+	event.series = {};
+	hash[event.id] = event;
+	return hash;
+      }, {});
 
-    var series = await req.conn.queryAsync(`
-      SELECT serie, name, abbreviation
-      FROM series`);
-    series = series.reduce((hash, serie) => {
-      serie.events = {};
-      hash[serie.serie] = serie;
-      return hash;
-    }, {});
+      var series = await req.conn.queryAsync(`
+	SELECT serie, name, abbreviation
+	FROM series`);
+      series = series.reduce((hash, serie) => {
+	serie.events = {};
+	hash[serie.serie] = serie;
+	return hash;
+      }, {});
 
-    (await req.conn.queryAsync(`
-      SELECT DISTINCT serie, id
-      FROM series_events
-      JOIN series_classes USING (serie)
-      JOIN classes USING (id, ranking_class)`))
-    .forEach((se) => {
-      let event = events[se.id];
-      let serie = series[se.serie];
-      if (event && serie) {
-	event.series[se.serie] = serie;
-	serie.events[se.id] = event;
-      }
-    });
-
-    let params = {
-      events: function(serie_id, register) {
-	let e = (serie_id == null) ? events :
-	  (series[serie_id] || {}).events;
-	if (e && register) {
-	  e = Object.values(e).reduce(function(events, event) {
-	    if (event.registration_ends)
-	      events[event.id] = event;
-	    return events;
-	  }, {});
+      (await req.conn.queryAsync(`
+	SELECT DISTINCT serie, id
+	FROM series_events
+	JOIN series_classes USING (serie)
+	JOIN classes USING (id, ranking_class)`))
+      .forEach((se) => {
+	let event = events[se.id];
+	let serie = series[se.serie];
+	if (event && serie) {
+	  event.series[se.serie] = serie;
+	  serie.events[se.id] = event;
 	}
-	return Object.values(e || {})
-	  .sort((a, b) =>
-	    (a.ts - b.ts) ||
-	    (a.title || '').localeCompare(b.title || ''));
-      },
-      abbreviations: function(series, ignore) {
-	var abbreviations =
-	  Object.values(series)
-	  .reduce((list, serie) => {
-	    if (serie.abbreviation &&
-	        (ignore || []).indexOf(serie.serie) == -1)
-	      list.push(serie.abbreviation);
-	    return list;
-	  }, [])
-	  .sort((a, b) => a.localeCompare(b));
-	if (abbreviations.length)
-	  return '(' + abbreviations.join(', ') + ')';
-      },
-      parse_timestamp: common.parse_timestamp,
-      remaining_time: common.remaining_time
-    };
-    if (req.user)
-      params.email = req.user.email;
-    res.marko(views['index'], params);
-  } catch (err) {
-    next(err);
-  }
+      });
+
+      let params = {
+	events: function(serie_id, register) {
+	  let e = (serie_id == null) ? events :
+	    (series[serie_id] || {}).events;
+	  if (e && register) {
+	    e = Object.values(e).reduce(function(events, event) {
+	      if (event.registration_ends)
+		events[event.id] = event;
+	      return events;
+	    }, {});
+	  }
+	  return Object.values(e || {})
+	    .sort((a, b) =>
+	      (a.ts - b.ts) ||
+	      (a.title || '').localeCompare(b.title || ''));
+	},
+	abbreviations: function(series, ignore) {
+	  var abbreviations =
+	    Object.values(series)
+	    .reduce((list, serie) => {
+	      if (serie.abbreviation &&
+		  (ignore || []).indexOf(serie.serie) == -1)
+		list.push(serie.abbreviation);
+	      return list;
+	    }, [])
+	    .sort((a, b) => a.localeCompare(b));
+	  if (abbreviations.length)
+	    return '(' + abbreviations.join(', ') + ')';
+	},
+	parse_timestamp: common.parse_timestamp,
+	remaining_time: common.remaining_time
+      };
+      if (req.user)
+	params.email = req.user.email;
+      res.marko(view, params);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 async function export_event(connection, id, email) {
@@ -4836,7 +4842,14 @@ app.use(cors({
     credentials: true
   }));
 
-app.get('/', conn(pool), index);
+app.get('/', conn(pool), function(req, res, next) {
+  res.marko(views['index']);
+});
+
+app.get('/otsv.html', conn(pool), serie_index(views['otsv.html']));
+app.get('/acup.html', conn(pool), serie_index(views['acup.html']));
+app.get('/bike.html', conn(pool), serie_index(views['bike.html']));
+app.get('/ekids.html', conn(pool), serie_index(views['ekids.html']));
 
 app.get('/login/', function(req, res, next) {
   var params = {

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2019  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html>
+  <head>
+    <title>ÖTSV Cup und AMF Staatsmeisterschaft 2019</title>
+    <link rel="stylesheet" type="text/css" href="app.css" />
+    <style>
+    a { text-decoration:none }
+    .register { background-color:#ffff80 }
+    </style>
+    <script src="js/common.js"></script>
+    <script>
+      function start_timers() {
+	var usec;
+
+	Array.prototype.forEach.call(document.getElementsByClassName('timer'),
+	  function(timer) {
+	    var timestamp = timer.getAttribute('timestamp');
+	    if (!timestamp)
+	      return;
+	    usec = parse_timestamp(timestamp).getTime() - Date.now();
+	    var id = timer.getAttribute('for');
+	    var text = document.getElementById(id);
+	    if (usec > 0) {
+	      text.innerHTML = remaining_time(timestamp);
+	    } else {
+	      text.remove();
+	      timer.remove();
+	    }
+	  });
+	if (usec)
+	  setTimeout(start_timers, usec % 1000 + 100);
+      }
+    </script>
+
+    <macro show_serie(serie, ignore)>
+    <p>
+      $ var events = data.events(serie);
+      <for(event in events)>
+	<a href="event/${event.id}/results">${event.title}</a> ${data.abbreviations(event.series, ignore=ignore)}<br>
+	<if(event.registration_ends)>
+	  <span class="timer" timestamp="${event.registration_ends}" for="timer${event.id}">
+	    &emsp;<a href="register/event/${event.id}" class="register">Jetzt voranmelden</a>
+	    (noch <span id="timer${event.id}">${data.remaining_time(event.registration_ends)}</span>)<br>
+	  </span>
+	</if>
+      </for>
+    </p>
+    </macro>
+  </head>
+  <body onload="start_timers()">
+    <h1>ÖTSV Cup und AMF Staatsmeisterschaft 2019</h1>
+    <show_serie serie=45 ignore=[44]/>
+
+    <h2>Jahreswertungen</h2>
+    <a href="serie/45/results">ÖTSV Cup, Jugendcup, Ladies Cup</a><br>
+    <a href="serie/46/results">AMF Staatsmeisterschaft</a>
+
+    <h2>Sonstiges</h2>
+    <a href="ergebnisse/statistik.shtml?vareihe=45&kuerzel">Punktestatistiken</a>
+  </body>
+</html>
