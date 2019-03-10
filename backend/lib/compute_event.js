@@ -21,7 +21,7 @@ var deepEqual = require('deep-equal');
 var common = require('../htdocs/js/common');
 let acup = require('./acup.js');
 
-function compute_event(cached_riders, event) {
+function compute_event(cached_riders, event, compute_marks) {
   function compute_active_zones(riders) {
     let active_zones = {};
 
@@ -87,8 +87,6 @@ function compute_event(cached_riders, event) {
 
     riders.forEach((rider) => {
       if (rider.group)
-	return;
-      if (!rider.marks_per_zone)
 	return;
 
       let last_started_round, last_completed_round;
@@ -389,7 +387,12 @@ function compute_event(cached_riders, event) {
     return score;
   }
 
-  function ranking_assign_rank(ranking) {
+  function assign_overall_rank(riders_at_rank, rank) {
+    for (let rider of riders_at_rank)
+      rider.rank = rank;
+  }
+
+  function assign_ranking_rank(ranking) {
     return function(riders_at_rank, rank) {
       let score = score_for_rank(rank, riders_at_rank.length);
       for (let rider of riders_at_rank) {
@@ -407,54 +410,62 @@ function compute_event(cached_riders, event) {
     if (!cached_rider.group && class_ != null)
       ranking_class = event.classes[class_ - 1].ranking_class;
 
-    riders.push({
-      number: cached_rider.number,
-      group: cached_rider.group,
-      date_of_birth: cached_rider.date_of_birth,
-      start: (cached_rider.group || ranking_class) &&
-	     cached_rider.verified && cached_rider.start &&
-	     (cached_rider.registered || !event.features.registered),
-      'class': class_,
-      ranking_class: ranking_class,
-      year_of_manufacture: cached_rider.year_of_manufacture,
-      additional_marks: null,
-      penalty_marks: cached_rider.penalty_marks,
-      rankings: cached_rider.rankings.map(
-	(ranking) => ranking && {
-	  rank: null,
-	  score: null,
-	  decisive_marks: null,
-	  decisive_round: null,
-	}
-      ),
-      non_competing: cached_rider.non_competing ||
-		     (event.classes[class_ - 1] || {}).non_competing,
-      failure: cached_rider.failure,
-      marks_per_zone: cached_rider.marks_per_zone,
-      marks_per_round: [],
-      marks_distribution: [],
-      marks: null,
-      decisive_marks: null,
-      decisive_round: null,
-      unfinished_zones: null,
-    });
+    let rider = {
+	ranking_class: ranking_class,
+	start: (cached_rider.group || ranking_class) &&
+	       cached_rider.verified && cached_rider.start &&
+	       (cached_rider.registered || !event.features.registered),
+	non_competing: cached_rider.non_competing ||
+		       (event.classes[class_ - 1] || {}).non_competing,
+	rankings: cached_rider.rankings.map(
+	  (ranking) => ranking && {
+	    rank: null,
+	    score: null,
+	    decisive_marks: null,
+	    decisive_round: null,
+	  }
+	),
+	rank: null,
+	decisive_marks: null,
+	decisive_round: null,
+    };
+    for (let field of ['number', 'group', 'date_of_birth', 'class',
+		       'year_of_manufacture', 'penalty_marks', 'failure',
+		       'marks_per_zone'])
+      rider[field] = cached_rider[field];
+    if (compute_marks) {
+      rider.marks = null;
+      rider.marks_distribution = [];
+      rider.marks_per_round = [];
+      rider.unfinished_zones = null;
+      rider.additional_marks = null;
+    } else {
+      for (let field of ['marks', 'marks_distribution', 'marks_per_round',
+			 'unfinished_zones', 'additional_marks'])
+	rider[field] = cached_rider[field];
+    }
+    riders.push(rider);
   }
 
-  if (event.type == 'otsv-acup') {
-    let year_of_event = (common.date_of_event(event)).getFullYear();
-    for (let rider of riders) {
-      if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
-	let year = rider.year_of_manufacture || year_of_event;
-	let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
-	if (m)
-	  rider.additional_marks = m;
+  if (compute_marks) {
+    if (event.type == 'otsv-acup') {
+      let year_of_event = (common.date_of_event(event)).getFullYear();
+      for (let rider of riders) {
+	if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
+	  let year = rider.year_of_manufacture || year_of_event;
+	  let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	  if (m)
+	    rider.additional_marks = m;
+	}
       }
     }
   }
 
-  compute_rider_marks(riders);
-  if (event.features.groups)
-    compute_group_marks(riders);
+  if (compute_marks) {
+    compute_rider_marks(riders);
+    if (event.features.groups)
+      compute_group_marks(riders);
+  }
 
   function rider_not_split(rider) {
     for (let n = 0; n < event.rankings.length; n++) {
@@ -482,11 +493,7 @@ function compute_event(cached_riders, event) {
     let riders_in_class = riders_per_class[ranking_class]
       .filter(rider_not_split);
 
-    compute_ranks(riders_in_class, null, set_decisive_overall,
-      (riders, rank) => {
-	for (let rider of riders)
-	  rider.rank = rank;
-      });
+    compute_ranks(riders_in_class, null, set_decisive_overall, assign_overall_rank);
   }
 
   /* Compute sub-rankings including only the selected riders.  The rank and
@@ -520,19 +527,22 @@ function compute_event(cached_riders, event) {
 	);
       }
       compute_ranks(riders_in_ranking, ranking, set_decisive_in_ranking,
-		    ranking_assign_rank(ranking));
+		    assign_ranking_rank(ranking));
     } else {
       for (let ranking_class in riders_per_class) {
 	let riders_in_class = riders_per_class[ranking_class]
 	  .filter(rider_in_ranking);
 	compute_ranks(riders_in_class, ranking, set_decisive_in_ranking,
-		      ranking_assign_rank(ranking));
+		      assign_ranking_rank(ranking));
       }
     }
   }
 
-  for (let rider of riders)
+  for (let rider of riders) {
     delete rider.ranking_class;
+    delete rider.start;
+    delete rider.non_competing;
+  }
 
   return riders;
 }
