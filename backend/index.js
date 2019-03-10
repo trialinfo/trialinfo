@@ -859,6 +859,21 @@ async function get_serie(connection, serie_id) {
   return serie;
 }
 
+function dates_to_string(dates) {
+  if (dates.every((date) => date.getYear() == dates[0].getYear())) {
+    if (dates.every((date) => date.getMonth() == dates[0].getMonth())) {
+      dates = dates.map((date) => moment(date).locale('de').format('D.')).join(' und ') +
+	      ' ' + moment(dates[0]).locale('de').format('MMMM YYYY');
+    } else {
+      dates = dates.map((date) => moment(date).locale('de').format('D. MMMM')).join(' und ') +
+	      ' ' + moment(dates[0]).locale('de').format('YYYY');
+    }
+  } else {
+    dates = dates.map((date) => moment(date).locale('de').format('D. MMMM YYYY')).join(' und ');
+  }
+  return dates;
+}
+
 async function rider_regform_data(connection, id, number, event) {
   let rider = await get_rider(connection, id, number);
   if (!rider)
@@ -938,20 +953,8 @@ async function rider_regform_data(connection, id, number, event) {
     if (future_event.active && future_event.date)
       dates.push(common.parse_timestamp(future_event.date));
   }
-  if (dates) {
-    if (dates.every((date) => date.getYear() == dates[0].getYear())) {
-      if (dates.every((date) => date.getMonth() == dates[0].getMonth())) {
-	dates = dates.map((date) => moment(date).locale('de').format('D.')).join(' und ') +
-	        ' ' + moment(dates[0]).locale('de').format('MMMM YYYY');
-      } else {
-	dates = dates.map((date) => moment(date).locale('de').format('D. MMMM')).join(' und ') +
-	        ' ' + moment(dates[0]).locale('de').format('YYYY');
-      }
-    } else {
-      dates = dates.map((date) => moment(date).locale('de').format('D. MMMM YYYY')).join(' und ');
-    }
-    event_name += '\n' + dates;
-  }
+  if (dates)
+    event_name += '\n' + dates_to_string(dates);
   rider.event_name = event_name;
 
   return rider;
