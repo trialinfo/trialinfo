@@ -351,7 +351,7 @@ var settingsController = [
 	angular.forEach(events, function(event) {
 	  used[event.location] = true;
 	});
-	while (location in used) {
+	while (location != null && location in used) {
 	  location = location.replace(/ \(Kopie( \d+)?\)$/, '');
 	  location += ' (Kopie' + (n == 1 ? '' : ' ' + n) + ')';
 	  n++;
@@ -415,7 +415,10 @@ var settingsController = [
 	if (fid == null) {
 	  event.location = $scope.unique_location;
 	  event.date = $scope.$eval('today | date:"yyyy-MM-dd"', {today: Date.now()});
-	  event.title = event.location + ' am ' + $scope.$eval('date | date:"d. MMMM yyyy"', event);
+	  event.title = null;
+	  if (event.location)
+		  event.title =
+		    event.location + ' am ' + $scope.$eval('date | date:"d. MMMM yyyy"', event);
 	} else {
 	  var future_event = $scope.future_events.find(
 	    function(future_event) {
