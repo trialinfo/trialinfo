@@ -29,7 +29,7 @@
       <tr>
 	<th><label for="tag">Veranstaltung</label></th>
 	<td>
-	  <select ng-model="remote.event" ng-options="event as event_name(event) for event in remote.events | filter:event_visible" ng-disabled="busy || !remote.events" id="tag">
+	  <select ng-model="remote.event" ng-options="event as eventName(event) for event in remote.events | filter:event_visible" ng-disabled="busy || !remote.events" id="tag">
 	  </select>
 	</td>
       </tr>

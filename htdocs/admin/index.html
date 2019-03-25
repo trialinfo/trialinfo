@@ -13,70 +13,35 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <base href="/admin/">
     <title ng-bind="$root.title">TrialInfo</title>
-    <link rel="stylesheet" type="text/css" href="../admin.css" />
+    <link rel="stylesheet" type="text/css" href="../app.css" />
 
     <script src="../js/angular/angular.js"></script>
     <script src="../js/angular/angular-locale_de-at.js"></script>
     <script src="../js/angular/angular-route.js"></script>
     <script src="../js/angular/angular-cookies.js"></script>
+    <script src="../js/ng-attr.js"></script>
     <script src="../js/json-diff.js"></script>
     <script src="../js/directives.js"></script>
     <script src="../js/common.js"></script>
-    <script src="api.js"></script>
+    <script src="../js/app-common.js"></script>
+    <script src="misc.js"></script>
     <script src="config.js"></script>
+    <script>
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'argshook.ngAttr', 'app-common', 'directives']);
+    </script>
     <script src="main/controller.js"></script>
     <script src="event/controller.js"></script>
-    <script src="riders/controller.js"></script>
-    <script src="marks/controller.js"></script>
-    <script src="settings/controller.js"></script>
-    <script src="zones/controller.js"></script>
-    <script src="scores/controller.js"></script>
-    <script src="list/controller.js"></script>
+    <script src="event/riders/controller.js"></script>
+    <script src="event/marks/controller.js"></script>
+    <script src="event/settings/controller.js"></script>
+    <script src="event/zones/controller.js"></script>
+    <script src="event/results/controller.js"></script>
+    <script src="event/list/controller.js"></script>
+    <script src="event/sync/controller.js"></script>
     <script src="serie/controller.js"></script>
+    <script src="serie/results/controller.js"></script>
     <script src="import/controller.js"></script>
-    <script src="sync/controller.js"></script>
     <script>
-
-      var application = angular.module('application', ['ngRoute', 'ngCookies']);
-
-      application.directive('isoDate', isoDateDirective);
-      application.directive('isoTime', isoTimeDirective);
-      application.directive('isoTimestamp', isoTimestampDirective);
-      application.directive('numeric', numericDirective);
-      application.directive('fractional', fractionalDirective);
-      application.directive('punkte', punkteDirective);
-      application.directive('yesNoNull', yesNoNullDirective);
-      application.directive('rankingClass', rankingClassDirective);
-      application.directive('nullable', nullableDirective);
-      application.directive('strikeThrough', strikeThroughDirective);
-
-      application.directive('autofocus', autofocusDirective);
-      application.directive('tabTo', tabTo);
-
-      application.filter('fractional', ['fractional', function(fractional) {
-	function fractionalFilter(x) {
-	  if (fractional.enabled)
-	    return fraction(x);
-	  else
-	    return x;
-	}
-	fractionalFilter.$stateful = true;
-	return fractionalFilter;
-      }]);
-      application.value('fractional', {enabled: true});
-
-      application.controller('mainController', mainController);
-      application.controller('eventController', eventController);
-      application.controller('ridersController', ridersController);
-      application.controller('marksController', marksController);
-      application.controller('settingsController', settingsController);
-      application.controller('zonesController', zonesController);
-      application.controller('eventScoresController', eventScoresController);
-      application.controller('eventListController', eventListController);
-      application.controller('serieController', serieController);
-      application.controller('importController', importController);
-      application.controller('syncController', syncController);
-
       application.config([
         '$routeProvider',
 	function($routeProvider) {
@@ -96,49 +61,49 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	    }).when('/event/:id/riders', {
 	      title: 'Fahrer',
 	      controller: 'ridersController',
-	      templateUrl: 'riders/view.html',
+	      templateUrl: 'event/riders/view.html',
 	      resolve: ridersController.resolveFactory(false),
 	      reloadOnSearch: false
 	    }).when('/event/:id/groups', {
 	      title: 'Gruppen',
 	      controller: 'ridersController',
-	      templateUrl: 'riders/view.html',
+	      templateUrl: 'event/riders/view.html',
 	      resolve: ridersController.resolveFactory(true),
 	      reloadOnSearch: false
 	    }).when('/event/:id/marks', {
 	      title: 'Punktevergabe',
 	      controller: 'marksController',
-	      templateUrl: 'marks/view.html',
+	      templateUrl: 'event/marks/view.html',
 	      resolve: marksController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/new/settings', {
 	      title: 'Einstellungen',
 	      controller: 'settingsController',
-	      templateUrl: 'settings/view.html',
+	      templateUrl: 'event/settings/view.html',
 	      resolve: settingsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/settings', {
 	      title: 'Einstellungen',
 	      controller: 'settingsController',
-	      templateUrl: 'settings/view.html',
+	      templateUrl: 'event/settings/view.html',
 	      resolve: settingsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/zones', {
 	      title: 'Sektionen aus der Wertung',
 	      controller: 'zonesController',
-	      templateUrl: 'zones/view.html',
+	      templateUrl: 'event/zones/view.html',
 	      resolve: zonesController.resolve,
 	      reloadOnSearch: false
-	    }).when('/event/:id/scores', {
+	    }).when('/event/:id/results', {
 	      title: 'Auswertung',
-	      controller: eventScoresController,
-	      templateUrl: 'scores/view.html',
-	      resolve: eventScoresController.resolve,
+	      controller: eventResultsController,
+	      templateUrl: 'event/results/view.html',
+	      resolve: eventResultsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/list', {
 	      title: 'Fahrerliste',
 	      controller: eventListController,
-	      templateUrl: 'list/view.html',
+	      templateUrl: 'event/list/view.html',
 	      resolve: eventListController.resolve,
 	      reloadOnSearch: false
 	    }).when('/serie/new', {
@@ -150,6 +115,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      controller: 'serieController',
 	      templateUrl: 'serie/view.html',
 	      resolve: serieController.resolve,
+	      reloadOnSearch: false
+	    }).when('/serie/:serie/results', {
+	      title: 'Auswertung',
+	      controller: serieResultsController,
+	      templateUrl: 'serie/results/view.html',
+	      resolve: serieResultsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/import', {
 	      title: 'Import',

@@ -1,9 +1,9 @@
-'use strict;'
+'use strict';
 
 var eventController = [
   '$scope', '$location', '$http', 'event',
   function ($scope, $location, $http, event) {
-    $scope.$root.context(event.rankings[0].title);
+    $scope.$root.context(event.title);
 
     $scope.config = config;
 
@@ -26,8 +26,8 @@ var eventController = [
     $scope.encodeURIComponent = encodeURIComponent;
 
     $scope.filename = function() {
-      if (event.rankings[0].title)
-        return event.rankings[0].title.replace(/[:\/\\]/g, '');
+      if (event.title)
+        return event.title.replace(/[:\/\\]/g, '');
       else if (event.date)
         return 'Trial ' + event.date;
       else
@@ -79,3 +79,5 @@ eventController.resolve = {
       return http_request($q, $http.get('/api/event/' + $route.current.params.id));
     }]
 };
+
+angular.module('application').controller('eventController', eventController);

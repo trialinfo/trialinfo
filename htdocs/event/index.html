@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2019  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html ng-app='application'>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <base href="/event/">
+    <title ng-bind="$root.title">TrialInfo</title>
+    <link rel="stylesheet" type="text/css" href="../app.css" />
+
+    <script src="../js/angular/angular.js"></script>
+    <script src="../js/angular/angular-locale_de-at.js"></script>
+    <script src="../js/angular/angular-route.js"></script>
+    <script src="../js/ng-attr.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/app-common.js"></script>
+    <script src="config.js"></script>
+    <script>
+      var application = angular.module('application', ['ngRoute', 'argshook.ngAttr', 'app-common']);
+    </script>
+    <script src="results/controller.js"></script>
+    <script>
+      application.config([
+        '$routeProvider',
+	function($routeProvider) {
+	  $routeProvider
+	    .when('/:id/results', {
+	      // title: 'Auswertung',
+	      controller: eventResultsController,
+	      templateUrl: 'results/view.html',
+	      resolve: eventResultsController.resolve,
+	      reloadOnSearch: false
+	    });
+	}]);
+
+      application.config([
+	'$locationProvider',
+	function($locationProvider) {
+	  $locationProvider.html5Mode(true);
+	}]);
+      application.run([
+	'$rootScope', '$route', '$location', '$http',
+	function($rootScope, $route, $location, $http) {
+	  $rootScope.context = function(context) {
+	    var title = [context];
+	    if ($route.current.title)
+	      title.push($route.current.title);
+	    $rootScope.title = title.join(' - ');
+	  };
+
+	  $rootScope.$on("$routeChangeSuccess", function() {
+	    $rootScope.title = $route.current.title || '';
+	  });
+
+	  $rootScope.join = join;
+	}]);
+    </script>
+  </head>
+  <body>
+    <div ng-view>
+      <p>Bitte aktivieren Sie JavaScript, um TrialInfo zu verwenden.</p>
+    </div>
+  </body>
+</html>

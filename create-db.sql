@@ -93,6 +93,9 @@ CREATE TABLE `events` (
   `id` int(11) NOT NULL DEFAULT '0',
   `base` char(16) DEFAULT NULL,
   `base_fid` int(11) DEFAULT NULL,
+  `title` varchar(70) DEFAULT NULL,
+  `subtitle` varchar(70) DEFAULT NULL,
+  `location` varchar(40) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `mtime` timestamp NULL DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
@@ -101,8 +104,6 @@ CREATE TABLE `events` (
   `equal_marks_resolution` int(11) DEFAULT NULL,
   `split_score` tinyint(1) DEFAULT NULL,
   `marks_skipped_zone` int(11) DEFAULT NULL,
-  `score_234` tinyint(1) DEFAULT NULL,
-  `ranking1_enabled` tinyint(1) DEFAULT NULL,
   `insurance` int(11) DEFAULT NULL,
   `registration_ends` timestamp NULL DEFAULT NULL,
   `registration_email` varchar(60) DEFAULT NULL,
@@ -110,6 +111,7 @@ CREATE TABLE `events` (
   `start_time` time DEFAULT NULL,
   `start_interval` int(11) DEFAULT NULL,
   `start_spec` varchar(40) DEFAULT NULL,
+  `main_ranking` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -201,8 +203,8 @@ CREATE TABLE `future_events` (
   `id` int(11) NOT NULL,
   `fid` int(11) NOT NULL,
   `date` date DEFAULT NULL,
-  `title` varchar(40) DEFAULT NULL,
-  `series` varchar(40) DEFAULT NULL,
+  `location` varchar(40) DEFAULT NULL,
+  `type` varchar(20) DEFAULT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`fid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -218,8 +220,8 @@ DROP TABLE IF EXISTS `future_starts`;
 CREATE TABLE `future_starts` (
   `id` int(11) NOT NULL,
   `fid` int(11) NOT NULL,
-  `rider_tag` char(16) NOT NULL,
-  PRIMARY KEY (`id`,`fid`,`rider_tag`)
+  `number` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`fid`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -311,9 +313,12 @@ DROP TABLE IF EXISTS `rankings`;
 CREATE TABLE `rankings` (
   `id` int(11) NOT NULL DEFAULT '0',
   `ranking` int(11) NOT NULL,
-  `title` varchar(70) DEFAULT NULL,
-  `subtitle` varchar(70) DEFAULT NULL,
   `name` varchar(20) DEFAULT NULL,
+  `default` tinyint(1) NOT NULL DEFAULT 0,
+  `assign_scores` tinyint(1) NOT NULL DEFAULT 0,
+  `joint` tinyint(1) NOT NULL DEFAULT 0,
+  `split` tinyint(1) NOT NULL DEFAULT 0,
+  `ignore` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -328,7 +333,7 @@ DROP TABLE IF EXISTS `result_columns`;
 CREATE TABLE `result_columns` (
   `id` int(11) NOT NULL DEFAULT '0',
   `n` int(11) NOT NULL DEFAULT '0',
-  `name` varchar(20) DEFAULT NULL,
+  `name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`,`n`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -346,6 +351,8 @@ CREATE TABLE `rider_rankings` (
   `ranking` int(11) NOT NULL,
   `rank` int(11) DEFAULT NULL,
   `score` double DEFAULT NULL,
+  `decisive_marks` INT DEFAULT NULL,
+  `decisive_round` INT DEFAULT NULL,
   PRIMARY KEY (`id`,`number`,`ranking`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -374,6 +381,7 @@ CREATE TABLE `riders` (
   `zip` varchar(5) DEFAULT NULL,
   `club` varchar(40) DEFAULT NULL,
   `vehicle` varchar(30) DEFAULT NULL,
+  `year_of_manufacture` int(11) DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `emergency_phone` varchar(20) DEFAULT NULL,
@@ -402,6 +410,7 @@ CREATE TABLE `riders` (
   `s5` int(11) DEFAULT NULL,
   `non_competing` tinyint(1) DEFAULT NULL,
   `failure` int(11) DEFAULT '0',
+  `penalty_marks` float DEFAULT NULL,
   `additional_marks` float DEFAULT NULL,
   `marks` float DEFAULT NULL,
   `rank` int(11) DEFAULT NULL,
@@ -409,6 +418,8 @@ CREATE TABLE `riders` (
   `user_tag` char(16) DEFAULT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '1',
   `accept_conditions` tinyint(1) NOT NULL DEFAULT '0',
+  `decisive_marks` INT DEFAULT NULL,
+  `decisive_round` INT DEFAULT NULL,
   PRIMARY KEY (`id`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -470,10 +481,10 @@ CREATE TABLE `series` (
   `tag` char(16) NOT NULL,
   `version` int(11) NOT NULL DEFAULT '1',
   `serie` int(11) NOT NULL,
-  `ranking` int(11) DEFAULT NULL,
   `name` varchar(40) DEFAULT NULL,
   `abbreviation` varchar(10) DEFAULT NULL,
   `closed` tinyint(1) DEFAULT NULL,
+  `mtime` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`serie`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -518,10 +529,12 @@ DROP TABLE IF EXISTS `series_classes`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `series_classes` (
   `serie` int(11) NOT NULL,
+  `ranking` int(11) NOT NULL,
   `ranking_class` int(11) NOT NULL,
-  `events` int(11) DEFAULT NULL,
+  `max_events` int(11) DEFAULT NULL,
+  `min_events` int(11) DEFAULT NULL,
   `drop_events` int(11) DEFAULT NULL,
-  PRIMARY KEY (`serie`,`ranking_class`)
+  PRIMARY KEY (`serie`,`ranking`,`ranking_class`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -551,6 +564,27 @@ CREATE TABLE `series_groups` (
   `group` int(11) NOT NULL,
   `read_only` tinyint(1) NOT NULL,
   PRIMARY KEY (`serie`,`group`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `series_scores`
+--
+
+DROP TABLE IF EXISTS `series_scores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `series_scores` (
+  `serie` int(11) NOT NULL,
+  `ranking` int(11) NOT NULL,
+  `ranking_class` int(11) NOT NULL,
+  `number` int(11) NOT NULL,
+  `last_id` int(11) NOT NULL,
+  `rank` int(11) DEFAULT NULL,
+  `drop_score` double DEFAULT NULL,
+  `score` double DEFAULT NULL,
+  `ranked` tinyint(1) NOT NULL,
+  PRIMARY KEY (`serie`,`ranking`,`ranking_class`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

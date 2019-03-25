@@ -13,7 +13,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <base href="/register/">
     <title ng-bind="$root.title">TrialInfo</title>
-    <link rel="stylesheet" type="text/css" href="../admin.css" />
+    <link rel="stylesheet" type="text/css" href="../app.css" />
 
     <script src="../js/angular/angular.js"></script>
     <script src="../js/angular/angular-locale_de-at.js"></script>
@@ -21,16 +21,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="../js/angular/angular-cookies.js"></script>
     <script src="../js/common.js"></script>
     <script src="../js/directives.js"></script>
+    <script src="../js/app-common.js"></script>
+    <script>
+      var application = angular.module('application', ['ngRoute', 'ngCookies', 'app-common', 'directives']);
+    </script>
     <script src="event/controller.js"></script>
     <script>
-      var application = angular.module('application', ['ngRoute', 'ngCookies']);
-
-      application.directive('isoDate', isoDateDirective);
-      application.directive('numeric', numericDirective);
-      application.directive('nullable', nullableDirective);
-
-      application.controller('eventController', eventController);
-
       application.filter('trusted', ['$sce', function($sce) {
         return function(text) {
 	  return $sce.trustAsHtml(text);

@@ -42,7 +42,7 @@ my @klassen = $q->param('klasse');
 my $bezeichnung;
 my $laeufe;
 my $streichresultate;
-my $wertung;
+my $wertung = 1;
 my $mtime;
 my $abgeschlossen;
 my $fahrer_nach_startnummer;
@@ -67,10 +67,9 @@ if (my @row = $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT DISTINCT id, date, ranking, title, subtitle, mtime, split_score, type
-    FROM rankings
-    JOIN series_events USING (id)
-    JOIN series USING (serie, ranking)
+    SELECT DISTINCT id, date, title, subtitle, events.mtime, split_score, type
+    FROM series_events
+    JOIN series USING (serie)
     JOIN events USING (id)
     WHERE serie = ? AND enabled
     ORDER BY date
@@ -82,7 +81,6 @@ my $letzte_id;
 while (my @row = $sth->fetchrow_array) {
     my $cfg;
     my $id = $row[0];
-    $wertung = $row[2];
     $cfg->{id} = $id;
     if ($row[1] =~ /^(\d{4})-0*(\d+)-0*(\d+)$/) {
 	$cfg->{label} = "$3.<br>$2.";
@@ -91,12 +89,12 @@ while (my @row = $sth->fetchrow_array) {
 	$cfg->{label} = $n;
     }
     $n++;
-    $cfg->{wertungen}[$wertung - 1] = { titel => $row[3], subtitel => $row[4] };
+    $cfg->{wertungen}[$wertung - 1] = { titel => $row[2], subtitel => $row[3] };
     $veranstaltungen->{$id}{cfg} = $cfg;
-    $mtime = max_timestamp($mtime, $row[5])
+    $mtime = max_timestamp($mtime, $row[4])
 	unless defined $row[1] && !same_day($row[1]);
-    $cfg->{punkteteilung} = $row[6];
-    $cfg->{art} = $row[7];
+    $cfg->{punkteteilung} = $row[5];
+    $cfg->{art} = $row[6];
     push @$veranstaltungen_reihenfolge, $row[0];
     $letzte_id = $row[0];
 }
@@ -109,8 +107,14 @@ if ($letzte_id) {
 	SELECT feature
 	FROM event_features
 	WHERE id = ?
+
+	UNION
+
+	SELECT CONCAT('ranking', ranking) AS feature
+	FROM rankings
+	WHERE id = ?
     });
-    $sth->execute($letzte_id);
+    $sth->execute($letzte_id, $letzte_id);
     while (my @row = $sth->fetchrow_array) {
 	$features->{$features_map->{$row[0]}} = 1
 	    if exists $features_map->{$row[0]};
@@ -148,12 +152,12 @@ $sth = $dbh->prepare(q{
     JOIN riders USING (id, number)
     JOIN classes USING (id, class)
     JOIN series_events USING (id)
-    JOIN series USING (serie, ranking)
-    JOIN series_classes USING (serie, ranking_class)
+    JOIN series USING (serie)
+    JOIN series_classes USING (serie, ranking, ranking_class)
     JOIN events USING (id)
-    WHERE enabled AND series_events.serie = ?
+    WHERE enabled AND series_events.serie = ? AND ranking = ?
 });
-$sth->execute($vareihe);
+$sth->execute($vareihe, $wertung);
 while (my $fahrer = $sth->fetchrow_hashref) {
     my $id = $fahrer->{id};
     delete $fahrer->{id};
@@ -170,7 +174,7 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $veranstaltung = $veranstaltungen->{$id};
     if ($veranstaltung) {
 	$fahrer->{land} = undef
-	    if $veranstaltung->{cfg}{art} =~ /^otsv/ &&
+	    if ($veranstaltung->{cfg}{art} // '') =~ /^otsv/ &&
 	       defined $fahrer->{land} && $fahrer->{land} eq 'A';
 
 	my $startnummer = $fahrer->{startnummer};
@@ -247,7 +251,7 @@ $veranstaltungen = [ map { exists $veranstaltungen->{$_} ?
 my $letzte_cfg = $veranstaltungen->[@$veranstaltungen - 1][0];
 
 $sth = $dbh->prepare(q{
-    SELECT class, name, color, events, drop_events
+    SELECT class, name, color, max_events, drop_events
     FROM classes
     JOIN series_classes USING (ranking_class)
     WHERE serie = ? AND id = ?
@@ -287,7 +291,7 @@ while (my @row = $sth->fetchrow_array) {
 
 doc_h1 "$bezeichnung";
 doc_h2 "Jahreswertung";
-jahreswertung veranstaltungen => $veranstaltungen,
+my $w = jahreswertung veranstaltungen => $veranstaltungen,
 	      wertung => $wertung,
 	      laeufe_gesamt => $laeufe,
 	      streichresultate => $streichresultate,
@@ -296,6 +300,31 @@ jahreswertung veranstaltungen => $veranstaltungen,
 	      nach_relevanz => 1,
 	      @klassen ? (klassen => \@klassen ) : (),
 	      tie_break => $tie_break;
+
+if ($ENV{DUMP}) {
+    $sth = $dbh->prepare(q{
+	DELETE FROM series_scores
+	WHERE serie = ?
+    });
+    $sth->execute($vareihe);
+    $sth = $dbh->prepare(q{
+	INSERT INTO series_scores
+	SET serie = ?, ranking = ?, ranking_class = ?, number = ?, last_id = ?, rank = ?, drop_score = ?, score = ?, ranked = 1
+    });
+    foreach my $klasse (keys %$w) {
+	my $klassenwertung = $w->{$klasse};
+	foreach my $startnummer (keys %$klassenwertung) {
+	    my $fahrerwertung = $klassenwertung->{$startnummer};
+	    $sth->execute($vareihe, $wertung, $klasse, $startnummer, $fahrerwertung->{letzte_id}, $fahrerwertung->{rang}, $fahrerwertung->{streichpunkte}, $fahrerwertung->{gesamtpunkte});
+	}
+    }
+    $sth = $dbh->prepare(q{
+	UPDATE series
+	SET mtime = NULL
+	WHERE serie = ?
+    });
+    $sth->execute($vareihe);
+}
 
 print "<p>Letzte Änderung: $mtime</p>\n"
     if $mtime;

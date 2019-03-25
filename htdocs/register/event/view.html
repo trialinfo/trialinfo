@@ -10,7 +10,7 @@
 <form novalidate name="form">
   <div ng-if="!rider">
     <p ng-repeat="rider in riders">
-      <a href="" ng-click="change_rider($index)">{{rider_info(rider)}}</a>
+      <a href="" ng-click="change_rider($index)">{{riderInfo(rider)}}</a>
       <span ng-if="number_of_starts(rider) == 1">
         ist derzeit für einen Start vorangemeldet.
       </span>
@@ -179,6 +179,12 @@
 	  </datalist>
 	</td>
       </tr>
+      <tr ng-if="features.year_of_manufacture">
+	<th><label for="year_of_manufacture">Baujahr</label></th>
+	<td>
+	  <input type="text" numeric size="4" maxlength="4" ng-model="rider.year_of_manufacture" id="year_of_manufacture">
+	</td>
+      </tr>
       <tr ng-if="features.frame_number">
 	<th><label for="frame_number">Rahmennummer</label></th>
 	<td>
@@ -248,11 +254,11 @@
 	<td>
 	  <span style="display:block">
 	    <input type="checkbox" ng-model="rider.start" id="start" ng-disabled="rider.registered">
-	    <label for="start">{{event.title}}<span ng-if="event.series"> ({{event.series}})</span></label>
+	    <label for="start">{{event_label(event)}}</label>
 	  </span>
 	  <span ng-repeat="future_event in event.future_events" style="display:block">
 	    <input type="checkbox" ng-model="rider.future_starts[future_event.fid]" id="start_{{future_event.fid}}" ng-disabled="rider.registered && future_event.active">
-	      <label for="start_{{future_event.fid}}">{{future_event_label(future_event)}}</label>
+	      <label for="start_{{future_event.fid}}">{{event_label(future_event)}}</label>
 	  </span>
 	</td>
       </tr>

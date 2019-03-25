@@ -1,8 +1,8 @@
-'use strict;'
+'use strict';
 
 var eventController = [
-  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', '$anchorScroll', 'event', 'riders', 'suggestions',
-  function ($routeParams, $scope, $cookies, $window, $timeout, $http, $anchorScroll, event, riders, suggestions) {
+  '$routeParams', '$scope', '$cookies', '$window', '$timeout', '$http', '$anchorScroll', 'setFocus', 'event', 'riders', 'suggestions',
+  function ($routeParams, $scope, $cookies, $window, $timeout, $http, $anchorScroll, setFocus, event, riders, suggestions) {
     $scope.context('Voranmeldung');
 
     try {
@@ -255,7 +255,7 @@ var eventController = [
 	if (country != 'A')
 	  rider.province = null;
 	if (country == null)
-	  set_focus('#country', $timeout);
+	  setFocus('#country');
       }
     });
 
@@ -334,7 +334,7 @@ var eventController = [
       delete $scope.internal.index;
     }
 
-    function rider_info(rider) {
+    function riderInfo(rider) {
       var infos = [];
       if (rider.first_name !== null && rider.first_name !== '')
 	infos.push(rider.first_name);
@@ -352,18 +352,27 @@ var eventController = [
       return infos.join(' ');
     }
 
-    $scope.rider_info = rider_info;
+    $scope.riderInfo = riderInfo;
 
-    $scope.future_event_label = function(future_event) {
-      var label = future_event.title;
-      if (future_event.series)
-	label += ' (' + future_event.series + ')';
+    $scope.event_label = function(event) {
+      var label = event.title;
+      if (event.location)
+        label = event.location;
+      if (event.date)
+	label += ' am ' + $scope.$eval('date | date:"d. MMMM"', event);
+      if (event.type != null) {
+	var event_type = event_types.find(function(event_type) {
+	  return event_type.value == event.type;
+	});
+	if (event_type)
+	  label += ' (' + event_type.name + ')';
+      }
       return label;
     };
 
     $scope.remove_rider = function() {
       $timeout(function() {
-	if (confirm('Fahrer ' + rider_info($scope.rider) + ' wirklich löschen?')) {
+	if (confirm('Fahrer ' + riderInfo($scope.rider) + ' wirklich löschen?')) {
 	  if ($scope.busy)
 	    return;
 	  $scope.busy = true;
@@ -440,3 +449,5 @@ eventController.resolve = {
 	});
     }],
 };
+
+angular.module('application').controller('eventController', eventController);

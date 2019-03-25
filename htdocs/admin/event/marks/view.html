@@ -1,0 +1,153 @@
+<h1>{{event.title}} – Punktevergabe</h1>
+<table>
+  <tr>
+    <td style="vertical-align:top">
+      <form name="form" ng-keydown="keydown($event)">
+	<fieldset>
+	  <legend>Punktevergabe</legend>
+	  <p ng-if="rider">
+	    {{rider.number < 0 ? null : rider.number}} <span ng-bind-html="class_symbol()"></span>
+	    {{rider.last_name}} {{rider.first_name}} (<span ng-if="!rider.group" title="{{event.classes[rider['class'] - 1].name}}">Klasse {{rider['class']}}</span><span ng-if="rider.group">Gruppe</span>)
+	  </p>
+	  <p ng-if="!rider.number">
+	    &nbsp;
+	  </p>
+	  <p>
+	    <fieldset ng-style="card_color() ? {'border': '2px solid ' + card_color(), 'border-style': 'groove'} : undefined">
+	      <legend>Punkte</legend>
+	      <table>
+		<tr>
+		  <th class="punktespalte"></th>
+		  <th class="punktespalte" ng-repeat="zone in zones_list()"><span title="Sektion {{zone}}">{{zone}}</span></th>
+		</tr>
+		<tr ng-repeat="round in rounds_list()">
+		  <th>
+		    <label for="marks_{{round}}_{{event.zones[ranking_class - 1][0]}}" title="Runde {{round}}" accesskey="{{round}}">
+		      R<span class="accesskey">{{round}}</span>
+		    </label>
+		  </th>
+		  <td ng-repeat="zone in zones_list()" style="text-align:center">
+		    <input ng-if="!event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
+		  </td>
+		  <td style="text-align:right;font-weight:bold">
+		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
+		  </td>
+		</tr>
+	      </table>
+	      <p ng-if="rider.start && rider.class != null && !class_may_start(rider.class)" style="color: red">
+		Für Klasse {{ranking_class}} sind keine zu befahrenen Runden und Sektionen<br>
+		ausgewählt, die Klasse startet daher nicht.
+	      </p>
+	    </fieldset>
+	  </p>
+	  <p>
+	    <table>
+	      <tr>
+		<th><label for="penalty_marks" accesskey="p">Straf<span class="accesskey">p</span>unkte</label></th>
+		<td>
+		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.penalty_marks" id="penalty_marks">
+		</td>
+	      </tr>
+	      <tr ng-if="rider.additional_marks != null">
+		<th>Zusatzpunkte</th>
+		<td>
+		  <input type="text" size="4" ng-model="rider.additional_marks" disabled="disabled">
+		</td>
+	      </tr>
+	      <tr>
+		<th>Gesamtpunkte</th>
+		<td>
+		  <input type="text" size="4" value="{{rider.marks}}" disabled="disabled">
+		    <span ng-if="(rider.registered || !features.registered) && rider.start" style="font-weight:bold">
+		    &nbsp; (<span ng-repeat="h in rider.marks_distribution track by $index"><span ng-if="event.four_marks || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
+		    </span>
+		</td>
+	      </tr>
+	      <tr ng-if="features.start_time || features.finish_time">
+		<th><label for="start_time">Fahr<span class="accesskey">z</span>eit</label></th>
+		<td>
+		  <input ng-if="features.start_time" ng-disabled="!rider" type="text" size="6" maxlength="8" ng-model="rider.start_time" name="start_time" iso-time accesskey="z" title="Startzeit"> −
+		  <input ng-if="features.finish_time" ng-disabled="!rider" type="text" size="6" maxlength="8" ng-model="rider.finish_time" name="finish_time" iso-time title="Zielzeit">
+		  &nbsp; <span style="font-weight: bold; color: red">{{over_time()}}</span>
+		</td>
+	      </tr>
+	      <tr>
+		<th><label for="failure" accesskey="a"><span class="accesskey">A</span>usfall</label></th>
+		<td>
+		  <select ng-disabled="!rider.start || rider_does_not_start()" ng-model="rider.failure" numeric id="failure">
+		    <option value="0"></option>
+		    <option value="3">Ausgefallen</option>
+		    <option value="4">Nicht gewertet</option>
+		    <option value="5">Nicht gestartet</option>
+		    <option value="6">Nicht gestartet, entschuldigt</option>
+		  </select>
+		</td>
+	      </tr>
+	      <tr>
+		<th><label for="tie_break" accesskey="t">S<span class="accesskey">t</span>echen</label></th>
+		<td>
+		  <select ng-disabled="!rider.start || rider_does_not_start()" ng-model="rider.tie_break" numeric id="tie_break">
+		    <option value="0"></option>
+		    <option value="1">1. Platz</option>
+		    <option value="2">2. Platz</option>
+		    <option value="3">3. Platz</option>
+		    <option value="4">4. Platz</option>
+		    <option value="5">5. Platz</option>
+		    <option value="6">6. Platz</option>
+		    <option value="7">7. Platz</option>
+		    <option value="8">8. Platz</option>
+		    <option value="9">9. Platz</option>
+		    <option value="10">10. Platz</option>
+		  </select>
+		</td>
+	      </tr>
+	      <tr ng-if="rider && (!old_rider.start || (features.registered && !old_rider.registered)) && (rider.group || starting_classes[ranking_class - 1])">
+		<th>Teilnahme</th>
+		<td>
+		  <span ng-if="features.registered">
+		    <input type="checkbox" ng-model="rider.registered" id="registered">
+		      <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
+		  </span>
+		  <input type="checkbox" ng-model="rider.start" id="start">
+		    <label for="start" strike-through="rider_does_not_start()" title="{{rider_does_not_start()}}" accesskey="s"><span class="accesskey">S</span>tart</label>
+		</td>
+	      </tr>
+	    </table>
+	  </p>
+	</fieldset>
+      </form>
+    </td>
+    <td style="vertical-align:top">
+      <form name="navigation">
+	<fieldset>
+	  <legend>Navigation</legend>
+	  <p>
+	    <button type="button" ng-disabled="modified()" ng-click="load_first_rider()" tabindex="-1">|&lt;</button>
+	    <button type="button" ng-disabled="modified()" ng-click="load_previous_rider()" tabindex="-1">&lt;</button>
+	    <button type="button" ng-disabled="modified()" ng-click="load_next_rider()" tabindex="-1">&gt;</button>
+	    <button type="button" ng-disabled="modified()" ng-click="load_last_rider()" tabindex="-1">&gt;|</button>
+	  </p>
+	  <p>
+	    <label for="search_term" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>
+	    <input type="text" ng-disabled="modified()" size="20" maxlength="40" ng-model="search_term" onchange="angular.element(this).scope().find_rider()" id="search_term" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
+	  </p>
+	  <p>
+	    <span ng-repeat="rider in riders_list">
+	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{riderInfo(rider)}}">{{riderName(rider)}}</a><br>
+	    </span>
+	    <span ng-if="riders_list != null && riders_list.length == 0">Keine Fahrer gefunden.</span>
+	  </p>
+	  <p>
+	    <span ng-if="zones_skipped" style="color: red">
+	    Tragen Sie für vom Fahrer ausgelassene Sektionen bitte ‚-‘ für die Punkte ein,<br>
+	    die folgenden Sektionen werden sonst nicht gewertet.</span>
+	  </p>
+	  <p>
+	    <button type="button" ng-disabled="!(modified() && form.$valid) || busy" ng-click="save()" tabindex="-1">Speichern</button>
+	    <button type="button" ng-disabled="!modified() || busy" ng-click="discard()" tabindex="-1">Verwerfen</button>
+	  </p>
+	</fieldset>
+      </form>
+    </td>
+  </tr>
+</table>

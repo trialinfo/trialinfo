@@ -1,8 +1,8 @@
-'use strict;'
+'use strict';
 
 var mainController = [
-  '$scope', '$cookies', '$location', '$window', 'events', 'series',
-  function ($scope, $cookies, $location, $window, events, series) {
+  '$scope', '$cookies', '$location', '$window', 'eventName', 'events', 'series',
+  function ($scope, $cookies, $location, $window, eventName, events, series) {
     try {
       $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
     } catch (_) { }
@@ -31,7 +31,7 @@ var mainController = [
 	      !serie.closed;
     };
 
-    $scope.event_name = event_name;
+    $scope.eventName = eventName;
 
     $scope.new_event = function() {
       $location.path('/event/new/settings');
@@ -64,3 +64,5 @@ mainController.resolve = {
       return http_request($q, $http.get('/api/series'));
     }]
 };
+
+angular.module('application').controller('mainController', mainController);

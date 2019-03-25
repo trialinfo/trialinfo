@@ -1,8 +1,8 @@
-'use strict;'
+'use strict';
 
 var importController = [
-  '$scope', '$http', '$location', '$q', '$timeout', 'events',
-  function ($scope, $http, $location, $q, $timeout, events) {
+  '$scope', '$http', '$location', '$q', '$timeout', 'eventName', 'events',
+  function ($scope, $http, $location, $q, $timeout, eventName, events) {
     $scope.config = config;
     $scope.events = events;
     $scope.settings = {
@@ -91,7 +91,8 @@ var importController = [
 	});
     };
 
-    $scope.event_name = event_name;
+    $scope.eventName = eventName;
+
     $scope.event_visible = function(event) {
       return !event.closed;
     };
@@ -169,3 +170,5 @@ importController.resolve = {
       return http_request($q, $http.get('/api/events'));
     }],
 };
+
+angular.module('application').controller('importController', importController);

@@ -40,11 +40,12 @@ var zlib = require('zlib');
 var clone = require('clone');
 var jsonpatch = require('json-patch');
 var child_process = require('child_process');
+var spawn = require('child-process-promise').spawn;
 var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
-var start_times = require('./start_times');
-var random_shuffle = require('./random_shuffle');
+var start_times = require('./lib/start_times');
+var random_shuffle = require('./lib/random_shuffle');
 
 var config = JSON.parse(fs.readFileSync('config.json'));
 
@@ -62,6 +63,28 @@ var emails = {
 };
 
 var regforms_dir = 'pdf/regform';
+
+let regforms = {};
+try {
+  regforms = fs.readdirSync(regforms_dir).reduce(function(regforms, type) {
+    let base_names = {};
+    try {
+      base_names = fs.readdirSync(regforms_dir + '/' + type).reduce(function(base_names, name) {
+	let match = name.match(/(.*)\.pdf$/);
+	if (match) {
+	  let base_name = match[1].replace(/{.+?:.+?}/g, '');
+	  if (!(base_name in base_names))
+	    base_names[base_name] = [];
+	  base_names[base_name].push(name);
+	}
+	return base_names;
+      }, {});
+    } catch (_) {}
+    if (Object.keys(base_names).length)
+      regforms[type] = base_names;
+    return regforms;
+  }, {});
+} catch (_) {}
 
 var object_values = require('object.values');
 if (!Object.values)
@@ -108,7 +131,9 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 /*
  * Local things
  */
-var compute = require('./lib/compute.js');
+var acup = require('./lib/acup.js');
+var compute_event = require('./lib/compute_event.js');
+var compute_serie = require('./lib/compute_serie.js');
 String.prototype.latinize = require('./lib/latinize');
 
 /*
@@ -151,6 +176,23 @@ async function update_database(connection) {
     `);
   }
 
+  if (!await column_exists(connection, 'riders', 'penalty_marks')) {
+    console.log('Adding column `penalty_marks` to table `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      CHANGE additional_marks penalty_marks FLOAT,
+      ADD additional_marks FLOAT AFTER failure;
+    `);
+  }
+
+  if (!await column_exists(connection, 'riders', 'year_of_manufacture')) {
+    console.log('Adding column `year_of_manufacture` to table `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD year_of_manufacture INT AFTER vehicle
+    `);
+  }
+
   if (!await column_exists(connection, 'classes', 'order')) {
     let bt = '`';
     console.log('Adding column `order` to table `classes`');
@@ -169,6 +211,319 @@ async function update_database(connection) {
     await connection.queryAsync(`
       ALTER TABLE events
       DROP class_order
+    `);
+  }
+
+  if (!await column_exists(connection, 'events', 'title')) {
+    console.log('Moving column `title` to table `event`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD title VARCHAR(70) AFTER base_fid,
+      ADD subtitle VARCHAR(70) AFTER title
+    `);
+    await connection.queryAsync(`
+      UPDATE events
+      JOIN rankings USING (id)
+      SET events.title = rankings.title,
+        events.subtitle = rankings.subtitle
+      WHERE ranking = 1
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      DROP title, DROP subtitle
+    `);
+  }
+
+  if (!await column_exists(connection, 'series_scores', 'serie')) {
+    console.log('Creating table `series_scores`');
+    await connection.queryAsync(`
+      CREATE TABLE series_scores (
+	serie INT DEFAULT NULL,
+	class INT DEFAULT NULL,
+	number INT DEFAULT NULL,
+	last_id INT NOT NULL,
+	rank INT,
+	drop_score double,
+	score double,
+	PRIMARY KEY (serie, class, number)
+      )
+    `);
+  }
+
+  if (!await column_exists(connection, 'series', 'mtime')) {
+    console.log('Adding column `mtime` to table `series`');
+    await connection.queryAsync(`
+      ALTER TABLE series
+      ADD mtime TIMESTAMP NULL DEFAULT NULL
+    `);
+  }
+
+  if (await column_exists(connection, 'series', 'ranking')) {
+    console.log('Moving column `ranking` from `series` to `series_classes` and `series_scores`');
+    if (!await column_exists(connection, 'series_classes', 'ranking')) {
+      await connection.queryAsync(`
+	DELETE series_classes
+	FROM series_classes
+	JOIN series USING (serie)
+	WHERE series.ranking IS NULL
+      `);
+
+      await connection.queryAsync(`
+	ALTER TABLE series_classes
+	ADD ranking INT NULL DEFAULT NULL AFTER serie
+      `);
+      await connection.queryAsync(`
+	UPDATE series_classes
+	JOIN series USING (serie)
+	SET series_classes.ranking = series.ranking
+      `);
+      await connection.queryAsync(`
+	ALTER TABLE series_classes
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (serie, ranking, ranking_class)
+      `);
+    }
+
+    if (!await column_exists(connection, 'series_scores', 'ranking')) {
+      await connection.queryAsync(`
+	ALTER TABLE series_scores
+	ADD ranking INT NULL DEFAULT NULL AFTER serie
+      `);
+      await connection.queryAsync(`
+	UPDATE series_scores
+	JOIN series USING (serie)
+	SET series_scores.ranking = series.ranking
+      `);
+      await connection.queryAsync(`
+	ALTER TABLE series_scores
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (serie, ranking, class, number)
+      `);
+    }
+
+    await connection.queryAsync(`
+      ALTER TABLE series
+      DROP ranking
+    `);
+  }
+
+  if (await column_exists(connection, 'series_classes', 'events')) {
+    console.log('Renaming column `events` in `series_classes` to `max_events`');
+    await connection.queryAsync(`
+      ALTER TABLE series_classes
+      CHANGE events max_events INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'series_classes', 'min_events')) {
+    console.log('Adding column `min_events` to table `series_classes`');
+    await connection.queryAsync(`
+      ALTER TABLE series_classes
+      ADD min_events INT NULL DEFAULT NULL AFTER max_events
+    `);
+  }
+
+  if (!await column_exists(connection, 'series_scores', 'ranked')) {
+    console.log('Adding column `ranked` to table `series_scores`');
+    await connection.queryAsync(`
+      ALTER TABLE series_scores
+      ADD ranked BOOLEAN NOT NULL
+    `);
+  }
+
+  if (await column_exists(connection, 'series_scores', 'class')) {
+    console.log('Renaming column `class` in `series_scores` to `ranking_class`');
+    await connection.queryAsync(`
+      ALTER TABLE series_scores
+      CHANGE class ranking_class INT
+    `);
+  }
+
+  let ranking_features;
+  (await connection.queryAsync(`
+    SELECT COUNT(*) AS count
+    FROM event_features
+    WHERE feature LIKE 'ranking%'
+  `)).forEach((row) => {
+    ranking_features = row.count;
+  });
+
+  if (ranking_features) {
+    console.log('Converting rankings');
+    await connection.queryAsync(`
+      DELETE rankings
+      FROM rankings
+      LEFT JOIN event_features ON rankings.id = event_features.id AND ranking = MID(feature, 8)
+      WHERE event_features.id IS NULL
+    `);
+
+    await connection.queryAsync(`
+      DELETE FROM event_features
+      WHERE feature LIKE 'ranking%'
+    `);
+  }
+
+  if (!await column_exists(connection, 'rankings', 'default')) {
+    console.log('Converting `events`.`ranking1_enabled` to `rankings`.`default`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD ` + '`default`' + ` BOOLEAN NOT NULL DEFAULT 0
+    `);
+
+    await connection.queryAsync(`
+      UPDATE rankings
+      JOIN events USING (id)
+      SET `+'`default`'+` = COALESCE(ranking1_enabled, 0)
+      WHERE ranking = 1
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP ranking1_enabled
+    `);
+  }
+
+  if (!await column_exists(connection, 'rankings', 'assign_scores')) {
+    console.log('Converting `events`.`score_234` to `rankings`.`assign_scores`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD assign_scores BOOLEAN NOT NULL DEFAULT 0
+    `);
+
+    await connection.queryAsync(`
+      UPDATE rankings
+      JOIN events USING (id)
+      SET assign_scores = 1
+      WHERE ranking = 1 OR score_234
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP score_234
+    `);
+  }
+
+  if (!await column_exists(connection, 'rankings', 'joint')) {
+    console.log('Adding column `joint` to `rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD joint BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
+
+  if (!await column_exists(connection, 'rankings', 'split')) {
+    console.log('Adding column `split` to `rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD split BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
+
+  if (!await column_exists(connection, 'rankings', 'ignore')) {
+    console.log('Adding column `ignore` to `rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rankings
+      ADD ${'`ignore`'} BOOLEAN NOT NULL DEFAULT 0
+    `);
+  }
+
+  if (!await column_exists(connection, 'events', 'main_ranking')) {
+    console.log('Adding column `main_ranking` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD main_ranking INT
+    `);
+
+    await connection.queryAsync(`
+      UPDATE events
+      JOIN rankings USING (id)
+      SET main_ranking = ranking
+      WHERE ranking = 1
+    `);
+  }
+
+  if (!await column_exists(connection, 'future_starts', 'number')) {
+    console.log('Converting table `future_starts`');
+    await connection.queryAsync(`
+      ALTER TABLE future_starts
+      ADD number INT
+    `);
+
+    await connection.queryAsync(`
+      UPDATE future_starts
+      JOIN riders USING (id, rider_tag)
+      SET future_starts.number = riders.number
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE future_starts
+      DROP PRIMARY KEY,
+      DROP rider_tag,
+      ADD PRIMARY KEY (id, fid, number);
+    `);
+  }
+
+  if (!await column_exists(connection, 'events', 'location')) {
+    console.log('Adding column `location` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD location VARCHAR(40) AFTER subtitle
+    `);
+  }
+
+  if (await column_exists(connection, 'future_events', 'title')) {
+    console.log('Renaming column `title` to `location` in `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      CHANGE title location VARCHAR(40)
+    `);
+  }
+
+  if (!await column_exists(connection, 'riders', 'decisive_marks')) {
+    console.log('Adding column `decisive_marks` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD decisive_marks INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'riders', 'decisive_round')) {
+    console.log('Adding column `decisive_round` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD decisive_round INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'rider_rankings', 'decisive_marks')) {
+    console.log('Adding column `decisive_marks` to `rider_rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rider_rankings
+      ADD decisive_marks INT
+    `);
+  }
+
+  if (!await column_exists(connection, 'rider_rankings', 'decisive_round')) {
+    console.log('Adding column `decisive_round` to `rider_rankings`');
+    await connection.queryAsync(`
+      ALTER TABLE rider_rankings
+      ADD decisive_round INT
+    `);
+  }
+
+  if (await column_exists(connection, 'future_events', 'series')) {
+    console.log('Dropping column `series` of `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      DROP series
+    `);
+  }
+
+  if (!await column_exists(connection, 'future_events', 'type')) {
+    console.log('Adding column `type` to `future_events`');
+    await connection.queryAsync(`
+      ALTER TABLE future_events
+      ADD type VARCHAR(20) AFTER location
     `);
   }
 }
@@ -257,7 +612,7 @@ var cache = {
   cached_riders: {},
   saved_riders: {},
   get_riders: function(id) {
-    return this.cached_riders[id];
+    return this.cached_riders[id] || {};
   },
   set_riders: function(id, riders) {
     delete this.saved_riders[id];
@@ -290,6 +645,14 @@ var cache = {
   delete_riders: function(id) {
     delete this.saved_riders[id];
     delete this.cached_riders[id];
+  },
+  check_for_new_riders: function(id) {
+    if (!this.saved_riders[id])
+      this.saved_riders[id] = {};
+    for (let number in this.cached_riders[id]) {
+      if (!(number in this.saved_riders[id]))
+	this.saved_riders[id][number] = undefined;
+    }
   },
   delete_rider: function(id, number) {
     if (this.saved_riders[id])
@@ -359,39 +722,6 @@ var cache = {
   }
 };
 
-function hash_future_starts(future_starts, rider) {
-  if (rider) {
-    let rider_tag = rider.rider_tag;
-    for (let fid in rider.future_starts) {
-      if (rider.future_starts[fid]) {
-	future_starts[fid + ' ' + rider_tag] = {
-	  fid: fid,
-	  rider_tag: rider_tag
-	};
-      }
-    }
-  }
-}
-
-async function update_future_starts(connection, id) {
-  let numbers = Object.keys(cache.saved_riders[id]);
-  let old_future_starts = {}, new_future_starts = {};
-  for (let number of numbers) {
-    let old_rider = cache.saved_riders[id][number];
-    let new_rider = cache.cached_riders[id][number];
-    hash_future_starts(old_future_starts, old_rider);
-    hash_future_starts(new_future_starts, new_rider);
-  }
-
-  await zipHashAsync(old_future_starts, new_future_starts,
-    async function(a, b) {
-      await update(connection, 'future_starts',
-	Object.assign({id: id}, a || b),
-	[],
-	a != null && {}, b != null && {});
-    });
-}
-
 async function commit_world(connection) {
   var ids = Object.keys(cache.saved_riders);
   for (let id of ids) {
@@ -402,18 +732,6 @@ async function commit_world(connection) {
       await update_rider(connection, id, number,
 			 old_rider, new_rider);
     }
-    /*
-     * The 'future_starts' table uses 'rider_tag' as the rider key instead of
-     * 'number'.  We cannot simply update it in update_rider() which processes
-     * the riders per number because otherwise number changes would lead to
-     * duplicate key errors in 'future_starts'.  (The 'rider_tag' doesn't
-     * change when 'number' changes).
-     *
-     * FIXME: Change 'future_starts' table to use 'number' as key instead of
-     * 'rider_tag' and revert this change.  (May conflict with
-     * pre-registration.)
-     */
-    await update_future_starts(connection, id);
   }
 
   ids = Object.keys(cache.saved_events);
@@ -473,9 +791,12 @@ async function get_serie(connection, serie_id) {
   ).map((row) => row.id);
 
   serie.classes = await connection.queryAsync(`
-    SELECT ranking_class AS class, events, drop_events
+    SELECT *
     FROM series_classes
-    WHERE serie = ?`, [serie_id]);
+    WHERE serie = ?`, [serie_id]).map((row) => {
+      delete row.serie;
+      return row;
+    });
 
   serie.new_numbers = {};
   (await connection.queryAsync(`
@@ -511,14 +832,37 @@ async function rider_regform_data(connection, id, number, event) {
   if (rider.number < 0)
     rider.number = null;
 
+  let name = [];
+  if (rider.last_name)
+    name.push(rider.last_name);
+  if (rider.first_name)
+    name.push(rider.first_name);
+  rider.name = name.join(' ');
+
+  let country_province = [];
+  if (rider.country)
+    country_province.push(rider.country);
+  if (rider.province)
+    country_province.push('(' + rider.province + ')');
+  rider.country_province = country_province.join(' ');
+
   if (rider.class != null) {
+    rider['class_' + rider.class] = true;
     var cls = event.classes[rider.class - 1];
     if (cls) {
+      rider.class_name = cls.name;
+
+      if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
+	rider.color = match[1];
+      rider.ranking_class = cls.ranking_class;
+
       cls = event.classes[cls.ranking_class - 1];
       if (cls) {
 	var match;
-	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
+	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/))) {
+	  rider.ranking_color = match[1];
 	  rider['class_' + match[1].toLowerCase()] = true;
+	}
       }
     }
   }
@@ -549,47 +893,126 @@ async function rider_regform_data(connection, id, number, event) {
       all_starts[date];
   }
 
+  let event_name = event.location || event.title;
+  let dates = [];
+  if (event.date)
+    dates.push(common.parse_timestamp(event.date));
+  for (let future_event of event.future_events) {
+    if (future_event.active && future_event.date)
+      dates.push(common.parse_timestamp(future_event.date));
+  }
+  if (dates) {
+    if (dates.every((date) => date.getYear() == dates[0].getYear())) {
+      if (dates.every((date) => date.getMonth() == dates[0].getMonth())) {
+	dates = dates.map((date) => moment(date).locale('de').format('D.')).join(' und ') +
+	        ' ' + moment(dates[0]).locale('de').format('MMMM YYYY');
+      } else {
+	dates = dates.map((date) => moment(date).locale('de').format('D. MMMM')).join(' und ') +
+	        ' ' + moment(dates[0]).locale('de').format('YYYY');
+      }
+    } else {
+      dates = dates.map((date) => moment(date).locale('de').format('D. MMMM YYYY')).join(' und ');
+    }
+    event_name += '\n' + dates;
+  }
+  rider.event_name = event_name;
+
   return rider;
 }
 
-async function admin_regform(res, connection, id, numbers) {
+async function admin_regform(res, connection, id, name, numbers) {
   let event = await get_event(connection, id);
-  if (event.type == null)
+  if (event.type == null ||
+      (regforms[event.type] || {})[name] == null)
     throw new HTTPError(404, 'Not Found');
 
-  var riders;
-
-  if (Array.isArray(numbers)) {
-    riders = [];
-    for (let number of numbers) {
-      var rider = await rider_regform_data(connection, id, number, event);
-      riders.push(rider);
+  function regform_for_rider(rider) {
+    let matching_filenames = [];
+    for (let filename of regforms[event.type][name]) {
+      let expressions = filename.match(/({.+?:.+?})/g) || [];
+      let matches = 0;
+      for (let expression of expressions) {
+	let match = expression.match(/{(.+?):(.+?)}/);
+	if (rider[match[1]] != match[2])
+	  break;
+	matches++;
+      }
+      if (matches == expressions.length) {
+	matching_filenames.push({
+	  filename: filename,
+	  matches: matches
+	});
+      }
     }
-  } else {
-    riders = await rider_regform_data(connection, id, numbers, event);
+    if (matching_filenames.length)
+      return matching_filenames.sort((a, b) => b.matches - a.matches)[0].filename;
   }
 
-  var form = regforms_dir + '/' + event.type + '.pdf';
-  var child = child_process.spawn('./pdf-fill-form.py', ['--fill', form], {
-    stdio: ['pipe', 'pipe', process.stderr]
-  });
+  let tmpresult;
 
-  child.stdin.write(JSON.stringify(riders));
-  child.stdin.end();
-
-  var headers_sent;
-  child.stdout.on('data', (chunk) => {
-    if (!headers_sent) {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${Array.isArray(numbers) ? 'Nennformulare' : 'Nennformular'}.pdf"`);
-      res.setHeader('Transfer-Encoding', 'chunked');
+  if (Array.isArray(numbers)) {
+    let riders = [];
+    for (let number of numbers) {
+      var rider = await rider_regform_data(connection, id, number, event);
+      let filename = regform_for_rider(rider);
+      if (filename == null)
+	throw new HTTPError(404, 'Not Found');
+      rider.filename = filename;
+      riders.push(rider);
     }
-    res.write(chunk);
-    headers_sent = true;
-  });
 
-  child.stdout.on('end', () => {
-    res.end();
+    let tmpfiles = [];
+    for (let rider of riders) {
+      let filename = rider.filename;
+      delete rider.filename;
+
+      var tmpfile = tmp.fileSync();
+      tmpfiles.push(tmpfile);
+
+      var form = `${regforms_dir}/${event.type}/${filename}`;
+      let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+	stdio: ['pipe', tmpfile.fd, process.stderr]
+      });
+      let child = promise.childProcess;
+      child.stdin.write(JSON.stringify(rider));
+      child.stdin.end();
+      await promise;
+    }
+
+    tmpresult = tmp.fileSync();
+    let args = tmpfiles.map((tmpfile) => tmpfile.name);
+    args.push(tmpresult.name);
+    let promise = spawn('pdfunite', args, {
+      stdio: ['pipe', process.stdout, process.stderr]
+    });
+    let child = promise.childProcess;
+    child.stdin.end();
+    await promise;
+
+    for (let tmpfile of tmpfiles)
+      tmpfile.removeCallback();
+  } else {
+    let rider = await rider_regform_data(connection, id, numbers, event);
+    let filename = regform_for_rider(rider);
+    if (filename == null)
+      throw new HTTPError(404, 'Not Found');
+
+    tmpresult = tmp.fileSync();
+    var form = `${regforms_dir}/${event.type}/${filename}`;
+    let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+      stdio: ['pipe', tmpresult.fd, process.stderr]
+    });
+    let child = promise.childProcess;
+    child.stdin.write(JSON.stringify(rider));
+    child.stdin.end();
+    await promise;
+  }
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(name)}.pdf`);
+  res.setHeader('Transfer-Encoding', 'chunked');
+  res.sendFile(tmpresult.name, {}, () => {
+    tmpresult.removeCallback();
   });
 
   /* FIXME: error handling! */
@@ -618,11 +1041,10 @@ async function get_events(connection, email) {
   var events_hash = {};
 
   var events = await connection.queryAsync(`
-    SELECT DISTINCT id, tag, date, title, enabled
+    SELECT DISTINCT id, tag, date, title, location, enabled
     FROM events
     JOIN events_all_admins USING (id)
-    LEFT JOIN rankings USING (id)
-    WHERE email = ? AND ranking = 1
+    WHERE email = ?
     ORDER BY date, title, id`, [email]);
 
   events.forEach((row) => {
@@ -697,7 +1119,7 @@ async function read_event(connection, id, revalidate) {
     SELECT *
     FROM future_events
     WHERE id = ?
-    ORDER BY date, title`, [id]);
+    ORDER BY date, location`, [id]);
   Object.values(event.future_events).forEach((future_event) => {
     delete future_event.id;
   });
@@ -747,7 +1169,7 @@ async function read_event(connection, id, revalidate) {
     JOIN series USING (serie)
     JOIN classes USING (id)
     JOIN series_classes USING (serie, ranking_class)
-    WHERE id = ? AND ranking
+    WHERE id = ?
     ORDER BY abbreviation`, [id])
   ).reduce((series, row) => {
     if (series)
@@ -760,65 +1182,9 @@ async function read_event(connection, id, revalidate) {
   return event;
 }
 
-/* FIXME: The current admin skipped_zones representation is pretty horrible.  */
-function skipped_zones_list(skipped_zones_hash) {
-  var skipped_zones_list = [];
-  Object.keys(skipped_zones_hash).forEach((_) => {
-    skipped_zones_list[_ - 1] = ((event_class) => {
-      var rounds = [];
-      Object.keys(event_class).forEach((_) => {
-	rounds[_ - 1] = ((event_round) => {
-	  var sections = Object.keys(event_round)
-	    .map((s) => +s)
-	    .sort();
-	  return sections;
-	})(event_class[_]);
-      });
-      return rounds;
-    })(skipped_zones_hash[_]);
-  });
-  return skipped_zones_list;
-}
-
-function skipped_zones_hash(skipped_zones_list) {
-  return skipped_zones_list.reduce(function(classes, v, i) {
-    if (v) {
-      classes[i + 1] = v.reduce(function(rounds, v, i) {
-	if (v) {
-	  rounds[i + 1] = v.reduce(function(zones, zone) {
-	    zones[zone] = true;
-	    return zones;
-	  }, {});
-	}
-	return rounds;
-      }, {});
-    }
-    return classes;
-  }, {});
-}
-
 async function get_event(connection, id) {
   var revalidate = make_revalidate_event(connection, id);
   return await read_event(connection, id, revalidate);
-}
-
-function admin_event_to_api(event) {
-  var copy = Object.assign({}, event);
-
-  if (event.skipped_zones)
-    copy.skipped_zones = skipped_zones_list(event.skipped_zones);
-
-  return copy;
-}
-
-function admin_event_from_api(event) {
-  if (event)
-    event.skipped_zones = skipped_zones_hash(event.skipped_zones || []);
-}
-
-async function admin_get_event(connection, id) {
-  var event = await get_event(connection, id);
-  return admin_event_to_api(event);
 }
 
 function make_revalidate_rider(id, number, version) {
@@ -908,20 +1274,21 @@ async function read_riders(connection, id, revalidate, number) {
   });
 
   (await connection.queryAsync(`
-    SELECT ranking, number, rank, score
+    SELECT *
     FROM rider_rankings
     WHERE ` + filters)
   ).forEach((row) => {
     var rider = riders[row.number];
     if (rider) {
-      rider.rankings[row.ranking - 1] = {rank: row.rank, score: row.score};
+      rider.rankings[row.ranking - 1] = row;
+      delete row.number;
+      delete row.ranking;
     }
   });
 
   (await connection.queryAsync(`
     SELECT fid, number
     FROM future_starts
-    JOIN riders using (id, rider_tag)
     WHERE ` + filters)
   ).forEach((row) => {
     var rider = riders[row.number];
@@ -986,7 +1353,7 @@ async function get_rider(connection, id, number, params, direction, event) {
     if (event) {
       if (event.features.registered)
 	or.push('registered');
-      or.push('rider_tag IN (SELECT rider_tag FROM future_events ' +
+      or.push('number IN (SELECT number FROM future_events ' +
 	        'JOIN future_starts USING (id, fid) ' +
 		'WHERE id = ' + connection.escape(id) + ' AND active)');
     }
@@ -1160,16 +1527,8 @@ async function find_riders(connection, id, params) {
 async function delete_rider(connection, id, number) {
   let query;
 
-  query = 'DELETE future_starts ' +
-          'FROM future_starts ' +
-	  'JOIN riders USING (id, rider_tag) ' +
-	  'WHERE id = ' + connection.escape(id) +
-	    ' AND number = ' + connection.escape(number);
-  log_sql(query);
-  await connection.queryAsync(query);
-
   for (let table of ['riders', 'riders_groups', 'rider_rankings', 'marks',
-		     'rounds', 'new_numbers']) {
+		     'rounds', 'new_numbers', 'future_starts']) {
     query = 'DELETE FROM ' + connection.escapeId(table) +
 	    ' WHERE id = ' + connection.escape(id) +
 	      ' AND number = ' + connection.escape(number);
@@ -1189,7 +1548,7 @@ async function rider_change_number(connection, id, old_number, new_number) {
   let query;
 
   for (let table of ['riders', 'riders_groups', 'rider_rankings', 'marks',
-		     'rounds']) {
+		     'rounds', 'future_starts']) {
     query = 'UPDATE ' + connection.escapeId(table) +
 	    ' SET number = ' + connection.escape(new_number) +
 	    ' WHERE id = ' + connection.escape(id) +
@@ -1240,7 +1599,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
       var result = await connection.queryAsync(`
         SELECT COALESCE(MIN(number), 0) - 1 AS number
 	FROM riders
-	WHERE id = ?`, [id]);
+	WHERE id = ? AND number < 0`, [id]);
       rider.number = result[0].number;
       if (number == null)
 	number = rider.number;
@@ -1263,8 +1622,10 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
       rider.rider_tag = random_tag();
 
     if (rider) {
-      if (!old_rider && !rider.rankings && event.ranking1_enabled)
-	rider.rankings = [{"rank":null, "score":null}];
+      if (!old_rider && !rider.rankings)
+	rider.rankings = event.rankings.map((ranking) =>
+	  (ranking && ranking.default) ?
+	    {"rank": null, "score": null} : null);
       rider = Object.assign(cache.modify_rider(id, number), rider);
     } else {
       await delete_rider(connection, id, number);
@@ -1273,7 +1634,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    compute(cache, id, event);
+    compute_event(cache, id, event);
 
     /* When verifying a rider, also verify the user so that future changes by
        that user will not need verification in the future.  */
@@ -1322,7 +1683,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.tie_break = 0;
       rider.rounds = null;
       rider.failure = 0;
-      rider.additional_marks = null;
+      rider.penalty_marks = null;
       rider.marks = null;
       rider.marks_per_zone = [];
       rider.marks_per_round = [];
@@ -1332,7 +1693,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
         (ranking) => ranking && {rank: null, score: null}
       );
     });
-    event.skipped_zones = [];
+    event.skipped_zones = {};
   }
 
   if (reset == 'start_times') {
@@ -1593,8 +1954,6 @@ async function reduce_future_starts(event, riders) {
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
-  admin_event_from_api(event);
-
   await cache.begin(connection);
   try {
     var old_event;
@@ -1636,6 +1995,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	  await get_riders(connection, id);
 	let riders = cache.modify_riders(id);
 	reset_event(base_event, base_riders, event, riders, reset);
+	cache.check_for_new_riders(id);
       }
 
       if (!future_event_ids_equal(old_event, event)) {
@@ -1645,7 +2005,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	await reduce_future_starts(event, riders);
       }
 
-      compute(cache, id, event);
+      compute_event(cache, id, event);
     } else {
       await delete_event(connection, id);
     }
@@ -1656,8 +2016,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       event = await read_event(connection, id, () => {});
     }
 
-    if (event)
-      return admin_event_to_api(event);
+    return event;
   } catch (err) {
     await cache.rollback(connection);
     throw err;
@@ -1694,20 +2053,27 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
   function hash_classes(classes) {
     if (!classes)
       return {};
-    return classes.reduce((hash, cls) => {
-      hash[cls['class']] = cls;
-      return hash;
-    }, {});
+    let hash = {};
+    classes.forEach((cls) => {
+      let ranking = hash[cls.ranking];
+      if (!ranking)
+	ranking = hash[cls.ranking] = {};
+      ranking[cls.ranking_class] = cls;
+    });
+    return hash;
   }
 
   await zipHashAsync(
     hash_classes(old_serie.classes), hash_classes(new_serie.classes),
-    async function(a, b, ranking_class) {
-      await update(connection, 'series_classes',
-        {serie: serie_id, ranking_class: ranking_class},
-        ['events', 'drop_events'],
-        a, b)
-      && (changed = true);
+    async function(a, b, ranking) {
+      await zipHashAsync(a, b,
+	async function(a, b, ranking_class) {
+	  await update(connection, 'series_classes',
+	    {serie: serie_id, ranking: ranking, ranking_class: ranking_class},
+	    undefined,
+	    a, b)
+	  && (changed = true);
+	});
     });
 
   await zipHashAsync(old_serie.new_numbers, new_serie.new_numbers,
@@ -1715,7 +2081,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
       await zipHashAsync(a, b, async function(a, b, number) {
 	await update(connection, 'new_numbers',
 	  {serie: serie_id, id: id, number: number},
-	  ['new_number'],
+	  undefined,
 	  a, b,
 	  (new_number) => (new_number !== undefined &&
 			   {number: number, new_number: new_number}))
@@ -1728,7 +2094,7 @@ async function __update_serie(connection, serie_id, old_serie, new_serie) {
     async function(a, b, number) {
       await update(connection, 'series_tie_break',
         {serie: serie_id, number: number},
-        ['tie_break'],
+        undefined,
         a, b,
 	(x) => (x != null ? {tie_break: x} : null))
       && (changed = true);
@@ -1766,6 +2132,8 @@ async function update_serie(connection, serie_id, old_serie, new_serie) {
 
   if (new_serie) {
     if (changed) {
+      new_serie.mtime = null;  /* enforce recomputing the results */
+
       nonkeys.push('version');
       new_serie.version = old_serie ? old_serie.version + 1 : 1;
     }
@@ -1807,7 +2175,8 @@ async function save_serie(connection, serie_id, serie, version, email) {
     return serie_id;
   } else {
     for (let table of ['series', 'series_classes', 'series_events',
-		       'series_admins', 'series_groups']) {
+		       'series_admins', 'series_groups',
+		       'series_scores']) {
       let query =
 	'DELETE FROM ' + connection.escapeId(table) +
 	' WHERE serie = ' + connection.escape(serie_id);
@@ -1848,7 +2217,7 @@ function make_revalidate_riders(connection, id) {
     });
 
     let cached_versions = {};
-    Object.values(cache.get_riders(id) || {}).forEach((rider) => {
+    Object.values(cache.get_riders(id)).forEach((rider) => {
       cached_versions[rider.number] = rider.version;
     });
 
@@ -1923,8 +2292,8 @@ async function get_riders_list(connection, id) {
     ['city', 'class', 'club', 'country', 'date_of_birth', 'email', 'entry_fee',
     'failure', 'finish_time', 'first_name', 'group', 'insurance', 'last_name',
     'license', 'non_competing', 'number', 'phone', 'province', 'registered',
-    'riders', 'rounds', 'start', 'start_time', 'street',
-    'vehicle', 'zip', 'guardian', 'comment', 'rider_comment', 'verified',
+    'riders', 'rounds', 'start', 'start_time', 'street', 'vehicle',
+    'year_of_manufacture', 'zip', 'guardian', 'comment', 'rider_comment', 'verified',
     'future_starts'].forEach(
       (field) => { r[field] = rider[field]; }
     );
@@ -1938,7 +2307,12 @@ async function get_riders_list(connection, id) {
   return list;
 }
 
-async function get_event_scores(connection, id) {
+var rider_public_fields = [
+  'club', 'country', 'first_name', 'last_name', 'province', 'vehicle',
+  'year_of_manufacture'
+];
+
+async function get_event_results(connection, id) {
   let revalidate_riders = make_revalidate_riders(connection, id);
   let revalidate_event = make_revalidate_event(connection, id);
   let revalidate = async function() {
@@ -1948,162 +2322,598 @@ async function get_event_scores(connection, id) {
   var event = await read_event(connection, id, revalidate);
   var riders = await read_riders(connection, id, revalidate);
 
-  var hash = {};
+  var hash = {
+    event: {
+      features: {}
+    },
+    rankings: []
+  };
 
-  var groups = [];
-  var active_riders = {};
-  var riders_per_class = {};
-  Object.keys(riders).forEach((number) => {
-    var rider = riders[number];
-
-    if (!rider.start ||
-        (!rider.registered && event.features.registered) ||
-        (!rider.verified && event.features.verified))
-      return;
-
-    var r = {};
-
-    ['number', 'last_name', 'first_name', 'club', 'vehicle',
-    'city', 'country', 'province', 'rank', 'failure', 'non_competing',
-    'additional_marks', 'marks', 'marks_distribution', 'marks_per_round',
-    'marks_per_zone', 'rankings'].forEach(
-      (field) => { r[field] = rider[field]; }
-    );
-    active_riders[rider.number] = r;
-
-    if (rider.group) {
-      r.riders = rider.riders;
-      groups.push(r);
-    } else {
-      let class_ = rider['class'];
-      if (class_ == null)
-	return;
-      if (!riders_per_class[class_])
-	riders_per_class[class_] = [];
-      riders_per_class[class_].push(r);
+  function ranking_classes(ranking) {
+    function class_info(class_nr) {
+      let ranking_class = class_nr;
+      if (event.classes[class_nr - 1])
+	ranking_class = event.classes[class_nr - 1].ranking_class;
+      let hash = {
+	ranking_class: class_nr,
+	zones: event.zones[ranking_class - 1],
+	skipped_zones: (event.skipped_zones || {})[ranking_class] || {},
+	scores: ranking != null &&
+		(event.rankings[ranking - 1] || {}).assign_scores &&
+		(ranking != 1 ||
+		 !(event.classes[class_nr - 1] || {}).no_ranking1),
+	riders: [],
+      };
+      if (event.classes[class_nr - 1]) {
+	for (let key of ['rounds', 'color', 'name'])
+	  hash[key] = event.classes[class_nr - 1][key];
+      }
+      return hash;
     }
-  });
 
-  function ranking_class(class_) {
-    if (class_ != null && event.classes[class_ - 1])
-      return event.classes[class_ - 1].ranking_class;
+    return function(riders) {
+      let riders_by_ranking_class = [];
+      for (let rider of riders) {
+	if (rider.class == null || !event.classes[rider.class - 1])
+	  continue;
+	let ranking_class = event.classes[rider.class - 1].ranking_class;
+
+	if (!riders_by_ranking_class[ranking_class - 1]) {
+	  riders_by_ranking_class[ranking_class - 1] =
+	    class_info(ranking_class);
+	}
+	riders_by_ranking_class[ranking_class - 1].riders.push(rider);
+      }
+
+      let ranking_classes = Object.values(riders_by_ranking_class);
+      if (event.type == 'otsv-acup' && ranking == 2) {
+	function color_order(a, b) {
+	  try {
+	    let color_a = event.classes[a.ranking_class - 1].color;
+	    let color_b = event.classes[b.ranking_class - 1].color;
+	    if (color_a != color_b)
+	      return acup.color_order[color_a] - acup.color_order[color_b];
+	  } catch (err) {
+	    throw new Error(`Failed to compare ranking classes ${a.ranking_class} and ${b.ranking_class}`);
+	  }
+	}
+
+	let last_ranking_class;
+	ranking_classes = ranking_classes
+	  .sort(color_order)
+	  .reduce((ranking_classes, ranking_class) => {
+	    if (last_ranking_class && !color_order(last_ranking_class, ranking_class)) {
+	      let merged = ranking_classes[ranking_classes.length - 1];
+	      if (merged === last_ranking_class) {
+		merged = ranking_classes[ranking_classes.length - 1] =
+		  Object.assign({}, merged);
+	        merged.ranking_class = [last_ranking_class.ranking_class];
+	      }
+
+	      merged.ranking_class.push(ranking_class.ranking_class);
+	      for (let key of ['zones', 'skipped_zones', 'rounds', 'color']) {
+		if (!deepEqual(last_ranking_class[key], ranking_class[key]))
+		  delete merged[key];
+	      }
+	      merged.name += ' + ' + ranking_class.name;
+	      merged.scores |= ranking_class.scores;
+	      merged.riders = merged.riders.concat(ranking_class.riders);
+	    } else {
+	      ranking_classes.push(ranking_class);
+	    }
+	    last_ranking_class = ranking_class;
+	    return ranking_classes;
+	  }, []);
+      } else {
+	function class_order(a, b) {
+	  if (event.classes[a] && event.classes[b])
+	    return event.classes[a].order - event.classes[b].order;
+	  return a - b;
+	}
+
+        ranking_classes.sort(class_order);
+      }
+
+      ranking_classes.forEach((ranking_class) => {
+	ranking_class.additional_marks =
+	  ranking_class.riders.some((rider) => rider.additional_marks);
+	ranking_class.penalty_marks =
+	  ranking_class.riders.some((rider) => rider.penalty_marks);
+      });
+
+      return ranking_classes;
+    };
   }
 
-  /*
-   * Convert index of riders_per_class from class to ranking class.
-   * Riders in classes which are not defined are dropped.
-   */
-  riders_per_class = (() => {
-    var rs = {};
-    Object.keys(riders_per_class).forEach((class_) => {
-      let rc = ranking_class(class_);
-      if (rc != null) {
-	if (!rs[rc])
-	  rs[rc] = [];
-	// I'm having trouble getting babel to substitute the spread operator
-	// on node v4.6.1.  Use push.apply instead for now:
-	//rs[rc].push(...riders_per_class[class_]);
-	Array.prototype.push.apply(rs[rc], riders_per_class[class_]);
+  function convert_ranking(ranking, overall) {
+    function convert_rider(rider) {
+      var r = {};
+      rider_public_fields.concat([
+	'additional_marks', 'penalty_marks', 'failure', 'marks',
+	'marks_distribution', 'marks_per_round', 'marks_per_zone',
+	'non_competing', 'number', 'tie_break'
+      ]).forEach(
+	(field) => { r[field] = rider[field]; }
+      );
+      let rx;
+      if (ranking) {
+        rx = rider.rankings[ranking - 1];
+	if (rx)
+	  r.score = rx.score;
       }
-    });
-    return rs;
-  })();
+      if (overall)
+	rx = rider;
+      if (rx) {
+	for (let field of ['rank', 'decisive_marks', 'decisive_round'])
+	  r[field] = rx[field];
+      }
+      return r;
+    }
 
-  hash.event = {};
-  ['equal_marks_resolution', 'mtime', 'four_marks', 'date',
-  'split_score', 'features', 'type', 'result_columns'].forEach(
+    return function(ranking_class) {
+      ranking_class.riders =
+        ranking_class.riders.map(convert_rider);
+      if (ranking_class.riders.some((rider) => rider.tie_break))
+	ranking_class.tie_break = true;
+      return ranking_class;
+    }
+  }
+
+  function sort_by_rank(ranking_class) {
+    ranking_class.riders.sort((a, b) =>
+      a.rank - b.rank ||
+      a.number - b.number);
+    ranking_class.riders.forEach((rider) => {
+      if (rider.failure || rider.non_competing)
+	delete rider.rank;
+    });
+    return ranking_class;
+  }
+
+  let result = ranking_classes(event.main_ranking)(
+    Object.values(riders).filter((rider) => rider.rank != null)
+  ).map(convert_ranking(event.main_ranking, true))
+  .map(sort_by_rank);
+
+  if (result.length) {
+    let ranking = {
+      ranking: null,
+      name: null,
+      classes: result
+    };
+    if (event.main_ranking != null) {
+      ranking.main_ranking = event.main_ranking;
+      ranking.main_ranking_name =
+        (event.rankings[event.main_ranking - 1] || {}).name;
+    }
+    hash.rankings.push(ranking);
+  }
+
+  for (let ranking_index in event.rankings) {
+    ranking_index = +ranking_index;
+    if (event.rankings[ranking_index].ignore)
+      continue;
+    if (ranking_index + 1 == event.main_ranking)
+      continue;
+
+    let result = ranking_classes(ranking_index + 1)(
+	Object.values(riders).filter((rider) => (rider.rankings[ranking_index] || {}).rank != null)
+      ).map(convert_ranking(ranking_index + 1, false))
+      .map(sort_by_rank);
+
+    if (result.length) {
+      hash.rankings.push({
+	ranking: +ranking_index + 1,
+	name: event.rankings[ranking_index].name,
+	classes: result
+      });
+    }
+  }
+
+  ['title', 'subtitle', 'mtime', 'four_marks', 'date', 'split_score', 'type',
+   'result_columns'].forEach(
     (field) => { hash.event[field] = event[field]; }
   );
 
-  hash.event.classes = [];
-  hash.event.zones = [];
-  Object.keys(riders_per_class).forEach((class_) => {
-    let hash_event_class = hash.event.classes[class_ - 1] = {};
-    let event_class = event.classes[class_ - 1];
-    ['rounds', 'color', 'name', 'order'].forEach((field) => {
-      hash_event_class[field] = event_class[field];
-    });
-    hash_event_class.groups = false;
-    hash.event.zones[class_ - 1] = event.zones[class_ - 1];
+  rider_public_fields.concat([
+    'number', 'additional_marks', 'individual_marks', 'column_5'
+  ]).forEach((feature) => {
+    hash.event.features[feature] = event.features[feature];
   });
-
-  var active_rankings = [];
-  Object.values(riders_per_class).forEach((riders) => {
-    Object.values(riders).forEach((rider) => {
-      rider.rankings.forEach((ranking, index) => {
-	if (ranking)
-	  active_rankings[index] = true;
-      });
-    });
-  });
-
-  /* FIXME: Hack to get the event title into the result. */
-  if (!active_rankings.length)
-    active_rankings[0] = true;
-
-  hash.event.rankings = [];
-  active_rankings.forEach((ranking, index) => {
-    hash.event.rankings[index] = event.rankings[index];
-  });
-
-  if (event.skipped_zones)
-    hash.event.skipped_zones = skipped_zones_list(event.skipped_zones);
-
-  hash.riders = [];
-  Object.keys(riders_per_class).forEach((class_) => {
-    if (riders_per_class[class_].length)
-      hash.riders[class_ - 1] = riders_per_class[class_];
-  });
-
-  /*
-   * Groups are added as a new pseudo-class ...
-   */
-  if (groups.length) {
-    let classes = {};
-    groups.forEach((group) => {
-      group.riders.forEach((number) => {
-	let rider = riders[number];
-	let rc = ranking_class(rider.class);
-	if (rc != null)
-	  classes[rc] = true;
-      });
-    });
-
-    let rounds;
-    let zones;
-    if (Object.keys(classes).length == 1) {
-      let class_ = Object.keys(classes)[0];
-      rounds = event.classes[class_ - 1].rounds;
-      zones = event.zones[class_ - 1];
-    } else {
-      rounds = 0;
-      zones = {};
-      Object.keys(classes).forEach((class_) => {
-	let rc = ranking_class(class_);
-	if (rc != null) {
-	  rounds = Math.max(rounds, event.classes[rc - 1].rounds);
-	  event.zones[rc - 1].forEach((zone) => {
-	    zones[zone] = true;
-	  });
-	}
-      });
-      zones = Object.keys(zones)
-        .map((_) => +_)
-	.sort((a, b) => a - b);
-    }
-
-    let groups_class = {
-      name: 'Gruppen',
-      rounds: rounds,
-      groups: true,
-    };
-    let n = hash.event.classes.length;
-    hash.riders[n] = groups;
-    hash.event.zones[n] = zones;
-    hash.event.classes[n] = groups_class;
-  }
 
   return hash;
+}
+
+async function get_serie_scores(connection, serie_id) {
+  let scores = {};
+
+  (await connection.queryAsync(`
+    SELECT *
+    FROM series_scores
+    WHERE serie = ?
+  `, [serie_id])).forEach((row) => {
+    delete row.serie;
+
+    let ranking = scores[row.ranking];
+    if (!ranking)
+      ranking = scores[row.ranking] = {};
+    delete row.ranking;
+
+    let ranking_class = ranking[row.ranking_class];
+    if (!ranking_class)
+      ranking_class = ranking[row.ranking_class] = {};
+    delete row.ranking_class;
+
+    let rider = ranking_class[row.number];
+    if (!rider)
+      rider = ranking_class[row.number] = {};
+    delete row.number;
+
+    Object.assign(rider, row);
+  });
+
+  return scores;
+}
+
+async function compute_and_update_serie(connection, serie_id, serie_mtime, last_event) {
+  await connection.queryAsync(`BEGIN`);
+
+  let old_rankings = await get_serie_scores(connection, serie_id);
+  let rankings = await compute_serie(connection, serie_id, last_event);
+  if (!deepEqual(old_rankings, rankings)) {
+    await zipHashAsync(old_rankings, rankings,
+      async function(a, b, ranking_nr) {
+	await zipHashAsync(a, b,
+	  async function(a, b, ranking_class_nr) {
+	    await zipHashAsync(a, b,
+	      async function(a, b, number) {
+		await update(connection, 'series_scores',
+		  {serie: serie_id, ranking: ranking_nr, ranking_class: ranking_class_nr, number: number},
+		  undefined,
+		  a, b);
+	      });
+	  });
+      });
+  }
+
+  let query = 'UPDATE series ' +
+    'SET mtime = ' + connection.escape(serie_mtime) + ' ' +
+    'WHERE serie = ' + connection.escape(serie_id);
+  log_sql(query);
+  await connection.queryAsync(query);
+
+  await connection.queryAsync(`COMMIT`);
+}
+
+async function get_serie_results(connection, serie_id) {
+  let serie = await get_serie(connection, serie_id);
+
+  let classes_in_serie = [];
+  for (let class_ of serie.classes) {
+    let ranking_in_serie = classes_in_serie[class_.ranking - 1];
+    if (!ranking_in_serie)
+      ranking_in_serie = classes_in_serie[class_.ranking - 1] = [];
+    ranking_in_serie[class_.ranking_class - 1] = class_;
+  }
+
+  function event_active_classes(event) {
+    let classes = event.classes;
+
+    let active_classes = [];
+    if (event.enabled) {
+      let rankings = event.rankings;
+      for (let ranking_idx = 0; ranking_idx < rankings.length; ranking_idx++) {
+	let active_in_ranking = {};
+
+	if (!rankings[ranking_idx] || rankings[ranking_idx].name == null)
+	  continue;
+	for (let idx = 0; idx < classes.length; idx++) {
+	  if (!classes[idx])
+	    continue;
+	  let ridx = classes[idx].ranking_class - 1;
+	  if (!classes_in_serie[ranking_idx] ||
+	      !classes_in_serie[ranking_idx][ridx] ||
+	      !classes[ridx])
+	    continue;
+	  if ((ranking_idx != 0 || !classes[idx].no_ranking1) &&
+	      !classes[idx].non_competing &&
+	      classes[ridx].rounds > 0 &&
+	      event.zones[ridx])
+	    active_in_ranking[ridx + 1] = true;
+	  }
+
+	  active_in_ranking = Object.keys(active_in_ranking);
+	  if (active_in_ranking.length)
+	    active_classes[ranking_idx] = active_in_ranking;
+	}
+      }
+      return active_classes;
+  }
+
+  let events_by_id = {};
+  let active_events = [];
+  let events_in_class = [];
+  for (let id of serie.events) {
+    let event = await get_event(connection, id);
+    if (!event.enabled)
+      continue;
+
+    events_by_id[event.id] = event;
+    let active_classes = event_active_classes(event);
+    if (active_classes.length) {
+      active_events.push(event);
+      for (let ranking_idx in active_classes) {
+	for (let class_ of active_classes[ranking_idx]) {
+	  let ranking = events_in_class[ranking_idx];
+	  if (!ranking)
+	    ranking = events_in_class[ranking_idx] = [];
+	  if (!ranking[class_ - 1])
+	    ranking[class_ - 1] = [];
+	  ranking[class_ - 1].push(event.id);
+	}
+      }
+    }
+  }
+
+  let last_event;
+  if (active_events.length)
+    last_event = active_events[active_events.length - 1];
+
+  let serie_mtime;
+  (await connection.queryAsync(`
+    SELECT mtime
+    FROM series
+    WHERE serie = ?
+  `, [serie_id])).forEach((row) => {
+    serie_mtime = row.mtime;
+  });
+  if (serie_mtime === undefined)
+    throw new HTTPError(404, 'Not Found');
+
+  let needs_recompute =
+    serie_mtime == null ||
+    Object.values(events_by_id).some((event) => event.mtime > serie_mtime);
+
+  if (needs_recompute) {
+    serie_mtime = '0000-00-00 00:00:00';
+    Object.values(events_by_id).forEach((event) => {
+      if (event.mtime > serie_mtime)
+	serie_mtime = event.mtime;
+    });
+    await compute_and_update_serie(connection, serie_id, serie_mtime, last_event);
+  }
+
+  let result = {
+    serie: {
+      name: serie.name,
+      features: []
+    },
+    events: [],
+    rankings: []
+  };
+
+  if (last_event) {
+    for (let key of ['type', 'split_score', 'result_columns'])
+      result.serie[key] = last_event[key];
+
+    let features = {};
+    rider_public_fields.concat([
+      'number'
+    ]).forEach((feature) => {
+      features[feature] = last_event.features[feature];
+    });
+    result.serie.features = features;
+
+    let max_ts = 0;
+    for (let event of active_events) {
+      if (event.mtime) {
+	let ts = common.parse_timestamp(event.mtime).getTime();
+	if (ts > max_ts)
+	  max_ts = ts;
+      }
+    }
+    if (max_ts != 0)
+      result.serie.mtime =
+	moment(max_ts).format('YYYY-MM-DD HH:mm:ss');
+
+    for (let event of active_events) {
+      result.events.push({
+	id: event.id,
+	title: event.title,
+	subtitle: event.subtitle,
+	location: event.location,
+	date: event.date,
+      });
+    }
+
+    let event_scores = {};
+    (await connection.queryAsync(`
+      SELECT ranking, id, ranking_class,
+	     COALESCE(new_number, number) AS number, score
+      FROM series_events
+      JOIN rider_rankings USING (id)
+      JOIN riders USING (id, number)
+      JOIN classes USING (id, class)
+      LEFT JOIN new_numbers USING (serie, id, number)
+      WHERE serie = ? AND score IS NOT NULL
+    `, [serie_id])).forEach((row) => {
+      let ranking_scores = event_scores[row.ranking];
+      if (!ranking_scores)
+	ranking_scores = event_scores[row.ranking] = {};
+
+      let ranking_class_scores = ranking_scores[row.ranking_class];
+      if (!ranking_class_scores)
+	ranking_class_scores = ranking_scores[row.ranking_class] = {};
+
+      let rider_scores = ranking_class_scores[row.number];
+      if (!rider_scores)
+	rider_scores = ranking_class_scores[row.number] = {};
+
+      rider_scores[row.id] = row.score;
+    });
+
+    let classes_in_rankings = [];
+    (await connection.queryAsync(`
+      SELECT ranking, ranking_class
+      FROM series_classes
+      JOIN (
+        SELECT class AS ranking_class, ` + '`order`' + `
+	FROM classes
+	WHERE id = ?
+      ) AS _class USING (ranking_class)
+      WHERE serie = ?
+      ORDER BY ranking, ` + '`order`' + `
+    `, [last_event.id, serie_id])).forEach((row) => {
+      let classes_in_ranking = classes_in_rankings[row.ranking - 1];
+      if (!classes_in_ranking)
+	classes_in_ranking = classes_in_rankings[row.ranking - 1] = [];
+
+      classes_in_ranking.push(row.ranking_class);
+    });
+
+    let rider_public = {};
+    (await connection.queryAsync(`
+      SELECT new_number AS number,
+             ${rider_public_fields
+	       .map((field) => connection.escapeId(field))
+	       .join(', ')}
+      FROM riders
+      JOIN (
+	SELECT last_id AS id,
+	       COALESCE(new_numbers.number, series_scores.number) AS number,
+	       series_scores.number AS new_number
+	FROM series_scores
+	LEFT JOIN new_numbers
+	  ON series_scores.last_id = new_numbers.id AND
+	     series_scores.number = new_numbers.new_number AND
+	     series_scores.serie = new_numbers.serie
+	WHERE series_scores.serie = ${connection.escape(serie_id)}
+      ) AS _series_scores USING (id, number)
+    `)).forEach((row) => {
+      rider_public[row.number] = row;
+    });
+
+    let rankings = [];
+    (await connection.queryAsync(`
+      SELECT series_scores.*
+      FROM series_scores
+      JOIN (
+        SELECT class AS ranking_class, ` + '`order`' + `
+	FROM classes
+	WHERE id = ${connection.escape(last_event.id)}
+      ) AS _classes USING (ranking_class)
+      WHERE serie = ${connection.escape(serie_id)}
+      ORDER BY _classes.order, rank, number
+    `)).forEach((row) => {
+      let ranking_classes = rankings[row.ranking - 1];
+      if (!ranking_classes)
+	ranking_classes = rankings[row.ranking - 1] = [];
+
+      let scores_in_class = ranking_classes[row.ranking_class - 1];
+      if (!scores_in_class) {
+	let class_ = {
+	  class: row.ranking_class
+	};
+	for (let key of ['name', 'color'])
+	  class_[key] = last_event.classes[row.ranking_class - 1][key];
+	for (let key of ['max_events', 'min_events', 'drop_events'])
+	  class_[key] = classes_in_serie[row.ranking - 1][row.ranking_class - 1][key];
+
+	scores_in_class = ranking_classes[row.ranking_class - 1] = {
+	  class: class_,
+	  events: events_in_class[row.ranking - 1][row.ranking_class - 1],
+	  riders: []
+	};
+      }
+
+      row.scores = [];
+      let rider_scores = event_scores[row.ranking][row.ranking_class][row.number] || {};
+      for (let id of scores_in_class.events)
+	row.scores.push(rider_scores[id]);
+
+      for (let key of ['serie', 'ranking', 'ranking_class'])
+        delete row[key];
+      Object.assign(row, rider_public[row.number]);
+      scores_in_class.riders.push(row);
+    });
+
+    for (let ranking_idx in classes_in_rankings) {
+      let classes_in_ranking = classes_in_rankings[ranking_idx];
+      let classes = [];
+      for (let class_ of classes_in_ranking) {
+	if (!rankings[ranking_idx])
+	  continue;
+	let class_ranking = rankings[ranking_idx][class_ - 1];
+	if (class_ranking)
+	  classes.push(class_ranking);
+      }
+
+      if ((last_event.rankings[ranking_idx] || {}).joint) {
+	if (classes.length > 1) {
+	  let joint = {
+	    class: {
+	      name: classes.map((class_) => class_.class.name).join (' + ')
+	    },
+	    riders: classes[0].riders
+	  };
+
+	  for (let key of ['color', 'max_events', 'min_events', 'drop_events']) {
+	    if (classes.slice(1).every((class_) => classes[0].class[key] == class_.class[key]))
+	      joint.class[key] = classes[0].class[key];
+	  }
+
+	  joint.events = (function() {
+	    let events = {};
+	    for (let class_ of classes) {
+	      for (let id of class_.events)
+		events[id] = true;
+	    }
+
+	    return active_events.reduce((list, event) => {
+	      if (event.id in events)
+		list.push(event.id);
+	      return list;
+	    }, []);
+	  })();
+
+	  let class_scores = {}
+	  for (let class_ of classes) {
+	    let events = [];
+	    class_.events.forEach((id) => {
+	      events.push(id);
+	    });
+
+	    for (let rider of class_.riders) {
+	      let rider_scores = class_scores[rider.number];
+	      if (!rider_scores)
+		rider_scores = class_scores[rider.number] = {};
+	      rider.scores.forEach((score, index) => {
+		if (score != null) {
+		  let id = class_.events[index];
+		  rider_scores[id] = (rider_scores[id] || 0) + score;
+		}
+	      });
+	    }
+	  }
+
+	  for (let rider of joint.riders) {
+	    let rider_scores = class_scores[rider.number];
+	    rider.scores = joint.events.map((id) => rider_scores[id] || null);
+	  }
+
+	  classes = [joint];
+	}
+      }
+
+      if (classes.length) {
+	result.rankings.push({
+	  name: last_event.rankings[ranking_idx].name,
+	  classes: classes
+	});
+      }
+    }
+  }
+  return result;
 }
 
 function zip(a, b, func) {
@@ -2167,6 +2977,9 @@ async function update(connection, table, keys, nonkeys, old_values, new_values, 
     old_values = map_func(old_values);
     new_values = map_func(new_values);
   }
+
+  if (!nonkeys && new_values)
+    nonkeys = Object.keys(new_values).filter((key) => !(key in keys));
 
   var query;
   if (!old_values) {
@@ -2236,7 +3049,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
     async function(a, b, index) {
       await update(connection, 'rider_rankings',
 	{id: id, number: number, ranking: index + 1},
-	['rank', 'score'],
+	undefined,
 	a, b);
     });
 
@@ -2245,7 +3058,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
       await zipAsync(a, b, async function(a, b, zone_index) {
 	await update(connection, 'marks',
 	  {id: id, number: number, round: round_index + 1, zone: zone_index + 1},
-	  ['marks'],
+	  undefined,
 	  a, b,
 	  (x) => (x != null ? {marks: x} : null))
 	&& (changed = true);
@@ -2256,7 +3069,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
     async function(a, b, index) {
       await update(connection, 'rounds',
 	{id: id, number: number, round: index + 1},
-	['marks'],
+	undefined,
 	a, b,
 	(x) => (x != null ? {marks: x} : null))
       && (changed = true);
@@ -2281,8 +3094,14 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
       && (changed = true);
     });
 
-  if (!deepEqual(old_rider.future_starts, new_rider.future_starts))
-    changed = true;
+  await zipHashAsync(old_rider.future_starts, new_rider.future_starts,
+    async function(a, b, fid) {
+      await update(connection, 'future_starts',
+	{id: id, number: number, fid: fid},
+	[],
+	a != null && {}, b != null && {})
+      && (changed = true);
+    });
 
   return changed;
 }
@@ -2357,7 +3176,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'classes',
 	{id: id, 'class': index + 1},
-	b ? Object.keys(b) : [],
+	undefined,
 	a, b)
       && (changed = true);
     });
@@ -2366,7 +3185,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'rankings',
 	{id: id, ranking: index + 1},
-	b ? Object.keys(b) : [],
+	undefined,
 	a, b)
       && (changed = true);
     });
@@ -2375,7 +3194,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'card_colors',
 	{id: id, round: index + 1},
-	['color'],
+	undefined,
 	a, b,
 	(color) => (color != null && {color: color}))
       && (changed = true);
@@ -2385,7 +3204,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'scores',
 	{id: id, rank: index + 1},
-	['score'],
+	undefined,
 	a, b,
 	(score) => (score != null && {score: score}))
       && (changed = true);
@@ -2395,7 +3214,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, index) {
       await update(connection, 'result_columns',
 	{id: id, n: index + 1},
-	['name'],
+	undefined,
 	a, b,
 	(name) => (name != null && {name: name}))
       && (changed = true);
@@ -2431,7 +3250,7 @@ async function __update_event(connection, id, old_event, new_event) {
     async function(a, b, fid) {
       await update(connection, 'future_events',
 		   {id: id, fid: fid},
-		   ['active', 'date', 'title', 'series'],
+		   undefined,
 		   a, b)
       && (changed = true);
     });
@@ -2464,7 +3283,10 @@ async function __update_event(connection, id, old_event, new_event) {
 	  await zipHashAsync(a, b,
 	    async function(a, b, zone) {
 	      await update(connection, 'skipped_zones',
-		{id: id, 'class': class_, round: round, zone: zone},
+		{id: id,
+		 'class': class_,
+		 round: round,
+		 zone: zone},
 		[],
 		a && {}, b && {})
 	      && (changed = true);
@@ -2569,7 +3391,6 @@ const register_event_fields = {
   insurance: true,
   registration_ends: true,
   registration_info: true,
-  series: true,
   type: true,
   version: true
 };
@@ -2578,7 +3399,8 @@ async function register_get_event(connection, id, user) {
   var event = await get_event(connection, id);
   var result = {
     id: id,
-    title: event.rankings[0].title,
+    title: event.title,
+    location: event.location,
   };
   Object.keys(register_event_fields).forEach((field) => {
     result[field] = event[field];
@@ -2624,6 +3446,7 @@ const register_rider_fields = {
   street: true,
   vehicle: true,
   version: true,
+  year_of_manufacture: true,
   zip: true,
 };
 
@@ -3162,6 +3985,7 @@ function html_diff(old_rider, new_rider) {
     non_competing: true,
     failure: true,
     additional_marks: true,
+    penalty_marks: true,
     user_tag: true,
     verified: true
   };
@@ -3313,7 +4137,7 @@ async function register_save_rider(connection, id, number, rider, user, query) {
       var result = await connection.queryAsync(`
         SELECT COALESCE(MIN(number), 0) - 1 AS number
 	FROM riders
-	WHERE id = ?`, [id]);
+	WHERE id = ? AND number < 0`, [id]);
       number = result[0].number;
     }
 
@@ -3347,8 +4171,9 @@ async function register_save_rider(connection, id, number, rider, user, query) {
 	  }
 	}
       } else {
-	if (event.ranking1_enabled)
-	  rider.rankings = [{"rank":null, "score":null}];
+	rider.rankings = event.rankings.map((ranking) =>
+	  (ranking && ranking.default) ?
+	    {"rank": null, "score": null} : null);
       }
 
       delete rider.non_competing;
@@ -3412,8 +4237,8 @@ async function check_number(connection, id, query) {
     JOIN series_classes USING (serie)
     JOIN series USING (serie)
     WHERE enabled AND serie in (
-	SELECT serie FROM series_events WHERE id = ?
-      ) AND ranking IS NOT NULL
+      SELECT serie FROM series_events WHERE id = ?
+    )
 
     UNION
 
@@ -3431,9 +4256,8 @@ async function check_number(connection, id, query) {
       result = await connection.queryAsync(`
 	SELECT id, title, number, class, last_name, first_name, date_of_birth
 	FROM events
-	JOIN rankings USING (id)
 	JOIN riders USING (id)
-	WHERE number = ? AND id IN (` + events + `) AND ranking = 1
+	WHERE number = ? AND id IN (` + events + `)
 	ORDER BY date DESC
 	LIMIT 1`, [query.number]);
     }
@@ -3478,11 +4302,10 @@ async function check_number(connection, id, query) {
 
 async function admin_event_get_as_base(connection, tag, email) {
   var result = await connection.queryAsync(`
-    SELECT title, id, tag
+    SELECT title, location, date, id, tag
     FROM events
-    LEFT JOIN rankings USING (id)
     JOIN events_all_admins USING (id)
-    WHERE tag = ? AND email = ? AND ranking = 1`, [tag, email]);
+    WHERE tag = ? AND email = ?`, [tag, email]);
   if (result.length == 1) {
     result = result[0];
     result.starters = {};
@@ -3518,8 +4341,7 @@ async function index(req, res, next) {
       SELECT id, date, title,
 	     CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends
       FROM events
-      JOIN rankings USING (id)
-      WHERE ranking = 1 AND enabled
+      WHERE enabled
       AND (registration_ends IS NOT NULL OR
 	  id IN (SELECT DISTINCT id FROM marks) OR
 	  id IN (SELECT DISTINCT id FROM riders WHERE start_time AND verified AND start))`);
@@ -3664,8 +4486,8 @@ async function export_event(connection, id, email) {
 }
 
 function basename(event) {
-  if (event.rankings[0].title)
-    return event.rankings[0].title.replace(/[:\/\\]/g, '');
+  if (event.title)
+    return event.title.replace(/[:\/\\]/g, '');
   else if (event.date)
     return 'Trial ' + event.date;
   else
@@ -3708,7 +4530,7 @@ async function admin_export_csv(connection, id) {
 
   let rankings = [];
   for (let n = 1; n <= 4; n++) {
-    if (event.features['ranking' + n])
+    if (event.rankings[n - 1])
       rankings.push(n);
   }
 
@@ -3732,14 +4554,15 @@ async function admin_export_csv(connection, id) {
       LEFT JOIN (
         SELECT id, number, 1 AS ranking${n}
 	FROM rider_rankings
+	JOIN rankings USING (id, ranking)
 	WHERE ranking = ${n}
       ) AS ranking${n} USING (id, number)`).join('') +
       future_events.map((fid, index) => `
       LEFT JOIN (
-        SELECT id, rider_tag, 1 AS start${index + 2}
+        SELECT id, number, 1 AS start${index + 2}
 	FROM future_starts
 	WHERE fid = ${fid}
-      ) AS start${index + 2} USING (id, rider_tag)`).join('') + `
+      ) AS start${index + 2} USING (id, number)`).join('') + `
       WHERE id = ${connection.escape(id)} AND
 	(number > 0 OR registered OR start OR number IN (
 	  SELECT number
@@ -3758,7 +4581,8 @@ async function admin_export_csv(connection, id) {
       }
 
       fields = fields.reduce(function(fields, field) {
-	  if (event.features[field.name])
+	  if (field.name.match(/^(start|ranking)\d+$/) ||
+	      event.features[field.name])
 	    fields.push(field.name);
 	  return fields;
 	}, []);
@@ -3781,7 +4605,7 @@ async function title_of_copy(connection, event) {
     FROM information_schema.columns
     WHERE table_schema = Database() AND table_name = 'rankings' AND column_name = 'title'`);
 
-  let title = event.rankings[0].title;
+  let title = event.title;
   var match = title.match(/(.*) \(Kopie(?: (\d+))?\)?$/);
   if (match)
     title = match[1] + '(Kopie ' + ((match[2] || 1) + 1) + ')';
@@ -3811,8 +4635,8 @@ async function import_event(connection, existing_id, data, email) {
 	WHERE tag = ?`, [event.tag]);
       if (result.length) {
 	event.tag = random_tag();
-	event.rankings[0].title += ' (Kopie)';
-	// event.rankings[0].title = await title_of_copy(connection, event);
+	event.title += ' (Kopie)';
+	// event.title = await title_of_copy(connection, event);
       }
 
       result = await connection.queryAsync(`
@@ -3952,23 +4776,20 @@ function query_string(query) {
   ).join('&');
 }
 
-var client_config = {
+var admin_config = {
+  admin: true,
   weasyprint: config.weasyprint,
   sync_target: config.sync_target,
-  existing_regforms: (function() {
-    try {
-      return fs.readdirSync(regforms_dir).reduce(
-	function(regforms, name) {
-	  var match = name.match(/(.*)\.pdf$/);
-	  if (match)
-	    regforms[match[1]] = true;
-	  return regforms;
-	}, {});
-    } catch(err) {
-      return {};
-    }
-  })(),
+  existing_regforms: Object.keys(regforms).reduce(
+    function(names, type) {
+      names[type] = Object.keys(regforms[type]).sort();
+      return names;
+    }, {})
 };
+
+var event_config = {
+  weasyprint: false
+}, serie_config = event_config;
 
 var sendFileOptions = {
   root: __dirname + '/htdocs/'
@@ -3985,7 +4806,7 @@ if (app.get('env') != 'production')
 if (!config.session)
   config.session = {};
 if (!config.session.secret)
-  config.session.secret = require('crypto').randomBytes(64).toString('hex');
+  config.session.secret = crypto.randomBytes(64).toString('hex');
 
 app.use(logger(app.get('env') == 'production' ? production_log_format : 'dev'));
 if (app.get('env') == 'production')
@@ -4020,6 +4841,7 @@ app.get('/', conn(pool), index);
 app.get('/login/', function(req, res, next) {
   var params = {
     mode: 'login',
+    email: ''
   };
   if (req.query)
     params.query = query_string(req.query);
@@ -4069,12 +4891,12 @@ app.get('/register/event/:id', conn(pool), async function(req, res, next) {
 
 app.get('/admin/config.js', function(req, res, next) {
   res.type('application/javascript');
-  res.send('var config = ' + JSON.stringify(client_config, null, '  ') + ';');
+  res.send('var config = ' + JSON.stringify(admin_config, null, '  ') + ';');
 });
 
 /*
  * Let Angular handle page-internal routing.  (Static files in /admin/ such as
- * /admin/api.js are already handled by express.static above.)
+ * /admin/misc.js are handled by express.static.)
  */
 app.get('/admin/*', function(req, res, next) {
   if (!(req.user || {}).admin) {
@@ -4094,6 +4916,16 @@ app.get('/register/*', function(req, res, next) {
   next();
 });
 
+app.get('/event/config.js', function(req, res, next) {
+  res.type('application/javascript');
+  res.send('var config = ' + JSON.stringify(event_config, null, '  ') + ';');
+});
+
+app.get('/serie/config.js', function(req, res, next) {
+  res.type('application/javascript');
+  res.send('var config = ' + JSON.stringify(serie_config, null, '  ') + ';');
+});
+
 app.use(express.static('htdocs', {etag: true}));
 
 app.get('/admin/*', function(req, res, next) {
@@ -4104,19 +4936,34 @@ app.get('/register/*', function(req, res, next) {
   res.sendFile('register/index.html', sendFileOptions);
 });
 
+app.get('/event/*', function(req, res, next) {
+  res.sendFile('event/index.html', sendFileOptions);
+});
+
+app.get('/serie/*', function(req, res, next) {
+  res.sendFile('serie/index.html', sendFileOptions);
+});
+
+app.get('/api/event/:id/results', conn(pool), function(req, res, next) {
+  get_event_results(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/serie/:serie/results', conn(pool), async function(req, res, next) {
+  get_serie_results(req.conn, req.params.serie)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
 /*
  * Accessible to all registered users:
  */
 
 app.use('/api', conn(pool));
 app.all('/api/*', auth);
-
-app.get('/api/event/:id/scores', function(req, res, next) {
-  get_event_scores(req.conn, req.params.id)
-  .then((result) => {
-    res.json(result);
-  }).catch(next);
-});
 
 app.get('/api/register/event/:id', function(req, res, next) {
   register_get_event(req.conn, req.params.id, req.user)
@@ -4175,7 +5022,14 @@ app.delete('/api/register/event/:id/rider/:number', async function(req, res, nex
   }
 });
 
+/*
+ * Accessible to admins only:
+ */
+
+app.all('/api/*', may_admin);
+
 app.post('/api/to-pdf', async function(req, res, next) {
+  let keep_html_on_error = false;
   var baseurl = (req.body.url || '.').replace(/\/admin\/.*/, '/admin/');
   var html = req.body.html
     .replace(/<!--.*?-->\s?/g, '')
@@ -4185,34 +5039,36 @@ app.post('/api/to-pdf', async function(req, res, next) {
     })*/
 
   var tmp_html = tmp.fileSync();
-  console.log(tmp_html.name);
   await fsp.write(tmp_html.fd, html);
 
   var tmp_pdf = tmp.fileSync();
-  console.log(tmp_pdf.name);
-  var child = child_process.spawn('weasyprint',
-				  ['-f', 'pdf', '--base-url', baseurl,
-				   tmp_html.name, tmp_pdf.name]);
-  child.on('close', (code) => {
-    tmp_html.removeCallback();
+  let args = ['-f', 'pdf', '--base-url', baseurl, tmp_html.name, tmp_pdf.name];
+  console.log('weasyprint' + ' ' + args.join(' '));
+  var child = child_process.spawn('weasyprint', args);
 
-    if (code)
-      next(new HTTPError(500, 'Internal Error'));
+  child.stderr.on('data', (data) => {
+    console.log(`${data}`);
+  });
+
+  child.on('close', (code) => {
+    if (!(code && keep_html_on_error))
+      tmp_html.removeCallback();
+
+    if (code) {
+      console.log('weasyprint failed with status ' + code +
+	(keep_html_on_error ? ' (keeping ' + tmp_html.name + ')' : ''));
+      tmp_pdf.removeCallback();
+      return next(new HTTPError(500, 'Internal Error'));
+    }
 
     var filename = req.body.filename || 'print.pdf';
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.sendFile(tmp_pdf.name, {}, () => {
       tmp_pdf.removeCallback();
     });
   });
 });
-
-/*
- * Accessible to admins only:
- */
-
-app.all('/api/*', may_admin);
 
 app.get('/api/events', function(req, res, next) {
   get_events(req.conn, req.user.email)
@@ -4229,7 +5085,7 @@ app.get('/api/series', function(req, res, next) {
 });
 
 app.get('/api/event/:id', will_read_event, function(req, res, next) {
-  admin_get_event(req.conn, req.params.id)
+  get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
@@ -4238,10 +5094,9 @@ app.get('/api/event/:id', will_read_event, function(req, res, next) {
 app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
   admin_export_event(req.conn, req.params.id, req.user.email)
   .then((result) => {
+    let filename = req.query.filename || result.filename;
     res.type('application/octet-stream');
-    res.setHeader('Content-Disposition',
-		  "attachment; filename*=UTF-8''" +
-		  encodeURIComponent(req.query.filename || result.filename));
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(result.data);
   }).catch(next);
 });
@@ -4249,10 +5104,9 @@ app.get('/api/event/:tag/export', will_read_event, function(req, res, next) {
 app.get('/api/event/:tag/csv', will_read_event, function(req, res, next) {
   admin_export_csv(req.conn, req.params.id)
   .then((result) => {
+    let filename = req.query.filename || 'Fahrerliste.csv';
     res.type('text/comma-separated-values');
-    res.setHeader('Content-Disposition',
-		  "attachment; filename*=UTF-8''" +
-		  encodeURIComponent(req.query.filename || 'Fahrerliste.csv'));
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(result);
   }).catch(next);
 });
@@ -4325,7 +5179,7 @@ app.get('/api/event/:id/last-rider', will_read_event, function(req, res, next) {
 
 app.get('/api/event/:id/regform', will_read_event, async function(req, res, next) {
   try {
-    await admin_regform(res, req.conn, req.params.id, req.query.number);
+    await admin_regform(res, req.conn, req.params.id, req.query.name, req.query.number);
   } catch (err) {
     next(err);
   }

@@ -1,4 +1,5 @@
 export PACKAGE = trialinfo
+export GPG_NAME = 3BB03F34
 
 MAKEFLAGS = --no-print-directory
 
@@ -47,6 +48,10 @@ serve: build
 profile: build
 	cd backend && npm run profile
 
+# For use by rpm.sh:
+snapshot:
+	@tar -c $(DOWNLOAD_FILES) backend/node_modules backend/package-lock.json
+
 .PHONY: require-tag
 require-tag:
 	@tag="$(TAG)"; \
@@ -59,14 +64,26 @@ require-tag:
 	    exit 2; \
 	fi
 
-tarball: require-tag
-	@./tarball.sh $(TAG)
-
-release: require-tag tarball
+release: require-tag
 	@./release.sh $(TAG)
 
 upload:
 	@./upload.sh
+
+repo/RPM-GPG-KEY-trialinfo:
+	@gpg --export -a $(GPG_NAME) > "$@"
+
+.PHONY: repo
+repo: repo/RPM-GPG-KEY-trialinfo
+	@rpmbuild -bb \
+		-D "_sourcedir $(PWD)/repo" \
+		-D "_rpmdir $(PWD)/rpm" \
+		-D "_gpg_name $(GPG_NAME)" \
+		repo/trialinfo-repo.spec
+	@rpm --addsign \
+		-D "__gpg /usr/bin/gpg" \
+		-D "_gpg_name $(GPG_NAME)" \
+		rpm/noarch/trialinfo-repo-*.rpm
 
 htdocs/js/angular-$(ANGULAR_VERSION)/angular%:
 	@mkdir -p  $(dir $@)

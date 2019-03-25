@@ -1,8 +1,8 @@
-'use strict;'
+'use strict';
 
 var serieController = [
-  '$scope', '$http', '$timeout', '$location', '$window', 'serie', 'events',
-  function ($scope, $http, $timeout, $location, $window, serie, events) {
+  '$scope', '$http', '$timeout', '$location', '$window', 'eventName', 'serie', 'events',
+  function ($scope, $http, $timeout, $location, $window, eventName, serie, events) {
     $scope.$root.context(serie ? serie.name : 'Neue Veranstaltungsreihe');
 
     var event_dates = {};
@@ -23,7 +23,8 @@ var serieController = [
     }
     assign_serie(serie);
 
-    $scope.event_name = event_name;
+    $scope.eventName = eventName;
+
     $scope.event_visible = function(event) {
       return $scope.serie.closed || !event.closed;
     };
@@ -45,16 +46,19 @@ var serieController = [
 
     function normalize_classes(serie) {
       var classes = serie.classes;
-      if (!classes.length ||
-	  classes[classes.length - 1]['class'] !== null)
-	classes.push({'class': null});
+      if (!classes.length)
+	classes.push({ranking: 1, ranking_class: null});
+      else if (classes[classes.length - 1].ranking_class !== null)
+	classes.push({ranking: classes[classes.length - 1].ranking, ranking_class: null});
       else {
 	for (var n = 0; n < classes.length - 1; n++)
-	  if (classes[n]['class'] === null)
+	  if (classes[n].ranking_class === null)
 	    classes = classes.splice(n, 1);
       }
       var sorted = sort_uniq(classes, function(a, b) {
-	return cmp_null(a['class'], b['class']);
+	return (a.ranking_class == null) - (b.ranking_class == null) ||
+	       cmp_null(a.ranking, b.ranking) ||
+	       cmp_null(a.ranking_class, b.ranking_class);
       });
       if (!angular.equals(classes, sorted))
 	serie.classes = sorted;
@@ -211,7 +215,6 @@ var serieController = [
 	    classes: [],
 	    events: [],
 	    new_numbers: {},
-	    ranking: 1,
 	    tie_break: {}
 	  };
 	}
@@ -239,7 +242,7 @@ var serieController = [
       if (events.length && events[events.length - 1] === null)
 	  events.pop();
       var classes = serie.classes;
-      if (classes.length && classes[classes.length - 1]['class'] === null)
+      if (classes.length && classes[classes.length - 1].ranking_class === null)
 	  classes.pop();
       new_numbers_to_api(serie.new_numbers);
       tie_break_to_api(serie);
@@ -330,3 +333,5 @@ serieController.resolve = {
 	return null;
     }]
 };
+
+angular.module('application').controller('serieController', serieController);

@@ -1,16 +1,16 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 
 import sys
 import getopt
 import json
-from PyQt4.QtCore import QString, QFile, QIODevice
-from popplerqt4 import Poppler
+from PyQt5.QtCore import QFile, QIODevice
+from popplerqt5 import Poppler
 import tempfile
 import subprocess
 import fcntl
 
 def usage(err):
-    print "USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}"
+    print("USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}")
     sys.exit(err)
 
 def get_form_fields(document):
@@ -18,28 +18,37 @@ def get_form_fields(document):
     for n in range(0, document.numPages()):
         page = document.page(n)
         for field in page.formFields():
-            name = str(field.name())
+            name = field.name()
             if field.type() == Poppler.FormField.FormText:
-                fields[name] = str(field.text().toUtf8())
+                fields[name] = field.text()
             elif field.type() == Poppler.FormField.FormButton:
-                fields[name] = field.state()
+                if field.buttonType() == Poppler.FormFieldButton.CheckBox:
+                    fields[name] = field.state()
+                elif field.buttonType() == Poppler.FormFieldButton.Radio:
+                    # Poppler currently doesn't have a way to determine the
+                    # field name of a radio button or the name of a group of
+                    # radio buttons.
+                    pass
     return fields
 
 def set_form_fields(document, fields):
     for n in range(0, document.numPages()):
         page = document.page(n)
         for field in page.formFields():
-            name = str(field.name())
+            name = field.name()
             if name in fields:
                 value = fields[name]
                 if field.type() == Poppler.FormField.FormText:
                     if value == None:
                         value = ''
-                    elif not isinstance(value, basestring):
+                    elif not isinstance(value, str):
                         value = str(value)
-                    field.setText(QString.fromUtf8(value))
+                    field.setText(value)
                 elif field.type() == Poppler.FormField.FormButton:
-                    field.setState(value)
+                    if field.buttonType() == Poppler.FormFieldButton.CheckBox:
+                        field.setState(value)
+                    elif field.buttonType() == Poppler.FormFieldButton.Radio:
+                        pass
 
 def write_pdf(fd, document):
     converter = document.pdfConverter()
@@ -62,7 +71,7 @@ def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "o:", ["fill", "out="])
     except getopt.GetoptError as err:
-        print str(err)
+        print(str(err))
         sys.exit(2)
 
     opt_fill = False
@@ -81,7 +90,6 @@ def main():
 
     if opt_fill:
         fields = json.load(sys.stdin)
-
         out = sys.stdout
         if opt_out != None:
             out = open(opt_out, "wb")

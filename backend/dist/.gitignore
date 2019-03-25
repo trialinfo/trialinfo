@@ -1,3 +1,6 @@
 /index.js
-/random_shuffle.js
-/start_times.js
+/lib/compute_event.js
+/lib/compute_serie.js
+/lib/latinize.js
+/lib/random_shuffle.js
+/lib/start_times.js
