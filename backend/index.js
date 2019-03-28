@@ -526,6 +526,19 @@ async function update_database(connection) {
       ADD type VARCHAR(20) AFTER location
     `);
   }
+
+  var rows = await connection.queryAsync(`
+    SELECT *
+    FROM INFORMATION_SCHEMA.columns
+    WHERE table_schema = ? AND table_name = 'events' AND column_name = 'registration_info'
+    `, [config.database.database]);
+  if (rows[0].CHARACTER_MAXIMUM_LENGTH != 2048) {
+    console.log('Changing length of `events.registration_info` to 2048');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      CHANGE registration_info registration_info VARCHAR(2048)
+    `);
+  }
 }
 
 pool.getConnectionAsync()
