@@ -2346,6 +2346,12 @@ async function get_event_results(connection, id) {
     rankings: []
   };
 
+  function class_order(a, b) {
+    if (event.classes[a] && event.classes[b])
+      return event.classes[a].order - event.classes[b].order;
+    return a - b;
+  }
+
   function ranking_classes(ranking) {
     function class_info(class_nr) {
       let ranking_class = class_nr;
@@ -2422,12 +2428,6 @@ async function get_event_results(connection, id) {
 	    return ranking_classes;
 	  }, []);
       } else {
-	function class_order(a, b) {
-	  if (event.classes[a] && event.classes[b])
-	    return event.classes[a].order - event.classes[b].order;
-	  return a - b;
-	}
-
         ranking_classes.sort(class_order);
       }
 
@@ -2537,6 +2537,77 @@ async function get_event_results(connection, id) {
   ]).forEach((feature) => {
     hash.event.features[feature] = event.features[feature];
   });
+
+  if (!hash.rankings.length) {
+    let future_events = [];
+    event.future_events.forEach((future_event) => {
+      if (future_event.active) {
+	let fe = Object.assign({}, future_event);
+	delete fe.active;
+	future_events.push(fe);
+      }
+    });
+    future_events.sort((a, b) => {
+      a = a.date;
+      b = b.date;
+      if (a == null || b == null)
+	return (a == null) - (b == null);
+      return a < b ? -1 : (b < a) ? 1 : 0;
+    });
+    let registered_riders = Object.values(riders).filter(
+      (rider) => {
+	if (rider.verified) {
+	  if (rider.start)
+	    return true;
+	  for (let future_event of future_events) {
+	    if (rider.future_starts[future_event.fid])
+	      return true;
+	  }
+      }});
+    if (registered_riders.length) {
+      let riders_per_class = [];
+      for (let rider of registered_riders) {
+	if (!riders_per_class[rider.class - 1])
+	  riders_per_class[rider.class - 1] = [];
+	riders_per_class[rider.class - 1].push(rider);
+      }
+      hash.registered = [];
+      for (let class_idx in riders_per_class) {
+	let registered_class = {
+	  class: +class_idx + 1,
+	};
+	if (event.classes[class_idx]) {
+	  for (let field of ['name', 'color'])
+	    registered_class[field] = event.classes[class_idx][field];
+	}
+	registered_class.riders =
+	  riders_per_class[class_idx].reduce((riders, rider) => {
+	    let hash = {};
+	    rider_public_fields.concat([
+	      'number', 'start'
+	    ]).forEach((field) => {
+	      hash[field] = rider[field];
+	    });
+	    hash.future_starts = [];
+	    future_events.forEach((future_event) => {
+	      let fid = future_event.fid;
+	      if (rider.future_starts[fid])
+		hash.future_starts.push(fid);
+	    });
+	    riders.push(hash);
+	    return riders;
+	  }, []);
+	hash.registered.push(registered_class);
+      }
+      hash.registered.sort((a, b) => class_order(a.class - 1, b.class - 1));
+      hash.future_events = future_events.reduce(
+	(future_events, future_event) => {
+	  future_events[future_event.fid] = future_event;
+	  delete future_event.fid;
+	  return future_events;
+	}, {});
+    }
+  }
 
   return hash;
 }

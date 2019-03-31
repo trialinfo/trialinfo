@@ -195,4 +195,21 @@ table.ranking tr td.important {
       </table>
   </div>
 </div>
+<div ng-repeat="class in results.registered">
+  <h3 ng-if="class.name">{{class.name}}</h3>
+  <table class="ranking">
+    <thead>
+      <tr>
+	<th style="text-align:center" ng-bind-html="class_symbol(class)" adjust-width="rank"></th>
+	<th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
+      </tr>
+    </thead>
+    <tbody ng-repeat="rider in class.riders track by rider.number" class="rider" ng-class-even="'alt'">
+      <tr>
+	<td>{{rider.all_starts}}</td>
+	<td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 <p ng-if="event.mtime && same_day(event.date)">Letzte Änderung: {{event.mtime}}</p>
