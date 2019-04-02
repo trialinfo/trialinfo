@@ -561,7 +561,7 @@ var settingsController = [
 	if (event.main_ranking != null)
 	  event.main_ranking = null;
       } else if (main_rankings.indexOf(event.main_ranking) == -1) {
-	ef (event.main_ranking != main_rankings[0])
+	if (event.main_ranking != main_rankings[0])
 	  event.main_ranking = main_rankings[0];
       }
     }, true);
