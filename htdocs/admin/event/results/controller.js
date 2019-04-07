@@ -46,22 +46,25 @@ var eventResultsController = [
       $scope.features = features;
       $scope.$root.context(event.title);
 
-      angular.forEach(results.registered, function(class_) {
-	angular.forEach(class_.riders, function(rider) {
-	  if (rider.start && rider.future_starts.length == Object.keys(results.future_events).length)
-	    return;
-	  var all_starts = [];
-	  if (rider.start)
-	    all_starts.push(event.date);
-	  rider.future_starts.forEach(function(fid) {
-	    all_starts.push(results.future_events[fid].date);
+      if (results.registered) {
+	let registered = results.registered;
+	angular.forEach(registered.classes, function(class_) {
+	  angular.forEach(class_.riders, function(rider) {
+	    if (rider.start && rider.future_starts.length == Object.keys(registered.future_events).length)
+	      return;
+	    var all_starts = [];
+	    if (rider.start)
+	      all_starts.push(event.date);
+	    rider.future_starts.forEach(function(fid) {
+	      all_starts.push(registered.future_events[fid].date);
+	    });
+	    rider.all_starts = all_starts
+	      .map(function(date) {
+		return $scope.$eval('date | date:"EEE"', {date: new Date(date)});
+	      }).join(', ');
 	  });
-	  rider.all_starts = all_starts
-	    .map(function(date) {
-	      return $scope.$eval('date | date:"EEE"', {date: new Date(date)});
-	    }).join(', ');
 	});
-      });
+      }
 
       angular.forEach(results.rankings, function(ranking) {
 	angular.forEach(ranking.classes, function(class_) {
@@ -215,7 +218,7 @@ var eventResultsController = [
 	if (num_riders)
 	  gesamt = num_riders + ' ' + 'Fahrer';
 	else if (results.registered) {
-	  num_riders = results.registered.reduce(function(n, class_) {
+	  num_riders = results.registered.classes.reduce(function(n, class_) {
 	    return n + class_.riders.length;
 	  }, 0);
 	  gesamt = num_riders + ' vorgenannte Fahrer';
