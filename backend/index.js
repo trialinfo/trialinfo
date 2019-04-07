@@ -2565,13 +2565,15 @@ async function get_event_results(connection, id) {
 	  }
       }});
     if (registered_riders.length) {
+      let registered = {
+	classes: []
+      };
       let riders_per_class = [];
       for (let rider of registered_riders) {
 	if (!riders_per_class[rider.class - 1])
 	  riders_per_class[rider.class - 1] = [];
 	riders_per_class[rider.class - 1].push(rider);
       }
-      hash.registered = [];
       for (let class_idx in riders_per_class) {
 	let registered_class = {
 	  class: +class_idx + 1,
@@ -2597,15 +2599,27 @@ async function get_event_results(connection, id) {
 	    riders.push(hash);
 	    return riders;
 	  }, []);
-	hash.registered.push(registered_class);
+	console.log(registered_class.riders);
+	registered_class.riders.sort((a, b) => {
+	  let cmp;
+	  cmp = (a.last_name || '').localeCompare(b.last_name || '');
+	  if (cmp)
+	    return cmp;
+	  cmp = (a.first_name || '').localeCompare(b.first_name || '');
+	  if (cmp)
+	    return cmp;
+	  return a.number - b.number;
+	});
+	registered.classes.push(registered_class);
       }
-      hash.registered.sort((a, b) => class_order(a.class - 1, b.class - 1));
-      hash.future_events = future_events.reduce(
+      registered.classes.sort((a, b) => class_order(a.class - 1, b.class - 1));
+      registered.future_events = future_events.reduce(
 	(future_events, future_event) => {
 	  future_events[future_event.fid] = future_event;
 	  delete future_event.fid;
 	  return future_events;
 	}, {});
+      hash.registered = registered;
     }
   }
 

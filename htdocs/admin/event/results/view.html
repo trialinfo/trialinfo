@@ -195,7 +195,7 @@ table.ranking tr td.important {
       </table>
   </div>
 </div>
-<div ng-repeat="class in results.registered">
+<div ng-if="results.registered" ng-repeat="class in results.registered.classes">
   <h3 ng-if="class.name">{{class.name}}</h3>
   <table class="ranking">
     <thead>
