@@ -89,7 +89,7 @@ var eventResultsController = [
 	      if (features.individual_marks)
 		return $sce.trustAsHtml(marks_in_round + '');
 	      else {
-		var marks = this.marks_per_zone[round - 1];
+		var marks = this.marks_per_zone[round - 1] || [];
 		return $sce.trustAsHtml(
 		  '<span title="' + marks.join(' ') + '">' + marks_in_round + '</span>'
 		);
