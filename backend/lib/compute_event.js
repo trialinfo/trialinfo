@@ -25,7 +25,7 @@ function compute_event(cached_riders, event) {
   function compute_active_zones(riders) {
     let active_zones = {};
 
-    Object.values(riders).forEach((rider) => {
+    riders.forEach((rider) => {
       if (rider.start && rider.ranking_class) {
 	let marks_per_zone = rider.marks_per_zone;
 	for (let round = 1; round <= marks_per_zone.length; round++) {
@@ -85,7 +85,7 @@ function compute_event(cached_riders, event) {
        kompatibel, wenn die Daten vom Trialtool stammen, weil das Auswertungen
        wie "Fahrer auf der Strecke" stört.  */
 
-    Object.values(riders).forEach((rider) => {
+    riders.forEach((rider) => {
       if (rider.group)
 	return;
       if (!rider.marks_per_zone)
@@ -167,7 +167,13 @@ function compute_event(cached_riders, event) {
   function compute_group_marks(groups) {
     let marks_skipped_zone = event.marks_skipped_zone || 0;
 
-    Object.values(groups).forEach((group) => {
+    /* FIXME: Rider numbers are not guaranteed to be unique in rankings that
+       combine multiple events! */
+    let riders_by_number = {};
+    for (let rider of groups)
+      riders_by_number[rider.number] = rider;
+
+    groups.forEach((group) => {
       if (!group.group)
 	return;
 
@@ -175,7 +181,7 @@ function compute_event(cached_riders, event) {
 
       if (group.start) {
 	group.riders.forEach((number) => {
-	  let rider = riders[number];
+	  let rider = riders_by_number[number];
 	  if (marks_per_zone == undefined)
 	    return;
 	  else if (!rider.marks_per_zone) {
@@ -222,7 +228,7 @@ function compute_event(cached_riders, event) {
 
 	    if (rider.rounds != null) {
 	      if (rider.rounds > (group.rounds || -1))
-		groups.rounds = rider.rounds;
+		group.rounds = rider.rounds;
 	    }
 	    if (rider.unfinished_zones) {
 	      if (group.unfinished_zones == null)
@@ -246,10 +252,10 @@ function compute_event(cached_riders, event) {
   }
 
   /* Groups are returned with key 'G' */
-  function group_riders_per_class() {
+  function group_riders_per_class(riders) {
     var riders_per_class = {};
 
-    Object.values(riders).forEach((rider) => {
+    riders.forEach((rider) => {
       let ranking_class =
 	rider.group ? 'G' : rider.ranking_class;
       if (rider.start && ranking_class) {
@@ -262,7 +268,7 @@ function compute_event(cached_riders, event) {
     return riders_per_class;
   }
 
-  function rank_order(ranking, decisive) {
+  function rank_order(ranking, set_decisive) {
     return function(a, b) {
       if (a.ranking_class != b.ranking_class) {
 	if (event.type == 'otsv-acup' && ranking == 2) {
@@ -307,8 +313,8 @@ function compute_event(cached_riders, event) {
       for (let n = 0; n < 5; n++) {
 	cmp = b.marks_distribution[n] - a.marks_distribution[n];
 	if (cmp) {
-	  if (decisive)
-	    decisive.marks((cmp < 0 ? a : b).number, n);
+	  if (set_decisive)
+	    set_decisive.marks(cmp < 0 ? a : b, n);
 	  return cmp;
 	}
       }
@@ -322,8 +328,8 @@ function compute_event(cached_riders, event) {
 	    for (let n = 0; n < ra.length; n++) {
 	      cmp = ra[n] - rb[n];
 	      if (cmp) {
-		if (decisive)
-		  decisive.round((cmp < 0 ? a : b).number, n + 1);
+		if (set_decisive)
+		  set_decisive.round(cmp < 0 ? a : b, n + 1);
 		return cmp;
 	      }
 	    }
@@ -332,8 +338,8 @@ function compute_event(cached_riders, event) {
 	    for (let n = ra.length - 1; n >= 0; n--) {
 	      cmp = ra[n] - rb[n];
 	      if (cmp) {
-		if (decisive)
-		  decisive.round((cmp < 0 ? a : b).number, n + 1);
+		if (set_decisive)
+		  set_decisive.round(cmp < 0 ? a : b, n + 1);
 		return cmp;
 	      }
 	    }
@@ -343,96 +349,65 @@ function compute_event(cached_riders, event) {
     };
   }
 
-  function compute_ranks(riders_in_class, ranking, decisive) {
-    let decisive_order = rank_order(ranking, decisive);
+  function compute_ranks(riders_in_class, ranking, set_decisive, assign) {
+    let decisive_order = rank_order(ranking, set_decisive);
     riders_in_class.sort(rank_order(ranking));
 
-    let ranks = {};
-    let rank = 1;
-    let previous_rider;
-    riders_in_class.forEach((rider) => {
-      ranks[rider.number] =
-        (previous_rider &&
-	 !decisive_order(previous_rider, rider)) ?
-	  ranks[previous_rider.number] : rank;
-      previous_rider = rider;
-      rank++;
-    });
-
-    return ranks;
-  }
-
-  function ranking_assign_ranks(riders, ranking, ranks) {
-    for (let number in ranks) {
-      let rider = riders[number];
-      rider.rankings[ranking - 1].rank = ranks[number];
-    }
-  }
-
-  function ranking_assign_scores(riders_in_class, ranking, ranks) {
-    if (!(event.rankings[ranking - 1].assign_scores))
-      return;
-
-    function skip_rider(rider) {
-      return rider.non_competing || rider.failure || rider.unfinished_zones;
-    }
-
-    if (event.split_score) {
-      let m, n;
-      for (m = 0; m < riders_in_class.length; m = n) {
-	let rider_m = riders_in_class[m];
-	if (skip_rider(rider_m)) {
-	  n = m + 1;
-	  continue;
-	}
-
-	let number_of_riders = 1;
-	for (n = m + 1; n < riders_in_class.length; n++) {
-	  let rider_n = riders_in_class[n];
-	  if (ranks[rider_m.number] != ranks[rider_n.number])
-	    break;
-	  if (skip_rider(rider_n))
-	    continue;
-	  number_of_riders++;
-	}
-
-	let score = 0;
-	let first_rank = ranks[rider_m.number];
-	for (let i = 0; i < number_of_riders; i++) {
-	  let rank = Math.min(first_rank + i, event.scores.length);
-	  score += event.scores[rank - 1];
-	}
-	score /= number_of_riders;
-	score = score || null;
-
-	for (n = m; n < m + number_of_riders; n++) {
-	  let rider_n = riders_in_class[n];
-	  if (ranks[rider_m.number] != ranks[rider_n.number])
-	    break;
-	  if (skip_rider(rider_n))
-	    continue;
-	  rider_n.rankings[ranking - 1].score = score;
-	}
+    let rank, next_rank = 1;
+    let riders_at_rank = [], previous_rider;
+    for (let rider of riders_in_class) {
+      if (!previous_rider || decisive_order(previous_rider, rider)) {
+	if (riders_at_rank.length)
+	  assign(riders_at_rank, rank);
+	riders_at_rank = [];
+	rank = next_rank;
       }
-    } else {
-      riders_in_class.forEach((rider) => {
-	if (skip_rider(rider))
-	  return;
-
-	let rank = Math.min(ranks[rider.number], event.scores.length);
-	let score = event.scores[rank - 1] || null;
-	rider.rankings[ranking - 1].score = score;
-      });
+      riders_at_rank.push(rider);
+      previous_rider = rider;
+      next_rank++;
     }
+    if (riders_at_rank.length)
+      assign(riders_at_rank, rank);
   }
 
-  let riders = cached_riders.reduce((riders, cached_rider) => {
+  function score_for_rank(rank, number_of_riders) {
+    let score = 0;
+    if (event.split_score) {
+      let first_rank = rank;
+      for (let i = 0; i < number_of_riders; i++) {
+	rank = first_rank + i;
+	if (rank > event.scores.length)
+	  rank = event.scores.length;
+	score += event.scores[rank - 1] || 0;
+      }
+      score /= number_of_riders;
+    } else {
+      if (rank > event.scores.length)
+	rank = event.scores.length;
+      score = event.scores[rank - 1] || 0;
+    }
+    return score;
+  }
+
+  function ranking_assign_rank(ranking) {
+    return function(riders_at_rank, rank) {
+      let score = score_for_rank(rank, riders_at_rank.length);
+      for (let rider of riders_at_rank) {
+	rider.rankings[ranking - 1].rank = rank;
+	if (!(rider.non_competing || rider.failure || rider.zones_todo))
+	  rider.rankings[ranking - 1].score = score;
+      }
+    };
+  }
+
+  let riders = [];
+  for (let cached_rider of cached_riders) {
     let class_ = cached_rider['class'];
     let ranking_class;
     if (!cached_rider.group && class_ != null)
       ranking_class = event.classes[class_ - 1].ranking_class;
 
-    riders[cached_rider.number] = {
+    riders.push({
       number: cached_rider.number,
       group: cached_rider.group,
       date_of_birth: cached_rider.date_of_birth,
@@ -462,13 +437,12 @@ function compute_event(cached_riders, event) {
       decisive_marks: null,
       decisive_round: null,
       unfinished_zones: null,
-    };
-    return riders;
-  }, {});
+    });
+  }
 
   if (event.type == 'otsv-acup') {
     let year_of_event = (common.date_of_event(event)).getFullYear();
-    for (let rider of Object.values(riders)) {
+    for (let rider of riders) {
       if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
 	let year = rider.year_of_manufacture || year_of_event;
 	let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
@@ -492,12 +466,12 @@ function compute_event(cached_riders, event) {
     return true;
   }
 
-  let decisive_overall = {
-    marks: function(number, marks) {
-      riders[number].decisive_marks = marks;
+  let set_decisive_overall = {
+    marks: function(rider, marks) {
+      rider.decisive_marks = marks;
     },
-    round: function(number, round) {
-      riders[number].decisive_round = round;
+    round: function(rider, round) {
+      rider.decisive_round = round;
     }
   };
 
@@ -508,11 +482,11 @@ function compute_event(cached_riders, event) {
     let riders_in_class = riders_per_class[ranking_class]
       .filter(rider_not_split);
 
-    let ranks = compute_ranks(riders_in_class, null, decisive_overall);
-    for (let number in ranks) {
-      let rider = riders[number];
-      rider.rank = ranks[number];
-    }
+    compute_ranks(riders_in_class, null, set_decisive_overall,
+      (riders, rank) => {
+	for (let rider of riders)
+	  rider.rank = rank;
+      });
   }
 
   /* Compute sub-rankings including only the selected riders.  The rank and
@@ -529,12 +503,12 @@ function compute_event(cached_riders, event) {
 	      !(event.classes[rider.class - 1] || {}).no_ranking1);
     }
 
-    let decisive_in_ranking = {
-      marks: function(number, marks) {
-	riders[number].rankings[ranking - 1].decisive_marks = marks;
+    let set_decisive_in_ranking = {
+      marks: function(rider, marks) {
+	rider.rankings[ranking - 1].decisive_marks = marks;
       },
       round: function(number, round) {
-	riders[number].rankings[ranking - 1].decisive_round = round;
+	rider.rankings[ranking - 1].decisive_round = round;
       }
     }
 
@@ -545,23 +519,21 @@ function compute_event(cached_riders, event) {
 	  riders_per_class[ranking_class].filter(rider_in_ranking)
 	);
       }
-      let ranks = compute_ranks(riders_in_ranking, ranking, decisive_in_ranking);
-      ranking_assign_ranks(riders, ranking, ranks);
-      ranking_assign_scores(riders_in_ranking, ranking, ranks);
+      compute_ranks(riders_in_ranking, ranking, set_decisive_in_ranking,
+		    ranking_assign_rank(ranking));
     } else {
       for (let ranking_class in riders_per_class) {
 	let riders_in_class = riders_per_class[ranking_class]
 	  .filter(rider_in_ranking);
-	let ranks = compute_ranks(riders_in_class, ranking, decisive_in_ranking);
-	ranking_assign_ranks(riders, ranking, ranks);
-	ranking_assign_scores(riders_in_class, ranking, ranks);
+	compute_ranks(riders_in_class, ranking, set_decisive_in_ranking,
+		      ranking_assign_rank(ranking));
       }
     }
   }
 
-  Object.values(riders).forEach((rider) => {
+  for (let rider of riders)
     delete rider.ranking_class;
-  });
+
   return riders;
 }
 

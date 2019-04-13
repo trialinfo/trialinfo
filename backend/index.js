@@ -1612,16 +1612,16 @@ async function rider_change_number(connection, id, old_number, new_number) {
 }
 
 function compute_update_event(id, event) {
-  let cached_riders = cache.get_riders(id);
-  let riders = compute_event(Object.values(cached_riders), event);
+  let cached_riders = Object.values(cache.get_riders(id));
+  let riders = compute_event(cached_riders, event);
 
-  Object.values(riders).forEach((rider) => {
-    let number = rider.number;
-    let cached_rider = cached_riders[number];
+  for (let n = 0; n < cached_riders.length; n++) {
+    let cached_rider = cached_riders[n];
+    let rider = riders[n];
 
     if (Object.keys(rider).some((key) => !deepEqual(rider[key], cached_rider[key])))
-      Object.assign(cache.modify_rider(id, number), rider);
-  });
+      Object.assign(cache.modify_rider(id, cached_rider.number), rider);
+  }
 }
 
 async function admin_save_rider(connection, id, number, rider, tag, query) {
