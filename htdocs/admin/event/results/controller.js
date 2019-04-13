@@ -85,7 +85,9 @@ var eventResultsController = [
 	    rider.marks_in_round = function(round) {
 	      var marks_in_round = this.marks_per_round[round - 1];
 	      if (marks_in_round === undefined)
-		marks_in_round = this.failure ? '-' : '';
+		marks_in_round = this.failure ? '-' : null;
+	      if (marks_in_round == null)
+		marks_in_round = '\u200B';  // zero-width space
 	      if (features.individual_marks)
 		return $sce.trustAsHtml(marks_in_round + '');
 	      else {
