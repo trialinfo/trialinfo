@@ -1294,6 +1294,7 @@ async function read_riders(connection, id, revalidate, number) {
     var rider = riders[row.number];
     if (rider) {
       rider.rankings[row.ranking - 1] = row;
+      delete row.id;
       delete row.number;
       delete row.ranking;
     }
