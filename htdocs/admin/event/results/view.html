@@ -141,9 +141,9 @@ table.ranking tr td.important {
 	  <tr>
 	    <th style="text-align:center" ng-bind-html="class_symbol(class_ranking)" adjust-width="rank"></th>
 	    <th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
-	    <th style="text-align:right; width:1.2em" ng-if="features.individual_marks" ng-repeat="zone in class_ranking.zones" title="Sektion {{zone}}" adjust-width="individual-marks">S{{zone}}</th>
+	    <th style="text-align:right; width:1.2em" ng-repeat="zone in (features.individual_marks ? class_ranking.zones : [])" title="Sektion {{zone}}" adjust-width="individual-marks">S{{zone}}</th>
 	    <th ng-if="features.individual_marks && rounds > 1" adjust-width="marks"><span title="Runde">R</span></th>
-	    <th ng-if="!features.individual_marks && rounds > 1" ng-repeat="round in enumerate(1, rounds)" style="text-align:right" adjust-width="marks"><span title="Runde {{round}}">R{{round}}</span></th>
+	    <th ng-repeat="round in ((!features.individual_marks && rounds > 1) ? enumerate(1, rounds) : [])" style="text-align:right" adjust-width="marks"><span title="Runde {{round}}">R{{round}}</span></th>
 	    <th style="text-align:right" ng-if="class_ranking.additional_marks" adjust-width="marks"><span title="Zusatzpunkte">AP</span></th>
 	    <th style="text-align:right" ng-if="class_ranking.penalty_marks" adjust-width="marks"><span title="Zeit- und Strafpunkte">ZP</span></th>
 	    <th style="text-align:right" adjust-width="total-marks"><span title="Gesamtpunkte">Ges</span></th>
@@ -161,9 +161,9 @@ table.ranking tr td.important {
 	  <tr ng-if="rider.failure || rider.non_competing">
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right"></td>
 	    <td rowspan="{{rows_per_rider}}" ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
-	    <td ng-if="features.individual_marks" ng-repeat="zone in class_ranking.zones" style="text-align:right" class="individual-marks">{{rider.marks_per_zone[0][zone - 1]}}</td>
+	    <td ng-repeat="zone in (features.individual_marks ? class_ranking.zones : [])" style="text-align:right" class="individual-marks">{{rider.marks_per_zone[0][zone - 1]}}</td>
 	    <td ng-if="features.individual_marks && rounds > 1" style="text-align:right" class="round {{rider.decisive_round == 1 ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(1)"></td>
-	    <td ng-if="!features.individual_marks && rounds > 1" ng-repeat="round in enumerate(1, rounds)" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{rider.decisive_round == round ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(round)"></td>
+	    <td ng-repeat="round in ((!features.individual_marks && rounds > 1) ? enumerate(1, rounds) : [])" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{rider.decisive_round == round ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(round)"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.additional_marks">{{rider.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.penalty_marks">{{rider.penalty_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:center" colspan="{{1 + class_ranking.tie_break + marks_distribution_columns}}">{{failure(rider)}}</td>
@@ -172,9 +172,9 @@ table.ranking tr td.important {
 	  <tr ng-if="!(rider.failure || rider.non_competing)">
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rank(rider)}}</td>
 	    <td rowspan="{{rows_per_rider}}" ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
-	    <td ng-if="features.individual_marks" ng-repeat="zone in class_ranking.zones" style="text-align:right" class="individual-marks">{{rider.marks_per_zone[0][zone - 1]}}</th>
+	    <td ng-repeat="zone in (features.individual_marks ? class_ranking.zones : [])" style="text-align:right" class="individual-marks">{{rider.marks_per_zone[0][zone - 1]}}</th>
 	    <td ng-if="features.individual_marks && rounds > 1" style="text-align:right" class="round {{rider.decisive_round == 1 ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(1)"></td>
-	    <td ng-if="!features.individual_marks && rounds > 1" ng-repeat="round in enumerate(1, rounds)" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{rider.decisive_round == round ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(round)"></td>
+	    <td ng-repeat="round in ((!features.individual_marks && rounds > 1) ? enumerate(1, rounds) : [])" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{rider.decisive_round == round ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(round)"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.additional_marks">{{rider.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.penalty_marks">{{rider.penalty_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rider.marks | fractional}}</td>
@@ -187,7 +187,7 @@ table.ranking tr td.important {
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.tie_break">{{rider.tie_break ? rider.tie_break + '.' : ''}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.scores">{{rider.score | fractional}}</td>
 	  </tr>
-	  <tr ng-if="features.individual_marks" ng-repeat="round in enumerate(2, rounds)">
+	  <tr ng-repeat="round in (features.individual_marks ? enumerate(2, rounds) : [])">
 	    <td ng-repeat="zone in class_ranking.zones" style="text-align:right" class="individual-marks">{{rider.marks_per_zone[round - 1][zone - 1]}}</td>
 	    <td ng-if="rounds > 1" style="text-align:right" class="round {{rider.decisive_round == round ? 'important' : ''}}" ng-bind-html="rider.marks_in_round(round)"></td>
 	  </tr>
@@ -195,7 +195,7 @@ table.ranking tr td.important {
       </table>
   </div>
 </div>
-<div ng-if="results.registered" ng-repeat="class in results.registered.classes">
+<div ng-repeat="class in (results.registered ? results.registered.classes : [])">
   <h3 ng-if="class.name">{{class.name}}</h3>
   <table class="ranking">
     <thead>
