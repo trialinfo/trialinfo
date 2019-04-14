@@ -1437,9 +1437,6 @@ async function admin_rider_to_api(connection, id, rider, event) {
       .sort();
   }
 
-  /*
-   * FIXME: A (sorted) list of enabled rankings would be a better representation.
-   */
   var rider_rankings = [];
   rider.rankings.forEach((ranking, index) => {
     if (ranking)
