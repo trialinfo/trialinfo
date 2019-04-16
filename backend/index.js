@@ -2612,7 +2612,6 @@ async function get_event_results(connection, id) {
 	    riders.push(hash);
 	    return riders;
 	  }, []);
-	console.log(registered_class.riders);
 	registered_class.riders.sort((a, b) => {
 	  let cmp;
 	  cmp = (a.last_name || '').localeCompare(b.last_name || '');
