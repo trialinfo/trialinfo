@@ -200,41 +200,24 @@ var eventResultsController = [
 	$scope.rankings = rankings;
 
       var summary = (function() {
-	var num_riders = 0;
-	var failures = [];
-	var non_competing = 0;
-
-	angular.forEach($scope.rankings, function(ranking) {
-	  angular.forEach(ranking.classes, function(class_) {
-	    num_riders += class_.riders.length;
-	    angular.forEach(class_.riders, function(rider) {
-	      if (rider.failure)
-		failures[rider.failure] = (failures[rider.failure] || 0) + 1;
-	      if (rider.non_competing)
-		non_competing++;
-	    });
-	  });
-	});
-
 	var gesamt = '';
-	if (num_riders)
-	  gesamt = num_riders + ' ' + 'Fahrer';
-	else if (results.registered) {
-	  num_riders = results.registered.classes.reduce(function(n, class_) {
-	    return n + class_.riders.length;
-	  }, 0);
-	  gesamt = num_riders + ' vorgenannte Fahrer';
-	} else
+	if (results.rankings.length)
+	  gesamt = results.event.riders + ' ' + 'Fahrer';
+	else if (results.registered)
+	  gesamt = results.event.riders + ' vorgenannte Fahrer';
+	else
 	  gesamt = 'Keine Fahrer';
 	var list = [];
-	if (failures[5] || failures[6])
-	  list.push(((failures[5] || 0) + (failures[6] || 0)) + ' nicht gestartet');
-	if (failures[3])
-	  list.push(failures[3] + ' ausgefallen');
-	if (failures[4])
-	  list.push(failures[4] + ' nicht gewertet');
-	if (non_competing)
-	  list.push(non_competing + ' außer Konkurrenz');
+	if (results.event.failures[5] || results.event.failures[6]) {
+	  list.push(((results.event.failures[5] || 0) +
+		     (results.event.failures[6] || 0)) + ' nicht gestartet');
+	}
+	if (results.event.failures[3])
+	  list.push(results.event.failures[3] + ' ausgefallen');
+	if (results.event.failures[4])
+	  list.push(results.event.failures[4] + ' nicht gewertet');
+	if (results.event.non_competing)
+	  list.push(results.event.non_competing + ' außer Konkurrenz');
 	if (list.length)
 	  gesamt += ' (davon ' + list.join(', ') + ')';
 	return gesamt ? gesamt + '.' : null;

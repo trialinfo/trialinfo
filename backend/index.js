@@ -2484,6 +2484,22 @@ async function get_event_results(connection, id) {
     return ranking_class;
   }
 
+  hash.event.riders = 0;
+  hash.event.failures = {};
+  for (let rider of Object.values(riders)) {
+    if (rider.rank != null) {
+      hash.event.riders++;
+      if (rider.non_competing) {
+	hash.event.non_competing =
+	  (hash.event.non_competing || 0) + 1;
+      }
+      if (rider.failure != 0) {
+	hash.event.failures[rider.failure] =
+	  (hash.event.failures[rider.failure] || 0) + 1;
+      }
+    }
+  }
+
   let result = ranking_classes(event.main_ranking)(
     Object.values(riders).filter((rider) => rider.rank != null)
   ).map(convert_ranking(event.main_ranking, true))
@@ -2616,6 +2632,7 @@ async function get_event_results(connection, id) {
 	  delete future_event.fid;
 	  return future_events;
 	}, {});
+      hash.event.riders = registered_riders.length;
       hash.registered = registered;
     }
   }
