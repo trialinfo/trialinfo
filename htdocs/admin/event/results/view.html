@@ -196,7 +196,7 @@ table.ranking tr td.important {
 	    <td ng-repeat="round in ((!features.individual_marks && rounds > 1) ? enumerate(1, rounds) : [])" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{result.decisive_round == round ? 'important' : ''}}" ng-bind-html="result.marks_in_round(round)"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.additional_marks">{{result.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.penalty_marks">{{result.penalty_marks | fractional}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:center" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}">{{failure(result)}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}"><span title="{{failure(result)}}">{{failure(result)}}</span></td>
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-if-start="result && !(result.failure || result.non_competing)" style="display:none"></td>
 	    <td ng-repeat="zone in (features.individual_marks ? event_ranking.zones : [])" style="text-align:right" class="individual-marks">{{result.marks_in_zone(1, zone)}}</th>
