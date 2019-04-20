@@ -138,7 +138,8 @@ var settingsController = [
 	  active: false,
 	  date: null,
 	  location: null,
-	  type: null
+	  type: null,
+	  combine: false
 	});
       }
     }
@@ -175,6 +176,7 @@ var settingsController = [
 	  title: null,
 	  location: null,
 	  type: null,
+	  combine: false,
 	  enabled: true,
 	  classes: [],
 	  card_colors: [],
@@ -364,8 +366,10 @@ var settingsController = [
 	$scope.internal.reset = null;
 	$scope.event.base_fid = null;
 	var base = $scope.event.base;
-	if (base == null)
+	if (base == null) {
+	  $scope.event.combine = false;
 	  return;
+	}
 
 	var id = events.find(function(event) {
 	  return event.tag == base;
@@ -432,6 +436,7 @@ var settingsController = [
 	    event.date = future_event.date;
 	  if (future_event.type)
 	    event.type = future_event.type;
+	  event.combine = future_event.combine;
 	}
 	event.future_events =
 	  angular.copy($scope.future_events).reduce(

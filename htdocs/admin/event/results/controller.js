@@ -36,15 +36,61 @@ var eventResultsController = [
       return filtered_rankings;
     }
 
+    function set_event_labels(events) {
+      function is_unique(array) {
+	let hash = {};
+	for (let value of array) {
+	  if (value in hash)
+	    return false;
+	  hash[value] = true;
+	}
+	return true;
+      }
+
+      let choices = [
+	// Location
+	events.map(function(event) {
+	  return event.location; }),
+
+	// Day of week
+	events.map(function(event) {
+	  return $scope.$eval(
+	    'date | date:"EEEE"',
+	    {date: new Date(event.date)}); }),
+
+	// Day and month
+	events.map(function(event) {
+	  return $scope.$eval(
+	    'date | date:"d.M."',
+	    {date: new Date(event.date)}); }),
+
+	// Event number (starting from 1); guaranteed to be unique
+	events.map(function(event, index) {
+	  return index + 1; })
+      ];
+
+      for (let choice of choices) {
+	if (is_unique(choice)) {
+	  for (let n = 0; n < events.length; n++)
+	    events[n].label = choice[n];
+	  break;
+	}
+      }
+    }
+
     function assign_results(r) {
       old_results = angular.copy(r);
       results = r;
       event = results.event;
       $scope.results = results;
       $scope.event = event;
+      $scope.events = results.events;
       features = event.features;
       $scope.features = features;
       $scope.$root.context(event.title);
+
+      if (results.events.length > 1)
+	set_event_labels(results.events);
 
       if (results.registered) {
 	let registered = results.registered;
@@ -82,21 +128,30 @@ var eventResultsController = [
 	      });
 	    }
 
-	    rider.marks_in_round = function(round) {
-	      var marks_in_round = this.marks_per_round[round - 1];
-	      if (marks_in_round === undefined)
-		marks_in_round = this.failure ? '-' : null;
-	      if (marks_in_round == null)
-		marks_in_round = '\u200B';  // zero-width space
-	      if (features.individual_marks)
-		return $sce.trustAsHtml(marks_in_round + '');
-	      else {
-		var marks = this.marks_per_zone[round - 1] || [];
-		return $sce.trustAsHtml(
-		  '<span title="' + marks.join(' ') + '">' + marks_in_round + '</span>'
-		);
+	    rider.results.forEach(function(result) {
+	      if (result) {
+		result.marks_in_round = function(round) {
+		  var marks_in_round = this.marks_per_round[round - 1];
+		  if (marks_in_round === undefined)
+		    marks_in_round = this.failure ? '-' : null;
+		  if (marks_in_round == null)
+		    marks_in_round = '\u200B';  // zero-width space
+		  if (features.individual_marks)
+		    return $sce.trustAsHtml(marks_in_round + '');
+		  else {
+		    var marks = this.marks_per_zone[round - 1] || [];
+		    marks = marks.map((marks) => marks == -1 ? '-' : marks);
+		    return $sce.trustAsHtml(
+		      '<span title="' + marks.join(' ') + '">' + marks_in_round + '</span>'
+		    );
+		  }
+		};
+		result.marks_in_zone = function(round, zone) {
+		  let marks = (this.marks_per_zone[round - 1] || [])[zone - 1];
+		  return marks == -1 ? '-' : marks;
+		};
 	      }
-	    };
+	    });
 	  });
 	});
       });
@@ -200,41 +255,24 @@ var eventResultsController = [
 	$scope.rankings = rankings;
 
       var summary = (function() {
-	var num_riders = 0;
-	var failures = [];
-	var non_competing = 0;
-
-	angular.forEach($scope.rankings, function(ranking) {
-	  angular.forEach(ranking.classes, function(class_) {
-	    num_riders += class_.riders.length;
-	    angular.forEach(class_.riders, function(rider) {
-	      if (rider.failure)
-		failures[rider.failure] = (failures[rider.failure] || 0) + 1;
-	      if (rider.non_competing)
-		non_competing++;
-	    });
-	  });
-	});
-
 	var gesamt = '';
-	if (num_riders)
-	  gesamt = num_riders + ' ' + 'Fahrer';
-	else if (results.registered) {
-	  num_riders = results.registered.classes.reduce(function(n, class_) {
-	    return n + class_.riders.length;
-	  }, 0);
-	  gesamt = num_riders + ' vorgenannte Fahrer';
-	} else
+	if (results.rankings.length)
+	  gesamt = results.event.riders + ' ' + 'Fahrer';
+	else if (results.registered)
+	  gesamt = results.event.riders + ' vorgenannte Fahrer';
+	else
 	  gesamt = 'Keine Fahrer';
 	var list = [];
-	if (failures[5] || failures[6])
-	  list.push(((failures[5] || 0) + (failures[6] || 0)) + ' nicht gestartet');
-	if (failures[3])
-	  list.push(failures[3] + ' ausgefallen');
-	if (failures[4])
-	  list.push(failures[4] + ' nicht gewertet');
-	if (non_competing)
-	  list.push(non_competing + ' außer Konkurrenz');
+	if (results.event.failures[5] || results.event.failures[6]) {
+	  list.push(((results.event.failures[5] || 0) +
+		     (results.event.failures[6] || 0)) + ' nicht gestartet');
+	}
+	if (results.event.failures[3])
+	  list.push(results.event.failures[3] + ' ausgefallen');
+	if (results.event.failures[4])
+	  list.push(results.event.failures[4] + ' nicht gewertet');
+	if (results.event.non_competing)
+	  list.push(results.event.non_competing + ' außer Konkurrenz');
 	if (list.length)
 	  gesamt += ' (davon ' + list.join(', ') + ')';
 	return gesamt ? gesamt + '.' : null;
@@ -650,12 +688,21 @@ var eventResultsController = [
 	show_all();
     });
 
+    $scope.max_rounds = function(class_ranking) {
+      return class_ranking.events.reduce(function(rounds, event) {
+	return Math.max(rounds, event.rounds);
+      }, 0);
+    };
+
     $scope.rank = function(rider) {
       if (rider.rank != null)
 	return rider.rank + '.';
     }
 
-    $scope.same_day = same_day;
+    $scope.on_day_of_event = function() {
+      let last_event = $scope.results.events.slice(-1)[0];
+      return !last_event.date || same_day(last_event.date);
+    };
   }];
 
 eventResultsController.resolve = {
