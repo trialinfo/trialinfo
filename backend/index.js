@@ -4748,9 +4748,14 @@ function serie_index(view) {
   return async function(req, res, next) {
     try {
       var events = await req.conn.queryAsync(`
-	SELECT id, date, title,
-	       CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends
+	SELECT id, date, title, location,
+	       CASE WHEN registration_ends > NOW() THEN registration_ends END AS registration_ends,
+	       combine, base_id
 	FROM events
+	LEFT JOIN (
+	  SELECT id AS base_id, tag AS base
+	  FROM events
+	) AS _ USING (base)
 	WHERE enabled
 	AND (registration_ends IS NOT NULL OR
 	    id IN (SELECT DISTINCT id FROM marks) OR
@@ -4763,6 +4768,64 @@ function serie_index(view) {
 	hash[event.id] = event;
 	return hash;
       }, {});
+
+      let combined = {};
+      for (let event of Object.values(events)) {
+	if (event.combine && events[event.base_id])
+	  combined[event.base_id] = true;
+      }
+
+      if (Object.keys(combined).length) {
+	for (let event of Object.values(events)) {
+	  if (event.id in combined)
+	    continue;
+
+	    let combine = [event];
+	    while (event.combine && events[event.base_id]) {
+	      event = events[event.base_id];
+	      combine.unshift(event);
+	    }
+	    if (combine.length > 1) {
+	      function all_identical(array) {
+		for (let value of array) {
+		  if (value != array[0])
+		    return false;
+		}
+		return true;
+	      }
+
+	      function f(event, format) {
+		if (event.ts)
+		  return moment(new Date(event.ts)).locale('de').format(format);
+	      }
+
+	      let last_event = combine[combine.length - 1];
+	      let title;
+
+	      if (all_identical(combine.map((event) => event.location))) {
+		title = last_event.location + ' am ';
+		if (all_identical(combine.map((event) => f(event, 'YYYY')))) {
+		  if (all_identical(combine.map((event) =>  f(event, 'MMMM')))) {
+		    title += combine.map((event) => f(event, 'D.')).join(' und ') +
+			     ' ' + f(last_event, 'MMMM YYYY');
+		  } else {
+		    title += combine.map((event) => f(event, 'D. MMMM')).join(' und ') +
+			     ' ' + f(last_event, 'YYYY');
+		  }
+		} else {
+		  title += combine.map((event) => f(event, 'D. MMMM YYYY')).join(' und ');
+		}
+	      } else {
+		title = combine.map((event) => event.location + ' am ' + f(event, 'D. MMMM YYYY')).join(' und ');
+	      }
+
+	      last_event.title = title;
+	    }
+	}
+
+	for (let id in combined)
+	  delete events[id];
+      }
 
       var series = await req.conn.queryAsync(`
 	SELECT serie, name, abbreviation
