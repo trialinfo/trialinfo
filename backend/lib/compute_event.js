@@ -514,7 +514,7 @@ function compute_event(cached_riders, event, compute_marks) {
       marks: function(rider, marks) {
 	rider.rankings[ranking - 1].decisive_marks = marks;
       },
-      round: function(number, round) {
+      round: function(rider, round) {
 	rider.rankings[ranking - 1].decisive_round = round;
       }
     }
