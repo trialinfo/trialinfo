@@ -156,15 +156,27 @@ var eventResultsController = [
 	});
       });
 
-      if (event.type && event.type.match(/^otsv/)) {
+      if (event.type && event.type.match(/^otsv/) && event.type != 'otsv-acup') {
+	function normalizeCountry(rider) {
+	  if (rider.country == 'A')
+	    rider.country = null;
+	}
+
 	angular.forEach(results.rankings, function(ranking) {
 	  angular.forEach(ranking.classes, function(class_) {
 	    angular.forEach(class_.riders, function(rider) {
-	      if (rider.country == 'A')
-		rider.country = null;
+	      normalizeCountry(rider);
 	    });
 	  });
 	});
+
+	if (results.registered) {
+	  angular.forEach(results.registered.classes, function(class_) {
+	    angular.forEach(class_.riders, function(rider) {
+	      normalizeCountry(rider);
+	    });
+	  });
+	}
       }
 
       $scope.distribution = [];
