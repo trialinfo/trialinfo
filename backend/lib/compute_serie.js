@@ -17,9 +17,10 @@
 
 'use strict';
 
-function new_rider(number) {
+function new_rider(rider) {
   return {
-    number: number,
+    number: rider.number,
+    date_of_birth: rider.date_of_birth,
     events: [],
     drop_score: null
   };
@@ -79,7 +80,8 @@ async function compute_serie(connection, serie_id, last_event) {
   (await connection.queryAsync(`
     SELECT ranking, ranking_class,
 	   COALESCE(new_number, number) AS number, id,
-	   rider_rankings.rank, rider_rankings.score
+	   rider_rankings.rank, rider_rankings.score,
+	   date_of_birth
     FROM rider_rankings
     JOIN riders USING (id, number)
     JOIN classes USING (id, class)
@@ -102,7 +104,7 @@ async function compute_serie(connection, serie_id, last_event) {
 
     let rider = ranking_class.riders[row.number];
     if (!rider) {
-      rider = ranking_class.riders[row.number] = new_rider(row.number);
+      rider = ranking_class.riders[row.number] = new_rider(row);
       if (tie_break[row.number])
 	rider.tie_break = tie_break[row.number];
     }
@@ -164,6 +166,12 @@ async function compute_serie(connection, serie_id, last_event) {
       // den Vergleich der Platzierungen, usw.:
       if (a.tie_break != null && b.tie_break != null)
 	return a.tie_break - b.tie_break;
+
+      if (last_event.type == 'otsv-acup') {
+	let _a = a.date_of_birth || '9999-99-99';
+	let _b = b.date_of_birth || '9999-99-99';
+	return _a.localeCompare(_b);
+      }
 
       // Laut Telefonat am 22.10.2014 mit Martin Suchy (OSK): Wenn Fahrer
       // punktegleich sind, werden sie in der Ergebnisliste anhand der besseren
@@ -264,7 +272,8 @@ async function compute_serie(connection, serie_id, last_event) {
       let ignore_keys = {
 	number: true,
 	events: true,
-	tie_break: true
+	tie_break: true,
+	date_of_birth: true
       };
       for (let key of Object.keys(rider)) {
 	if (!(key in ignore_keys))
@@ -303,7 +312,7 @@ async function compute_serie(connection, serie_id, last_event) {
 	ranking_class.riders.forEach((rider) => {
 	  let joint_rider = joint_riders[rider.number];
 	  if (!joint_rider) {
-	    joint_rider = joint_riders[rider.number] = new_rider(rider.number);
+	    joint_rider = joint_riders[rider.number] = new_rider(rider);
 	  }
 	  joint_rider.events =
 	    joint_rider.events.concat(rider.events);
