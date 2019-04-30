@@ -3039,6 +3039,16 @@ async function get_serie_results(connection, serie_id) {
       return active_classes;
   }
 
+  let event_has_results = {};
+  (await connection.queryAsync(`
+    SELECT DISTINCT id
+    FROM series_events
+    JOIN rider_rankings USING (id)
+    WHERE serie = ? AND score IS NOT NULL
+  `, [serie_id])).forEach((row) => {
+    event_has_results[row.id] = true;
+  });
+
   let events_by_id = {};
   let active_events = [];
   let events_in_class = [];
@@ -3049,7 +3059,7 @@ async function get_serie_results(connection, serie_id) {
 
     events_by_id[event.id] = event;
     let active_classes = event_active_classes(event);
-    if (active_classes.length) {
+    if (active_classes.length && event_has_results[event.id]) {
       active_events.push(event);
       for (let ranking_idx in active_classes) {
 	for (let class_ of active_classes[ranking_idx]) {
