@@ -397,7 +397,8 @@ function compute_event(cached_riders, event, compute_marks) {
       let score = score_for_rank(rank, riders_at_rank.length);
       for (let rider of riders_at_rank) {
 	rider.rankings[ranking - 1].rank = rank;
-	if (!(rider.non_competing || rider.failure || rider.zones_todo))
+	if (!(rider.non_competing || rider.failure || rider.zones_todo ||
+	      rider.unfinished_zones))
 	  rider.rankings[ranking - 1].score = score;
       }
     };
