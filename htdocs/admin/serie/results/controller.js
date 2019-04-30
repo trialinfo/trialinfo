@@ -19,12 +19,16 @@ var serieResultsController = [
     $scope.serie = serie;
     $scope.features = features;
 
-    if (serie.type && serie.type.match(/^otsv/)) {
+    if (serie.type && serie.type.match(/^otsv/) && serie.type != 'otsv-acup') {
+      function normalizeCountry(rider) {
+	if (rider.country == 'A')
+	  rider.country = null;
+      }
+
       results.rankings.forEach(function(ranking) {
 	ranking.classes.forEach(function(class_ranking) {
 	  class_ranking.riders.forEach(function(rider) {
-	    if (rider.country == 'A')
-	      rider.country = null;
+	    normalizeCountry(rider);
 	  });
 	});
       });
