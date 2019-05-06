@@ -165,22 +165,22 @@ table.ranking tr td.important {
 	    <th style="text-align:right" ng-if="event_ranking.additional_marks" adjust-width="marks"><span title="Zusatzpunkte">ZP</span></th>
 	    <th style="text-align:right" ng-if="event_ranking.penalty_marks" adjust-width="marks"><span title="Zeit- und Strafpunkte">SP</span></th>
 	    <th style="text-align:right" adjust-width="sum-marks"><span title="Punkte">Σ</span></th>
-	    <th style="text-align:right" ng-if="distribution[0]" adjust-width="marks-distribution"><span title="Nuller">0ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[1]" adjust-width="marks-distribution"><span title="Einser">1ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[2]" adjust-width="marks-distribution"><span title="Zweier">2ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[3]" adjust-width="marks-distribution"><span title="Dreier">3ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[4]" adjust-width="marks-distribution"><span title="Vierer">4ₛ</span></th>
-	    <th style="text-align:right" ng-if="distribution[5]" adjust-width="marks-distribution"><span title="Fünfer">5ₛ</span></th>
+	    <th style="text-align:right" ng-if="distribution[0]" adjust-width="marks-distribution"><span title="Nuller">0s</span></th>
+	    <th style="text-align:right" ng-if="distribution[1]" adjust-width="marks-distribution"><span title="Einser">1s</span></th>
+	    <th style="text-align:right" ng-if="distribution[2]" adjust-width="marks-distribution"><span title="Zweier">2s</span></th>
+	    <th style="text-align:right" ng-if="distribution[3]" adjust-width="marks-distribution"><span title="Dreier">3s</span></th>
+	    <th style="text-align:right" ng-if="distribution[4]" adjust-width="marks-distribution"><span title="Vierer">4s</span></th>
+	    <th style="text-align:right" ng-if="distribution[5]" adjust-width="marks-distribution"><span title="Fünfer">5s</span></th>
 	    <th style="text-align:right" ng-if="event_ranking.tie_break" adjust-width="tie-break"><span title="Stechen">ST</span></th>
 	    <th rowspan="{{rows_per_rider}}" style="display:none"></th>
 	    <th ng-repeat-end style="display:none"></th>
 	    <th style="text-align:right" ng-if="events.length > 1" adjust-width="total-marks"><span title="Punkte">Σ</span></th>
-	    <th style="text-align:right" ng-if="events.length > 1 && distribution[0]" adjust-width="marks-distribution"><span title="Nuller">0ₛ</span></th>
-	    <th style="text-align:right" ng-if="events.length > 1 && distribution[1]" adjust-width="marks-distribution"><span title="Einser">1ₛ</span></th>
-	    <th style="text-align:right" ng-if="events.length > 1 && distribution[2]" adjust-width="marks-distribution"><span title="Zweier">2ₛ</span></th>
-	    <th style="text-align:right" ng-if="events.length > 1 && distribution[3]" adjust-width="marks-distribution"><span title="Dreier">3ₛ</span></th>
-	    <th style="text-align:right" ng-if="events.length > 1 && distribution[4]" adjust-width="marks-distribution"><span title="Vierer">4ₛ</span></th>
-	    <th style="text-align:right" ng-if="events.length > 1 && distribution[5]" adjust-width="marks-distribution"><span title="Fünfer">5ₛ</span></th>
+	    <th style="text-align:right" ng-if="events.length > 1 && distribution[0]" adjust-width="marks-distribution"><span title="Nuller">0s</span></th>
+	    <th style="text-align:right" ng-if="events.length > 1 && distribution[1]" adjust-width="marks-distribution"><span title="Einser">1s</span></th>
+	    <th style="text-align:right" ng-if="events.length > 1 && distribution[2]" adjust-width="marks-distribution"><span title="Zweier">2s</span></th>
+	    <th style="text-align:right" ng-if="events.length > 1 && distribution[3]" adjust-width="marks-distribution"><span title="Dreier">3s</span></th>
+	    <th style="text-align:right" ng-if="events.length > 1 && distribution[4]" adjust-width="marks-distribution"><span title="Vierer">4s</span></th>
+	    <th style="text-align:right" ng-if="events.length > 1 && distribution[5]" adjust-width="marks-distribution"><span title="Fünfer">5s</span></th>
 	    <th style="text-align:right" ng-if="class_ranking.scores" adjust-width="scores"><span title="{{'Wertungspunkte' + (ranking.main_ranking ? ' in ' + ranking.main_ranking_name : '')}}">WP</span></th>
 	  </tr>
 	</thead>
