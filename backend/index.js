@@ -4854,7 +4854,16 @@ function serie_index(view) {
 	SELECT DISTINCT serie, id
 	FROM series_events
 	JOIN series_classes USING (serie)
-	JOIN classes USING (id, ranking_class)`))
+	JOIN classes USING (id, ranking_class)
+
+	UNION
+
+	SELECT serie, id
+	FROM series_events
+	WHERE serie NOT IN (
+	    SELECT serie
+	    FROM series_classes
+	)`))
       .forEach((se) => {
 	let event = events[se.id];
 	let serie = series[se.serie];
