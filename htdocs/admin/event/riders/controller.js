@@ -403,7 +403,7 @@ var ridersController = [
 
     $scope.future_events = event.future_events.reduce(
       function(future_events, future_event) {
-	if (future_event.active)
+	if (future_event.active || event.registration_ends != null)
 	  future_events.push(future_event);
 	return future_events;
       }, []);
