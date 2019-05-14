@@ -212,7 +212,7 @@
 		  <label for="non_competing" accesskey="a" strike-through="non_competing" title="{{non_competing ? 'Klasse ' + rider.class + ' startet außer Konkurrenz.' : ''}}"><span class="accesskey">A</span>ußer Konkurrenz</label>
 		<span ng-repeat="future_event in future_events" style="display:block">
 		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.future_starts[future_event.fid]" id="start_{{future_event.fid}}">
-		  <label for="start_{{future_event.fid}}" strike-through="rider_does_not_start()" title="{{rider_does_not_start()}}">{{future_event.location}} am {{future_event.date | date:"d. MMMM"}}</label>
+		  <label for="start_{{future_event.fid}}" strike-through="future_event.active && rider_does_not_start()" title="{{future_event.active ? rider_does_not_start() : null}}">{{future_event.location}} am {{future_event.date | date:"d. MMMM"}}</label>
 		</span>
 	      </td>
 	    </tr>
