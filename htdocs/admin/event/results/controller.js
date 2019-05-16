@@ -366,6 +366,20 @@ var eventResultsController = [
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
+      start_time:
+        { name: 'Startzeit',
+	  heading: 'Startzeit',
+	  expr: "start_time",
+	  style: { 'text-align': 'left' },
+	  attr: { 'adjust-width': 'time' },
+	  when: function() { return features.start_time } },
+      finish_time:
+        { name: 'Zielzeit',
+	  heading: 'Zielzeit',
+	  expr: "finish_time",
+	  style: { 'text-align': 'left' },
+	  attr: { 'adjust-width': 'time' },
+	  when: function() { return features.finish_time } },
     };
     angular.forEach(defined_fields, function(field) {
       field.heading = $sce.trustAsHtml(field.heading);
@@ -503,8 +517,12 @@ var eventResultsController = [
 	return;
       }
 
+      var default_fields = ['number', 'name'].concat(event.result_columns);
+      if (results.registered)
+	default_fields.push('start_time');
+
       var fields = [];
-      angular.forEach(['number', 'name'].concat(event.result_columns), function(name) {
+      angular.forEach(default_fields, function(name) {
 	var field = defined_fields[name];
 	if (field && (!field.when || field.when()))
 	  fields.push(name);
