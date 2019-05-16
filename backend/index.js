@@ -2379,7 +2379,7 @@ async function get_full_event(connection, id) {
 
 var rider_public_fields = [
   'club', 'country', 'first_name', 'last_name', 'province', 'vehicle',
-  'year_of_manufacture'
+  'year_of_manufacture', 'start_time', 'finish_time'
 ];
 
 let rider_result_fields = [
