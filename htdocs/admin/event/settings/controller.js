@@ -461,9 +461,8 @@ var settingsController = [
       $scope.$watch('event.base_fid', watch_base_fid);
     }
 
-    $scope.type_blur = function() {
+    $scope.$watch('event.type', function(type) {
       var event = $scope.event;
-      var type = $scope.event.type;
       if (type === $scope.old_type)
 	return;
       $scope.old_type = type;
@@ -490,7 +489,7 @@ var settingsController = [
 	if (type == 'otsv-acup')
 	  event.equal_marks_resolution = 0;
       }
-    };
+    });
 
     $scope.blur_ranking_class = function(class_, event) {
       if (event.target.value === class_ + '')
