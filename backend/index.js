@@ -596,17 +596,16 @@ async function validate_user(connection, user) {
 
   if (rows.length != 1) {
     console.error('User ' + JSON.stringify(user.email) + ' does not exist');
-    throw 'E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist nicht registriert. ' +
-	  'Bitte fahren Sie mit <em>Neu registrieren</em> fort.';
+    throw 'Die E-Mail-Adresse ' + JSON.stringify(user.email) + ' ist nicht registriert.';
   }
   if (rows[0].password == null) {
     console.error('No password set for user ' + JSON.stringify(user.email));
     throw 'Für die E-Mail-Adresse ' + JSON.stringify(user.email) +
 	  ' ist noch kein Kennwort gesetzt.<br>' +
           'Bitte fahren Sie mit der an diese Adresse geschickten ' +
-	  'Bestätigungs-E-Mail fort, oder schicken Sie über ' +
-	  '<em>Kennwort zurücksetzen</em> erneut eine ' +
-	  'Bestätigungs-E-Mail an diese Adresse.';
+	  'Bestätigungs-E-Mail fort, oder setzen Sie das Kennwort ' +
+	  'erneut zurück, um eine weitere Bestätigungs-E-Mail zu ' +
+	  'erhalten.';
   }
   var password_hash = rows[0].password;
   delete rows[0].password;
@@ -4277,12 +4276,9 @@ async function signup_or_reset(req, res, mode) {
       html_escape(email) +
       '</em>';
     if (mode == 'signup') {
-      error += ' ist bereits registriert.<br>Wenn das Ihre E-Mail-Adresse' +
-               ' ist und Sie das Kennwort vergessen haben, können Sie' +
-	       ' hier das <em>Kennwort zurücksetzen</em>.';
+      error += ' ist bereits registriert.';
     } else {
-      error += ' ist nicht registriert. Bitte setzen Sie mit <em>Neu ' +
-	       ' registrieren</em> fort.';
+      error += ' ist nicht registriert.';
     }
 
     params.mode = mode;
@@ -4297,7 +4293,7 @@ async function show_change_password(req, res, next) {
   var email = req.query.email;
   var params = {email: email};
   var result = await req.conn.queryAsync(`
-    SELECT secret
+    SELECT password, secret
     FROM users
     WHERE email = ?`, [email]);
   if (result.length == 0) {
@@ -4309,24 +4305,27 @@ async function show_change_password(req, res, next) {
     if (req.query)
       params.query = query_string(req.query);
     res.marko(views['login'], params);
-  } else if (result.length == 1 && result[0].secret != req.query.secret) {
-    params.mode = 'login';
-    params.error =
-      'Der Bestätigungscode für die E-Mail-Adresse <em>' +
-      html_escape(email) +
-      '</em> ist nicht mehr gültig. Bitte versuchen Sie es erneut.';
-    if (req.query)
-      params.query = query_string(req.query);
-    res.marko(views['login'], params);
-  } else {
-    var query = {
-      email: email,
-      secret: req.query.secret
-    };
-    if (req.query.redirect)
-      query.redirect = req.query.redirect;
-    params.query = query_string(query);
-    res.marko(views['change-password'], params);
+  } else if (result.length == 1) {
+    params.reset_password = (result[0].password != null);
+    if (result[0].secret != req.query.secret) {
+      params.mode = 'login';
+      params.error =
+	'Der Bestätigungscode für die E-Mail-Adresse <em>' +
+	html_escape(email) +
+	'</em> ist nicht mehr gültig. Bitte versuchen Sie es erneut.';
+      if (req.query)
+	params.query = query_string(req.query);
+      res.marko(views['login'], params);
+    } else {
+      var query = {
+	email: email,
+	secret: req.query.secret
+      };
+      if (req.query.redirect)
+	query.redirect = req.query.redirect;
+      params.query = query_string(query);
+      res.marko(views['change-password'], params);
+    }
   }
 }
 

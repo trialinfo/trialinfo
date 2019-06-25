@@ -11,7 +11,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="../app.css" />
-    <title>TrialInfo - Anmeldung</title>
+    <title>TrialInfo – Anmeldung</title>
     <script>
       function mode(mode, event) {
 	if (event)
@@ -63,13 +63,18 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     </div>
     <div id="js" style="display:none">
       <span class="login">
-	<h1>TrialInfo – Anmeldung</h1>
+	<h1>Anmeldung</h1>
+	<p>Anmeldung für registrierte Benutzer.</p>
       </span>
       <span class="signup">
-	<h1>TrialInfo – Neu registrieren</h1>
+	<h1>Neu registrieren</h1>
+	<p>Bitte geben Sie ihre E-Mail-Adresse ein.<br>
+	Wir senden Ihnen daraufhin eine E-Mail zur Bestätigung Ihrer Anmeldung und zur Vergabe eines Kennworts.</p>
       </span>
       <span class="reset">
-	<h1>TrialInfo – Kennwort zurücksetzen</h1>
+	<h1>Kennwort zurücksetzen</h1>
+	<p>Bitte geben Sie ihre E-Mail-Adresse ein.<br>
+	Wir senden Ihnen daraufhin eine E-Mail zur Bestätigung und Vergabe eines neuen Kennworts.</p>
       </span>
       <if(data.error)>
         <p style="color:red">$!{data.error}</p>
@@ -98,9 +103,15 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	  <tr>
 	    <th></th>
 	    <td marko-preserve-whitespace>
-	      <a class="signup reset" href="#" onclick="mode('login',event)">Anmelden</a>
-	      <a class="login reset" href="#" onclick="mode('signup',event)">Neu registrieren</a>
-	      <a class="login signup" href="#" onclick="mode('reset',event)">Kennwort zurücksetzen</a>
+	      <span class="signup reset">
+	        <a href="#" onclick="mode('login',event)" style="display:block">Sie sind bereits registriert?</a>
+	      </span>
+	      <span class="login reset">
+	        <a href="#" onclick="mode('signup',event)" style="display:block">Sie sind noch nicht registriert?</a>
+	      </span>
+	      <span>
+	        <a class="login signup" href="#" onclick="mode('reset',event)" style="display:block">Sie haben Ihr Kennwort vergessen?</a>
+	      </span>
 	    </td>
 	  </tr>
 	</table>
