@@ -2714,7 +2714,7 @@ async function get_event_results(connection, id) {
 	    hash.event.non_competing =
 	      (hash.event.non_competing || 0) + 1;
 	  }
-	  if (result.failure != 0) {
+	  if ((result.failure || 0) != 0) {
 	    hash.event.failures[result.failure] =
 	      (hash.event.failures[result.failure] || 0) + 1;
 	  }
