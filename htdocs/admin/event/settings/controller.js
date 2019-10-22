@@ -244,7 +244,7 @@ var settingsController = [
       class_order[index] = a;
 
       var classes = $scope.event.classes;
-      tmp = classes[a].order;
+      var tmp = classes[a].order;
       classes[a].order = classes[b].order;
       classes[b].order = tmp;
     }
