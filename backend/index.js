@@ -55,6 +55,7 @@ var views = {
   'acup.html': require('./views/acup.marko.js'),
   'bike.html': require('./views/bike.marko.js'),
   'ekids.html': require('./views/ekids.marko.js'),
+  'other.html': require('./views/other.marko.js'),
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
@@ -4873,13 +4874,18 @@ function serie_index(view) {
       });
 
       let params = {
-	events: function(serie_id, register) {
+	events: function(serie_id, not_series) {
 	  let e = (serie_id == null) ? events :
 	    (series[serie_id] || {}).events;
-	  if (e && register) {
+	  if (e && not_series) {
 	    e = Object.values(e).reduce(function(events, event) {
-	      if (event.registration_ends)
-		events[event.id] = event;
+	      for (let serie of not_series) {
+		let events_in_serie = Object.keys((series[serie] || {}).events)
+		  .map((x) => +x);
+		if (events_in_serie.indexOf(event.id) != -1)
+		  return events;
+	      }
+	      events[event.id] = event;
 	      return events;
 	    }, {});
 	  }
@@ -5340,6 +5346,7 @@ app.get('/otsv.html', conn(pool), serie_index(views['otsv.html']));
 app.get('/acup.html', conn(pool), serie_index(views['acup.html']));
 app.get('/bike.html', conn(pool), serie_index(views['bike.html']));
 app.get('/ekids.html', conn(pool), serie_index(views['ekids.html']));
+app.get('/other.html', conn(pool), serie_index(views['other.html']));
 
 app.get('/login/', function(req, res, next) {
   var params = {
