@@ -2711,7 +2711,8 @@ async function get_event_results(connection, id) {
   hash.event.failures = {};
   for (let riders of Object.values(riders_by_ranking_class)) {
     for (let rider of riders) {
-      if (rider.rank != null) {
+      if (rider.rank != null ||
+	  rider.rankings.some((ranking) => ranking.rank != null)) {
 	hash.event.riders++;
 	if (events.length == 1) {
 	  let result = rider.results[0];
@@ -2719,7 +2720,7 @@ async function get_event_results(connection, id) {
 	    hash.event.non_competing =
 	      (hash.event.non_competing || 0) + 1;
 	  }
-	  if (result.failure != 0) {
+	  if ((result.failure || 0) != 0) {
 	    hash.event.failures[result.failure] =
 	      (hash.event.failures[result.failure] || 0) + 1;
 	  }
