@@ -103,11 +103,11 @@ function join(separator) {
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
 	  return text === '' ? null : text;
 	});
-	ctrl.$formatters.push(function(value) {
+	ngModel.$formatters.push(function(value) {
 	  return value === null ? '' : value;
 	});
       }
@@ -119,23 +119,23 @@ function join(separator) {
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attrs, ctrl) {
-	ctrl.$parsers.push(function(text) {
+      link: function($scope, element, attrs, ngModel) {
+	ngModel.$parsers.push(function(text) {
 	  var match;
 	  if (typeof text == 'string') {
 	    if (text == '') {
-	      ctrl.$setValidity('numeric', true);
+	      ngModel.$setValidity('numeric', true);
 	      return null;
 	    } else if (match = text.match(/^-?[0-9]+$/) &&
 		       (!('min' in attrs) || +text >= +attrs.min) &&
 		       (!('max' in attrs) || +text <= +attrs.max)) {
-	      ctrl.$setValidity('numeric', true);
+	      ngModel.$setValidity('numeric', true);
 	      return +text;
 	    } else
-	      ctrl.$setValidity('numeric', false);
+	      ngModel.$setValidity('numeric', false);
 	  }
 	});
-	ctrl.$formatters.push(function(value) {
+	ngModel.$formatters.push(function(value) {
 	  if (value == null)
 	    return '';
 	  if (typeof value == 'number')
@@ -194,23 +194,23 @@ function join(separator) {
       return {
 	restrict: 'A',
 	require: 'ngModel',
-	link: function(scope, element, attrs, ctrl) {
-	  ctrl.$parsers.push(function(text) {
+	link: function($scope, element, attrs, ngModel) {
+	  ngModel.$parsers.push(function(text) {
 	    var match;
 	    if (typeof text == 'string') {
 	      if (text == '') {
-		ctrl.$setValidity('fractional', true);
+		ngModel.$setValidity('fractional', true);
 		return null;
 	      } else if (match = text.match(/^-?([0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)?$/) &&
 			 (!('min' in attrs) || +text >= +attrs.min) &&
 			 (!('max' in attrs) || +text <= +attrs.max)) {
-		ctrl.$setValidity('fractional', true);
+		ngModel.$setValidity('fractional', true);
 		return +text;
 	      } else
-		ctrl.$setValidity('fractional', false);
+		ngModel.$setValidity('fractional', false);
 	    }
 	  });
-	  ctrl.$formatters.push(function(value) {
+	  ngModel.$formatters.push(function(value) {
 	    if (value == null)
 	      return '';
 	    if (typeof value == 'number')
