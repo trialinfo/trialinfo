@@ -286,12 +286,6 @@
 	$scope.timeout = $timeout;
       },
       link: function ($scope, element, attr) {
-	if (navigator.userAgent.match(/iPad|iPhone/)) {
-	  /* Auf iPhone und iPad verschwindet die Bildschirmtatstatur, sobald
-	     einem Feld der Fokus entzogen wird, das würde die Eingabe sehr
-	     erschweren. */
-	  return;
-	}
 	function good_key(event) {
 	  return !(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) &&
 		 event.which > 46 && event.which <= 222 &&
