@@ -282,33 +282,19 @@
   module.directive('tabTo', function() {
     return {
       restrict: 'A',
-      controller: function($scope, $timeout) {
-	$scope.timeout = $timeout;
-      },
       link: function ($scope, element, attr) {
-	function good_key(event) {
-	  return !(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) &&
-		 event.which > 46 && event.which <= 222 &&
-		 (event.which < 112 /* F1 */ || event.which > 123 /* F12 */);
-	}
-	element.bind('keydown', function(event) {
-	  if (good_key(event)) {
-	    $scope.timeout(function() {
-	      if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
-		var selector = $scope.$eval(attr.tabTo);
-		if (selector !== undefined) {
-		  if (selector === null)
-		    element[0].blur();
-		  else {
-		    var next = document.getElementById(selector);
-		    if (next) {
-		      next.focus();
-		      next.select();
-		    }
-		  }
-		}
+	element.bind('input', function(event) {
+	  if (event.data == null)
+	    return;
+	  if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
+	    var selector = $scope.$eval(attr.tabTo);
+	    if (selector != null) {
+	      var next = document.getElementById(selector);
+	      if (next) {
+		next.focus();
+		next.select();
 	      }
-	    }, 20);
+	    }
 	  }
 	});
       }
