@@ -299,8 +299,11 @@ function compute_event(cached_riders, event, compute_marks) {
       if (event.type == 'otsv-acup') {
 	/* We only care about the number of clean sections. */
 	cmp = b.marks_distribution[0] - a.marks_distribution[0];
-	if (cmp)
+	if (cmp) {
+	  if (set_decisive)
+	    set_decisive.marks(cmp < 0 ? a : b, 0);
 	  return cmp;
+	}
 
 	let _a = a.date_of_birth || '9999-99-99';
 	let _b = b.date_of_birth || '9999-99-99';
