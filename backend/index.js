@@ -2493,17 +2493,19 @@ async function get_event_results(connection, id) {
 	result.unfinished_zones = cached_rider.unfinished_zones;
 	rider.results[ev] = result;
 
-	for (let n in cached_rider.marks_distribution) {
-	  if (cached_rider.marks_distribution[n] != null) {
-	    rider.marks_distribution[n] =
-	      (rider.marks_distribution[n] || 0) +
-	      cached_rider.marks_distribution[n];
+	if (!(cached_rider.failure || cached_rider.non_competing)) {
+	  for (let n in cached_rider.marks_distribution) {
+	    if (cached_rider.marks_distribution[n] != null) {
+	      rider.marks_distribution[n] =
+		(rider.marks_distribution[n] || 0) +
+		cached_rider.marks_distribution[n];
+	    }
 	  }
-	}
 
-	for (let field of ['marks', 'additional_marks', 'penalty_marks']) {
-	  if (cached_rider[field] !== undefined)
-	    rider[field] = (rider[field] || 0) + cached_rider[field];
+	  for (let field of ['marks', 'additional_marks', 'penalty_marks']) {
+	    if (cached_rider[field] !== undefined)
+	      rider[field] = (rider[field] || 0) + cached_rider[field];
+	  }
 	}
       }
     }
@@ -2517,8 +2519,9 @@ async function get_event_results(connection, id) {
 	rider.unfinished_zones = 0;
 	for (let ev = 0; ev < events.length; ev++) {
 	  let result = rider.results[ev];
-	  if (!result || result.unfinished_zones != 0) {
-	    if (result) {
+	  if (!result || result.failure || result.non_competing ||
+	      result.unfinished_zones != 0) {
+	    if (result && !(result.failure || result.non_competing)) {
 	      rider.unfinished_zones += result.unfinished_zones || 0;
 	      ev++;
 	    }
