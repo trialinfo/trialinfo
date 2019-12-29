@@ -2458,10 +2458,11 @@ async function get_event_results(connection, id) {
 	continue;
 
       let rider = base_rider(cached_rider);
-      for (let field of ['rank'])
+      for (let field of ['rank', 'marks', 'marks_distribution',
+			 'decisive_marks', 'failure', 'non_competing'])
 	rider[field] = cached_rider[field];
       let result = rider_result(cached_rider, events[0], ranking_class);
-      for (let field of ['decisive_marks', 'decisive_round'])
+      for (let field of ['decisive_round'])
 	result[field] = cached_rider[field];
       rider.results.push(result);
 

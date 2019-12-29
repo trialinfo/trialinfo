@@ -196,7 +196,7 @@ table.ranking tr td.important {
 	    <td ng-repeat="round in (!features.individual_marks ? enumerate(1, event_ranking.rounds) : [])" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{result.decisive_round == round ? 'important' : ''}}" ng-bind-html="result.marks_in_round(round)"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.additional_marks">{{result.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.penalty_marks">{{result.penalty_marks | fractional}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}"><span title="{{failure(result)}}">{{failure(result)}}</span></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" ng-if="events.length > 1" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}"><span title="{{failure(result)}}">{{failure(result)}}</span></td>
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-if-start="result && !(result.failure || result.non_competing)" style="display:none"></td>
 	    <td ng-repeat="zone in (features.individual_marks ? event_ranking.zones : [])" style="text-align:right" class="individual-marks">{{result.marks_in_zone(1, zone)}}</th>
@@ -204,23 +204,28 @@ table.ranking tr td.important {
 	    <td ng-repeat="round in (!features.individual_marks ? enumerate(1, event_ranking.rounds) : [])" rowspan="{{rows_per_rider}}" style="text-align:right" class="round {{result.decisive_round == round ? 'important' : ''}}" ng-bind-html="result.marks_in_round(round)"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.additional_marks">{{result.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.penalty_marks">{{result.penalty_marks | fractional}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{result.marks | fractional}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[0]" class="distribution {{result.decisive_marks == 0 ? 'important' : ''}}">{{result.marks_distribution[0]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[1]" class="distribution {{result.decisive_marks == 1 ? 'important' : ''}}">{{result.marks_distribution[1]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[2]" class="distribution {{result.decisive_marks == 2 ? 'important' : ''}}">{{result.marks_distribution[2]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[3]" class="distribution {{result.decisive_marks == 3 ? 'important' : ''}}">{{result.marks_distribution[3]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[4]" class="distribution {{result.decisive_marks == 4 ? 'important' : ''}}">{{result.marks_distribution[4]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[5]" class="distribution {{result.decisive_marks == 5 ? 'important' : ''}}">{{result.marks_distribution[5]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1">{{result.marks | fractional}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[0]" class="distribution">{{result.marks_distribution[0]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[1]" class="distribution">{{result.marks_distribution[1]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[2]" class="distribution">{{result.marks_distribution[2]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[3]" class="distribution">{{result.marks_distribution[3]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[4]" class="distribution">{{result.marks_distribution[4]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[5]" class="distribution">{{result.marks_distribution[5]}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.tie_break">{{result.tie_break ? result.tie_break + '.' : ''}}</td>
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-repeat-end style="display:none"></td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1">{{rider.marks | fractional}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[0]" class="distribution {{rider.decisive_marks == 0 ? 'important' : ''}}">{{rider.marks_distribution[0]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[1]" class="distribution {{rider.decisive_marks == 1 ? 'important' : ''}}">{{rider.marks_distribution[1]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[2]" class="distribution {{rider.decisive_marks == 2 ? 'important' : ''}}">{{rider.marks_distribution[2]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[3]" class="distribution {{rider.decisive_marks == 3 ? 'important' : ''}}">{{rider.marks_distribution[3]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[4]" class="distribution {{rider.decisive_marks == 4 ? 'important' : ''}}">{{rider.marks_distribution[4]}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="events.length > 1 && distribution[5]" class="distribution {{rider.decisive_marks == 5 ? 'important' : ''}}">{{rider.marks_distribution[5]}}</td>
+	    <td ng-if-start="rider.failure || rider.non_competing" style="display:none"></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + marks_distribution_columns}}"><span title="{{failure(rider)}}">{{failure(rider)}}</span></td>
+	    <td ng-if-end style="display:none"></td>
+	    <td ng-if-start="!(rider.failure || rider.non_competing)" style="display:none"></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rider.marks | fractional}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[0]" class="distribution {{rider.decisive_marks == 0 ? 'important' : ''}}">{{rider.marks_distribution[0]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[1]" class="distribution {{rider.decisive_marks == 1 ? 'important' : ''}}">{{rider.marks_distribution[1]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[2]" class="distribution {{rider.decisive_marks == 2 ? 'important' : ''}}">{{rider.marks_distribution[2]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[3]" class="distribution {{rider.decisive_marks == 3 ? 'important' : ''}}">{{rider.marks_distribution[3]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[4]" class="distribution {{rider.decisive_marks == 4 ? 'important' : ''}}">{{rider.marks_distribution[4]}}</td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[5]" class="distribution {{rider.decisive_marks == 5 ? 'important' : ''}}">{{rider.marks_distribution[5]}}</td>
+	    <td ng-if-end style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.scores">{{rider.score | fractional}}</td>
 	  </tr>
 	  <tr ng-repeat="round in (features.individual_marks ? enumerate(2, rounds) : [])">
