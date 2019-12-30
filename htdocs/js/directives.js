@@ -208,29 +208,38 @@
   });
 
   // Model: -1 <=> '-', 0, 1, 2, 3, 4 (when allowed), 5, null <=> ''
+  // (For uci_x10 events: 10, 20, ... instead of 1, 2, ...)
   module.directive('marks', function() {
     return {
       restrict: 'A',
       require: 'ngModel',
       link: function($scope, element, attr, ngModel) {
 	ngModel.$parsers.push(function(text) {
-	  var four_marks;
-	  try {
-	    four_marks = $scope.event.four_marks;
-	  } catch(_) {}
+	  var valid = false, value = +text;
 
 	  if (typeof text == 'string') {
 	    if (text == '') {
-	      ngModel.$setValidity('marks', true);
-	      return null;
+	      value = null;
+	      valid = true;
 	    } else if (text == '-') {
-	      ngModel.$setValidity('marks', true);
-	      return -1;
-	    } else if (text.match(/^[012345]$/) && (four_marks || text != '4')) {
-	      ngModel.$setValidity('marks', true);
-	      return +text;
-	    } else
-	      ngModel.$setValidity('marks', false);
+	      value = -1;
+	      valid = true;
+	    } else if ($scope.event.uci_x10) {
+	      if (text.match(/^(0|[1-6]0)$/))
+		valid = true;
+	      else if (text.match(/^[1-6]$/)) {
+		value = value * 10;
+		ngModel.$setViewValue(value + '');
+		ngModel.$render();
+		valid = true;
+	      }
+	    } else {
+	      if (text.match(/^[0-5]$/) &&
+		  ($scope.event.four_marks || text != '4'))
+		valid = true;
+	    }
+	    ngModel.$setValidity('marks', valid);
+	    return value;
 	  }
 	});
 	ngModel.$formatters.push(function(value) {
