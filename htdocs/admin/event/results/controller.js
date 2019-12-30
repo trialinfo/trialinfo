@@ -182,13 +182,23 @@ var eventResultsController = [
       $scope.distribution = [];
       $scope.marks_distribution_columns = 0;
       if (!features.individual_marks) {
-	$scope.distribution[0] = true;
-	$scope.marks_distribution_columns++;
-	if (event.type != 'otsv-acup') {
+	if (event.type == 'otsv-acup') {
+	  $scope.distribution[0] = true;
+	  $scope.marks_distribution_columns++;
+	} else if (event.uci_x10) {
 	  $scope.distribution[1] = true;
 	  $scope.distribution[2] = true;
 	  $scope.distribution[3] = true;
-	  $scope.marks_distribution_columns += 3;
+	  $scope.distribution[4] = true;
+	  $scope.distribution[5] = true;
+	  $scope.distribution[6] = true;
+	  $scope.marks_distribution_columns += 6;
+	} else {
+	  $scope.distribution[0] = true;
+	  $scope.distribution[1] = true;
+	  $scope.distribution[2] = true;
+	  $scope.distribution[3] = true;
+	  $scope.marks_distribution_columns += 4;
 	  if (event.four_marks) {
 	    $scope.distribution[4] = true;
 	    $scope.marks_distribution_columns++;
