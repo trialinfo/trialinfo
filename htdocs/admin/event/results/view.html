@@ -183,6 +183,7 @@ table.ranking tr td.important {
 	    <th style="text-align:right" ng-if="distribution[4]" adjust-width="marks-distribution">{{event.uci_x10 ? '40' : '4'}}</th>
 	    <th style="text-align:right" ng-if="distribution[5]" adjust-width="marks-distribution">{{event.uci_x10 ? '50' : '5'}}</th>
 	    <th style="text-align:right" ng-if="distribution[6]" adjust-width="marks-distribution">{{event.uci_x10 ? '60' : '6'}}</th>
+	    <th style="text-align:left" ng-if="features.explain_rank && class_ranking.explain_rank" adjust-width="explain-rank">Bemerkung</th>
 	    <th style="text-align:right" ng-if="class_ranking.scores" adjust-width="scores"><span title="{{'Wertungspunkte' + (ranking.main_ranking ? ' in ' + ranking.main_ranking_name : '')}}">WP</span></th>
 	  </tr>
 	</thead>
@@ -218,7 +219,7 @@ table.ranking tr td.important {
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-repeat-end style="display:none"></td>
 	    <td ng-if-start="rider.failure || rider.non_competing" style="display:none"></td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + marks_distribution_columns}}"><span title="{{failure(rider)}}">{{failure(rider)}}</span></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + marks_distribution_columns + (features.explain_rank && class_ranking.explain_rank)}}"><span title="{{failure(rider)}}">{{failure(rider)}}</span></td>
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-if-start="!(rider.failure || rider.non_competing)" style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rider.marks | fractional}}</td>
@@ -229,6 +230,9 @@ table.ranking tr td.important {
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[4]" class="distribution {{rider.decisive_marks == 4 ? 'important' : ''}}">{{rider.marks_distribution[4]}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[5]" class="distribution {{rider.decisive_marks == 5 ? 'important' : ''}}">{{rider.marks_distribution[5]}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="distribution[6]" class="distribution {{rider.decisive_marks == 6 ? 'important' : ''}}">{{rider.marks_distribution[6]}}</td>
+	    <td ng-if-end style="display:none"></td>
+	    <td ng-if-start="!(rider.failure || rider.non_competing)" style="display:none"></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:left" ng-if="features.explain_rank && class_ranking.explain_rank">{{explain_rank(class_ranking.riders, $index)}}</td>
 	    <td ng-if-end style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.scores">{{rider.score | fractional}}</td>
 	  </tr>

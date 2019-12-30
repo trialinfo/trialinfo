@@ -2831,7 +2831,7 @@ async function get_event_results(connection, id) {
     (field) => { hash.event[field] = last_event[field]; }
   );
   rider_public_fields.concat([
-    'number', 'additional_marks', 'individual_marks', 'column_5'
+    'number', 'additional_marks', 'individual_marks', 'column_5', 'explain_rank'
   ]).forEach((feature) => {
     hash.event.features[feature] = last_event.features[feature];
   });
@@ -2850,6 +2850,9 @@ async function get_event_results(connection, id) {
 	  ranking_class.riders.some((rider) =>
 	    (rider.results[ev] || {}).tie_break);
       }
+      ranking_class.explain_rank =
+	ranking_class.riders.some((rider) =>
+	  rider.decisive_marks != null);
     }
   }
 

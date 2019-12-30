@@ -181,7 +181,7 @@ var eventResultsController = [
 
       $scope.distribution = [];
       $scope.marks_distribution_columns = 0;
-      if (!features.individual_marks) {
+      if (!features.individual_marks && !features.explain_rank) {
 	if (event.type == 'otsv-acup') {
 	  $scope.distribution[0] = true;
 	  $scope.marks_distribution_columns++;
@@ -326,6 +326,29 @@ var eventResultsController = [
 	country_province.push('(' + rider.province + ')');
       return country_province.join(' ');
     };
+
+    $scope.explain_rank = function(riders, index) {
+      let rider = riders[index];
+      let previous_rider;
+      if (index > 0)
+	previous_rider = riders[index - 1];
+
+      let marks = [];
+      if (previous_rider && previous_rider.decisive_marks != null)
+	marks.push(previous_rider.decisive_marks);
+      if (rider.decisive_marks != null)
+	marks.push(rider.decisive_marks);
+      if (marks.length == 2) {
+	if (marks[0] == marks[1])
+	  marks.pop();
+	else if (marks[0] > marks[1])
+	  [marks[0],marks[1]] = [marks[1],marks[0]];
+      }
+      return marks.map(
+        (marks) => rider.marks_distribution[marks] + '×' +
+		   marks + (features.uci_x10 ? '0' : '')
+      ).join(', ');
+    }
 
     var defined_fields = {
       number:
