@@ -563,6 +563,22 @@ async function update_database(connection) {
       ADD unfinished_zones INT
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'uci_x10')) {
+    console.log('Adding column `uci_x10` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD uci_x10 BOOLEAN AFTER enabled
+    `);
+  }
+
+  if (!await column_exists(connection, 'riders', 's6')) {
+    console.log('Adding column `s6` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD s6 INT AFTER s5
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1266,7 +1282,7 @@ async function read_riders(connection, id, revalidate, number) {
 
     delete row.id;
     row.marks_distribution = [];
-    for (let n = 0; n <= 5; n++) {
+    for (let n = 0; 's'+n in row; n++) {
       if (row['s'+n] != null)
         row.marks_distribution[n] = row['s'+n];
       delete row['s'+n];
@@ -2811,7 +2827,7 @@ async function get_event_results(connection, id) {
     }
   }
 
-  ['four_marks', 'split_score', 'type', 'result_columns'].forEach(
+  ['four_marks', 'uci_x10', 'split_score', 'type', 'result_columns'].forEach(
     (field) => { hash.event[field] = last_event[field]; }
   );
   rider_public_fields.concat([
@@ -3443,8 +3459,10 @@ async function update(connection, table, keys, nonkeys, old_values, new_values, 
 
 function flatten_marks_distribution(rider) {
   if (rider.marks_distribution) {
-    for (let n = 0; n <= 5; n++)
-      rider['s' + n] = rider.marks_distribution[n];
+    for (let n = 0; n < rider.marks_distribution.length; n++) {
+      if (rider.marks_distribution[n] !== undefined)
+        rider['s'+n] = rider.marks_distribution[n];
+    }
     delete rider.marks_distribution;
   }
 }

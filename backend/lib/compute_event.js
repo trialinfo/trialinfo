@@ -112,12 +112,24 @@ function compute_event(cached_riders, event, compute_marks) {
 	      if (zone_skipped) {
 		rider.unfinished_zones++;
 	      } else {
-		rider.marks_per_round[round - 1] +=
-		  (marks == -1) ? marks_skipped_zone : marks;
-		if (marks >= 0 && marks <= 5) {
-		  if (rider.marks_distribution.length == 0)
+		let actual_marks = (marks == -1) ? marks_skipped_zone : marks;
+		rider.marks_per_round[round - 1] += actual_marks;
+
+		let index;
+		if (event.uci_x10) {
+		  if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
+		    index = actual_marks / 10;
+		} else {
+		  if (actual_marks >= 0 && actual_marks <= 5)
+		    index = actual_marks;
+		}
+		if (index != null) {
+		  if (rider.marks_distribution.length == 0) {
 		    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
-		  rider.marks_distribution[marks]++;
+		    if (event.uci_x10)
+		      rider.marks_distribution.push(0);
+		  }
+		  rider.marks_distribution[index]++;
 		}
 		last_started_round = round;
 	      }
@@ -210,8 +222,11 @@ function compute_event(cached_riders, event, compute_marks) {
 
 	    for (let index in rider.marks_distribution) {
 	      if (rider.marks_distribution[index] != null) {
-		if (group.marks_distribution.length == 0)
+		if (group.marks_distribution.length == 0) {
 		  group.marks_distribution = [0, 0, 0, 0, 0, 0];
+		  if (event.uci_x10)
+		    group.marks_distribution.push(0);
+		}
 	        group.marks_distribution[index] +=
 	          rider.marks_distribution[index];
 	      }
@@ -291,7 +306,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	(a.non_competing - b.non_competing) ||
 	(!b.failure - !a.failure) ||
 	(a.unfinished_zones - b.unfinished_zones) ||
-	(a.marks - b.marks) ||
+	(event.uci_x10 ? (b.marks - a.marks) : (a.marks - b.marks)) ||
 	(a.tie_break - b.tie_break);
       if (cmp)
 	return cmp;
@@ -310,13 +325,25 @@ function compute_event(cached_riders, event, compute_marks) {
 	return _a.localeCompare(_b);
       }
 
-      /* More cleaned sections win, etc. */
-      for (let n = 0; n < 5; n++) {
+      function compare_marks_distribution(a, b, n) {
 	cmp = b.marks_distribution[n] - a.marks_distribution[n];
-	if (cmp) {
-	  if (set_decisive)
-	    set_decisive.marks(cmp < 0 ? a : b, n);
-	  return cmp;
+	if (cmp && set_decisive)
+	  set_decisive.marks(cmp < 0 ? a : b, n);
+	return cmp;
+      }
+
+      /* More cleaned sections win, etc. */
+      if (event.uci_x10) {
+	for (let n = 6; n >= 0; n--) {
+	  cmp = compare_marks_distribution(a, b, n);
+	  if (cmp)
+	    return cmp;
+	}
+      } else {
+	for (let n = 0; n < 6; n++) {
+	  cmp = compare_marks_distribution(a, b, n);
+	  if (cmp)
+	    return cmp;
 	}
       }
 
@@ -327,7 +354,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	  if (event.equal_marks_resolution == 1) {
 	    /* First better round wins */
 	    for (let n = 0; n < ra.length; n++) {
-	      cmp = ra[n] - rb[n];
+	      cmp = event.uci_x10 ? (rb[n] - ra[n]) : (ra[n] - rb[n]);
 	      if (cmp) {
 		if (set_decisive)
 		  set_decisive.round(cmp < 0 ? a : b, n + 1);
@@ -337,7 +364,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	  } else {
 	    /* Last better round wins */
 	    for (let n = ra.length - 1; n >= 0; n--) {
-	      cmp = ra[n] - rb[n];
+	      cmp = event.uci_x10 ? (rb[n] - ra[n]) : (ra[n] - rb[n]);
 	      if (cmp) {
 		if (set_decisive)
 		  set_decisive.round(cmp < 0 ? a : b, n + 1);
