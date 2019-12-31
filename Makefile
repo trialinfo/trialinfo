@@ -9,7 +9,7 @@ MARKOC = backend/node_modules/marko/bin/markoc
 
 # AngularJS
 ANGULAR_BASE=https://code.angularjs.org
-ANGULAR_VERSION=1.6.8
+ANGULAR_VERSION=1.7.9
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular.js \

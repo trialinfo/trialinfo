@@ -248,6 +248,8 @@ var marksController = [
 	    var zones = event.zones[rc - 1] || [];
 	    rider.rounds = 0;
 	    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
+	    if (event.uci_x10)
+	      rider.marks_distribution.push(0);
 	    delete $scope.zones_skipped;
 	    var skipped = false;
 	    var round;
@@ -261,12 +263,18 @@ var marksController = [
 		  if (marks == null)
 		    skipped = true;
 		  else if (!skipped) {
-		    if (marks == -1)
-		      marks_in_round += event.marks_skipped_zone;
-		    else {
-		      marks_in_round += marks;
-		      rider.marks_distribution[marks]++;
+		    let actual_marks = (marks == -1) ? event.marks_skipped_zone : marks;
+		    marks_in_round += actual_marks;
+		    let index;
+		    if (event.uci_x10) {
+		      if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
+			index = actual_marks / 10;
+		    } else {
+		      if (actual_marks >= 0 && actual_marks <= 5)
+			index = actual_marks;
 		    }
+		    if (index != null)
+		      rider.marks_distribution[index]++;
 		    round_used = true;
 		  } else
 		    $scope.zones_skipped = true;
@@ -281,6 +289,8 @@ var marksController = [
 	  } else {
 	    rider.rounds = null;
 	    rider.marks_distribution = [null, null, null, null, null, null];
+	    if (event.uci_x10)
+	      rider.marks_distribution.push(null);
 	  }
 	}
       }

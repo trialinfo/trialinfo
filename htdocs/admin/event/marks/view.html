@@ -27,7 +27,8 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" style="text-align:center">
-		    <input ng-if="!event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
+		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
+		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
 		  </td>
 		  <td style="text-align:right;font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
@@ -59,7 +60,7 @@
 		<td>
 		  <input type="text" size="4" value="{{rider.marks}}" disabled="disabled">
 		    <span ng-if="(rider.registered || !features.registered) && rider.start" style="font-weight:bold">
-		    &nbsp; (<span ng-repeat="h in rider.marks_distribution track by $index"><span ng-if="event.four_marks || $index != 4" title="Anzahl der {{$index}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
+		    &nbsp; (<span ng-repeat="h in rider.marks_distribution track by $index"><span ng-if="event.four_marks || $index != 4" title="Anzahl der {{$index * (event.uci_x10 ? 10 : 1)}}er">{{h || '-'}}<span ng-if="!$last"> &nbsp;</span></span></span>)
 		    </span>
 		</td>
 	      </tr>

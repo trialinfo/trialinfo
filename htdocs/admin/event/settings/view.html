@@ -92,8 +92,10 @@ a:hover.updown {
       <label for="marks_skipped_zone">Für das Auslassen einer Sektion gibt es <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.marks_skipped_zone" id="marks_skipped_zone" style="text-align: center"> Punkte.</label>
     </p>
     <p>
-      <input type="checkbox" ng-model="event.four_marks" id="four_marks">
-        <label for="four_marks">Es gilt die Vierpunktewertung (Fahrradtrial).</label>
+      <input type="checkbox" ng-model="event.uci_x10" id="uci_x10">
+        <label for="uci_x10">UCI Sektoren-Wertung (Fahrradtrial).</label><br>
+      <input type="checkbox" ng-model="event.four_marks" ng-disabled="event.uci_x10" id="four_marks">
+	<label for="four_marks">Es gilt die Vierpunktewertung (Fahrradtrial).</label><br>
     </p>
     <p>
       <label for="equal_marks_resolution">Bei Gleichstand zählt das Rundenergebnis
@@ -385,8 +387,10 @@ a:hover.updown {
 	<p>
 	  <input type="checkbox" ng-model="features.individual_marks" id="feature_einzelpunkte">
 	    <label for="feature_einzelpunkte">Einzelpunkte statt Punkteverteilung</label><br>
-	  <input type="checkbox" ng-model="features.column_5" id="feature_spalte5er">
-	    <label for="feature_spalte5er">Spalte für Fünfer in Punkteverteilung</label><br>
+	  <input type="checkbox" ng-disabled="event.uci_x10 || features.individual_marks" ng-model="features.column_5" id="feature_spalte5">
+	    <label for="feature_spalte5">Spalte für Fünfer in Punkteverteilung</label><br>
+	  <input type="checkbox" ng-model="features.explain_rank" id="feature_explain_rank">
+	    <label for="feature_explain_rank">Erklärung der Platzierung statt Punkteverteilung</label><br>
 	</p>
     </fieldset>
   </fieldset><br>

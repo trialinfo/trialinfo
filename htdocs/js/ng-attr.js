@@ -11,13 +11,13 @@
   function ngAttrDirective($parse) {
     return {
       restrict: 'A',
-      link: function(scope, element, attrs) {
+      link: function($scope, element, attrs) {
         var el = element[0];
 
-        scope.$watch(attrs.ngAttr, setAttributes, true);
+        $scope.$watch(attrs.ngAttr, setAttributes, true);
 
         function setAttributes() {
-          var attrsAndValueRefs = $parse(attrs.ngAttr)(scope) || {};
+          var attrsAndValueRefs = $parse(attrs.ngAttr)($scope) || {};
 
           Object
             .keys(attrsAndValueRefs)

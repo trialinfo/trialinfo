@@ -38,14 +38,14 @@
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
-	  var value = parse_iso_date(scope, text);
-	  ctrl.$setValidity('isoDate', value !== undefined);
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
+	  var value = parse_iso_date($scope, text);
+	  ngModel.$setValidity('isoDate', value !== undefined);
 	  return value;
 	});
-	ctrl.$formatters.push(function(value) {
-	  return format_iso_date(scope, value, 'd.M.yyyy');
+	ngModel.$formatters.push(function(value) {
+	  return format_iso_date($scope, value, 'd.M.yyyy');
 	});
       }
     };
@@ -83,14 +83,14 @@
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
-	  var value = parse_iso_time(scope, text);
-	  ctrl.$setValidity('isoTime', value !== undefined);
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
+	  var value = parse_iso_time($scope, text);
+	  ngModel.$setValidity('isoTime', value !== undefined);
 	  return value;
 	});
-	ctrl.$formatters.push(function(value) {
-	  return format_iso_time(scope, value, 'H:mm', 'H:mm:ss');
+	ngModel.$formatters.push(function(value) {
+	  return format_iso_time($scope, value, 'H:mm', 'H:mm:ss');
 	});
       }
     };
@@ -111,7 +111,7 @@
     return value;
   }
 
-  function parse_iso_timestamp(scope, text) {
+  function parse_iso_timestamp($scope, text) {
     if (typeof text == 'string' && text == '')
       return null;
     else {
@@ -119,12 +119,12 @@
       if (split.length > 2)
 	return undefined;
       if (split.length >= 1) {
-	split[0] = parse_iso_date(scope, split[0]);
+	split[0] = parse_iso_date($scope, split[0]);
 	if (split[0] === undefined)
 	  return undefined;
       }
       if (split.length == 2) {
-	split[1] = parse_iso_time(scope, split[1]);
+	split[1] = parse_iso_time($scope, split[1]);
 	if (split[1] === undefined)
 	  return undefined;
       } else
@@ -138,14 +138,14 @@
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
-	  var value = parse_iso_timestamp(scope, text);
-	  ctrl.$setValidity('isoTime', value !== undefined);
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
+	  var value = parse_iso_timestamp($scope, text);
+	  ngModel.$setValidity('isoTime', value !== undefined);
 	  return value;
 	});
-	ctrl.$formatters.push(function(value) {
-	  return format_iso_timestamp(scope, value);
+	ngModel.$formatters.push(function(value) {
+	  return format_iso_timestamp($scope, value);
 	});
       }
     };
@@ -156,20 +156,20 @@
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
 	  if (typeof text == 'string') {
 	    if (text == '-') {
-	      ctrl.$setValidity('yesNoNull', true);
+	      ngModel.$setValidity('yesNoNull', true);
 	      return null;
 	    } else if (text === 'yes' || text === 'no') {
-	      ctrl.$setValidity('yesNoNull', true);
+	      ngModel.$setValidity('yesNoNull', true);
 	      return text === 'yes';
 	    } else
-	      ctrl.$setValidity('yesNoNull', false);
+	      ngModel.$setValidity('yesNoNull', false);
 	  }
 	});
-	ctrl.$formatters.push(function(value) {
+	ngModel.$formatters.push(function(value) {
 	  if (value == null)
 	    return '-';
 	  if (typeof value == 'boolean')
@@ -186,18 +186,18 @@
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(ranking_class) {
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(ranking_class) {
 	  if (typeof ranking_class === 'string') {
-	    ctrl.$setValidity('rankingClass', true);
+	    ngModel.$setValidity('rankingClass', true);
 	    if (ranking_class === '')
 	      return attr.rankingClass;
 	    else
 	      return ranking_class;
 	  }
-	  ctrl.$setValidity('rankingClass', false);
+	  ngModel.$setValidity('rankingClass', false);
 	});
-	ctrl.$formatters.push(function(ranking_class) {
+	ngModel.$formatters.push(function(ranking_class) {
 	  if (ranking_class === attr.rankingClass)
 	    return '';
 	  else
@@ -208,32 +208,41 @@
   });
 
   // Model: -1 <=> '-', 0, 1, 2, 3, 4 (when allowed), 5, null <=> ''
+  // (For uci_x10 events: 10, 20, ... instead of 1, 2, ...)
   module.directive('marks', function() {
     return {
       restrict: 'A',
       require: 'ngModel',
-      link: function(scope, element, attr, ctrl) {
-	ctrl.$parsers.push(function(text) {
-	  var four_marks;
-	  try {
-	    four_marks = scope.event.four_marks;
-	  } catch(_) {}
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
+	  var valid = false, value = +text;
 
 	  if (typeof text == 'string') {
 	    if (text == '') {
-	      ctrl.$setValidity('marks', true);
-	      return null;
+	      value = null;
+	      valid = true;
 	    } else if (text == '-') {
-	      ctrl.$setValidity('marks', true);
-	      return -1;
-	    } else if (text.match(/^[012345]$/) && (four_marks || text != '4')) {
-	      ctrl.$setValidity('marks', true);
-	      return +text;
-	    } else
-	      ctrl.$setValidity('marks', false);
+	      value = -1;
+	      valid = true;
+	    } else if ($scope.event.uci_x10) {
+	      if (text.match(/^(0|[1-6]0)$/))
+		valid = true;
+	      else if (text.match(/^[1-6]$/)) {
+		value = value * 10;
+		ngModel.$setViewValue(value + '');
+		ngModel.$render();
+		valid = true;
+	      }
+	    } else {
+	      if (text.match(/^[0-5]$/) &&
+		  ($scope.event.four_marks || text != '4'))
+		valid = true;
+	    }
+	    ngModel.$setValidity('marks', valid);
+	    return value;
 	  }
 	});
-	ctrl.$formatters.push(function(value) {
+	ngModel.$formatters.push(function(value) {
 	  if (value == null)
 	    return '';
 	  else if (value == -1)
@@ -248,8 +257,8 @@
   module.directive('strikeThrough', function() {
     return {
       restrict: 'AC',
-      link: function(scope, element, attr, ctrl) {
-	scope.$watch(attr.strikeThrough, function(value) {
+      link: function($scope, element, attr) {
+	$scope.$watch(attr.strikeThrough, function(value) {
 	  element.css('text-decoration', value ? 'line-through' : '');
 	}, true);
       }
@@ -273,7 +282,7 @@
   module.directive('autofocus', function() {
     return {
       restrict: 'A',
-      link: function (scope, element, attrs) {
+      link: function ($scope, element, attrs) {
 	element[0].focus();
       }
     };
@@ -282,39 +291,19 @@
   module.directive('tabTo', function() {
     return {
       restrict: 'A',
-      controller: function($scope, $timeout) {
-	$scope.timeout = $timeout;
-      },
-      link: function (scope, element, attr) {
-	if (navigator.userAgent.match(/iPad|iPhone/)) {
-	  /* Auf iPhone und iPad verschwindet die Bildschirmtatstatur, sobald
-	     einem Feld der Fokus entzogen wird, das würde die Eingabe sehr
-	     erschweren. */
-	  return;
-	}
-	function good_key(event) {
-	  return !(event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) &&
-		 event.which > 46 && event.which <= 222 &&
-		 (event.which < 112 /* F1 */ || event.which > 123 /* F12 */);
-	}
-	element.bind('keydown', function(event) {
-	  if (good_key(event)) {
-	    scope.timeout(function() {
-	      if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
-		var selector = scope.$eval(attr.tabTo);
-		if (selector !== undefined) {
-		  if (selector === null)
-		    element[0].blur();
-		  else {
-		    var next = document.getElementById(selector);
-		    if (next) {
-		      next.focus();
-		      next.select();
-		    }
-		  }
-		}
+      link: function ($scope, element, attr) {
+	element.bind('input', function(event) {
+	  if (event.data == null)
+	    return;
+	  if (!event.target || !event.target.className.match(/\bng-invalid\b/)) {
+	    var selector = $scope.$eval(attr.tabTo);
+	    if (selector != null) {
+	      var next = document.getElementById(selector);
+	      if (next) {
+		next.focus();
+		next.select();
 	      }
-	    }, 20);
+	    }
 	  }
 	});
       }

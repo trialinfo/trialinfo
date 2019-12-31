@@ -568,6 +568,22 @@ async function update_database(connection) {
       ADD unfinished_zones INT
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'uci_x10')) {
+    console.log('Adding column `uci_x10` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD uci_x10 BOOLEAN AFTER enabled
+    `);
+  }
+
+  if (!await column_exists(connection, 'riders', 's6')) {
+    console.log('Adding column `s6` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD s6 INT AFTER s5
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1271,7 +1287,7 @@ async function read_riders(connection, id, revalidate, number) {
 
     delete row.id;
     row.marks_distribution = [];
-    for (let n = 0; n <= 5; n++) {
+    for (let n = 0; 's'+n in row; n++) {
       if (row['s'+n] != null)
         row.marks_distribution[n] = row['s'+n];
       delete row['s'+n];
@@ -2463,10 +2479,11 @@ async function get_event_results(connection, id) {
 	continue;
 
       let rider = base_rider(cached_rider);
-      for (let field of ['rank'])
+      for (let field of ['rank', 'marks', 'marks_distribution',
+			 'decisive_marks', 'failure', 'non_competing'])
 	rider[field] = cached_rider[field];
       let result = rider_result(cached_rider, events[0], ranking_class);
-      for (let field of ['decisive_marks', 'decisive_round'])
+      for (let field of ['decisive_round'])
 	result[field] = cached_rider[field];
       rider.results.push(result);
 
@@ -2498,17 +2515,19 @@ async function get_event_results(connection, id) {
 	result.unfinished_zones = cached_rider.unfinished_zones;
 	rider.results[ev] = result;
 
-	for (let n in cached_rider.marks_distribution) {
-	  if (cached_rider.marks_distribution[n] != null) {
-	    rider.marks_distribution[n] =
-	      (rider.marks_distribution[n] || 0) +
-	      cached_rider.marks_distribution[n];
+	if (!(cached_rider.failure || cached_rider.non_competing)) {
+	  for (let n in cached_rider.marks_distribution) {
+	    if (cached_rider.marks_distribution[n] != null) {
+	      rider.marks_distribution[n] =
+		(rider.marks_distribution[n] || 0) +
+		cached_rider.marks_distribution[n];
+	    }
 	  }
-	}
 
-	for (let field of ['marks', 'additional_marks', 'penalty_marks']) {
-	  if (cached_rider[field] !== undefined)
-	    rider[field] = (rider[field] || 0) + cached_rider[field];
+	  for (let field of ['marks', 'additional_marks', 'penalty_marks']) {
+	    if (cached_rider[field] !== undefined)
+	      rider[field] = (rider[field] || 0) + cached_rider[field];
+	  }
 	}
       }
     }
@@ -2522,8 +2541,9 @@ async function get_event_results(connection, id) {
 	rider.unfinished_zones = 0;
 	for (let ev = 0; ev < events.length; ev++) {
 	  let result = rider.results[ev];
-	  if (!result || result.unfinished_zones != 0) {
-	    if (result) {
+	  if (!result || result.failure || result.non_competing ||
+	      result.unfinished_zones != 0) {
+	    if (result && !(result.failure || result.non_competing)) {
 	      rider.unfinished_zones += result.unfinished_zones || 0;
 	      ev++;
 	    }
@@ -2812,11 +2832,11 @@ async function get_event_results(connection, id) {
     }
   }
 
-  ['four_marks', 'split_score', 'type', 'result_columns'].forEach(
+  ['four_marks', 'uci_x10', 'split_score', 'type', 'result_columns'].forEach(
     (field) => { hash.event[field] = last_event[field]; }
   );
   rider_public_fields.concat([
-    'number', 'additional_marks', 'individual_marks', 'column_5'
+    'number', 'additional_marks', 'individual_marks', 'column_5', 'explain_rank'
   ]).forEach((feature) => {
     hash.event.features[feature] = last_event.features[feature];
   });
@@ -2835,6 +2855,9 @@ async function get_event_results(connection, id) {
 	  ranking_class.riders.some((rider) =>
 	    (rider.results[ev] || {}).tie_break);
       }
+      ranking_class.explain_rank =
+	ranking_class.riders.some((rider) =>
+	  rider.decisive_marks != null);
     }
   }
 
@@ -3444,8 +3467,10 @@ async function update(connection, table, keys, nonkeys, old_values, new_values, 
 
 function flatten_marks_distribution(rider) {
   if (rider.marks_distribution) {
-    for (let n = 0; n <= 5; n++)
-      rider['s' + n] = rider.marks_distribution[n];
+    for (let n = 0; n < rider.marks_distribution.length; n++) {
+      if (rider.marks_distribution[n] !== undefined)
+        rider['s'+n] = rider.marks_distribution[n];
+    }
     delete rider.marks_distribution;
   }
 }

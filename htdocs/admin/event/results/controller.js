@@ -181,14 +181,24 @@ var eventResultsController = [
 
       $scope.distribution = [];
       $scope.marks_distribution_columns = 0;
-      if (!features.individual_marks) {
-	$scope.distribution[0] = true;
-	$scope.marks_distribution_columns++;
-	if (event.type != 'otsv-acup') {
+      if (!features.individual_marks && !features.explain_rank) {
+	if (event.type == 'otsv-acup') {
+	  $scope.distribution[0] = true;
+	  $scope.marks_distribution_columns++;
+	} else if (event.uci_x10) {
 	  $scope.distribution[1] = true;
 	  $scope.distribution[2] = true;
 	  $scope.distribution[3] = true;
-	  $scope.marks_distribution_columns += 3;
+	  $scope.distribution[4] = true;
+	  $scope.distribution[5] = true;
+	  $scope.distribution[6] = true;
+	  $scope.marks_distribution_columns += 6;
+	} else {
+	  $scope.distribution[0] = true;
+	  $scope.distribution[1] = true;
+	  $scope.distribution[2] = true;
+	  $scope.distribution[3] = true;
+	  $scope.marks_distribution_columns += 4;
 	  if (event.four_marks) {
 	    $scope.distribution[4] = true;
 	    $scope.marks_distribution_columns++;
@@ -316,6 +326,29 @@ var eventResultsController = [
 	country_province.push('(' + rider.province + ')');
       return country_province.join(' ');
     };
+
+    $scope.explain_rank = function(riders, index) {
+      let rider = riders[index];
+      let previous_rider;
+      if (index > 0)
+	previous_rider = riders[index - 1];
+
+      let marks = [];
+      if (previous_rider && previous_rider.decisive_marks != null)
+	marks.push(previous_rider.decisive_marks);
+      if (rider.decisive_marks != null)
+	marks.push(rider.decisive_marks);
+      if (marks.length == 2) {
+	if (marks[0] == marks[1])
+	  marks.pop();
+	else if (marks[0] > marks[1])
+	  [marks[0],marks[1]] = [marks[1],marks[0]];
+      }
+      return marks.map(
+        (marks) => rider.marks_distribution[marks] + '×' +
+		   marks + (features.uci_x10 ? '0' : '')
+      ).join(', ');
+    }
 
     var defined_fields = {
       number:
