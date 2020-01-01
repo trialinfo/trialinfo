@@ -414,7 +414,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	rank = event.scores.length;
       score = event.scores[rank - 1] || 0;
     }
-    return score;
+    return score || null;
   }
 
   function assign_overall_rank(riders_at_rank, rank) {
