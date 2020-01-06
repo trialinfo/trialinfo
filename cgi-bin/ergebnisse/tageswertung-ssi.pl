@@ -40,7 +40,7 @@ trace_sql $dbh, 2, \*STDERR
 my $q = CGI->new;
 my $id = $q->param('id'); # veranstaltung
 my $wertung = $q->param('wertung') || 1;
-my @klassen = $q->param('klasse');
+my @klassen = $q->multi_param('klasse');
 
 my $bezeichnung;
 my $mtime;
