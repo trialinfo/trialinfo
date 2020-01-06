@@ -32,9 +32,9 @@ my $dbh = DBI->connect("DBI:$database", $username, $password, { db_utf8($databas
 
 my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
-my @nicht = $q->param('nicht');
+my @nicht = $q->multi_param('nicht');
 
-my @spalten = $q->param('spalte');
+my @spalten = $q->multi_param('spalte');
 my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
 my $mit_kuerzel = $q->param('kuerzel');
 

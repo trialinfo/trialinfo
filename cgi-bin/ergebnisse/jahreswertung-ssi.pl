@@ -37,7 +37,7 @@ trace_sql $dbh, 2, \*STDERR
 
 my $q = CGI->new;
 my $vareihe = $q->param('vareihe');
-my @klassen = $q->param('klasse');
+my @klassen = $q->multi_param('klasse');
 
 my $bezeichnung;
 my $laeufe;
