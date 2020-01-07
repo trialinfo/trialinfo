@@ -49,6 +49,8 @@ var random_shuffle = require('./lib/random_shuffle');
 
 var config = JSON.parse(fs.readFileSync('config.json'));
 
+const cache_max_age = 5 * 60 * 1000;  /* 5 min */
+
 var views = {
   'index': require('./views/index.marko.js'),
   'otsv.html': require('./views/otsv.marko.js'),
@@ -639,16 +641,25 @@ async function validate_user(connection, user) {
  * Cache
  */
 var cache = {
+  cached_event_timestamps: {},
   cached_events: {},
   saved_events: {},
+
+  _access_event: function(id) {
+    this.cached_event_timestamps[id] = Date.now();
+  },
+
   get_event: function(id) {
+    this._access_event(id);
     return this.cached_events[id];
   },
   set_event: function(id, event) {
+    this._access_event(id);
     delete this.saved_events[id];
     this.cached_events[id] = event;
   },
   modify_event: function(id) {
+    this._access_event(id);
     if (!(id in this.saved_events)) {
       var event = this.cached_events[id];
       this.saved_events[id] = event;
@@ -660,6 +671,7 @@ var cache = {
     return this.cached_events[id];
   },
   delete_event: function(id) {
+    this._access_event(id);
     delete this.saved_events[id];
     delete this.cached_events[id];
   },
@@ -670,16 +682,20 @@ var cache = {
   cached_riders: {},
   saved_riders: {},
   get_riders: function(id) {
+    this._access_event(id);
     return this.cached_riders[id] || {};
   },
   set_riders: function(id, riders) {
+    this._access_event(id);
     delete this.saved_riders[id];
     this.cached_riders[id] = riders;
   },
   get_rider: function(id, number) {
+    this._access_event(id);
     return (this.cached_riders[id] || {})[number];
   },
   modify_rider: function(id, number) {
+    this._access_event(id);
     if (!this.saved_riders[id])
       this.saved_riders[id] = {};
     if (!this.cached_riders[id])
@@ -696,11 +712,13 @@ var cache = {
     return this.cached_riders[id][number];
   },
   modify_riders: function(id) {
+    this._access_event(id);
     for (let number in this.cached_riders[id])
       this.modify_rider(id, number);
     return this.cached_riders[id];
   },
   delete_riders: function(id) {
+    this._access_event(id);
     delete this.saved_riders[id];
     delete this.cached_riders[id];
   },
@@ -713,12 +731,14 @@ var cache = {
     }
   },
   delete_rider: function(id, number) {
+    this._access_event(id);
     if (this.saved_riders[id])
       delete this.saved_riders[id][number];
     if (this.cached_riders[id])
       delete this.cached_riders[id][number];
   },
   set_rider: function(id, number, rider) {
+    this._access_event(id);
     if (this.saved_riders[id])
       delete this.saved_riders[id][number];
     if (rider) {
@@ -776,6 +796,21 @@ var cache = {
     if (this.transaction) {
       delete this.transaction;
       await connection.queryAsync(`ROLLBACK`);
+    }
+  },
+  expire: function() {
+    if (this.transaction)
+      return;
+
+    let expiry = Date.now() - cache_max_age;
+    for (let id in this.cached_event_timestamps) {
+      let accessed = this.cached_event_timestamps[id];
+      if (accessed < expiry) {
+	console.log('Expiring cache for event ' + id);
+	delete this.cached_events[id];
+	delete this.cached_riders[id];
+	delete this.cached_event_timestamps[id];
+      }
     }
   }
 };
@@ -1820,6 +1855,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.license = null;
     });
     event.base = null;
+    event.base_fid = null;
   }
 }
 
@@ -5893,10 +5929,6 @@ try {
 
   require('systemd');
   server.listen('systemd');
-
-  /* We don't get here unless started by systemd. */
-  require('autoquit');
-  server.autoQuit({timeout: 300 });
 } catch (_) {
   if (!config.http && !config.https)
     config.http = {};
@@ -5918,5 +5950,10 @@ try {
     https.createServer(options, app).listen(port);
   }
 };
+
+(function() {
+  const timer = setInterval(() => { cache.expire() }, cache_max_age / 10);
+  timer.unref();
+})();
 
 /* ex:set shiftwidth=2: */
