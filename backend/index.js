@@ -581,6 +581,14 @@ async function update_database(connection) {
       ADD s6 INT AFTER s5
     `);
   }
+
+  if (!await column_exists(connection, 'riders', 'achievements')) {
+    console.log('Adding column `achievements` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD achievements VARCHAR(40) AFTER email
+    `);
+  }
 }
 
 pool.getConnectionAsync()

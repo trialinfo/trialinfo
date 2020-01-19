@@ -178,6 +178,12 @@
 		<input ng-disabled="!enabled.rider" type="text" size="40" maxlength="60" nullable ng-model="rider.email" id="email" title="{{user_title()}}">
 	      </td>
 	    </tr>
+	    <tr ng-if="features.achievements">
+	      <th><label for="achievements">Erfolge</label></th>
+	      <td>
+		<input ng-disabled="!enabled.rider" type="text" size="30" maxlength="40" nullable ng-model="rider.achievements" id="achievements">
+	      </td>
+	    </tr>
 	    <tr ng-if="features.comment">
 	      <th><label for="comment">Bemerkungen</label></th>
 	      <td>
