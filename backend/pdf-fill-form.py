@@ -7,7 +7,7 @@ from PyQt5.QtCore import QFile, QIODevice
 from popplerqt5 import Poppler
 import tempfile
 import subprocess
-import fcntl
+import os
 
 def usage(err):
     print("USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}")
@@ -63,10 +63,6 @@ def fill_one(document, fields, fp):
     set_form_fields(document, fields)
     write_pdf(fp.fileno(), document)
 
-def clear_cloexec(fd):
-    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-    fcntl.fcntl(fd, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
-
 def main():
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "o:", ["fill", "out="])
@@ -90,8 +86,9 @@ def main():
 
     if opt_fill:
         fields = json.load(sys.stdin)
-        out = sys.stdout
-        if opt_out != None:
+        if opt_out == None:
+            out = os.fdopen(sys.stdout.fileno(), "wb")
+        else:
             out = open(opt_out, "wb")
 
         if isinstance(fields, dict):
@@ -106,20 +103,18 @@ def main():
                 orig_fields = get_form_fields(document)
                 fps = []
                 for fields in array:
-                    fp = tempfile.TemporaryFile()
-                    clear_cloexec(fp.fileno())
+                    fp = tempfile.NamedTemporaryFile()
                     fill_one(document, dict(orig_fields, **fields), fp)
                     fps.append(fp)
 
                 # Note: pdfunite wants a seekable output file, so we cannot
                 # pass it sys.stdout which may be a pipe.
 
-                tmp_out = tempfile.TemporaryFile()
-                clear_cloexec(tmp_out.fileno())
+                tmp_out = tempfile.NamedTemporaryFile()
                 fps.append(tmp_out);
 
                 cmd = ['pdfunite']
-                cmd.extend(map(lambda fp: '/proc/self/fd/%s' % fp.fileno(), fps))
+                cmd.extend(map(lambda fp: fp.name, fps))
                 subprocess.call(cmd)
 
                 while True:
