@@ -949,6 +949,13 @@ async function rider_regform_data(connection, id, number, event) {
     name.push(rider.first_name);
   rider.name = name.join(' ');
 
+  let name_country = [];
+  if (rider.name)
+    name_country.push(rider.name);
+  if (rider.country)
+    name_country.push('(' + rider.country + ')');
+  rider.name_country = name_country.join(' ');
+
   let country_province = [];
   if (rider.country)
     country_province.push(rider.country);
