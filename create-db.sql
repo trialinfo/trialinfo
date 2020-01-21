@@ -114,6 +114,8 @@ CREATE TABLE `events` (
   `start_spec` varchar(40) DEFAULT NULL,
   `main_ranking` int(11) DEFAULT NULL,
   `combine` tinyint(1) NOT NULL DEFAULT '0',
+  `country` varchar(15) DEFAULT NULL,
+  `hide_country` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -156,9 +156,9 @@ var eventResultsController = [
 	});
       });
 
-      if (event.type && event.type.match(/^otsv/) && event.type != 'otsv-acup') {
+      if (event.hide_country) {
 	function normalizeCountry(rider) {
-	  if (rider.country == 'A')
+	  if (rider.country == event.country)
 	    rider.country = null;
 	}
 
@@ -320,7 +320,8 @@ var eventResultsController = [
 
     $scope.country_province = function(rider) {
       var country_province = [];
-      if (rider.country)
+      if (rider.country &&
+	  (rider.country != event.country || !event.hide_country))
 	country_province.push(rider.country);
       if (rider.province)
 	country_province.push('(' + rider.province + ')');

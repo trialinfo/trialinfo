@@ -19,9 +19,9 @@ var serieResultsController = [
     $scope.serie = serie;
     $scope.features = features;
 
-    if (serie.type && serie.type.match(/^otsv/) && serie.type != 'otsv-acup') {
+    if (serie.hide_country) {
       function normalizeCountry(rider) {
-	if (rider.country == 'A')
+	if (rider.country == serie.country)
 	  rider.country = null;
       }
 
@@ -164,7 +164,8 @@ var serieResultsController = [
 
     $scope.country_province = function(rider) {
       var country_province = [];
-      if (rider.country)
+      if (rider.country &&
+	  (rider.country != serie.country || !serie.hide_country))
 	country_province.push(rider.country);
       if (rider.province)
 	country_province.push('(' + rider.province + ')');

@@ -67,7 +67,8 @@ if (my @row = $sth->fetchrow_array) {
 my $veranstaltungen_reihenfolge = [];
 
 $sth = $dbh->prepare(q{
-    SELECT DISTINCT id, date, title, subtitle, events.mtime, split_score, type
+    SELECT DISTINCT id, date, title, subtitle, events.mtime, split_score, type,
+		    country, hide_country
     FROM series_events
     JOIN series USING (serie)
     JOIN events USING (id)
@@ -95,6 +96,8 @@ while (my @row = $sth->fetchrow_array) {
 	unless defined $row[1] && !same_day($row[1]);
     $cfg->{punkteteilung} = $row[5];
     $cfg->{art} = $row[6];
+    $cfg->{land} = $row[7];
+    $cfg->{land_verbergen} = $row[8];
     push @$veranstaltungen_reihenfolge, $row[0];
     $letzte_id = $row[0];
 }
@@ -174,8 +177,9 @@ while (my $fahrer = $sth->fetchrow_hashref) {
     my $veranstaltung = $veranstaltungen->{$id};
     if ($veranstaltung) {
 	$fahrer->{land} = undef
-	    if ($veranstaltung->{cfg}{art} // '') =~ /^otsv/ &&
-	       defined $fahrer->{land} && $fahrer->{land} eq 'A';
+	    if defined $fahrer->{land} &&
+	       $fahrer->{land} eq $veranstaltung->{cfg}{land} &&
+	       $veranstaltung->{cfg}{land_verbergen};
 
 	my $startnummer = $fahrer->{startnummer};
 	$veranstaltung->{fahrer}{$startnummer} = $fahrer;

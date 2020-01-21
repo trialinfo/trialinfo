@@ -589,6 +589,22 @@ async function update_database(connection) {
       ADD achievements VARCHAR(80) AFTER email
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'country')) {
+    console.log('Adding column `country` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD country VARCHAR(15)
+    `);
+  }
+
+  if (!await column_exists(connection, 'events', 'hide_country')) {
+    console.log('Adding column `hide_country` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD hide_country BOOLEAN
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -952,7 +968,8 @@ async function rider_regform_data(connection, id, number, event) {
   let name_country = [];
   if (rider.name)
     name_country.push(rider.name);
-  if (rider.country)
+  if (rider.country &&
+      (rider.country != event.country || !event.hide_country))
     name_country.push('(' + rider.country + ')');
   rider.name_country = name_country.join(' ');
 
@@ -2880,7 +2897,7 @@ async function get_event_results(connection, id) {
     }
   }
 
-  ['four_marks', 'uci_x10', 'split_score', 'type', 'result_columns'].forEach(
+  ['four_marks', 'uci_x10', 'split_score', 'type', 'result_columns', 'country', 'hide_country'].forEach(
     (field) => { hash.event[field] = last_event[field]; }
   );
   rider_public_fields.concat([
@@ -3188,7 +3205,7 @@ async function get_serie_results(connection, serie_id) {
   };
 
   if (last_event) {
-    for (let key of ['type', 'split_score', 'result_columns'])
+    for (let key of ['type', 'split_score', 'result_columns', 'country', 'hide_country'])
       result.serie[key] = last_event[key];
 
     let features = {};
@@ -3889,6 +3906,7 @@ const register_event_fields = {
   registration_ends: true,
   registration_info: true,
   type: true,
+  country: true,
   version: true
 };
 

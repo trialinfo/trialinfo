@@ -118,7 +118,7 @@
 	  </span>
 	</td>
       </tr>
-      <tr ng-if="features.province && (!otsv_event() || rider.country == 'A')">
+      <tr ng-if="features.province && (!otsv_event() || rider.country == event.country)">
 	<th><label for="province">Bundesland</label></th>
 	<td ng-if="!otsv_event()">
 	  <input type="text" nullable size="15" maxlength="20" ng-model="rider.province" list="province_list" name="province">
@@ -126,7 +126,7 @@
 	    <option ng-repeat="province in suggestions.province" value="{{province}}">
 	  </datalist>
 	</td>
-	<td ng-if="otsv_event() && rider.country == 'A'">
+	<td ng-if="otsv_event() && rider.country == event.country">
 	  <select ng-model="rider.province" nullable ng-options="province.code as province.name for province in provinces" name="province">
 	  </select>
 	</td>
