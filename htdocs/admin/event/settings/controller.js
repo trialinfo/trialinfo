@@ -12,6 +12,13 @@ var settingsController = [
 
     $scope.event_types = event_types;
 
+    $scope.countries = countries.map(function(country) {
+      return {
+	name: country.name,
+	code: country.codes[0]
+      };
+    });
+
     assign_event(event);
     event = undefined;
 

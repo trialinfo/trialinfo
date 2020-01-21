@@ -37,25 +37,35 @@ function guardian_visible(rider, event) {
   return age < 18;
 }
 
+/* The first code (IOC) is used in the database.  The others are mostly ISO codes. */
+/* https://en.wikipedia.org/wiki/List_of_IOC_country_codes */
+/* https://en.wikipedia.org/wiki/ISO_3166-1 */
+
 var countries = [
-  {name: 'Deutschland', codes: ['D', 'DE', 'DEU', 'GER', 'Germany', 'Allemagne']},
-  {name: 'England', codes: ['GB', 'GBR', 'UK', 'Großbritannien']},
-  {name: 'Frankreich', codes: ['F', 'FR', 'FRA', 'France']},
-  {name: 'Italien', codes: ['I', 'IT', 'ITA', 'Italia']},
-  {name: 'Kroation', codes: ['HR', 'HRV', 'Hrvatska']},
-  {name: 'Niederlande', codes: ['NL', 'NLD', 'Nederland']},
-  {name: 'Österreich', codes: ['A', 'AT', 'AUT', 'Ö', 'Austria', 'Autriche']},
-  {name: 'Polen', codes: ['PL', 'POL', 'Poland', 'Polska']},
-  {name: 'Schweiz', codes: ['CH', 'CHE', 'Switzerland', 'Suisse']},
-  {name: 'Slowakei', codes: ['SK', 'SVK', 'Slovakia', 'Slovensko']},
-  {name: 'Slowenien', codes: ['SI', 'SVN', 'Slovenia', 'Slovenija']},
-  {name: 'Spanien', codes: ['E', 'ES', 'ESP', 'Spain', 'España']},
-  {name: 'Tschechien', codes: ['CZ', 'CZE', 'Česko']},
-  {name: 'Ungarn', codes: ['H', 'HU', 'HUN', 'Magyarország']},
+  {name: 'Belgien', codes: ['BEL', 'BE', 'Belgium']},
+  {name: 'Dänemark', codes: ['DEN', 'DK', 'DNK', 'Denmark']},
+  {name: 'Deutschland', codes: ['GER', 'DEU', 'D', 'DE', 'Germany', 'Allemagne']},
+  {name: 'England', codes: ['GBR', 'GB', 'UK', 'Großbritannien']},
+  {name: 'Frankreich', codes: ['FRA', 'F', 'FR', 'France']},
+  {name: 'Italien', codes: ['ITA', 'I', 'IT', 'Italia']},
+  {name: 'Kroation', codes: ['CRO', 'HRV', 'HR', 'Hrvatska']},
+  {name: 'Lettland', codes: ['LAT', 'LV', 'LVA', 'Latvia']},
+  {name: 'Niederlande', codes: ['NED', 'NLD', 'NL', 'Nederland']},
+  {name: 'Norwegen', codes: ['NOR', 'NO', 'Norway']},
+  {name: 'Österreich', codes: ['AUT', 'A', 'AT', 'Ö', 'Austria', 'Autriche']},
+  {name: 'Polen', codes: ['POL', 'PL', 'Poland', 'Polska']},
+  {name: 'Rumänien', codes: ['ROU', 'RO', 'ROM', 'Romania']},
+  {name: 'Schweden', codes: ['SWE', 'SE', 'Sweden']},
+  {name: 'Schweiz', codes: ['SUI', 'CH', 'CHE', 'Switzerland', 'Suisse']},
+  {name: 'Slowakei', codes: ['SVK', 'SK', 'Slovakia', 'Slovensko']},
+  {name: 'Slowenien', codes: ['SLO', 'SI', 'SVN', 'Slovenia', 'Slovenija']},
+  {name: 'Spanien', codes: ['ESP', 'E', 'ES', 'Spain', 'España']},
+  {name: 'Tschechien', codes: ['CZE', 'CZ', 'Česko']},
+  {name: 'Ungarn', codes: ['HUN', 'H', 'HU', 'Magyarország']},
 ];
 
 var provinces = {
-  'A': [
+  'AUT': [
     {name: 'Burgenland', codes: ['B']},
     {name: 'Kärnten', codes: ['K']},
     {name: 'Niederösterreich', codes: ['NÖ']},

@@ -38,7 +38,7 @@ var eventController = [
       var rider = riders[index];
       if (!rider) {
 	rider = {
-	  country: 'A',
+	  country: event.country,
 	  future_starts: {},
 	  insurance: event.insurance,
 	  accept_conditions: false
@@ -218,12 +218,14 @@ var eventController = [
       name: '',
       code: null
     }];
-    provinces['A'].forEach(function(province) {
-      $scope.provinces.push({
-	name: province.name,
-	code: province.codes[0]
+    if (provinces[event.country]) {
+      provinces[event.country].forEach(function(province) {
+	$scope.provinces.push({
+	  name: province.name,
+	  code: province.codes[0]
+	});
       });
-    });
+    }
 
     $scope.hasFutureEvents = Object.keys(event.future_events).length != 0;
 
@@ -239,7 +241,7 @@ var eventController = [
 
       if (rider.country != country) {
 	rider.country = country;
-	if (country != 'A')
+	if (country != event.country)
 	  rider.province = null;
 	if (country == null)
 	  setFocus('#country');

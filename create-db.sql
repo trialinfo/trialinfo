@@ -114,6 +114,8 @@ CREATE TABLE `events` (
   `start_spec` varchar(40) DEFAULT NULL,
   `main_ranking` int(11) DEFAULT NULL,
   `combine` tinyint(1) NOT NULL DEFAULT '0',
+  `country` varchar(15) DEFAULT NULL,
+  `hide_country` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -392,7 +394,7 @@ CREATE TABLE `riders` (
   `registration` varchar(15) DEFAULT NULL,
   `displacement` varchar(10) DEFAULT NULL,
   `email` varchar(60) DEFAULT NULL,
-  `achievements` varchar(40) DEFAULT NULL,
+  `achievements` varchar(80) DEFAULT NULL,
   `comment` varchar(150) DEFAULT NULL,
   `rider_comment` varchar(150) DEFAULT NULL,
   `country` varchar(15) DEFAULT NULL,

@@ -525,14 +525,16 @@ var ridersController = [
       };
 
       var province_codes = {};
-      provinces['A'].forEach(function(province) {
-	if (province.codes[0]) {
-	  province_codes[province.name.toLocaleUpperCase()] = province.codes[0];
-	  province.codes.forEach(function(code) {
-	    province_codes[code.toLocaleUpperCase()] = province.codes[0];
-	  });
-	}
-      });
+      if (provinces[event.country]) {
+	provinces[event.country].forEach(function(province) {
+	  if (province.codes[0]) {
+	    province_codes[province.name.toLocaleUpperCase()] = province.codes[0];
+	    province.codes.forEach(function(code) {
+	      province_codes[code.toLocaleUpperCase()] = province.codes[0];
+	    });
+	  }
+	});
+      }
 
       $scope.blur_province = function() {
 	var province = $scope.rider.province;

@@ -15,9 +15,9 @@ var eventListController = [
       subtitle: event.subtitle
     };
 
-    if (event.type && event.type.match(/^otsv/)) {
+    if (event.hide_country) {
       list.forEach(function(rider) {
-	if (rider.country == 'A')
+	if (rider.country == event.country)
 	  rider.country = null;
       });
     }
@@ -155,7 +155,8 @@ var eventListController = [
 
     $scope.country_province = function(rider) {
       var country_province = [];
-      if (rider.country)
+      if (rider.country &&
+	  (rider.country != event.country || !event.hide_country))
 	country_province.push(rider.country);
       if (rider.province)
 	country_province.push('(' + rider.province + ')');
