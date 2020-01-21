@@ -586,7 +586,7 @@ async function update_database(connection) {
     console.log('Adding column `achievements` to `riders`');
     await connection.queryAsync(`
       ALTER TABLE riders
-      ADD achievements VARCHAR(40) AFTER email
+      ADD achievements VARCHAR(80) AFTER email
     `);
   }
 }

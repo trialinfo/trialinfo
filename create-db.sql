@@ -392,7 +392,7 @@ CREATE TABLE `riders` (
   `registration` varchar(15) DEFAULT NULL,
   `displacement` varchar(10) DEFAULT NULL,
   `email` varchar(60) DEFAULT NULL,
-  `achievements` varchar(40) DEFAULT NULL,
+  `achievements` varchar(80) DEFAULT NULL,
   `comment` varchar(150) DEFAULT NULL,
   `rider_comment` varchar(150) DEFAULT NULL,
   `country` varchar(15) DEFAULT NULL,
