@@ -91,37 +91,37 @@ def main():
         else:
             out = open(opt_out, "wb")
 
+        array = fields
         if isinstance(fields, dict):
-            fill_one(document, fields, out)
+            array = [fields]
+
+        if len(array) == 0:
+            pass
+        elif len(array) == 1:
+            fill_one(document, array[0], out)
         else:
-            array = fields
-            if len(array) == 0:
-                pass
-            elif len(array) == 1:
-                fill_one(document, array[0], out)
-            else:
-                orig_fields = get_form_fields(document)
-                fps = []
-                for fields in array:
-                    fp = tempfile.NamedTemporaryFile()
-                    fill_one(document, dict(orig_fields, **fields), fp)
-                    fps.append(fp)
+            orig_fields = get_form_fields(document)
+            fps = []
+            for fields in array:
+                fp = tempfile.NamedTemporaryFile()
+                fill_one(document, dict(orig_fields, **fields), fp)
+                fps.append(fp)
 
-                # Note: pdfunite wants a seekable output file, so we cannot
-                # pass it sys.stdout which may be a pipe.
+            # Note: pdfunite wants a seekable output file, so we cannot
+            # pass it sys.stdout which may be a pipe.
 
-                tmp_out = tempfile.NamedTemporaryFile()
-                fps.append(tmp_out);
+            tmp_out = tempfile.NamedTemporaryFile()
+            fps.append(tmp_out);
 
-                cmd = ['pdfunite']
-                cmd.extend(map(lambda fp: fp.name, fps))
-                subprocess.call(cmd)
+            cmd = ['pdfunite']
+            cmd.extend(map(lambda fp: fp.name, fps))
+            subprocess.call(cmd)
 
-                while True:
-                    chunk = tmp_out.read(16384)
-                    if not chunk:
-                        break
-                    out.write(chunk)
+            while True:
+                chunk = tmp_out.read(16384)
+                if not chunk:
+                    break
+                out.write(chunk)
 
     else:
         fields = get_form_fields(document)
