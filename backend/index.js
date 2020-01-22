@@ -1001,12 +1001,8 @@ async function rider_regform_data(connection, id, number, event) {
     }
   }
 
-  if (common.guardian_visible(rider, event)) {
-    if (!rider.guardian)
-      rider.guardian = '……………………………………………………';
-  } else {
-      rider.guardian = null;
-  }
+  if (!common.guardian_visible(rider, event))
+    rider.guardian = null;
 
   if (rider.date_of_birth != null) {
     rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
