@@ -1094,7 +1094,7 @@ async function admin_regform(res, connection, id, name, numbers) {
       tmpfiles.push(tmpfile);
 
       var form = `${regforms_dir}/${event.type}/${filename}`;
-      let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+      let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', form], {
 	stdio: ['pipe', tmpfile.fd, process.stderr]
       });
       let child = promise.childProcess;
@@ -1123,7 +1123,7 @@ async function admin_regform(res, connection, id, name, numbers) {
 
     tmpresult = tmp.fileSync();
     var form = `${regforms_dir}/${event.type}/${filename}`;
-    let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+    let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', form], {
       stdio: ['pipe', tmpresult.fd, process.stderr]
     });
     let child = promise.childProcess;
