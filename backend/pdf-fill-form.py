@@ -10,7 +10,7 @@ import subprocess
 import os
 
 def usage(err):
-    print("USAGE: " + sys.argv[0] + " [--fill] [--out=out.pdf] {in.pdf}")
+    print("USAGE: " + sys.argv[0] + " [--fill] [--print] [--out=out.pdf] {in.pdf}")
     sys.exit(err)
 
 def get_form_fields(document):
@@ -65,16 +65,19 @@ def fill_one(document, fields, fp):
 
 def main():
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "o:", ["fill", "out="])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "o:", ["fill", "print", "out="])
     except getopt.GetoptError as err:
         print(str(err))
         sys.exit(2)
 
     opt_fill = False
+    opt_print = False
     opt_out = None
     for opt, arg in opts:
         if opt == '--fill':
             opt_fill = True
+        if opt == '--print':
+            opt_print = True
         if opt in ('-o', '--out'):
             opt_out = arg
     if len(args) == 0:
@@ -91,37 +94,43 @@ def main():
         else:
             out = open(opt_out, "wb")
 
+        array = fields
         if isinstance(fields, dict):
-            fill_one(document, fields, out)
+            array = [fields]
+
+        if len(array) == 0:
+            pass
+        elif len(array) == 1 and not opt_print:
+            fill_one(document, array[0], out)
         else:
-            array = fields
-            if len(array) == 0:
-                pass
-            elif len(array) == 1:
-                fill_one(document, array[0], out)
-            else:
-                orig_fields = get_form_fields(document)
-                fps = []
-                for fields in array:
-                    fp = tempfile.NamedTemporaryFile()
-                    fill_one(document, dict(orig_fields, **fields), fp)
-                    fps.append(fp)
+            orig_fields = get_form_fields(document)
+            fps = []
+            for fields in array:
+                fp = tempfile.NamedTemporaryFile()
+                fill_one(document, dict(orig_fields, **fields), fp)
+                fps.append(fp)
 
-                # Note: pdfunite wants a seekable output file, so we cannot
-                # pass it sys.stdout which may be a pipe.
+            # Note: pdfunite wants a seekable output file, so we cannot
+            # pass it sys.stdout which may be a pipe.
 
-                tmp_out = tempfile.NamedTemporaryFile()
-                fps.append(tmp_out);
+            tmp_out = tempfile.NamedTemporaryFile()
+            fps.append(tmp_out);
 
-                cmd = ['pdfunite']
-                cmd.extend(map(lambda fp: fp.name, fps))
+            cmd = ['pdfunite']
+            cmd.extend(map(lambda fp: fp.name, fps))
+            subprocess.call(cmd)
+
+            if opt_print:
+                tmp2_out = tempfile.NamedTemporaryFile()
+                cmd = ['pdftocairo', '-pdf', tmp_out.name, tmp2_out.name]
                 subprocess.call(cmd)
+                tmp_out = tmp2_out
 
-                while True:
-                    chunk = tmp_out.read(16384)
-                    if not chunk:
-                        break
-                    out.write(chunk)
+            while True:
+                chunk = tmp_out.read(16384)
+                if not chunk:
+                    break
+                out.write(chunk)
 
     else:
         fields = get_form_fields(document)

@@ -1007,12 +1007,8 @@ async function rider_regform_data(connection, id, number, event) {
     }
   }
 
-  if (common.guardian_visible(rider, event)) {
-    if (!rider.guardian)
-      rider.guardian = '……………………………………………………';
-  } else {
-      rider.guardian = null;
-  }
+  if (!common.guardian_visible(rider, event))
+    rider.guardian = null;
 
   if (rider.date_of_birth != null) {
     rider.date_of_birth = moment(common.parse_timestamp(rider.date_of_birth))
@@ -1046,6 +1042,8 @@ async function rider_regform_data(connection, id, number, event) {
   rider.event_name = event_name;
   rider.event_location = event.location;
   rider.event_date = dates_to_string(dates);
+  rider.event_year = moment(common.parse_timestamp(event.date))
+    .locale('de').format('YYYY');
 
   return rider;
 }
@@ -1100,7 +1098,7 @@ async function admin_regform(res, connection, id, name, numbers) {
       tmpfiles.push(tmpfile);
 
       var form = `${regforms_dir}/${event.type}/${filename}`;
-      let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+      let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', form], {
 	stdio: ['pipe', tmpfile.fd, process.stderr]
       });
       let child = promise.childProcess;
@@ -1129,7 +1127,7 @@ async function admin_regform(res, connection, id, name, numbers) {
 
     tmpresult = tmp.fileSync();
     var form = `${regforms_dir}/${event.type}/${filename}`;
-    let promise = spawn('./pdf-fill-form.py', ['--fill', form], {
+    let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', form], {
       stdio: ['pipe', tmpresult.fd, process.stderr]
     });
     let child = promise.childProcess;
