@@ -964,6 +964,7 @@ async function rider_regform_data(connection, id, number, event) {
   if (rider.first_name)
     name.push(rider.first_name);
   rider.name = name.join(' ');
+  rider.NAME = rider.name.toUpperCase();
 
   let name_country = [];
   if (rider.name)
@@ -972,6 +973,7 @@ async function rider_regform_data(connection, id, number, event) {
       (rider.country != event.country || !event.hide_country))
     name_country.push('(' + rider.country + ')');
   rider.name_country = name_country.join(' ');
+  rider.NAME_COUNTRY = rider.name_country.toUpperCase();
 
   let country_province = [];
   if (rider.country)
