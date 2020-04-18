@@ -605,6 +605,14 @@ async function update_database(connection) {
       ADD hide_country BOOLEAN
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'section_wise_entry')) {
+    console.log('Adding column `section_wise_entry` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD section_wise_entry BOOLEAN
+    `);
+  }
 }
 
 pool.getConnectionAsync()
