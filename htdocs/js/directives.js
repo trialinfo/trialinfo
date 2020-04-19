@@ -269,8 +269,10 @@
     return function(selector) {
       $timeout(function() {
 	var element = document.querySelector(selector);
-	element.focus();
-	element.select();
+	if (element) {
+	  element.focus();
+	  element.select();
+	}
       });
     };
   }]);
@@ -307,7 +309,7 @@
 	  }
 	});
       }
-    }
+    };
   });
 
   module.factory('eventName', ['$rootScope', function($rootScope) {

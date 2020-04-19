@@ -478,6 +478,40 @@ var marksController = [
       }
     };
 
+    $scope.marks_keydown = function(ev, round, index) {
+      var rider = $scope.rider;
+      if (rider) {
+	function move_to(round, index) {
+	  var rc = ranking_class(rider);
+	  var zones = event.zones[rc - 1];
+	  var rounds = event.classes[rc - 1].rounds;
+	  if (index >= 0 && index < zones.length &&
+	      round >= 1 && round <= rounds) {
+	    setFocus('#marks_' + round + '_' + zones[index]);
+	    ev.preventDefault();
+	  }
+	}
+
+	function fully_selected(element) {
+	  return !element ||
+		 (element.selectionStart == 0 &&
+		  element.selectionEnd == element.value.length);
+	}
+
+	if (ev.key == 'ArrowLeft') {
+	  if (fully_selected(ev.target))
+	    move_to(round, index - 1);
+	} else if (ev.key == 'ArrowRight') {
+	  if (fully_selected(ev.target))
+	    move_to(round, index + 1);
+	} else if (ev.key == 'ArrowUp') {
+	  move_to(round - 1, index);
+	} else if (ev.key == 'ArrowDown') {
+	  move_to(round + 1, index);
+	}
+      }
+    };
+
     $scope.over_time = function() {
       try {
 	var rider = $scope.rider;
