@@ -1491,6 +1491,17 @@ async function get_rider(connection, id, number, params, direction, event) {
     else
       filters.push('NOT COALESCE(`group`, 0)');
   }
+  if (params.zone) {
+    filters.push('number IN (SELECT number ' +
+		   'FROM riders ' +
+		   'JOIN classes USING (id, class) ' +
+		   'JOIN (SELECT id, class AS ranking_class, zone ' +
+		     'FROM zones ' +
+		     'WHERE id = ' + connection.escape(id) +
+		   ') AS _ USING (id, ranking_class) ' +
+		   'WHERE id = ' + connection.escape(id) +
+		   ' AND zone = ' + connection.escape(params.zone) + ')');
+  }
   if (direction < 0) {
     if (number != null) {
       filters.push('number < ?');
