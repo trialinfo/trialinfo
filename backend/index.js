@@ -1252,7 +1252,8 @@ async function read_event(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT class, zone
     FROM zones
-    WHERE id = ?`, [id])
+    WHERE id = ?
+    ORDER BY class, zone`, [id])
   ).forEach((row) => {
     var class_ = event.zones[row['class'] - 1];
     if (!class_)
