@@ -281,7 +281,13 @@ a:hover.updown {
     </table>
   </fieldset><br>
   <fieldset style="display:inline">
-    <legend>Fahrer und Gruppen</legend>
+    <legend>Dateneingabe</legend>
+    <p>
+    <input type="checkbox" ng-model="event.section_wise_entry" id="section_wise_entry">
+      <label for="section_wise_entry">Sektionsweise Eingabe der Punkte</label><br>
+    <input type="checkbox" ng-model="features.groups" id="groups">
+      <label for="groups">Verwaltung von Gruppen</label>
+    </p>
     <fieldset style="display:inline">
       <legend>Sichtbare Felder</legend>
 	<p>
@@ -368,11 +374,6 @@ a:hover.updown {
 	  <option value="4">Tagesversicherung</option>
 	</select>.</label>
       </p>
-    </fieldset><br>
-    <fieldset style="display:inline">
-      <legend>Gruppen</legend>
-	<input type="checkbox" ng-model="features.groups" id="groups">
-	  <label for="groups">Verwaltung von Gruppen</label>
     </fieldset>
   </fieldset><br>
   <fieldset style="display:inline">

@@ -86,13 +86,28 @@ var marksController = [
 	  var rc = ranking_class(rider);
 	  var zones = event.zones[rc - 1];
 	  var marks_per_zone = rider.marks_per_zone;
-	  for (var round = rider.rounds || 1; round <= (rider.rounds || 0) + 1; round++) {
+
+	  function try_to_focus(round, zone) {
+	    var marks = marks_per_zone[round - 1][zone - 1];
+	    if (marks == null && !zone_skipped(rc, round, zone)) {
+	      setFocus('#marks_' + round + '_' + zone);
+	      return true;
+	    }
+	  }
+
+	  var rounds = event.classes[rc - 1].rounds;
+	  if (event.section_wise_entry) {
 	    for (var index = 0; index < zones.length; index++) {
-	      var zone = zones[index];
-	      var marks = marks_per_zone[round - 1][zone - 1];
-	      if (marks == null && !zone_skipped(rc, round, zone)) {
-		setFocus('#marks_' + round + '_' + zone);
-		return;
+	      for (var round = rider.rounds || 1; round <= rounds; round++) {
+		if (try_to_focus(round, zones[index]))
+		  return;
+	      }
+	    }
+	  } else {
+	    for (var round = rider.rounds || 1; round <= rounds; round++) {
+	      for (var index = 0; index < zones.length; index++) {
+		if (try_to_focus(round, zones[index]))
+		  return;
 	      }
 	    }
 	  }
@@ -133,10 +148,12 @@ var marksController = [
       clear_search_result();
     }
 
-    $scope.load_next_rider = function() {
+    $scope.load_next_rider = function(current_zone) {
       var params = {
 	start: 1
       };
+      if (current_zone != null)
+	params.zone = current_zone;
       load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number, {params: params}));
       clear_search_result();
     }
@@ -276,14 +293,47 @@ var marksController = [
 		    if (index != null)
 		      rider.marks_distribution[index]++;
 		    round_used = true;
-		  } else
-		    $scope.zones_skipped = true;
+		  }
 		}
 	      }
 	      if (round_used) {
 		rider.marks_per_round[round - 1] = marks_in_round;
 		rider.marks += marks_in_round;
 		rider.rounds = round;
+	      }
+	    }
+
+	    var was_null;
+	    function check_skipped(round, zone) {
+	      if (!zone_skipped(rc, round, zone)) {
+		var marks = rider.marks_per_zone[round - 1][zone - 1];
+		if (marks == null)
+		  was_null = true;
+		else
+		  return was_null;
+	      }
+	    }
+
+	    var rounds = event.classes[rc - 1].rounds;
+	    if (event.section_wise_entry) {
+	      check:
+	      for (var index = 0; index < zones.length; index++) {
+		for (round = 1; round <= rounds; round++) {
+		  if (check_skipped(round, zones[index])) {
+		    $scope.zones_skipped = true;
+		    break check;
+		  }
+		}
+	      }
+	    } else {
+	      check:
+	      for (round = 1; round <= rounds; round++) {
+		for (var index = 0; index < zones.length; index++) {
+		  if (check_skipped(round, zones[index])) {
+		    $scope.zones_skipped = true;
+		    break check;
+		  }
+		}
 	      }
 	    }
 	  } else {
@@ -314,6 +364,20 @@ var marksController = [
     $scope.save = function() {
       if ($scope.busy)
 	return;
+
+      var current_zone;
+      if (event.section_wise_entry) {
+	var element = document.activeElement;
+	if (element && element.getAttribute('marks') != null) {
+	  var id = element.getAttribute('id');
+	  if (id != null) {
+	    var match = id.match(/^marks_\d+_(\d+)$/);
+	    if (match)
+	      current_zone = match[1];
+	  }
+	}
+      }
+
       /* FIXME: Wenn Start, dann muss die Klasse starten. */
       $scope.busy = true;
       var rider = $scope.rider;
@@ -325,6 +389,8 @@ var marksController = [
 	.then(function(response) {
 	  assign_rider(response.data);
 	  setFocus('#search_term');
+	  if (event.section_wise_entry)
+	    $scope.load_next_rider(current_zone);
 	})
 	.catch(network_error)
 	.finally(function() {
@@ -398,9 +464,50 @@ var marksController = [
       if (rider) {
 	var rc = ranking_class(rider);
 	var zones = event.zones[rc - 1];
-	while (++index < zones.length) {
-	  if (!zone_skipped(rc, round, zones[index]))
-	    return 'marks_' + round + '_' + zones[index];
+	if (event.section_wise_entry) {
+	  while (round++ < event.classes[rc - 1].rounds) {
+	    if (!zone_skipped(rc, round, zones[index]))
+	      return 'marks_' + round + '_' + zones[index];
+	  }
+	} else {
+	  while (++index < zones.length) {
+	    if (!zone_skipped(rc, round, zones[index]))
+	      return 'marks_' + round + '_' + zones[index];
+	  }
+	}
+      }
+    };
+
+    $scope.marks_keydown = function(ev, round, index) {
+      var rider = $scope.rider;
+      if (rider) {
+	function move_to(round, index) {
+	  var rc = ranking_class(rider);
+	  var zones = event.zones[rc - 1];
+	  var rounds = event.classes[rc - 1].rounds;
+	  if (index >= 0 && index < zones.length &&
+	      round >= 1 && round <= rounds) {
+	    setFocus('#marks_' + round + '_' + zones[index]);
+	    ev.preventDefault();
+	  }
+	}
+
+	function fully_selected(element) {
+	  return !element ||
+		 (element.selectionStart == 0 &&
+		  element.selectionEnd == element.value.length);
+	}
+
+	if (ev.key == 'ArrowLeft') {
+	  if (fully_selected(ev.target))
+	    move_to(round, index - 1);
+	} else if (ev.key == 'ArrowRight') {
+	  if (fully_selected(ev.target))
+	    move_to(round, index + 1);
+	} else if (ev.key == 'ArrowUp') {
+	  move_to(round - 1, index);
+	} else if (ev.key == 'ArrowDown') {
+	  move_to(round + 1, index);
 	}
       }
     };

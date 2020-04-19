@@ -27,8 +27,8 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" style="text-align:center">
-		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
-		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)">
+		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
 		  </td>
 		  <td style="text-align:right;font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
@@ -140,7 +140,7 @@
 	  </p>
 	  <p>
 	    <span ng-if="zones_skipped" style="color: red">
-	    Tragen Sie für vom Fahrer ausgelassene Sektionen bitte ‚-‘ für die Punkte ein,<br>
+	    Tragen Sie für ausgelassene Sektionen bitte ‚-‘ für die Punkte ein,<br>
 	    die folgenden Sektionen werden sonst nicht gewertet.</span>
 	  </p>
 	  <p>

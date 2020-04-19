@@ -611,6 +611,14 @@ async function update_database(connection) {
       ADD hide_country BOOLEAN
     `);
   }
+
+  if (!await column_exists(connection, 'events', 'section_wise_entry')) {
+    console.log('Adding column `section_wise_entry` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD section_wise_entry BOOLEAN
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -970,6 +978,7 @@ async function rider_regform_data(connection, id, number, event) {
   if (rider.first_name)
     name.push(rider.first_name);
   rider.name = name.join(' ');
+  rider.NAME = rider.name.toUpperCase();
 
   let name_country = [];
   if (rider.name)
@@ -978,6 +987,7 @@ async function rider_regform_data(connection, id, number, event) {
       (rider.country != event.country || !event.hide_country))
     name_country.push('(' + rider.country + ')');
   rider.name_country = name_country.join(' ');
+  rider.NAME_COUNTRY = rider.name_country.toUpperCase();
 
   let country_province = [];
   if (rider.country)
@@ -1256,7 +1266,8 @@ async function read_event(connection, id, revalidate) {
   (await connection.queryAsync(`
     SELECT class, zone
     FROM zones
-    WHERE id = ?`, [id])
+    WHERE id = ?
+    ORDER BY class, zone`, [id])
   ).forEach((row) => {
     var class_ = event.zones[row['class'] - 1];
     if (!class_)
@@ -1493,6 +1504,17 @@ async function get_rider(connection, id, number, params, direction, event) {
       filters.push('`group`');
     else
       filters.push('NOT COALESCE(`group`, 0)');
+  }
+  if (params.zone) {
+    filters.push('number IN (SELECT number ' +
+		   'FROM riders ' +
+		   'JOIN classes USING (id, class) ' +
+		   'JOIN (SELECT id, class AS ranking_class, zone ' +
+		     'FROM zones ' +
+		     'WHERE id = ' + connection.escape(id) +
+		   ') AS _ USING (id, ranking_class) ' +
+		   'WHERE id = ' + connection.escape(id) +
+		   ' AND zone = ' + connection.escape(params.zone) + ')');
   }
   if (direction < 0) {
     if (number != null) {
@@ -2526,8 +2548,8 @@ async function get_event_results(connection, id) {
       hash[field] = rider[field];
 
     hash.marks_per_zone = rider.marks_per_zone;
-    let skipped_zones = event.skipped_zones[ranking_class];
-    if (event.skipped_zones[ranking_class]) {
+    let skipped_zones = (event.skipped_zones || {})[ranking_class];
+    if (skipped_zones) {
       hash.marks_per_zone = clone(hash.marks_per_zone, false);
       for (let round of Object.keys(skipped_zones)) {
 	for (let zone of Object.keys(skipped_zones[round])) {
