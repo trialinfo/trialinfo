@@ -2522,8 +2522,8 @@ async function get_event_results(connection, id) {
       hash[field] = rider[field];
 
     hash.marks_per_zone = rider.marks_per_zone;
-    let skipped_zones = event.skipped_zones[ranking_class];
-    if (event.skipped_zones[ranking_class]) {
+    let skipped_zones = (event.skipped_zones || {})[ranking_class];
+    if (skipped_zones) {
       hash.marks_per_zone = clone(hash.marks_per_zone, false);
       for (let round of Object.keys(skipped_zones)) {
 	for (let zone of Object.keys(skipped_zones[round])) {
