@@ -2484,6 +2484,31 @@ async function get_full_event(connection, id) {
   };
 }
 
+function ranking_class(rider, event) {
+  if (rider.verified && rider.start &&
+      (rider.registered || !event.features.registered) &&
+      rider.class != null) {
+    let class_ = event.classes[rider.class - 1];
+    if (class_)
+      return class_.ranking_class;
+  }
+}
+
+function rider_marks_per_zone(rider, event, ranking_class) {
+  let marks_per_zone = rider.marks_per_zone;
+  let skipped_zones = (event.skipped_zones || {})[ranking_class];
+  if (skipped_zones) {
+    marks_per_zone = clone(marks_per_zone, false);
+    for (let round of Object.keys(skipped_zones)) {
+      for (let zone of Object.keys(skipped_zones[round])) {
+	if ((marks_per_zone[round - 1] || [])[zone - 1] != null)
+	  marks_per_zone[round - 1][zone - 1] = null;
+      }
+    }
+  }
+  return marks_per_zone;
+}
+
 var rider_public_fields = [
   'club', 'country', 'first_name', 'last_name', 'province', 'vehicle',
   'year_of_manufacture', 'start_time', 'finish_time'
@@ -2520,16 +2545,6 @@ async function get_event_results(connection, id) {
     id = result[0].id;
   }
 
-  function ranking_class(rider, event) {
-    if (rider.verified && rider.start &&
-	(rider.registered || !event.features.registered) &&
-	rider.class != null) {
-      let class_ = event.classes[rider.class - 1];
-      if (class_)
-	return class_.ranking_class;
-    }
-  }
-
   function base_rider(rider) {
     let hash = {
       results: []
@@ -2546,19 +2561,7 @@ async function get_event_results(connection, id) {
     let hash = {};
     for (let field of rider_result_fields)
       hash[field] = rider[field];
-
-    hash.marks_per_zone = rider.marks_per_zone;
-    let skipped_zones = (event.skipped_zones || {})[ranking_class];
-    if (skipped_zones) {
-      hash.marks_per_zone = clone(hash.marks_per_zone, false);
-      for (let round of Object.keys(skipped_zones)) {
-	for (let zone of Object.keys(skipped_zones[round])) {
-	  if ((hash.marks_per_zone[round - 1] || [])[zone - 1] != null)
-	    hash.marks_per_zone[round - 1][zone - 1] = null;
-	}
-      }
-    }
-
+    hash.marks_per_zone = rider_marks_per_zone(rider, event, ranking_class);
     return hash;
   }
 
@@ -3047,6 +3050,116 @@ async function get_event_results(connection, id) {
       hash.event.riders = registered_riders.length;
       hash.registered = registered;
     }
+  }
+
+  return hash;
+}
+
+async function get_event_sections(connection, id) {
+  let event_riders = await get_full_event(connection, id);
+  let event = event_riders.event;
+  let riders = event_riders.riders;
+
+  function base_rider(rider, event, rc) {
+    let hash = {
+    };
+    for (let field of ['number', 'class', 'last_name', 'first_name'])
+      hash[field] = rider[field];
+    hash.marks_per_zone = rider_marks_per_zone(rider, event, rc);
+    return hash;
+  }
+
+  let classes = {};
+  let riders_by_ranking_class = {};
+  for (let rider of Object.values(riders)) {
+    if (!rider.start || (event.features.registered && !rider.registered))
+      continue;
+    let rc = ranking_class(rider, event);
+    if (!rc)
+      continue;
+
+    classes[rider.class] = true;
+    if (!riders_by_ranking_class[rc])
+      riders_by_ranking_class[rc] = [];
+    riders_by_ranking_class[rc].push(base_rider(rider, event, rc));
+  }
+
+  let riders_by_zone = {};
+  for (let rc in riders_by_ranking_class) {
+    for (let zone of event.zones[rc - 1]) {
+      if (!riders_by_zone[zone])
+	riders_by_zone[zone] = [];
+      for (let rider of riders_by_ranking_class[rc])
+	riders_by_zone[zone].push(rider.number);
+    }
+  }
+
+  let ranking_classes_by_zone = {};
+  for (let rc in riders_by_ranking_class) {
+    for (let zone of event.zones[rc - 1]) {
+      if (!ranking_classes_by_zone[zone])
+	ranking_classes_by_zone[zone] = [];
+      ranking_classes_by_zone[zone].push(rc);
+    }
+  }
+
+  let rounds_by_zone = {};
+  for (let zone in ranking_classes_by_zone) {
+    rounds_by_zone[zone] = Math.max.apply(this,
+      ranking_classes_by_zone[zone].map(
+        (rc) => event.classes[rc - 1].rounds));
+  }
+
+  var hash = {
+    event: {
+    },
+    riders: {},
+    zones: []
+  };
+
+  ['title', 'subtitle', 'mtime', 'skipped_zones'].forEach(
+    (field) => { hash.event[field] = event[field]; }
+  );
+
+  hash.event.classes = [];
+  for (let c in classes) {
+    var class_ = {};
+    for (let field of ['rounds', 'name', 'color', 'ranking_class'])
+      class_[field] = event.classes[c - 1][field];
+    hash.event.classes[c - 1] = class_;
+  }
+
+  for (let rc in riders_by_ranking_class) {
+    for (let rider of riders_by_ranking_class[rc]) {
+      hash.riders[rider.number] = rider;
+    }
+  }
+
+  for (let zone in riders_by_zone) {
+    let riders = riders_by_zone[zone];
+    riders.sort((a, b) => {
+	if (a >= 0) {
+	  if (b >= 0)
+	    return a - b;
+	  return 1;
+	} else if (b >= 0) {
+	  return -1;
+	} else {
+	  let cmp;
+	  a = hash.riders[a];
+	  b = hash.riders[b];
+	  cmp = (a.last_name || '').localeCompare(b.last_name || '');
+	  if (cmp)
+	    return cmp;
+	  cmp = (a.first_name || '').localeCompare(b.first_name || '');
+	  if (cmp)
+	    return cmp;
+	}
+      });
+    hash.zones[zone - 1] = {
+      rounds: rounds_by_zone[zone],
+      riders: riders
+    };
   }
 
   return hash;
@@ -5552,6 +5665,13 @@ app.get('/serie/*', function(req, res, next) {
 
 app.get('/api/event/:id/results', conn(pool), function(req, res, next) {
   get_event_results(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/event/:id/sections', conn(pool), function(req, res, next) {
+  get_event_sections(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);
