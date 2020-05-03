@@ -361,11 +361,7 @@ var marksController = [
       calculate_marks();
     });
 
-    $scope.save = function() {
-      if ($scope.busy)
-	return;
-
-      var current_zone;
+    function current_zone() {
       if (event.zone_wise_entry) {
 	var element = document.activeElement;
 	if (element && element.getAttribute('marks') != null) {
@@ -373,10 +369,15 @@ var marksController = [
 	  if (id != null) {
 	    var match = id.match(/^marks_\d+_(\d+)$/);
 	    if (match)
-	      current_zone = match[1];
+	      return match[1];
 	  }
 	}
       }
+    }
+
+    $scope.save = function() {
+      if ($scope.busy)
+	return;
 
       /* FIXME: Wenn Start, dann muss die Klasse starten. */
       $scope.busy = true;
@@ -384,13 +385,14 @@ var marksController = [
       var params = {
 	event_version: event.version
       };
+      var cz = current_zone();
       $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider,
 		{params: params})
 	.then(function(response) {
 	  assign_rider(response.data);
 	  setFocus('#search_term');
 	  if (event.zone_wise_entry)
-	    $scope.load_next_rider(current_zone);
+	    $scope.load_next_rider(cz);
 	})
 	.catch(network_error)
 	.finally(function() {
@@ -541,9 +543,14 @@ var marksController = [
     $scope.keydown = function(event) {
       if (event.which == 13) {
 	$timeout(function() {
-	  if ($scope.modified() && $scope.form.$valid)
-	    $scope.save();
-	});
+	  if ($scope.modified()) {
+	    if ($scope.form.$valid)
+	      $scope.save();
+	  } else {
+	    var cz = current_zone();
+	    if (cz)
+	      $scope.load_next_rider(cz);
+	  }});
       } else if (event.which == 27) {
 	$timeout(function() {
 	  if ($scope.modified())
