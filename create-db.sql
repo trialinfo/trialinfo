@@ -116,7 +116,7 @@ CREATE TABLE `events` (
   `combine` tinyint(1) NOT NULL DEFAULT '0',
   `country` varchar(15) DEFAULT NULL,
   `hide_country` tinyint(1) DEFAULT NULL,
-  `section_wise_entry` tinyint(1) DEFAULT NULL,
+  `zone_wise_entry` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

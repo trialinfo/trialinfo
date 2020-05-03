@@ -1,0 +1,126 @@
+<style type="text/css">
+  a:link,a:visited { text-decoration:none; color:black; }
+  a:hover,a:active { text-decoration:underline; color:#551a8b; }
+</style>
+
+<style type="text/css" ng-bind-html="print_style()">
+</style>
+
+<h1 ng-if="!config.admin" class="no-print">{{event.title}}</h1>
+<h1 ng-if="config.admin" class="no-print"><a href="" ng-click="settings($event)">{{event.title}}</a></h1>
+<div ng-if="fold.settings" class="no-print">
+  <p>
+    <form name="form" ng-model="show.filter">
+      <fieldset style="display:inline">
+	<legend>Anzeige einstellen</legend>
+	<table>
+	  <tr><th>Subtitel</th>
+	  <td>
+	    <input type="text" size="40" maxlength="70" ng-model="show.subtitle" id="subtitle" nullable>
+	  </td>
+	  </tr>
+	</table>
+      </fieldset><br>
+    </form>
+    <form id="pdf" action="/api/to-pdf" method="POST" ng-if="config.weasyprint && show.duration == null">
+      <fieldset style="display:inline">
+	<legend>Drucken</legend>
+	<table>
+	  <tr><th>Seitenformat</th>
+	    <td>
+	      <select ng-model="show['page-size']">
+		<option value="A4">A4 Hochformat</option>
+		<option value="A4 landscape">A4 Querformat</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th>Ränder</th>
+	    <td>
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-left']" title="Links" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-top']" title="Oben" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-right']" title="Rechts" style="text-align:center">
+	      <input type="text" size="4" maxlength="6" ng-model="show['margin-bottom']" title="Unten" style="text-align:center">
+	    </td>
+	  </tr>
+	  <tr><th>Schriftgröße</th>
+	    <td>
+	      <input type="text" numeric min="6" max="20" size="2" maxlength="2" ng-model="show['font-size']" style="text-align:center"> Punkt
+	    </td>
+	  </tr>
+	  <tr><th>Spalten</th>
+	    <td>
+	      <select ng-model="show.columns">
+	        <option value="1">1</option>
+	        <option value="2">2</option>
+	        <option value="3">3</option>
+	        <option value="4">4</option>
+	      </select>
+	    </td>
+	  </tr>
+	  <tr><th></th>
+	    <td>
+	      <input type="checkbox" ng-model="show['page-break']" id="page-break"><label for="page-break">Seitenumbruch zwischen den Sektionen</label>
+	    </td>
+	  </tr>
+	  <tr><th></th>
+	    <td><button type="submit" ng-click="create_pdf($event)">PDF</button></td>
+	  </tr>
+	</table>
+      </fieldset>
+      <input type="hidden" name="filename" value="{{event.title}}.pdf">
+      <input type="hidden" name="url" value="{{url}}">
+      <input type="hidden" name="html" value="{{html}}">
+    </form>
+  </p>
+</div>
+<h2 class="no-print">{{show.subtitle}}</h2>
+
+<style type="text/css">
+table.ranking {
+  border-collapse:collapse;
+}
+table.ranking td, table.ranking th {
+  border:1px solid #98bf21;
+}
+table.ranking td {
+  padding: 0.1em 0.2em 0.1em 0.2em;
+}
+table.ranking th {
+  padding: 0.2em 0.3em 0.2em 0.3em;
+  font-weight:bolder;
+  background-color:#A7C942;
+  color:#ffffff;
+}
+table.ranking tbody.alt {
+  background-color:#EAF2D3;
+}
+</style>
+
+<div ng-repeat="zone_nr in zones_list" ng-init="zone = zones[zone_nr - 1]" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
+  <h1 class="only-print">{{event.title}}</h1>
+  <h2 class="only-print">{{show.subtitle}}</h2>
+  <h2>Sektion {{zone_nr}}</h2>
+  <div style="columns:{{show.columns}}">
+    <table class="ranking">
+      <thead>
+	<tr>
+	  <th adjust-width="number" style="text-align:right"><span title="Startnummer">Nr.</span></th>
+	  <!-- <th></th> -->
+	  <!-- <th adjust-width="class"><span title="Klasse">Kl.</span></th> -->
+	  <th adjust-width="name" style="text-align:left">Name</th>
+	  <th ng-repeat="round in enumerate(1, zone.rounds)" adjust-width="marks" style="text-align:center"><span title="Runde {{round}}">R{{round}}</span></th>
+	</tr>
+      </thead>
+      <tbody ng-repeat="number in zone.riders" ng-init="rider = riders[number]" class="rider" ng-class-even="'alt'">
+        <tr>
+	  <td style="text-align:right">{{number}}</td>
+	  <!-- <td ng-bind-html="class_symbol(event.classes[rider.class - 1])"></td> -->
+	  <!-- <td>{{rider.class}}</td> -->
+	  <td style="text-align:left">{{rider.last_name}} {{rider.first_name}}</td>
+	  <td ng-repeat="round in enumerate(1, zone.rounds)" style="text-align:center">{{rider.marks_per_zone[round - 1][zone_nr - 1]}}</td>
+	</tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- <p ng-if="event.mtime && on_day_of_event()" class="no-print">Letzte Änderung: {{event.mtime}}</p> -->
