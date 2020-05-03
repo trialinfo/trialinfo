@@ -21,6 +21,9 @@ a.imprint { color:gray;text-decoration:none }
 a.imprint:link { color:gray }
 a.imprint:visited { color:gray }
 
+@media not print {
+  .only-print, .only-print * { display:none !important; }
+}
 @media print {
   .no-print, .no-print * { display:none !important; }
   .page-break { page-break-before:always; }

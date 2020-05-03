@@ -2494,7 +2494,7 @@ function ranking_class(rider, event) {
   }
 }
 
-function rider_marks_per_zone(rider, event, ranking_class) {
+function result_marks_per_zone(rider, event, ranking_class) {
   let marks_per_zone = rider.marks_per_zone;
   let skipped_zones = (event.skipped_zones || {})[ranking_class];
   if (skipped_zones) {
@@ -2561,7 +2561,7 @@ async function get_event_results(connection, id) {
     let hash = {};
     for (let field of rider_result_fields)
       hash[field] = rider[field];
-    hash.marks_per_zone = rider_marks_per_zone(rider, event, ranking_class);
+    hash.marks_per_zone = result_marks_per_zone(rider, event, ranking_class);
     return hash;
   }
 
@@ -3055,7 +3055,7 @@ async function get_event_results(connection, id) {
   return hash;
 }
 
-async function get_event_sections(connection, id) {
+async function get_section_lists(connection, id) {
   let event_riders = await get_full_event(connection, id);
   let event = event_riders.event;
   let riders = event_riders.riders;
@@ -3065,7 +3065,7 @@ async function get_event_sections(connection, id) {
     };
     for (let field of ['number', 'class', 'last_name', 'first_name'])
       hash[field] = rider[field];
-    hash.marks_per_zone = rider_marks_per_zone(rider, event, rc);
+    hash.marks_per_zone = result_marks_per_zone(rider, event, rc);
     return hash;
   }
 
@@ -5671,7 +5671,7 @@ app.get('/api/event/:id/results', conn(pool), function(req, res, next) {
 });
 
 app.get('/api/event/:id/sections', conn(pool), function(req, res, next) {
-  get_event_sections(req.conn, req.params.id)
+  get_section_lists(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);

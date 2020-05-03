@@ -1,6 +1,9 @@
 <h1>{{event.title}}</h1>
 <a href="event/{{event.id}}/results">Auswertung</a><br>
 <a href="event/{{event.id}}/list">Fahrerliste</a> (<a href="event/{{event.id}}/list?riding">Fahrer auf der Strecke</a>)<br>
+<span ng-if="event.zone_wise_entry">
+  <a href="event/{{event.id}}/sections">Sektionslisten</a><br>
+</span>
 <br>
 <a href="event/{{event.id}}/riders">Fahrer</a><br>
 <span ng-if="features.groups">
