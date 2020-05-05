@@ -5,18 +5,26 @@ var eventSectionsController = [
   function ($scope, $sce, $route, $location, $timeout, $http, $q, sections) {
     $scope.config = config;
     $scope.show = {
+      zones: {},
       subtitle: sections.event.subtitle
     };
+
+    function filter_zones() {
+      return $scope.zones.reduce(function(list, zone, idx) {
+	if (zone && $scope.show.zones[idx + 1])
+	  list.push(idx + 1);
+	  return list;
+      }, []);
+    }
 
     function assign_sections(sections) {
       $scope.event = sections.event;
       $scope.riders = sections.riders;
       $scope.zones = sections.zones;
-      $scope.zones_list = sections.zones.reduce(function(list, zone, idx) {
+      angular.forEach($scope.zones, function(zone, idx) {
 	if (zone)
-	  list.push(idx + 1);
-	  return list;
-      }, []);
+	  $scope.show.zones[idx + 1] = true;
+      });
       angular.forEach($scope.riders, function(rider) {
 	angular.forEach(rider.marks_per_zone, function(marks) {
 	  for (var idx in marks) {
@@ -31,6 +39,15 @@ var eventSectionsController = [
 
     function to_url() {
       var search = angular.copy($scope.show);
+
+      var hidden_zones = {};
+      angular.forEach($scope.zones, function(zone, idx) {
+	if (zone && !search.zones[idx + 1])
+	  hidden_zones[idx + 1] = true;
+      });
+      if (Object.keys(hidden_zones).length)
+	search['hide-zone'] = Object.keys(hidden_zones);
+      delete search.zones;
 
       angular.forEach(search, function(value, key) {
 	if (value === null || value === '' || value === false)
@@ -55,7 +72,9 @@ var eventSectionsController = [
 
     function update() {
       $scope.$root.context($scope.event.title);
-
+      var zones_list = filter_zones();
+      if (!angular.equals(zones_list, $scope.zones_list))
+	$scope.zones_list = zones_list;
       update_url();
     }
 
@@ -119,6 +138,20 @@ var eventSectionsController = [
 
     function from_url(search) {
       var show = angular.copy(search);
+
+      var zones = {};
+      angular.forEach($scope.zones, function(zone, idx) {
+	if (zone)
+	  zones[idx + 1] = true;
+      });
+      var hidden_zones = show['hide-zone'] || [];
+      if (typeof hidden_zones === 'string')
+	hidden_zones = [hidden_zones];
+      angular.forEach(hidden_zones, function(zone) {
+	zones[zone] = false;
+      });
+      show.zones = zones;
+      delete show['hide-zone'];
 
       if (show['font-size'] !== undefined)
 	show['font-size'] = +show['font-size'];

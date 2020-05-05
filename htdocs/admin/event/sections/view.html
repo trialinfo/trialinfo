@@ -19,6 +19,13 @@
 	    <input type="text" size="40" maxlength="70" ng-model="show.subtitle" id="subtitle" nullable>
 	  </td>
 	  </tr>
+	  <tr><th>Sektionen</th>
+	  <td>
+	    <span ng-repeat="zone_ in zones track by $index" ng-if="zone_" ng-init="zone = $index + 1">
+	      <input type="checkbox" ng-model="show.zones[zone]" id="zone_{{zone}}"><label for="zone_{{zone}}">{{zone}}</label>
+	    </span>
+	  </td>
+	  </tr>
 	</table>
       </fieldset><br>
     </form>
