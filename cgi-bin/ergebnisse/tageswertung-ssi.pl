@@ -74,8 +74,8 @@ if (my @row = $sth->fetchrow_array) {
     $cfg->{vierpunktewertung} = $row[7];
     $cfg->{punkteteilung} = $row[8];
     $cfg->{art} = $row[9];
-    $cfg->{land} = $row{10};
-    $cfg->{land_verbergen} = $row{11};
+    $cfg->{land} = $row[10];
+    $cfg->{land_verbergen} = $row[11];
 }
 
 unless (defined $cfg) {
