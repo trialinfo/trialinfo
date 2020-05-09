@@ -79,12 +79,12 @@ var marksController = [
       update_url();
     }
 
-    function focus_marks() {
+    function focus_marks(current_zone) {
       try {
 	var rider = $scope.rider;
 	if (rider.start && !rider.failure) {
 	  var rc = ranking_class(rider);
-	  var zones = event.zones[rc - 1];
+	  var zones = current_zone != null ? [current_zone] : event.zones[rc - 1];
 	  var marks_per_zone = rider.marks_per_zone;
 
 	  function try_to_focus(round, zone) {
@@ -115,13 +115,13 @@ var marksController = [
       } catch (_) {};
     }
 
-    function load_rider(promise) {
+    function load_rider(promise, current_zone) {
       promise
 	.then(function(response) {
 	  let rider = response.data;
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
-	    focus_marks();
+	    focus_marks(current_zone);
 	  }
 	})
 	.catch(network_error);
@@ -154,7 +154,7 @@ var marksController = [
       };
       if (current_zone != null)
 	params.zone = current_zone;
-      load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number, {params: params}));
+      load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number, {params: params}), current_zone);
       clear_search_result();
     }
 
@@ -361,7 +361,7 @@ var marksController = [
       calculate_marks();
     });
 
-    function current_zone() {
+    function get_current_zone() {
       if (event.zone_wise_entry) {
 	var element = document.activeElement;
 	if (element && element.getAttribute('marks') != null) {
@@ -385,14 +385,14 @@ var marksController = [
       var params = {
 	event_version: event.version
       };
-      var cz = current_zone();
+      var current_zone = get_current_zone();
       $http.put('/api/event/' + event.id + '/rider/' + rider.number, rider,
 		{params: params})
 	.then(function(response) {
 	  assign_rider(response.data);
 	  setFocus('#search_term');
 	  if (event.zone_wise_entry)
-	    $scope.load_next_rider(cz);
+	    $scope.load_next_rider(current_zone);
 	})
 	.catch(network_error)
 	.finally(function() {
@@ -500,11 +500,23 @@ var marksController = [
 		  element.selectionEnd == element.value.length);
 	}
 
+	function cursor_position(element) {
+	  if (element && element.selectionStart == element.selectionEnd)
+	    return element.selectionStart;
+	}
+
+	function value_length(element) {
+	  if (element)
+	    return element.value.length;
+	}
+
 	if (ev.key == 'ArrowLeft') {
-	  if (fully_selected(ev.target))
+	  if (fully_selected(ev.target) ||
+	      cursor_position(ev.target) == 0)
 	    move_to(round, index - 1);
 	} else if (ev.key == 'ArrowRight') {
-	  if (fully_selected(ev.target))
+	  if (fully_selected(ev.target) ||
+	      cursor_position(ev.target) == value_length(ev.target))
 	    move_to(round, index + 1);
 	} else if (ev.key == 'ArrowUp') {
 	  move_to(round - 1, index);
@@ -547,9 +559,9 @@ var marksController = [
 	    if ($scope.form.$valid)
 	      $scope.save();
 	  } else {
-	    var cz = current_zone();
-	    if (cz)
-	      $scope.load_next_rider(cz);
+	    var current_zone = get_current_zone();
+	    if (current_zone)
+	      $scope.load_next_rider(current_zone);
 	  }});
       } else if (event.which == 27) {
 	$timeout(function() {
