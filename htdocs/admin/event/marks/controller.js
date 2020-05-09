@@ -500,11 +500,23 @@ var marksController = [
 		  element.selectionEnd == element.value.length);
 	}
 
+	function cursor_position(element) {
+	  if (element && element.selectionStart == element.selectionEnd)
+	    return element.selectionStart;
+	}
+
+	function value_length(element) {
+	  if (element)
+	    return element.value.length;
+	}
+
 	if (ev.key == 'ArrowLeft') {
-	  if (fully_selected(ev.target))
+	  if (fully_selected(ev.target) ||
+	      cursor_position(ev.target) == 0)
 	    move_to(round, index - 1);
 	} else if (ev.key == 'ArrowRight') {
-	  if (fully_selected(ev.target))
+	  if (fully_selected(ev.target) ||
+	      cursor_position(ev.target) == value_length(ev.target))
 	    move_to(round, index + 1);
 	} else if (ev.key == 'ArrowUp') {
 	  move_to(round - 1, index);
