@@ -38,7 +38,7 @@ rm -rf backend/dist
 %install
 find -depth \( -name debian -o -name Makefile -o -name create-db.sql \) -prune -o -print \
 | cpio -pd %{buildroot}/var/lib/%{name}
-install -d %{buildroot}/var/lib/${package}/pdf/regform
+install -d %{buildroot}/var/lib/${package}/pdf
 # install -D create-db.sql %{buildroot}/usr/share/doc/${package}/create-db.sql
 install -d %{buildroot}/etc/systemd/system
 install -m 644 systemd/%{name}.service systemd/%{name}.socket \

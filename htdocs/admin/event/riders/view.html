@@ -342,7 +342,10 @@
 	      {{groups ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
 	  </p>
 	  <p>
-	    <button ng-repeat="name in config.existing_regforms[event.type]" type="button" ng-if="!groups" ng-disabled="modified() || !enabled.rider" ng-click="regform(name)" style="display:block">{{name}}</button>
+	    <span ng-repeat="form in config.pdf_forms[event.type]" ng-if="!groups" style="display:block">
+	      <button type="button" ng-disabled="modified() || !enabled.rider" ng-click="pdf_form(form)">{{form.name}}</button>
+	      <button type="button" ng-if="form.direct" ng-disabled="modified() || !enabled.rider" ng-click="print_direct(form)" style="padding:0 0">🖶</button>
+	    </span>
 	  </p>
 	</fieldset>
       </form>
