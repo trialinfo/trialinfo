@@ -156,29 +156,6 @@ var eventResultsController = [
 	});
       });
 
-      if (event.hide_country) {
-	function normalizeCountry(rider) {
-	  if (rider.country == event.country)
-	    rider.country = null;
-	}
-
-	angular.forEach(results.rankings, function(ranking) {
-	  angular.forEach(ranking.classes, function(class_) {
-	    angular.forEach(class_.riders, function(rider) {
-	      normalizeCountry(rider);
-	    });
-	  });
-	});
-
-	if (results.registered) {
-	  angular.forEach(results.registered.classes, function(class_) {
-	    angular.forEach(class_.riders, function(rider) {
-	      normalizeCountry(rider);
-	    });
-	  });
-	}
-      }
-
       $scope.distribution = [];
       $scope.marks_distribution_columns = 0;
       if (!features.individual_marks && !features.explain_rank) {
@@ -351,6 +328,13 @@ var eventResultsController = [
       ).join(', ');
     }
 
+    $scope.flag_symbol = function(country) {
+      var code = regional_indicator_symbol_codes[country];
+      if (code)
+	return String.fromCodePoint(0x1f1e6 + code.codePointAt(0) - 65,
+	                            0x1f1e6 + code.codePointAt(1) - 65)
+    };
+
     var defined_fields = {
       number:
 	{ name: 'Startnummer',
@@ -400,6 +384,11 @@ var eventResultsController = [
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
+      flag:
+        { name: 'Landesflagge',
+	  expr: "flag_symbol(country)",
+	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'flag' } },
       start_time:
         { name: 'Startzeit',
 	  heading: 'Startzeit',
