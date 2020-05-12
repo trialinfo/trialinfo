@@ -156,55 +156,24 @@ var eventResultsController = [
 	});
       });
 
-      if (event.hide_country) {
-	function normalizeCountry(rider) {
-	  if (rider.country == event.country)
-	    rider.country = null;
-	}
-
-	angular.forEach(results.rankings, function(ranking) {
-	  angular.forEach(ranking.classes, function(class_) {
-	    angular.forEach(class_.riders, function(rider) {
-	      normalizeCountry(rider);
-	    });
-	  });
-	});
-
-	if (results.registered) {
-	  angular.forEach(results.registered.classes, function(class_) {
-	    angular.forEach(class_.riders, function(rider) {
-	      normalizeCountry(rider);
-	    });
-	  });
-	}
-      }
-
       $scope.distribution = [];
       $scope.marks_distribution_columns = 0;
       if (!features.individual_marks && !features.explain_rank) {
 	if (event.type == 'otsv-acup') {
-	  $scope.distribution[0] = true;
+	  $scope.distribution = [0];
 	  $scope.marks_distribution_columns++;
 	} else if (event.uci_x10) {
-	  $scope.distribution[1] = true;
-	  $scope.distribution[2] = true;
-	  $scope.distribution[3] = true;
-	  $scope.distribution[4] = true;
-	  $scope.distribution[5] = true;
-	  $scope.distribution[6] = true;
+	  $scope.distribution = [6,5,4,3,2,1];
 	  $scope.marks_distribution_columns += 6;
 	} else {
-	  $scope.distribution[0] = true;
-	  $scope.distribution[1] = true;
-	  $scope.distribution[2] = true;
-	  $scope.distribution[3] = true;
+	  $scope.distribution = [0,1,2,3];
 	  $scope.marks_distribution_columns += 4;
 	  if (event.four_marks) {
-	    $scope.distribution[4] = true;
+	    $scope.distribution.push(4);
 	    $scope.marks_distribution_columns++;
 	  }
 	  if (features.column_5) {
-	    $scope.distribution[5] = true;
+	    $scope.distribution.push(5);
 	    $scope.marks_distribution_columns++;
 	  }
 	}
@@ -351,6 +320,13 @@ var eventResultsController = [
       ).join(', ');
     }
 
+    $scope.flag_symbol = function(country) {
+      var code = regional_indicator_symbol_codes[country];
+      if (code)
+	return String.fromCodePoint(0x1f1e6 + code.codePointAt(0) - 65,
+	                            0x1f1e6 + code.codePointAt(1) - 65)
+    };
+
     var defined_fields = {
       number:
 	{ name: 'Startnummer',
@@ -400,6 +376,11 @@ var eventResultsController = [
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
+      flag:
+        { name: 'Landesflagge',
+	  expr: "flag_symbol(country)",
+	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'flag' } },
       start_time:
         { name: 'Startzeit',
 	  heading: 'Startzeit',

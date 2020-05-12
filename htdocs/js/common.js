@@ -37,7 +37,8 @@ function guardian_visible(rider, event) {
   return age < 18;
 }
 
-/* The first code (IOC) is used in the database.  The others are mostly ISO codes. */
+/* The first entry in the codes arrays is the IOC (International Olympic
+ * Committee) country code; this is what's used in the database. */
 /* https://en.wikipedia.org/wiki/List_of_IOC_country_codes */
 /* https://en.wikipedia.org/wiki/ISO_3166-1 */
 
@@ -76,6 +77,29 @@ var provinces = {
     {name: 'Vorarlberg', codes: ['V']},
     {name: 'Wien', codes: ['W']}
   ]
+};
+
+var regional_indicator_symbol_codes = {
+  'AUT': 'AT',
+  'BEL': 'BE',
+  'CRO': 'HR',
+  'CZE': 'CZ',
+  'DEN': 'DK',
+  'ESP': 'ES',
+  'FRA': 'FR',
+  'GBR': 'GB',
+  'GER': 'DE',
+  'HUN': 'HU',
+  'ITA': 'IT',
+  'LAT': 'LV',
+  'NED': 'NL',
+  'NOR': 'NO',
+  'POL': 'PL',
+  'ROU': 'RO',
+  'SLO': 'SI',
+  'SUI': 'CH',
+  'SVK': 'SK',
+  'SWE': 'SE'
 };
 
 function remaining_time(timestamp) {

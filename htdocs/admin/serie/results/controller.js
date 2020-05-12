@@ -19,21 +19,6 @@ var serieResultsController = [
     $scope.serie = serie;
     $scope.features = features;
 
-    if (serie.hide_country) {
-      function normalizeCountry(rider) {
-	if (rider.country == serie.country)
-	  rider.country = null;
-      }
-
-      results.rankings.forEach(function(ranking) {
-	ranking.classes.forEach(function(class_ranking) {
-	  class_ranking.riders.forEach(function(rider) {
-	    normalizeCountry(rider);
-	  });
-	});
-      });
-    }
-
     angular.forEach(results.events, function(event, index) {
       event.label = +index + 1;
     });
@@ -172,6 +157,13 @@ var serieResultsController = [
       return country_province.join(' ');
     };
 
+    $scope.flag_symbol = function(country) {
+      var code = regional_indicator_symbol_codes[country];
+      if (code)
+	return String.fromCodePoint(0x1f1e6 + code.codePointAt(0) - 65,
+				    0x1f1e6 + code.codePointAt(1) - 65)
+    };
+
     var defined_fields = {
       number:
 	{ name: 'Startnummer',
@@ -221,6 +213,11 @@ var serieResultsController = [
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
+      flag:
+	{ name: 'Landesflagge',
+	  expr: "flag_symbol(country)",
+	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'flag' } },
     };
     angular.forEach(defined_fields, function(field) {
       field.heading = $sce.trustAsHtml(field.heading);
