@@ -973,10 +973,10 @@ async function rider_regform_data(connection, id, number, event) {
     rider.number = null;
 
   let name = [];
-  if (rider.last_name)
-    name.push(rider.last_name);
   if (rider.first_name)
     name.push(rider.first_name);
+  if (rider.last_name)
+    name.push(rider.last_name);
   rider.name = name.join(' ');
   rider.NAME = rider.name.toUpperCase();
 
