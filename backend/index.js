@@ -70,29 +70,47 @@ var emails = {
   'notify-registration': require('./emails/notify-registration.marko.js')
 };
 
-var regforms_dir = 'pdf/regform';
+var pdf_dir = 'pdf';
 
-let regforms = {};
-try {
-  regforms = fs.readdirSync(regforms_dir).reduce(function(regforms, type) {
-    let base_names = {};
+let pdf_forms = {};
+(function() {
+  var form_types = [];
+  try {
+    form_types = fs.readdirSync(pdf_dir);
+  } catch (_) {}
+  for (var form_type of form_types) {
+    var event_types = [];
     try {
-      base_names = fs.readdirSync(regforms_dir + '/' + type).reduce(function(base_names, name) {
-	let match = name.match(/(.*)\.pdf$/);
-	if (match) {
-	  let base_name = match[1].replace(/{.+?:.+?}/g, '');
-	  if (!(base_name in base_names))
-	    base_names[base_name] = [];
-	  base_names[base_name].push(name);
+      event_types = fs.readdirSync(pdf_dir + '/' + form_type);
+    } catch (_) {
+    }
+
+    for (var event_type of event_types) {
+      var names = [];
+      try {
+	names = fs.readdirSync(pdf_dir + '/' + form_type + '/' + event_type);
+      } catch (_) {
+      }
+
+      for (var name of names) {
+	var match = name.match(/(.*)\.pdf$/);
+	if (!match)
+	  continue;
+	let base_name = match[1].replace(/{.+?:.+?}/g, '');
+
+	if (!(event_type in pdf_forms))
+	  pdf_forms[event_type] = {};
+	if (!(base_name in pdf_forms[event_type])) {
+	  pdf_forms[event_type][base_name] = {
+	    forms: [],
+	    type: form_type
+	  };
 	}
-	return base_names;
-      }, {});
-    } catch (_) {}
-    if (Object.keys(base_names).length)
-      regforms[type] = base_names;
-    return regforms;
-  }, {});
-} catch (_) {}
+	pdf_forms[event_type][base_name].forms.push(name);
+      }
+    }
+  }
+})();
 
 var object_values = require('object.values');
 if (!Object.values)
@@ -968,7 +986,7 @@ function dates_to_string(dates) {
   return dates;
 }
 
-async function rider_regform_data(connection, id, number, event) {
+async function rider_pdf_form_data(connection, id, number, event) {
   let rider = await get_rider(connection, id, number);
   if (!rider)
     throw new HTTPError(404, 'Not Found');
@@ -979,10 +997,10 @@ async function rider_regform_data(connection, id, number, event) {
     rider.number = null;
 
   let name = [];
-  if (rider.last_name)
-    name.push(rider.last_name);
   if (rider.first_name)
     name.push(rider.first_name);
+  if (rider.last_name)
+    name.push(rider.last_name);
   rider.name = name.join(' ');
   rider.NAME = rider.name.toUpperCase();
 
@@ -1064,15 +1082,23 @@ async function rider_regform_data(connection, id, number, event) {
   return rider;
 }
 
-async function admin_regform(res, connection, id, name, numbers) {
+async function admin_pdf_form(res, connection, id, name, numbers, direct) {
   let event = await get_event(connection, id);
   if (event.type == null ||
-      (regforms[event.type] || {})[name] == null)
+      (pdf_forms[event.type] || {})[name] == null)
     throw new HTTPError(404, 'Not Found');
 
-  function regform_for_rider(rider) {
+  let printer;
+  if (direct) {
+    let form_type = pdf_forms[event.type][name].type;
+    printer = (config.printers || {})[form_type];
+    if (!printer)
+      throw new HTTPError(404, 'No printer defined for form type ' + encodeURIComponent(form_type));
+  }
+
+  function pdf_form_for_rider(rider) {
     let matching_filenames = [];
-    for (let filename of regforms[event.type][name]) {
+    for (let filename of pdf_forms[event.type][name].forms) {
       let expressions = filename.match(/({.+?:.+?})/g) || [];
       let matches = 0;
       for (let expression of expressions) {
@@ -1088,8 +1114,12 @@ async function admin_regform(res, connection, id, name, numbers) {
 	});
       }
     }
-    if (matching_filenames.length)
-      return matching_filenames.sort((a, b) => b.matches - a.matches)[0].filename;
+    if (matching_filenames.length) {
+      return {
+	filename: matching_filenames.sort((a, b) => b.matches - a.matches)[0].filename,
+	type: pdf_forms[event.type][name].type
+      };
+    }
   }
 
   let tmpresult;
@@ -1097,24 +1127,24 @@ async function admin_regform(res, connection, id, name, numbers) {
   if (Array.isArray(numbers)) {
     let riders = [];
     for (let number of numbers) {
-      var rider = await rider_regform_data(connection, id, number, event);
-      let filename = regform_for_rider(rider);
-      if (filename == null)
+      var rider = await rider_pdf_form_data(connection, id, number, event);
+      let form = pdf_form_for_rider(rider);
+      if (form == null)
 	throw new HTTPError(404, 'Not Found');
-      rider.filename = filename;
+      rider.form = form;
       riders.push(rider);
     }
 
     let tmpfiles = [];
     for (let rider of riders) {
-      let filename = rider.filename;
-      delete rider.filename;
+      let form = rider.form;
+      delete rider.form;
 
       var tmpfile = tmp.fileSync();
       tmpfiles.push(tmpfile);
 
-      var form = `${regforms_dir}/${event.type}/${filename}`;
-      let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', form], {
+      var filename = `${pdf_dir}/${form.type}/${event.type}/${form.filename}`;
+      let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', filename], {
 	stdio: ['pipe', tmpfile.fd, process.stderr]
       });
       let child = promise.childProcess;
@@ -1136,14 +1166,14 @@ async function admin_regform(res, connection, id, name, numbers) {
     for (let tmpfile of tmpfiles)
       tmpfile.removeCallback();
   } else {
-    let rider = await rider_regform_data(connection, id, numbers, event);
-    let filename = regform_for_rider(rider);
-    if (filename == null)
+    let rider = await rider_pdf_form_data(connection, id, numbers, event);
+    let form = pdf_form_for_rider(rider);
+    if (form == null)
       throw new HTTPError(404, 'Not Found');
 
     tmpresult = tmp.fileSync();
-    var form = `${regforms_dir}/${event.type}/${filename}`;
-    let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', form], {
+    var filename = `${pdf_dir}/${form.type}/${event.type}/${form.filename}`;
+    let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', filename], {
       stdio: ['pipe', tmpresult.fd, process.stderr]
     });
     let child = promise.childProcess;
@@ -1152,14 +1182,24 @@ async function admin_regform(res, connection, id, name, numbers) {
     await promise;
   }
 
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(name)}.pdf`);
-  res.setHeader('Transfer-Encoding', 'chunked');
-  res.sendFile(tmpresult.name, {}, () => {
+  if (direct) {
+    let lp = spawn('lp', ['-d', printer], {
+      stdio: ['pipe', process.stdout, process.stderr]
+    });
+    let reader = fs.createReadStream(tmpresult.name);
+    reader.pipe(lp.childProcess.stdin);
+    await lp;
     tmpresult.removeCallback();
-  });
-
-  /* FIXME: error handling! */
+    res.send('Printed to printer ' + encodeURIComponent(printer));
+    console.log('Printed to printer ' + printer);
+  } else {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(name)}.pdf`);
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.sendFile(tmpresult.name, {}, () => {
+      tmpresult.removeCallback();
+    });
+  }
 }
 
 async function get_events(connection, email) {
@@ -5519,9 +5559,20 @@ var admin_config = {
   admin: true,
   weasyprint: config.weasyprint,
   sync_target: config.sync_target,
-  existing_regforms: Object.keys(regforms).reduce(
-    function(names, type) {
-      names[type] = Object.keys(regforms[type]).sort();
+  pdf_forms: Object.keys(pdf_forms).reduce(
+    function(names, event_type) {
+      names[event_type] = Object.keys(pdf_forms[event_type]).reduce(
+        (names, name) => {
+	  var form_type = pdf_forms[event_type][name].type;
+	  var hash = {
+	    name: name
+	  };
+	  if (form_type in (config.printers || {}))
+	    hash.direct = true;
+	  names.push(hash);
+	  return names;
+	}, []);
+      names[event_type].sort((a,b) => a.name.localeCompare(b.name));
       return names;
     }, {})
 };
@@ -5932,9 +5983,17 @@ app.get('/api/event/:id/last-rider', will_read_event, function(req, res, next) {
   }).catch(next);
 });
 
-app.get('/api/event/:id/regform', will_read_event, async function(req, res, next) {
+app.get('/api/event/:id/pdf-form', will_read_event, async function(req, res, next) {
   try {
-    await admin_regform(res, req.conn, req.params.id, req.query.name, req.query.number);
+    await admin_pdf_form(res, req.conn, req.params.id, req.query.name, req.query.number, false);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/event/:id/pdf-form', will_read_event, async function(req, res, next) {
+  try {
+    await admin_pdf_form(res, req.conn, req.params.id, req.query.name, req.query.number, true);
   } catch (err) {
     next(err);
   }

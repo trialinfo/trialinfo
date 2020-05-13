@@ -1,8 +1,8 @@
 'use strict';
 
 var eventListController = [
-  '$scope', '$sce', '$route', '$location', '$window', '$timeout', 'event', 'list',
-  function eventListController($scope, $sce, $route, $location, $window, $timeout, event, list) {
+  '$scope', '$sce', '$http', '$route', '$location', '$window', '$timeout', 'event', 'list',
+  function eventListController($scope, $sce, $http, $route, $location, $window, $timeout, event, list) {
     $scope.config = config;
     $scope.$root.context(event.title);
 
@@ -849,8 +849,8 @@ var eventListController = [
       $scope.fold.settings = !$scope.fold.settings;
     }
 
-    $scope.regforms = function(name) {
-      var riders = $scope.resulting_list.reduce(function(riders, group) {
+    function riders_list(grouped_list) {
+      return grouped_list.reduce(function(riders, group) {
 	group.list.reduce(function(riders, rider) {
 	  if (!rider.group)
 	    riders.push(rider);
@@ -858,12 +858,30 @@ var eventListController = [
 	}, riders);
 	return riders;
       }, []);
+    }
 
-      $window.location.href = '/api/event/' + event.id + '/regform?' +
-        'name=' + name +
+    $scope.pdf_forms = function(form) {
+      var riders = riders_list($scope.resulting_list);
+
+      $window.location.href = '/api/event/' + event.id + '/pdf-form?' +
+	'name=' + encodeURIComponent(form.name) +
 	riders.map(function(rider) {
 	  return '&number=' + encodeURIComponent(rider.number);
 	}).join('');
+    }
+
+    $scope.print_direct = function(form) {
+      var riders = riders_list($scope.resulting_list);
+
+      $http.post('/api/event/' + event.id + '/pdf-form?' +
+	'name=' + encodeURIComponent(form.name) +
+	riders.map(function(rider) {
+	  return '&number=' + encodeURIComponent(rider.number);
+	}).join(''), '')
+      /**/.then(function(response) {
+	console.log(response.data)
+      })/**/
+      .catch(network_error);
     }
 
     $scope.$watch('show.riders_groups', function(value) {

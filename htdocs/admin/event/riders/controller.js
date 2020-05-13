@@ -805,11 +805,21 @@ var ridersController = [
 
     warn_before_unload($scope, $scope.modified);
 
-    $scope.regform = function(name) {
+    $scope.pdf_form = function(form) {
       $window.location.href =
-	'/api/event/' + event.id + '/regform?number=' +
-	encodeURIComponent($scope.rider.number) + '&name=' +
-	encodeURIComponent(name);
+	'/api/event/' + event.id + '/pdf-form?name=' +
+	encodeURIComponent(form.name) + '&number=' +
+	encodeURIComponent($scope.rider.number);
+    };
+
+    $scope.print_direct = function(form) {
+      $http.post('/api/event/' + event.id + '/pdf-form?&name=' +
+	encodeURIComponent(form.name) + '&number=' +
+	encodeURIComponent($scope.rider.number), '')
+      /**/.then(function(response) {
+	console.log(response.data)
+      })/**/
+      .catch(network_error);
     };
 
     $scope.$watch("rider.class", function(class_) {

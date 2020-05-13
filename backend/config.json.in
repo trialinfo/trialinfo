@@ -19,5 +19,8 @@
   },
   "log_sql": true,
   "weasyprint": true,
+  "printers": {
+    "Labels": "PT-P700"
+  },
   "sync_target": "<<url to sync to>>"
 }
