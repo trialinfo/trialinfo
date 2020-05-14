@@ -158,10 +158,11 @@
       <tr ng-if="features.club">
 	<th><label for="club">Club</label></th>
 	<td>
-	  <input type="text" size="25" maxlength="40" nullable ng-model="rider.club" id="club" list="club_list">
+	  <input type="text" size="25" maxlength="32" nullable ng-model="rider.club" id="club" name="club" list="club_list">
 	  <datalist id="club_list">
 	    <option ng-repeat="club in suggestions.club" value="{{club}}">
 	  </datalist>
+	  <span ng-if="form.club.$invalid" style="color:red">Danke fürs Kürzen!</span>
 	</td>
       </tr>
       <tr ng-if="features.applicant">

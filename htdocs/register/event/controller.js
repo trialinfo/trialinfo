@@ -52,6 +52,13 @@ var eventController = [
       $scope.blur_country();
 
       $scope.internal.conditions = !rider.accept_conditions;
+
+      $timeout(function() {
+	for (let control of $scope.form.$$controls) {
+          control.$setDirty();
+          control.$validate();
+	}
+      });
     }
 
     $scope.guardian_visible = function(rider) {
