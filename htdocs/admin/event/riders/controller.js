@@ -365,6 +365,7 @@ var ridersController = [
 	'group': groups,
 	'class': null,
 	'number': null,
+	'country': event.country,
 	'rankings': event.rankings.map(function(ranking) { return ranking.default; }),
 	'insurance': event.insurance,
 	'verified': true,
