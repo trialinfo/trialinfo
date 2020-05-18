@@ -248,8 +248,7 @@ var eventController = [
 
       if (rider.country != country) {
 	rider.country = country;
-	if (country != event.country)
-	  rider.province = null;
+	rider.province = null;
 	if (country == null)
 	  setFocus('#country');
       }
