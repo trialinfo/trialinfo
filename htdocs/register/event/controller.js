@@ -39,6 +39,7 @@ var eventController = [
       if (!rider) {
 	rider = {
 	  country: event.country,
+	  province: null,
 	  future_starts: {},
 	  insurance: event.insurance,
 	  accept_conditions: false
@@ -212,14 +213,14 @@ var eventController = [
     });
 
     var country_codes = {};
-    countries.forEach(function(country) {
+    for (let country of countries) {
       if (country.codes[0]) {
 	country_codes[country.name.toLocaleUpperCase()] = country.codes[0];
-	country.codes.forEach(function(code) {
+	for (let code of country.codes) {
 	  country_codes[code.toLocaleUpperCase()] = country.codes[0];
-	});
+	}
       }
-    });
+    }
 
     $scope.provinces = [{
       name: '',
@@ -255,9 +256,6 @@ var eventController = [
     });
 
     $scope.blur_country = function() {
-      if (!$scope.otsv_event())
-	return;
-
       var country_code = $scope.rider.country;
       if (country_code != null) {
 	country_code = country_code.toLocaleUpperCase();

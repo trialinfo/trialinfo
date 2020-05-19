@@ -505,52 +505,45 @@ var ridersController = [
       }
     };
 
-    if (event.type && event.type.match(/^otsv/)) {
-      var country_codes = {};
-      countries.forEach(function(country) {
-	if (country.codes[0]) {
-	  country_codes[country.name.toLocaleUpperCase()] = country.codes[0];
-	  country.codes.forEach(function(code) {
-	    country_codes[code.toLocaleUpperCase()] = country.codes[0];
-	  });
+    var country_codes = {};
+    for (let country of countries) {
+      if (country.codes[0]) {
+	country_codes[country.name.toLocaleUpperCase()] = country.codes[0];
+	for (let code of country.codes) {
+	  country_codes[code.toLocaleUpperCase()] = country.codes[0];
 	}
-      });
-
-      $scope.blur_country = function() {
-	var country = $scope.rider.country;
-	if (country) {
-	  var code = country_codes[country.toLocaleUpperCase()];
-	  if (code && country != code)
-	    $scope.rider.country = code;
-	}
-      };
-
-      var province_codes = {};
-      if (provinces[event.country]) {
-	provinces[event.country].forEach(function(province) {
-	  if (province.codes[0]) {
-	    province_codes[province.name.toLocaleUpperCase()] = province.codes[0];
-	    province.codes.forEach(function(code) {
-	      province_codes[code.toLocaleUpperCase()] = province.codes[0];
-	    });
-	  }
-	});
       }
-
-      $scope.blur_province = function() {
-	var province = $scope.rider.province;
-	if (province) {
-	  var code = province_codes[province.toLocaleUpperCase()];
-	  if (code && province != code)
-	    $scope.rider.province = code;
-	}
-      };
-    } else {
-      $scope.blur_country = function() {
-      };
-      $scope.blur_province = function() {
-      };
     }
+
+    $scope.blur_country = function() {
+      var rider = $scope.rider;
+      if (rider.country) {
+	var code = country_codes[rider.country.toLocaleUpperCase()];
+	if (code && rider.country != code)
+	  rider.country = code;
+      }
+    };
+
+    var province_codes = {};
+    if (provinces[event.country]) {
+      for (let province of provinces[event.country]) {
+	if (province.codes[0]) {
+	  province_codes[province.name.toLocaleUpperCase()] = province.codes[0];
+	  for (let code of province.codes) {
+	    province_codes[code.toLocaleUpperCase()] = province.codes[0];
+	  }
+	}
+      }
+    }
+
+    $scope.blur_province = function() {
+      var rider = $scope.rider;
+      if (rider.province) {
+	var code = province_codes[rider.province.toLocaleUpperCase()];
+	if (code && rider.province != code)
+	  rider.province = code;
+      }
+    };
 
     $scope.clone = function() {
       let rider = angular.copy($scope.rider);

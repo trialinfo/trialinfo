@@ -76,6 +76,24 @@ var provinces = {
     {name: 'Tirol', codes: ['T']},
     {name: 'Vorarlberg', codes: ['V']},
     {name: 'Wien', codes: ['W']}
+  ],
+  'GER': [
+    {name: 'Baden-Württemberg', codes: ['BW']},
+    {name: 'Bayern', codes: ['BY']},
+    {name: 'Berlin', codes: ['BE']},
+    {name: 'Brandenburg', codes: ['BB']},
+    {name: 'Bremen', codes: ['HB']},
+    {name: 'Hamburg', codes: ['HH']},
+    {name: 'Hessen', codes: ['HE']},
+    {name: 'Mecklenburg-Vorpommern', codes: ['MV']},
+    {name: 'Niedersachsen', codes: ['NI']},
+    {name: 'Nordrhein-Westfalen', codes: ['NW']},
+    {name: 'Rheinland-Pfalz', codes: ['RP']},
+    {name: 'Saarland', codes: ['SL']},
+    {name: 'Sachsen', codes: ['SN']},
+    {name: 'Sachsen-Anhalt', codes: ['ST']},
+    {name: 'Schleswig-Holstein', codes: ['SH']},
+    {name: 'Thüringen', codes: ['TH']},
   ]
 };
 
