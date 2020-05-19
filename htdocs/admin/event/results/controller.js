@@ -364,7 +364,7 @@ var eventResultsController = [
 	  heading: 'Club',
 	  expr: "club",
 	  style: { 'text-align': 'left',
-		   'max-width': '13em',
+		   'max-width': '15em',
 		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
 		   'overflow': 'hidden' },
 	  attr: { 'adjust-width': 'club' },

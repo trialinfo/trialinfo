@@ -106,11 +106,11 @@
       <tr ng-if="features.country">
 	<th><label for="country">Land</label></th>
 	<td>
-	  <span ng-if="otsv_event() && internal.country != null">
-	    <select ng-model="internal.country" nullable ng-options="country.code as country.name for country in countries" name="country" id="country">
+	  <span ng-if="internal.country != null">
+	    <select ng-model="internal.country" ng-options="country.code as country.name for country in countries" name="country" id="country">
 	    </select>
 	  </span>
-	  <span ng-if="!otsv_event() || internal.country == null">
+	  <span ng-if="internal.country == null">
 	    <input type="text" nullable required size="15" maxlength="15" ng-model="rider.country" ng-blur="blur_country()" name="country" id="country" list="country_list"><span ng-if="required_error(form.country)" style="color:red">*</span>
 	    <datalist id="country_list">
 	      <option ng-repeat="country in suggestions.country" value="{{country}}">
@@ -118,16 +118,10 @@
 	  </span>
 	</td>
       </tr>
-      <tr ng-if="features.province && (!otsv_event() || rider.country == event.country)">
+      <tr ng-if="features.province && rider.country == event.country">
 	<th><label for="province">Bundesland</label></th>
-	<td ng-if="!otsv_event()">
-	  <input type="text" nullable size="15" maxlength="20" ng-model="rider.province" list="province_list" name="province">
-	  <datalist id="province_list">
-	    <option ng-repeat="province in suggestions.province" value="{{province}}">
-	  </datalist>
-	</td>
-	<td ng-if="otsv_event() && rider.country == event.country">
-	  <select ng-model="rider.province" nullable ng-options="province.code as province.name for province in provinces" name="province">
+	<td>
+	  <select ng-model="rider.province" ng-options="province.code as province.name for province in provinces" name="province">
 	  </select>
 	</td>
       </tr>
@@ -158,10 +152,11 @@
       <tr ng-if="features.club">
 	<th><label for="club">Club</label></th>
 	<td>
-	  <input type="text" size="25" maxlength="40" nullable ng-model="rider.club" id="club" list="club_list">
+	  <input type="text" size="25" maxlength="32" nullable ng-model="rider.club" id="club" name="club" list="club_list">
 	  <datalist id="club_list">
 	    <option ng-repeat="club in suggestions.club" value="{{club}}">
 	  </datalist>
+	  <span ng-if="form.club.$invalid" style="color:red">Danke fürs Kürzen!</span>
 	</td>
       </tr>
       <tr ng-if="features.applicant">

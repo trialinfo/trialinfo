@@ -67,7 +67,7 @@ a:hover.updown {
       <tr>
 	<th><label for="country">Land</label></th>
 	<td>
-	  <select ng-model="event.country" nullable ng-options="country.code as country.name for country in countries" id="country">
+	  <select ng-model="event.country" ng-options="country.code as country.name for country in countries" id="country">
           </select>
 	  <input type="checkbox" ng-model="event.hide_country" id="hide_country">
 	    <label for="hide_country" title="Eigenes Land in Ergebnissen nicht anzeigen.">Verbergen</label>

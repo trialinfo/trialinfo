@@ -39,6 +39,7 @@ var eventController = [
       if (!rider) {
 	rider = {
 	  country: event.country,
+	  province: null,
 	  future_starts: {},
 	  insurance: event.insurance,
 	  accept_conditions: false
@@ -52,6 +53,13 @@ var eventController = [
       $scope.blur_country();
 
       $scope.internal.conditions = !rider.accept_conditions;
+
+      $timeout(function() {
+	for (let control of $scope.form.$$controls) {
+          control.$setDirty();
+          control.$validate();
+	}
+      });
     }
 
     $scope.guardian_visible = function(rider) {
@@ -205,14 +213,14 @@ var eventController = [
     });
 
     var country_codes = {};
-    countries.forEach(function(country) {
+    for (let country of countries) {
       if (country.codes[0]) {
 	country_codes[country.name.toLocaleUpperCase()] = country.codes[0];
-	country.codes.forEach(function(code) {
+	for (let code of country.codes) {
 	  country_codes[code.toLocaleUpperCase()] = country.codes[0];
-	});
+	}
       }
-    });
+    }
 
     $scope.provinces = [{
       name: '',
@@ -241,17 +249,13 @@ var eventController = [
 
       if (rider.country != country) {
 	rider.country = country;
-	if (country != event.country)
-	  rider.province = null;
+	rider.province = null;
 	if (country == null)
 	  setFocus('#country');
       }
     });
 
     $scope.blur_country = function() {
-      if (!$scope.otsv_event())
-	return;
-
       var country_code = $scope.rider.country;
       if (country_code != null) {
 	country_code = country_code.toLocaleUpperCase();
