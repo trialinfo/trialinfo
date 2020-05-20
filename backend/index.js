@@ -1907,7 +1907,6 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.start = false;
       rider.start_time = null;
       rider.entry_fee = null;
-      rider.rider_comment = null;
     });
     Object.keys(riders).forEach((number) => {
       if (riders[number].group)
@@ -1947,6 +1946,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
     Object.values(riders).forEach((rider) => {
       rider.future_starts = {};
       rider.license = null;
+      rider.rider_comment = null;
     });
     event.base = null;
     event.base_fid = null;
