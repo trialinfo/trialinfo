@@ -572,7 +572,7 @@ var eventResultsController = [
 	return;
       }
 
-      var default_fields = ['number', 'name'].concat(event.result_columns);
+      var default_fields = [].concat(event.result_columns);
       if (results.registered)
 	default_fields.push('start_time');
 

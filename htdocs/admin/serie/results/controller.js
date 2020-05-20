@@ -375,7 +375,7 @@ var serieResultsController = [
       }
 
       var fields = [];
-      angular.forEach(['number', 'name'].concat(serie.result_columns), function(name) {
+      angular.forEach(serie.result_columns, function(name) {
 	var field = defined_fields[name];
 	if (field && (!field.when || field.when()))
 	  fields.push(name);
