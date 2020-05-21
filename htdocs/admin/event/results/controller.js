@@ -352,6 +352,19 @@ var eventResultsController = [
 	  },
 	  style: { 'text-align': 'left', 'padding-right': '1em' },
 	  attr: { 'adjust-width': 'name' } },
+      name_applicant:
+	{ name: 'Name (Bewerber)',
+	  heading: 'Name',
+	  html_value: function(rider) {
+	    let name = htmlEscape(join(' ', rider.last_name, rider.first_name));
+	    let applicant = '';
+	    if (rider.applicant != null)
+	      applicant = '<br><em>' + htmlEscape(rider.applicant) + '</em>';
+	    return $sce.trustAsHtml(name + applicant);
+	  },
+	  style: { 'text-align': 'left', 'padding-right': '1em' },
+	  attr: { 'adjust-width': 'name' },
+	  when: function() { return features.applicant } },
       vehicle:
 	{ name: 'Fahrzeug',
 	  heading: 'Fahrzeug',
