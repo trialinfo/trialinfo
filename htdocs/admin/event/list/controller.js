@@ -153,7 +153,7 @@ var eventListController = [
     if ($scope.show.riders && $scope.show.groups)
       $scope.riders_groups = true;
 
-    $scope.country_province = function(rider) {
+    function country_province(rider) {
       var country_province = [];
       if (rider.country &&
 	  (rider.country != event.country || !event.hide_country))
@@ -161,14 +161,14 @@ var eventListController = [
       if (rider.province)
 	country_province.push('(' + rider.province + ')');
       return country_province.join(' ');
-    };
+    }
 
     $scope.ranking_name = function(ranking) {
       var r = event.rankings[ranking - 1];
       return r && r.name ? r.name : 'Wertung ' + ranking;
     };
 
-    $scope.groups_list = function(groups) {
+    function groups_list(groups) {
       var liste = [];
       angular.forEach(groups, function(number) {
 	var group = riders_by_number[number];
@@ -180,7 +180,7 @@ var eventListController = [
       }).sort(function(a, b) { return a.localeCompare(b); }).join(', ');
     }
 
-    $scope.address = function(rider) {
+    function address(rider) {
       var address = [], zip_city = [];
       if (rider.street != '' && rider.street != null)
 	address.push(rider.street);
@@ -193,7 +193,7 @@ var eventListController = [
       return address.join(', ');
     }
 
-    $scope.rider_may_start = function(rider) {
+    function rider_may_start(rider) {
       return rider.verified && (rider.registered || !features.registered);
     }
 
@@ -201,201 +201,268 @@ var eventListController = [
       verified:
 	{ name: 'Verifiziert',
 	  heading: 'Verifiziert',
-	  expr: "verified ? 'Ja' : ''",
+	  value: function(rider) {
+	    return rider.verified ? 'Ja' : null;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'yesno' },
 	  when: function() { return features.verified; } },
       number:
 	{ name: 'Startnummer',
 	  heading: '<span title="Startnummer">Nr.</span>',
-	  expr: "number < 0 ? null : number",
+	  value: function(rider) {
+	    return rider.number < 0 ? null : rider.number;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'number' },
 	  when: function() { return features.number; } },
       'class':
 	{ name: 'Klasse (in Nennung)',
 	  heading: '<span title="Klasse (in Nennung)">Kl.</span>',
-	  expr: "rider['class']",
+	  value: function(rider) {
+	    return rider['class'];
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'class' },
 	  when: function() { return features['class']; } },
       name:
 	{ name: 'Name',
 	  heading: 'Name',
-	  expr: "join(' ', last_name, first_name)",
+	  value: function(rider) {
+	    return join(' ', rider.last_name, rider.first_name);
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'name' },
 	  },
       guardian:
 	{ name: 'Ges. Vertreter',
 	  heading: '<span title="Gesetzlicher Vertreter">Ges. Vertreter</span>',
-	  expr: "guardian",
+	  value: function(rider) {
+	    return rider.guardian;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'guardian' },
 	  when: function() { return features.guardian; } },
       date_of_birth:
 	{ name: 'Geburtsdatum',
 	  heading: 'Geburtsdatum',
-	  expr: "date_of_birth | date:'d.M.yyyy'",
+	  value: function(rider) {
+	    return $scope.$eval("date_of_birth | date:'d.M.yyyy'", rider);
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'date_of_birth' },
 	  when: function() { return features.date_of_birth; } },
       age_year:
 	{ name: 'Jahrgang',
 	  heading: 'Jahrgang',
-	  expr: "date_of_birth | date:'yyyy'",
+	  value: function(rider) {
+	    return $scope.$eval("date_of_birth | date:'yyyy'", rider);
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'age_year' },
 	  when: function() { return features.date_of_birth; } },
       city:
 	{ name: 'Wohnort',
 	  heading: 'Wohnort',
-	  expr: "city",
+	  value: function(rider) {
+	    return rider.city;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'city' },
 	  when: function() { return features.city; } },
       club:
 	{ name: 'Club',
 	  heading: 'Club',
-	  expr: "club",
+	  value: function(rider) {
+	    return rider.club;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'club' },
 	  when: function() { return features.club; } },
       vehicle:
 	{ name: 'Fahrzeug',
 	  heading: 'Fahrzeug',
-	  expr: "vehicle",
+	  value: function(rider) {
+	    return rider.vehicle;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'vehicle' },
 	  when: function() { return features.vehicle; } },
       year_of_manufacture:
         { name: 'Baujahr',
 	  heading: '<span title="Baujahr">Bj.</span>',
-	  expr: "year_of_manufacture",
+	  value: function(rider) {
+	    return rider.year_of_manufacture;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'year_of_manufacture' },
 	  when: function() { return features.year_of_manufacture; } },
       zip:
 	{ name: 'Postleitzahl',
 	  heading: 'PLZ',
-	  expr: "zip",
+	  value: function(rider) {
+	    return rider.zip;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'zip' },
 	  when: function() { return features.zip; } },
       country:
 	{ name: 'Land',
 	  heading: 'Land',
-	  expr: "country",
+	  value: function(rider) {
+	    return rider.country;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country' },
 	  when: function() { return features.country; } },
       address:
 	{ name: 'Anschrift',
 	  heading: 'Anschrift',
-	  expr: "address(rider)",
+	  value: function(rider) {
+	    return address(rider);
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'address' },
 	  when: function() { return features.street || features.zip || features.city } },
       province:
 	{ name: 'Bundesland',
 	  heading: 'Bundesland',
-	  expr: "province",
+	  value: function(rider) {
+	    return rider.province;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'province' },
 	  when: function() { return features.province; } },
       country_province:
 	{ name: 'Land (Bundesland)',
 	  heading: '<span title="Land (Bundesland)">Land</span>',
-	  expr: "country_province(rider)",
+	  value: function(rider) {
+	    return country_province(rider);
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.province || features.country; } },
       phone:
 	{ name: 'Telefon',
 	  heading: 'Telefon',
-	  expr: "phone",
+	  value: function(rider) {
+	    return rider.phone;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'phone' },
 	  when: function() { return features.phone; } },
       emergency_phone:
 	{ name: 'Notfall-Telefon',
 	  heading: 'Notfall-Telefon',
-	  expr: "emergency_phone",
+	  value: function(rider) {
+	    return rider.emergency_phone;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'emergency_phone' },
 	  when: function() { return features.emergency_phone; } },
       email:
 	{ name: 'E-Mail',
 	  heading: 'E-Mail',
-	  expr: "email",
+	  value: function(rider) {
+	    return rider.email;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'email' },
 	  when: function() { return features.email; } },
       start_time:
 	{ name: 'Startzeit',
 	  heading: 'Startzeit',
-	  expr: "start_time | date:'H:mm:ss'",
+	  value: function(rider) {
+	    return $scope.$eval("start_time | date:'H:mm:ss'", rider);
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'time' },
 	  when: function() { return features.start_time; } },
       finish_time:
 	{ name: 'Zielzeit',
 	  heading: 'Zielzeit',
-	  expr: "finish_time | date:'H:mm:ss'",
+	  value: function(rider) {
+	    return $scope.$eval("finish_time | date:'H:mm:ss'", rider);
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'time' },
 	  when: function() { return features.finish_time; } },
       registered:
 	{ name: 'Nennungseingang',
 	  heading: 'Nennungseingang',
-	  expr: "registered ? 'Ja' : ''",
+	  value: function(rider) {
+	    return rider.registered ? 'Ja' : null;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'yesno' },
 	  when: function() { return features.registered; } },
       start:
 	{ name: 'Start',
 	  heading: 'Start',
-	  expr: "start ? (rider_may_start(rider) ? 'Ja' : '?') : ''",
+	  value: function(rider) {
+	    return rider.start ? (rider_may_start(rider) ? 'Ja' : '?') : null;
+	  },
 	  style: { 'text-align': 'yesno' },
 	  attr: { 'adjust-width': 'start' },
 	  when: function() { return features.start; } },
       non_competing:
 	{ name: 'Außer Konkurrenz',
 	  heading: '<span title="Außer Konkurrenz">A.K.</span>',
-	  expr: "non_competing ? 'Ja' : ''",
+	  value: function(rider) {
+	    return rider.non_competing ? 'Ja' : null;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'yesno' } },
       insurance:
 	{ name: 'Versicherung',
 	  heading: 'Versicherung',
-	  expr: "insurance",
+	  value: function(rider) {
+	    return rider.insurance;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'insurance' },
 	  when: function() { return features.insurance; } },
       license:
 	{ name: 'Lizenznummer',
 	  heading: 'Lizenznr.',
-	  expr: "license",
+	  value: function(rider) {
+	    return rider.license;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'license' },
 	  when: function() { return features.license; } },
       current_round:
 	{ name: 'Aktuelle Runde',
 	  heading: '<span title="Aktuelle Runde">In Runde</span>',
-	  expr: "(!start || failure || rounds >= event.classes[event.classes[rider['class'] - 1].ranking_class - 1].rounds) ? null : rounds + 1",
+	  value: function(rider) {
+	    if (!rider.start || rider.failure)
+	      return null;
+	    try {
+	      let ranking_class = event.classes[rider['class'] - 1].ranking_class;
+	      if (rider.rounds >= event.classes[ranking_class - 1].rounds)
+		return null;
+	    } catch (_) {
+	      return null;
+	    }
+	    return rider.rounds + 1;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'current_round' } },
       groups:
 	{ name: 'Gruppen',
 	  heading: 'Gruppen',
-	  expr: 'groups_list(groups)',
+	  value: function(rider) {
+	    return groups_list(rider.groups);
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'groups' },
 	  when: function() { return $scope.riders_groups; } },
       entry_fee:
 	{ name: 'Nenngeld',
 	  heading: 'Nenngeld',
-	  expr: 'entry_fee',
+	  value: function(rider) {
+	    return rider.entry_fee;
+	  },
 	  style: { 'text-align': 'right' },
 	  attr: { 'adjust-width': 'entry_fee' },
 	  when: function() { return features.entry_fee; },
@@ -403,7 +470,9 @@ var eventListController = [
       org_fee:
 	{ name: 'ÖTSV-Beitrag',
 	  heading: 'ÖTSV-Beitrag',
-	  expr: 'org_fee',
+	  value: function(rider) {
+	    return rider.org_fee;
+	  },
 	  style: { 'text-align': 'right' },
 	  attr: { 'adjust-width': 'org_fee' },
 	  when: function() { return features.org_fee; },
@@ -414,7 +483,9 @@ var eventListController = [
       defined_fields['ranking' + ranking] = {
 	name: name,
 	heading: name,
-	expr: "rankings[" + (ranking - 1) + "] ? 'Ja' : ''",
+	value: function(rider) {
+	  return rider.rankings[ranking - 1] ? 'Ja' : null;
+	},
 	style: { 'text-align': 'center' },
 	when: function() { return event.rankings[ranking - 1]; }
       };
@@ -574,8 +645,8 @@ var eventListController = [
       },
       country_province: {
 	heading: function(f) {
-	  var country_province = $scope.country_province(f);
-	  return country_province === '' ? 'Land / Bundesland nicht bekannt' : country_province;
+	  var cp = country_province(f);
+	  return cp === '' ? 'Land / Bundesland nicht bekannt' : cp;
 	},
 	compare: function(f1, f2) {
 	  return generic_compare(f1.country, f2.country) ||
@@ -793,7 +864,7 @@ var eventListController = [
 	    var agg = null;
 	    if (field.aggregieren)
 	      angular.forEach(group.list, function(rider) {
-		agg = field.aggregieren(agg, $scope.$eval(field.expr, rider));
+		agg = field.aggregieren(agg, field.value(rider));
 	      });
 	    liste.push(agg);
 	  });

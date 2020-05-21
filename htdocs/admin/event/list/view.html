@@ -233,7 +233,7 @@ table.liste td, table.liste th {
     </thead>
     <tbody ng-repeat="rider in group.list">
       <tr>
-	<td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+	<td ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind="field.value(rider)"></td>
       </tr>
       <tr ng-if="show.comments && (rider.comment || rider.rider_comment)">
         <td colspan="{{fields.length}}" class="comment-cell">
