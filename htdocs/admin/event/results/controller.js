@@ -280,7 +280,7 @@ var eventResultsController = [
       return list;
     }
 
-    function class_symbol(class_) {
+    $scope.class_symbol = function(class_) {
       if (class_.color) {
 	return $sce.trustAsHtml(
 	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + class_.color + '"></span>');
@@ -320,12 +320,12 @@ var eventResultsController = [
       ).join(', ');
     }
 
-    $scope.flag_symbol = function(country) {
+    function flag_symbol(country) {
       var code = regional_indicator_symbol_codes[country];
       if (code)
 	return String.fromCodePoint(0x1f1e6 + code.codePointAt(0) - 65,
 	                            0x1f1e6 + code.codePointAt(1) - 65)
-    };
+    }
 
     let htmlEscape = (function() {
       let element = angular.element('<span/>');
