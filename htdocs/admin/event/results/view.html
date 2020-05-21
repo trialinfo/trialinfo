@@ -178,7 +178,7 @@ table.ranking tr td.important {
 	<tbody ng-repeat="rider in class_ranking.riders track by rider.number" class="rider" ng-class-even="'alt'">
 	  <tr>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rank(rider)}}</td>
-	    <td rowspan="{{rows_per_rider}}" ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+	    <td rowspan="{{rows_per_rider}}" ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.html_value(rider)"></td>
 	    <td ng-repeat-start="ev in enumerate(0, events.length - 1)" ng-init="result = rider.results[ev]; event_ranking = class_ranking.events[ev]" style="display:none"></td>
 	    <td ng-if="!result" colspan="{{(features.individual_marks ? event_ranking.zones.length + 1 : event_ranking.rounds) + 1 + event_ranking.additional_marks + event_ranking.penalty_marks + event_ranking.tie_break + marks_distribution_columns}}" rowspan="{{features.individual_marks ? rounds : 1}}"></td>
 	    <td ng-if-start="result.failure || result.non_competing" style="display:none"></td>
@@ -234,7 +234,7 @@ table.ranking tr td.important {
     <tbody ng-repeat="rider in class.riders track by rider.number" class="rider" ng-class-even="'alt'">
       <tr>
 	<td>{{rider.all_starts}}</td>
-	<td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+	<td ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.html_value(rider)"></td>
       </tr>
     </tbody>
   </table>

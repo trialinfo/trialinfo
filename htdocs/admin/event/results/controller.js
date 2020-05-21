@@ -280,14 +280,14 @@ var eventResultsController = [
       return list;
     }
 
-    $scope.class_symbol = function(class_) {
+    function class_symbol(class_) {
       if (class_.color) {
 	return $sce.trustAsHtml(
 	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + class_.color + '"></span>');
       }
-    };
+    }
 
-    $scope.country_province = function(rider) {
+    function country_province(rider) {
       var country_province = [];
       if (rider.country &&
 	  (rider.country != event.country || !event.hide_country))
@@ -295,7 +295,7 @@ var eventResultsController = [
       if (rider.province)
 	country_province.push('(' + rider.province + ')');
       return country_province.join(' ');
-    };
+    }
 
     $scope.explain_rank = function(riders, index) {
       let rider = riders[index];
@@ -327,25 +327,50 @@ var eventResultsController = [
 	                            0x1f1e6 + code.codePointAt(1) - 65)
     };
 
+    let htmlEscape = (function() {
+      let element = angular.element('<span/>');
+      return function(text) {
+	return element.text(text).html();
+      };
+    })();
+
     var defined_fields = {
       number:
 	{ name: 'Startnummer',
 	  heading: '<span title="Startnummer">Nr.</span>',
-	  expr: "number < 0 ? null : number",
+	  value: function(rider) {
+	    return rider.number < 0 ? null : rider.number;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'number' },
 	  when: function() { return features.number } },
       name:
 	{ name: 'Name',
 	  heading: 'Name',
-	  /* FIXME: <br> nach Bewerber! */
-	  expr: "(bewerber ? bewerber + ': ' : '') + join(' ', last_name, first_name)",
+	  value: function(rider) {
+	    return join(' ', rider.last_name, rider.first_name);
+	  },
 	  style: { 'text-align': 'left', 'padding-right': '1em' },
 	  attr: { 'adjust-width': 'name' } },
+      name_applicant:
+	{ name: 'Name (Bewerber)',
+	  heading: 'Name',
+	  html_value: function(rider) {
+	    let name = htmlEscape(join(' ', rider.last_name, rider.first_name));
+	    let applicant = '';
+	    if (rider.applicant != null)
+	      applicant = '<br><em>' + htmlEscape(rider.applicant) + '</em>';
+	    return $sce.trustAsHtml(name + applicant);
+	  },
+	  style: { 'text-align': 'left', 'padding-right': '1em' },
+	  attr: { 'adjust-width': 'name' },
+	  when: function() { return features.applicant } },
       vehicle:
 	{ name: 'Fahrzeug',
 	  heading: 'Fahrzeug',
-	  expr: "vehicle",
+	  value: function(rider) {
+	    return rider.vehicle;
+	  },
 	  style: { 'text-align': 'left',
 		   'max-width': '10em',
 		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
@@ -355,14 +380,18 @@ var eventResultsController = [
       year_of_manufacture:
 	{ name: 'Baujahr',
 	  heading: '<span title="Baujahr">Bj.</span>',
-	  expr: "year_of_manufacture",
+	  value: function(rider) {
+	    return rider.year_of_manufacture;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'year_of_manufacture' },
 	  when: function() { return features.year_of_manufacture } },
       club:
 	{ name: 'Club',
 	  heading: 'Club',
-	  expr: "club",
+	  value: function(rider) {
+	    return rider.club;
+	  },
 	  style: { 'text-align': 'left',
 		   'max-width': '15em',
 		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
@@ -372,32 +401,43 @@ var eventResultsController = [
       country_province:
 	{ name: 'Land (Bundesland)',
 	  heading: '<span title="Land (Bundesland)">Land</span>',
-	  expr: "country_province(rider)",
+	  value: country_province,
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
       flag:
         { name: 'Landesflagge',
-	  expr: "flag_symbol(country)",
+	  value: function(rider) {
+	    return flag_symbol(rider.country);
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'flag' } },
       start_time:
         { name: 'Startzeit',
 	  heading: 'Startzeit',
-	  expr: "start_time",
+	  value: function(rider) {
+	    return rider.start_time;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'time' },
 	  when: function() { return features.start_time } },
       finish_time:
         { name: 'Zielzeit',
 	  heading: 'Zielzeit',
-	  expr: "finish_time",
+	  value: function(rider) {
+	    return rider.finish_time;
+	  },
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'time' },
 	  when: function() { return features.finish_time } },
     };
     angular.forEach(defined_fields, function(field) {
       field.heading = $sce.trustAsHtml(field.heading);
+      if (field.value) {
+	field.html_value = function(rider) {
+	  return $sce.trustAsHtml(htmlEscape(field.value(rider)));
+	};
+      }
     });
     $scope.field_list = (function() {
       var field_list = [];
@@ -532,7 +572,7 @@ var eventResultsController = [
 	return;
       }
 
-      var default_fields = ['number', 'name'].concat(event.result_columns);
+      var default_fields = [].concat(event.result_columns);
       if (results.registered)
 	default_fields.push('start_time');
 

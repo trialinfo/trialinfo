@@ -147,7 +147,7 @@ var serieResultsController = [
       }
     })();
 
-    $scope.country_province = function(rider) {
+    function country_province(rider) {
       var country_province = [];
       if (rider.country &&
 	  (rider.country != serie.country || !serie.hide_country))
@@ -157,32 +157,57 @@ var serieResultsController = [
       return country_province.join(' ');
     };
 
-    $scope.flag_symbol = function(country) {
+    function flag_symbol(country) {
       var code = regional_indicator_symbol_codes[country];
       if (code)
 	return String.fromCodePoint(0x1f1e6 + code.codePointAt(0) - 65,
 				    0x1f1e6 + code.codePointAt(1) - 65)
     };
 
+    let htmlEscape = (function() {
+      let element = angular.element('<span/>');
+      return function(text) {
+	return element.text(text).html();
+      };
+    })();
+
     var defined_fields = {
       number:
 	{ name: 'Startnummer',
 	  heading: '<span title="Startnummer">Nr.</span>',
-	  expr: "number < 0 ? null : number",
+	  value: function(rider) {
+	    return rider.number < 0 ? null : rider.number;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'number' },
 	  when: function() { return features.number } },
       name:
 	{ name: 'Name',
 	  heading: 'Name',
-	  /* FIXME: <br> nach Bewerber! */
-	  expr: "(bewerber ? bewerber + ': ' : '') + join(' ', last_name, first_name)",
+	  value: function(rider) {
+	    return join(' ', rider.last_name, rider.first_name);
+	  },
 	  style: { 'text-align': 'left', 'padding-right': '1em' },
 	  attr: { 'adjust-width': 'name' } },
+      name_applicant:
+	{ name: 'Name (Bewerber)',
+	  heading: 'Name',
+	  html_value: function(rider) {
+	    let name = htmlEscape(join(' ', rider.last_name, rider.first_name));
+	    let applicant = '';
+	    if (rider.applicant != null)
+	      applicant = '<br><em>' + htmlEscape(rider.applicant) + '</em>';
+	    return $sce.trustAsHtml(name + applicant);
+	  },
+	  style: { 'text-align': 'left', 'padding-right': '1em' },
+	  attr: { 'adjust-width': 'name' },
+	  when: function() { return features.applicant } },
       vehicle:
 	{ name: 'Fahrzeug',
 	  heading: 'Fahrzeug',
-	  expr: "vehicle",
+	  value: function(rider) {
+	    return rider.vehicle;
+	  },
 	  style: { 'text-align': 'left',
 		   'max-width': '10em',
 		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
@@ -192,14 +217,18 @@ var serieResultsController = [
       year_of_manufacture:
 	{ name: 'Baujahr',
 	  heading: '<span title="Baujahr">Bj.</span>',
-	  expr: "year_of_manufacture",
+	  value: function(rider) {
+	    return rider.year_of_manufacture;
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'year_of_manufacture' },
 	  when: function() { return features.year_of_manufacture } },
       club:
 	{ name: 'Club',
 	  heading: 'Club',
-	  expr: "club",
+	  value: function(rider) {
+	    return rider.club;
+	  },
 	  style: { 'text-align': 'left',
 		   'max-width': '13em',
 		   /* 'white-space': 'nowrap', */ /* FIXME: See commit message. */
@@ -209,18 +238,25 @@ var serieResultsController = [
       country_province:
 	{ name: 'Land (Bundesland)',
 	  heading: '<span title="Land (Bundesland)">Land</span>',
-	  expr: "country_province(rider)",
+	  value: country_province,
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'country_province' },
 	  when: function() { return features.country || features.province } },
       flag:
 	{ name: 'Landesflagge',
-	  expr: "flag_symbol(country)",
+	  value: function(rider) {
+	    return flag_symbol(rider.country);
+	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'flag' } },
     };
     angular.forEach(defined_fields, function(field) {
       field.heading = $sce.trustAsHtml(field.heading);
+      if (field.value) {
+	field.html_value = function(rider) {
+	  return $sce.trustAsHtml(htmlEscape(field.value(rider)));
+	};
+      }
     });
     $scope.field_list = (function() {
       var field_list = [];
@@ -339,7 +375,7 @@ var serieResultsController = [
       }
 
       var fields = [];
-      angular.forEach(['number', 'name'].concat(serie.result_columns), function(name) {
+      angular.forEach(serie.result_columns, function(name) {
 	var field = defined_fields[name];
 	if (field && (!field.when || field.when()))
 	  fields.push(name);

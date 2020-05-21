@@ -1913,7 +1913,6 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       rider.start = false;
       rider.start_time = null;
       rider.entry_fee = null;
-      rider.rider_comment = null;
     });
     Object.keys(riders).forEach((number) => {
       if (riders[number].group)
@@ -1953,6 +1952,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
     Object.values(riders).forEach((rider) => {
       rider.future_starts = {};
       rider.license = null;
+      rider.rider_comment = null;
     });
     event.base = null;
     event.base_fid = null;
@@ -2497,11 +2497,12 @@ async function get_riders_list(connection, id) {
     var r = {
       rankings: []
     };
-    ['city', 'class', 'club', 'country', 'date_of_birth', 'email', 'entry_fee',
-    'failure', 'finish_time', 'first_name', 'group', 'insurance', 'last_name',
-    'license', 'non_competing', 'number', 'phone', 'province', 'registered',
-    'riders', 'rounds', 'start', 'start_time', 'street', 'vehicle',
-    'year_of_manufacture', 'zip', 'guardian', 'comment', 'rider_comment', 'verified',
+    ['city', 'class', 'club', 'country', 'date_of_birth', 'email',
+    'emergency_phone', 'entry_fee', 'failure', 'finish_time', 'first_name',
+    'group', 'insurance', 'last_name', 'license', 'non_competing', 'number',
+    'phone', 'province', 'registered', 'riders', 'rounds', 'start',
+    'start_time', 'street', 'vehicle', 'year_of_manufacture', 'zip',
+    'guardian', 'comment', 'rider_comment', 'verified',
     'future_starts'].forEach(
       (field) => { r[field] = rider[field]; }
     );
@@ -2557,7 +2558,7 @@ function result_marks_per_zone(rider, event, ranking_class) {
 
 var rider_public_fields = [
   'club', 'country', 'first_name', 'last_name', 'province', 'vehicle',
-  'year_of_manufacture', 'start_time', 'finish_time'
+  'year_of_manufacture', 'start_time', 'finish_time', 'applicant'
 ];
 
 let rider_result_fields = [

@@ -198,7 +198,10 @@ var settingsController = [
 	  },
 	  rankings: [],
 	  scores: [],
-	  result_columns: [],
+	  result_columns: [
+	    "number",
+	    "name"
+	  ],
 	  equal_marks_resolution: 0,
 	  insurance: 0,
 	  future_events: [],
