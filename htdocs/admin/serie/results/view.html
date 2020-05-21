@@ -118,7 +118,7 @@ table.ranking tr td.important {
       <tbody ng-repeat="rider in class_ranking.riders">
         <tr ng-class-even="'alt'">
           <td style="text-align:right">{{rank(rider)}}</td>
-	  <td ng-repeat="field in fields track by $index" ng-style="field.style">{{$eval(field.expr, rider)}}</td>
+	  <td ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.html_value(rider)"></td>
 	  <td style="text-align:right" ng-repeat="event_score in rider.scores track by $index">{{event_score | fractional}}</td>
 	  <td style="text-align:right" ng-if="have_drop_score(class_ranking)">{{rider.drop_score | fractional}}</td>
 	  <td style="text-align:right">{{rider.score | fractional}}</td>
