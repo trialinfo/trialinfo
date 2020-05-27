@@ -3,3 +3,4 @@
 /npm-debug.log
 *.marko.js
 isolate-*.log
+*.pem

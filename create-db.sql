@@ -60,6 +60,7 @@ DROP TABLE IF EXISTS `events`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `events` (
   `tag` char(16) NOT NULL,
+  `access_token` char(16) DEFAULT NULL,
   `version` int(11) NOT NULL DEFAULT 1,
   `id` int(11) NOT NULL DEFAULT 0,
   `base` char(16) DEFAULT NULL,
@@ -84,7 +85,8 @@ CREATE TABLE `events` (
   `combine` tinyint(1) NOT NULL DEFAULT 0,
   `country` varchar(15) DEFAULT NULL,
   `hide_country` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `access_token` (`access_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `events_admins`;
@@ -329,6 +331,65 @@ CREATE TABLE `scores` (
   `rank` int(11) NOT NULL,
   `score` int(11) NOT NULL,
   PRIMARY KEY (`id`,`rank`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `scoring_canceled_marks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `scoring_canceled_marks` (
+  `id` int(11) NOT NULL,
+  `device` int(11) NOT NULL,
+  `seq` int(11) NOT NULL,
+  `time` timestamp NULL DEFAULT NULL,
+  `canceled_device` int(11) NOT NULL,
+  `canceled_seq` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`device`,`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `scoring_devices`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `scoring_devices` (
+  `device` int(11) NOT NULL,
+  `device_tag` char(16) NOT NULL,
+  `name` varchar(30) DEFAULT NULL,
+  PRIMARY KEY (`device`),
+  UNIQUE KEY `device_tag` (`device_tag`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `scoring_marks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `scoring_marks` (
+  `id` int(11) NOT NULL,
+  `device` int(11) NOT NULL,
+  `seq` int(11) NOT NULL,
+  `time` timestamp NULL DEFAULT NULL,
+  `number` int(11) NOT NULL,
+  `zone` int(11) NOT NULL,
+  `marks` int(11) NOT NULL,
+  `penalty_marks` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`,`device`,`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `scoring_registered_zones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `scoring_registered_zones` (
+  `id` int(11) NOT NULL,
+  `zone` int(11) NOT NULL,
+  `device` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`zone`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `scoring_zones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `scoring_zones` (
+  `id` int(11) NOT NULL,
+  `zone` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `series`;

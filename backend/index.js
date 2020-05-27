@@ -120,7 +120,14 @@ var LocalStrategy = require('passport-local').Strategy;
  */
 
 logger.token('email', function (req, res) {
-  return (req.user || {}).email || '-';
+  if (req.user)
+    return req.user.email;
+  if (req.scoring_device) {
+    if (req.scoring_device.name != null)
+      return encodeURIComponent(req.scoring_device.name);
+    return req.scoring_device.device_tag;
+  }
+  return '-';
 });
 
 var production_log_format =
@@ -660,6 +667,84 @@ async function update_database(connection) {
     await connection.queryAsync(`
       ALTER TABLE riders
       ADD paid BOOLEAN AFTER tie_break
+    `);
+  }
+
+  if (!await column_exists(connection, 'events', 'access_token')) {
+    console.log('Adding column `access_token` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD access_token CHAR(16) AFTER tag,
+      ADD UNIQUE KEY access_token (access_token)
+    `);
+  }
+
+  if (!await column_exists(connection, 'scoring_zones', 'id')) {
+    console.log('Creating table `scoring_zones`');
+    await connection.queryAsync(`
+      CREATE TABLE scoring_zones (
+	id INT,
+	zone INT,
+	PRIMARY KEY (id, zone)
+      )
+    `);
+  }
+
+  if (!await column_exists(connection, 'scoring_devices', 'device')) {
+    console.log('Creating table `scoring_devices`');
+    await connection.queryAsync(`
+      CREATE TABLE scoring_devices (
+	device INT,
+	device_tag CHAR(16) NOT NULL,
+	name VARCHAR(30),
+	PRIMARY KEY (device),
+	UNIQUE KEY device_tag (device_tag),
+	UNIQUE KEY name (name)
+      )
+    `);
+  }
+
+  if (!await column_exists(connection, 'scoring_registered_zones', 'device')) {
+    console.log('Creating table `scoring_registered_zones`');
+    await connection.queryAsync(`
+      CREATE TABLE scoring_registered_zones (
+	id INT,
+	zone INT,
+	device INT NOT NULL,
+	PRIMARY KEY (id, zone)
+      )
+    `);
+  }
+
+  if (!await column_exists(connection, 'scoring_marks', 'device')) {
+    console.log('Creating table `scoring_marks`');
+    await connection.queryAsync(`
+      CREATE TABLE scoring_marks (
+	id INT,
+	device INT,
+	seq INT,
+	time TIMESTAMP NULL DEFAULT NULL,
+	number INT NOT NULL,
+	zone INT NOT NULL,
+	marks INT NOT NULL,
+	penalty_marks INT,
+	PRIMARY KEY (id, device, seq)
+      )
+    `);
+  }
+
+  if (!await column_exists(connection, 'scoring_canceled_marks', 'device')) {
+    console.log('Creating table `scoring_canceled_marks`');
+    await connection.queryAsync(`
+      CREATE TABLE scoring_canceled_marks (
+	id INT,
+	device INT,
+	seq INT,
+	time TIMESTAMP NULL DEFAULT NULL,
+	canceled_device INT NOT NULL,
+	canceled_seq INT NOT NULL,
+	PRIMARY KEY (id, device, seq)
+      )
     `);
   }
 }
@@ -1382,6 +1467,15 @@ async function read_event(connection, id, revalidate) {
       zones[row.zone] = true;
     });
   }
+
+  event.scoring_zones = [];
+  (await connection.queryAsync(`
+    SELECT zone
+    FROM scoring_zones
+    WHERE id = ?`, [id])
+  ).forEach((row) => {
+    event.scoring_zones[row.zone - 1] = true;
+  });
 
   event.series = (await connection.queryAsync(`
     SELECT DISTINCT abbreviation
@@ -2229,6 +2323,12 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	  await inherit_from_event(connection, id, base_id, reset, email);
 	await add_event_write_access(connection, id, email);
       }
+
+      if (event.scoring_zones.length) {
+	if (event.access_token == null)
+	  event.access_token = random_tag();
+      }
+
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
 
@@ -4045,6 +4145,14 @@ async function __update_event(connection, id, old_event, new_event) {
       && (changed = true);
     });
 
+  await zipAsync(old_event.scoring_zones, new_event.scoring_zones,
+    async function(a, b, zone_index) {
+      await update(connection, 'scoring_zones',
+        {id: id, zone: zone_index + 1},
+        [],
+        a && {}, b && {})
+      && (changed = true);
+    });
   return changed;
 }
 
@@ -4067,7 +4175,8 @@ async function update_event(connection, id, old_event, new_event) {
     version: true,
     result_columns: true,
     future_events: true,
-    series: true
+    series: true,
+    scoring_zones: true
   };
 
   var nonkeys = Object.keys(new_event || {}).filter(
@@ -5488,6 +5597,292 @@ async function admin_patch_event(connection, id, patch, email) {
   await import_event(connection, id, event1, email);
 }
 
+async function scoring_get_registered_zones(connection, id) {
+  return (await connection.queryAsync(`
+    SELECT zone, device_tag
+    FROM scoring_zones
+    LEFT JOIN scoring_registered_zones USING (id, zone)
+    LEFT JOIN scoring_devices USING (device)
+    WHERE id = ?`, [id]))
+    .reduce((zones, row) => {
+      zones[row.zone] = row.device_tag;
+      return zones;
+    }, {});
+}
+
+async function scoring_get_seq(connection, id) {
+  return (await connection.queryAsync(`
+    SELECT device_tag, MAX(seq) AS seq
+    FROM scoring_marks
+    JOIN scoring_devices USING (device)
+    WHERE id = ?
+    GROUP BY device_tag`, [id]))
+    .reduce((seqs, row) => {
+      seqs[row.device_tag]  = row.seq;
+      return seqs;
+    }, {});
+}
+
+async function scoring_get_info(connection, id) {
+  let event = await get_event(connection, id);
+  var riders = await get_riders(connection, id);
+
+  let hash = {
+    event: {
+      features: {},
+      classes: [],
+      zones: [],
+      skipped_zones: {}
+    },
+    riders: {},
+    seq: {}
+  };
+  for (let field of ['date', 'location', 'four_marks', 'uci_x10']) {
+    hash.event[field] = event[field];
+  }
+  for (let feature of ['number', 'first_name', 'last_name']) {
+    if (event.features[feature])
+      hash.event.features[feature] = true;
+  }
+
+  let scoring_zones = {};
+  for (let index in event.scoring_zones) {
+    if (event.scoring_zones[index])
+      scoring_zones[+index + 1] = true;
+  }
+  let scoring_classes = {};
+  for (let index in event.classes) {
+    for (let zone of event.zones[index] || []) {
+      if (scoring_zones[zone]) {
+	scoring_classes[+index + 1] = true;
+	break;
+      }
+    }
+  }
+
+  let classes = {};
+  for (let number in riders) {
+    let rider = riders[number];
+    let rc = ranking_class(rider, event);
+    if (rc && scoring_classes[rc]) {
+      classes[rc] = true;
+      classes[rider.class] = true;
+      let rider_copy = {};
+      for (let field of ['class', 'first_name', 'last_name', 'non_competing']) {
+	if (event.features[field])
+	  rider_copy[field] = rider[field];
+      }
+      rider_copy.failed = !!rider.failure;
+      hash.riders[rider.number] = rider_copy;
+    }
+  }
+  for (let c in classes) {
+    let class_ = {};
+    for (let field of ['rounds', 'name', 'color', 'ranking_class', 'time_limit'])
+      class_[field] = event.classes[c - 1][field];
+    hash.event.classes[c - 1] = class_;
+    let rc = class_.ranking_class;
+    hash.event.zones[rc - 1] = event.zones[rc - 1];
+    if (event.skipped_zones[rc]) {
+      hash.event.skipped_zones[rc] =
+        event.skipped_zones[rc];
+    }
+  }
+
+  hash.registered_zones = await scoring_get_registered_zones(connection, id);
+
+  hash.devices = (await connection.queryAsync(`
+    SELECT device_tag, name
+    FROM scoring_devices
+    WHERE name IS NOT NULL`)).reduce((devices, row) => {
+      devices[row.device_tag] = row.name;
+      return devices;
+    }, {});
+
+  return hash;
+}
+
+async function scoring_get_protocol(connection, id, zones, seq) {
+  let protocol = {};
+  if (zones.length) {
+    function add_to_protocol(device_tag, row) {
+      delete row.id;
+      delete row.device;
+      if (row.time != null)
+	row.time = moment.utc(row.time).toDate();
+      if (protocol[device_tag] == null)
+	protocol[device_tag] = [];
+      protocol[device_tag].push(row);
+    }
+
+    let scoring_devices = {};
+    let scoring_devices_rev = {};
+    (await connection.queryAsync(`
+      SELECT device, device_tag
+      FROM scoring_devices
+    `)).map((row) => {
+      scoring_devices[row.device] = row.device_tag;
+      scoring_devices_rev[row.device_tag] = row.device;
+    });
+
+    let active_devices = {};
+    (await connection.queryAsync(`
+      SELECT DISTINCT device
+      FROM scoring_marks
+      WHERE id = ${connection.escape(id)} AND
+	zone IN (${zones.map((zone) => connection.escape(zone)).join(', ')})
+    `)).map((row) => {
+      active_devices[row.device] = true;
+    }, {});
+    (await connection.queryAsync(`
+      SELECT DISTINCT device
+      FROM scoring_canceled_marks
+      JOIN (
+        SELECT id, device AS canceled_device, seq AS canceled_seq
+	FROM scoring_marks
+	WHERE zone IN (${zones.map((zone) => connection.escape(zone)).join(', ')})
+      ) AS _ USING (id, canceled_device, canceled_seq)
+      WHERE id = ${connection.escape(id)}
+    `)).map((row) => {
+      active_devices[row.device] = true;
+    }, {});
+
+    if (Object.keys(active_devices).length) {
+      let is_older = Object.keys(seq)
+	.map((device_tag) => `(device = ${connection.escape(scoring_devices_rev[device_tag])} AND seq <= ${connection.escape(seq[device_tag])})`)
+	.join(` OR `);
+      let is_newer = is_older == `` ? `` : ` AND NOT (${is_older})`;
+
+      (await connection.queryAsync(`
+	SELECT *
+	FROM scoring_marks
+	WHERE id = ${connection.escape(id)} AND
+	  device IN (${Object.keys(active_devices).map((device) => connection.escape(+device)).join(', ')})
+	  ${is_newer}`))
+      .map((row) => {
+	add_to_protocol(scoring_devices[row.device], row);
+      });
+
+      (await connection.queryAsync(`
+	SELECT *
+	FROM scoring_canceled_marks
+	WHERE id = ${connection.escape(id)} AND
+	  device IN (${Object.keys(active_devices).map((device) => connection.escape(+device)).join(', ')})
+	  ${is_newer}`))
+      .map((row) => {
+	row.canceled_device = scoring_devices[row.canceled_device];
+	add_to_protocol(scoring_devices[row.device], row);
+      });
+
+      for (let device_tag in protocol) {
+	protocol[device_tag].sort((a, b) => a.seq - b.seq);
+      }
+    }
+  }
+  return protocol;
+}
+
+async function scoring_register(connection, scoring_device, id, query, data) {
+  await connection.queryAsync(`BEGIN`);
+  try {
+    let old_zones = (await connection.queryAsync(`
+      SELECT zone
+      FROM scoring_registered_zones
+      WHERE id = ?
+      AND device = ?`,
+      [id, scoring_device.device]))
+      .map((row) => row.zone);
+
+    function hash_zones(zones) {
+      let hash = {};
+      for (let zone of zones)
+	hash[zone] = true;
+      return hash;
+    }
+
+    await zipHashAsync(
+      hash_zones(old_zones), hash_zones(data.zones),
+      async function(a, b, zone) {
+	await update(connection, 'scoring_registered_zones',
+	  {id: id, device: scoring_device.device, zone: zone},
+	  [],
+	  a != null && {}, b != null && {});
+      });
+    await connection.queryAsync(`COMMIT`);
+  } catch (error) {
+      await connection.queryAsync(`ROLLBACK`);
+  }
+
+  return {
+    registered_zones: await scoring_get_registered_zones(connection, id),
+    protocol: await scoring_get_protocol(connection, id, data.zones, data.seq)
+  };
+}
+
+function is_canceled_item(item) {
+  return item.canceled_device != null && item.canceled_seq != null;
+}
+
+async function scoring_update(connection, scoring_device, id, query, data) {
+  await connection.queryAsync(`BEGIN`);
+  try {
+    let registered_zones = await scoring_get_registered_zones(connection, id);
+    for (let device_tag in data.protocol) {
+      for (let item of data.protocol[device_tag]) {
+	item = Object.assign({}, item, {
+	  id: id,
+	  device: scoring_device.device
+	});
+	let table;
+	if (is_canceled_item(item)) {
+	  let rows = await connection.queryAsync(`
+	    SELECT device
+	    FROM scoring_marks
+	    JOIN scoring_devices USING (device)
+	    WHERE id = ${connection.escape(id)} AND
+	      device_tag = ${connection.escape(item.canceled_device)} AND
+	      seq = ${connection.escape(item.canceled_seq)} AND
+	      zone IN (
+	        SELECT zone
+		FROM scoring_registered_zones
+		WHERE device = ${connection.escape(scoring_device.device)}
+	      )
+	    `);
+	  if (!rows.length) {
+	    console.log(`No marks to cancel for device ${item.canceled_device}, seq ${item.seq}`);
+	    continue;
+	  }
+	  item.canceled_device = rows[0].device;
+	  table = 'scoring_canceled_marks';
+	} else {
+	  if (device_tag != scoring_device.device_tag) {
+	    console.log(`Ignoring updates for device ${device_tag} from device ${scoring_device.device_tag}`);
+	    continue;
+	  }
+	  if (registered_zones[item.zone] != device_tag) {
+	    console.log(`Ignoring updates for unregistered zone ${item.zone} from device ${scoring_device.device_tag}`);
+	    continue;
+	  }
+	  table = 'scoring_marks';
+	}
+	let sql = `INSERT IGNORE INTO ${table} SET ` + Object.keys(item)
+	    .map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
+	    .join(', ')
+	log_sql(sql);
+	await connection.queryAsync(sql);
+      }
+    }
+    await connection.queryAsync(`COMMIT`);
+    return {
+      seq: await scoring_get_seq(connection, id)
+    };
+  } catch (error) {
+    console.log(error);
+    await connection.queryAsync(`ROLLBACK`);
+    return new HTTPError(500, 'Internal Error');
+  }
+}
+
 function query_string(query) {
   if (!query)
     return '';
@@ -5693,6 +6088,79 @@ app.get('/api/event/:id/sections', conn(pool), function(req, res, next) {
 
 app.get('/api/serie/:serie/results', conn(pool), async function(req, res, next) {
   get_serie_results(req.conn, req.params.serie)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+/*
+ * Accessible for score taking:
+ */
+
+async function uses_access_token(req, res, next) {
+  let result = await req.conn.queryAsync(`
+    SELECT id
+    FROM events
+    WHERE access_token = ?`,
+    [req.params.access_token]);
+  if (result.length != 1)
+    return next(new HTTPError(404, 'Not Found'));
+  req.params.id = result[0].id;
+  next();
+}
+
+async function will_take_scores(req, res, next) {
+  try {
+    let scoring_device = {
+      device_tag: req.headers['x-device-tag']
+    };
+    if (scoring_device.device_tag == null)
+      return next(new HTTPError(403, 'Forbidden'));
+
+    let result = await req.conn.queryAsync(`
+      SELECT device, name
+      FROM scoring_devices
+      WHERE device_tag = ? `,
+      [scoring_device.device_tag]);
+    if (result.length == 1) {
+      scoring_device.device = result[0].device;
+      scoring_device.name = result[0].name;
+    } else {
+      await req.conn.queryAsync(`BEGIN`);
+      result = await req.conn.queryAsync(`
+	SELECT COALESCE(MAX(device), 0) + 1 AS device
+	FROM scoring_devices`);
+      scoring_device.device = result[0].device;
+      await req.conn.queryAsync(`
+	INSERT INTO scoring_devices
+	SET device = ?, device_tag = ?`,
+	[scoring_device.device, scoring_device.device_tag]);
+      await req.conn.queryAsync(`COMMIT`);
+    }
+    req.scoring_device = scoring_device;
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+app.get('/api/scoring/:access_token', conn(pool), uses_access_token, async function(req, res, next) {
+  scoring_get_info(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.put('/api/scoring/:access_token/register', conn(pool), uses_access_token, will_take_scores, async function(req, res, next) {
+  scoring_register(req.conn, req.scoring_device, req.params.id, req.query, req.body)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.post('/api/scoring/:access_token', conn(pool), uses_access_token, will_take_scores, async function(req, res, next) {
+  scoring_update(req.conn, req.scoring_device, req.params.id, req.query, req.body)
   .then((result) => {
     res.json(result);
   }).catch(next);
