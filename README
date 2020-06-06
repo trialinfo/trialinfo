@@ -206,6 +206,7 @@ Systemd
   -----------------------------------------
   [Socket]
   ListenStream=3080
+  Service=trialinfo.service
 
   [Install]
   WantedBy=sockets.target

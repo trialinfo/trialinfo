@@ -53,6 +53,7 @@ systemctl restart trialinfo.socket 2> /dev/null || :
 %files
 /etc/systemd/system/%{name}.service
 /etc/systemd/system/%{name}.socket
+/etc/systemd/system/%{name}-secure.socket
 %doc create-db.sql
 /var/lib/%{name}/
 
