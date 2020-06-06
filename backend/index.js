@@ -6135,33 +6135,33 @@ app.get('/api/user/:user_tag', async function(req, res, next) {
 
 app.use(clientErrorHandler);
 
-try {
+require('systemd');
+
+if (!config.http && !config.https) {
   var http = require('http');
-  var server = http.createServer(app);
-
-  require('systemd');
-  server.listen('systemd');
-} catch (_) {
-  if (!config.http && !config.https)
+  try {
+    http.createServer(app).listen('systemd');
+  } catch (_) {
     config.http = {};
+  };
+}
 
-  if (config.http) {
-    var http = require('http');
-    var port = config.http.port || 80;
-    http.createServer(app).listen(port);
-  }
+if (config.http) {
+  var http = require('http');
+  var port = config.http.port || 80;
+  http.createServer(app).listen(port);
+}
 
-  if (config.https) {
-    var fs = require('fs');
-    var https = require('https');
-    var options = {
-      key: fs.readFileSync(config.https.key),
-      cert: fs.readFileSync(config.https.cert)
-    };
-    var port = config.https.port || 443;
-    https.createServer(options, app).listen(port);
-  }
-};
+if (config.https) {
+  var fs = require('fs');
+  var https = require('https');
+  var options = {
+    key: fs.readFileSync(config.https.key),
+    cert: fs.readFileSync(config.https.cert)
+  };
+  var port = config.https.port || 443;
+  https.createServer(options, app).listen(port);
+}
 
 (function() {
   const timer = setInterval(() => { cache.expire() }, cache_max_age / 10);
