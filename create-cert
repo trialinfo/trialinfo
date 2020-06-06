@@ -1,0 +1,59 @@
+#! /bin/bash
+
+set -e
+
+keyfile=backend/otsv
+
+die() {
+    echo "$*"
+    exit 1
+}
+
+! [ -e "$keyfile-key.pem" ] || \
+    die "File $keyfile-key.pem exists"
+! [ -e "$keyfile-cert.pem" ] || \
+    die "File $keyfile-cert.pem exists"
+
+config=$(cat <<-EOF
+    [req]
+    distinguished_name = distinguished_name
+    x509_extensions = req_exts
+    utf8 = yes
+    prompt = no
+
+    [distinguished_name]
+    countryName = AT
+    stateOrProvinceName = ST
+    localityName = Graz
+    organizationName = Andreas Grünbacher
+    commonName = TrialInfo
+    emailAddress = auswertung@otsv.at
+
+    [req_exts]
+    keyUsage = digitalSignature, keyEncipherment
+    extendedKeyUsage = serverAuth,clientAuth
+    subjectAltName = @alternate_names
+
+    [alternate_names]
+    IP.1 = 127.0.0.1
+    IP.2 = ::1
+    DNS.1 = localhost
+    DNS.2 = localhost.localdomain
+    DNS.3 = *.otsv.at
+EOF
+)
+
+openssl req \
+    -config <(echo "$config") \
+    -x509 \
+    -nodes \
+    -newkey rsa:4096 \
+    -sha256 \
+    -days 36500 \
+    -keyout $keyfile-key.pem \
+    -out $keyfile-cert.pem
+
+openssl x509 \
+    -nameopt utf8 \
+    -in $keyfile-cert.pem \
+    -text
