@@ -645,6 +645,14 @@ async function update_database(connection) {
       DROP start_spec
     `);
   }
+
+  if (!await column_exists(connection, 'classes', 'time_limit')) {
+    console.log('Adding column `time_limit` to `classes`');
+    await connection.queryAsync(`
+      ALTER TABLE classes
+      ADD time_limit TIME AFTER riding_time
+    `);
+  }
 }
 
 pool.getConnectionAsync()

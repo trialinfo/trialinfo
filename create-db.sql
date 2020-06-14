@@ -38,6 +38,7 @@ CREATE TABLE `classes` (
   `name` varchar(60) DEFAULT NULL,
   `color` varchar(20) DEFAULT NULL,
   `riding_time` time DEFAULT NULL,
+  `time_limit` time DEFAULT NULL,
   `ranking_class` int(11) NOT NULL,
   `no_ranking1` tinyint(1) DEFAULT NULL,
   `non_competing` tinyint(1) DEFAULT NULL,
