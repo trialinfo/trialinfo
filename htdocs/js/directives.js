@@ -96,6 +96,28 @@
     };
   });
 
+  module.directive('isoTimeFormat', function() {
+    return {
+      restrict: 'A',
+      require: 'ngModel',
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(text) {
+	  if (text == '')
+	    return null;
+	  let m = moment(text, attr.isoTimeFormat, true);
+	  ngModel.$setValidity('isoMinutesSeconds', m.isValid());
+	  if (m.isValid())
+	    return m.format('HH:mm:ss');
+	});
+	ngModel.$formatters.push(function(value) {
+	  if (value == null)
+	    return '';
+	  return moment(value, 'HH:mm:ss', true).format(attr.isoTimeFormat);
+	});
+      }
+    };
+  });
+
   function format_iso_timestamp($scope, value) {
     if (value == null)
       return '';
