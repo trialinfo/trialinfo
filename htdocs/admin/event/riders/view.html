@@ -109,7 +109,7 @@
 	    <tr ng-if="features.club">
 	      <th><label for="club">Club</label></th>
 	      <td>
-		<input ng-disabled="!enabled.rider" type="text" size="25" maxlength="32" nullable ng-model="rider.club" id="club" list="club_list">
+		<input ng-disabled="!enabled.rider" type="text" size="25" maxlength="40" nullable ng-model="rider.club" id="club" list="club_list">
 		<datalist id="club_list">
 		  <option ng-repeat="club in suggestions.club" value="{{club}}">
 		</datalist>
