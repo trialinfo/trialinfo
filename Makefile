@@ -10,6 +10,7 @@ MARKOC = backend/node_modules/marko/bin/markoc
 # AngularJS
 ANGULAR_BASE=https://code.angularjs.org
 ANGULAR_VERSION=1.7.9
+MOMENT_VERSION=2.26.0
 
 DOWNLOAD_FILES = \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular.js \
@@ -18,6 +19,8 @@ DOWNLOAD_FILES = \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-route.js \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-cookies.js \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js \
+	htdocs/js/moment.js \
+	htdocs/js/moment.min.js \
 	htdocs/js/json-diff.js
 
 MARKO_FILES = \
@@ -94,6 +97,16 @@ htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --silent --location \
 		https://github.com/angular/bower-angular-i18n/raw/v$(ANGULAR_VERSION)/angular-locale_de-at.js
+
+htdocs/js/moment.js:
+	@mkdir -p $(dir $@)
+	$(CURL) -o $@ --silent --location \
+		https://github.com/moment/moment/raw/$(MOMENT_VERSION)/moment.js
+
+htdocs/js/moment.min.js:
+	@mkdir -p $(dir $@)
+	$(CURL) -o $@ --silent --location \
+		https://github.com/moment/moment/raw/$(MOMENT_VERSION)/min/moment.min.js
 
 htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)

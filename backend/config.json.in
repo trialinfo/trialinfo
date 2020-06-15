@@ -8,10 +8,10 @@
   "from": "<<email (remove for debugging)>>",
   "url": "<<proxy url>>",
   "http": {
-    "port": 80
+    "port": <<80 | "systemd">>
   },
   "https": {
-    "port": 443,
+    "port": <<443 | "systemd">>,
     "key": "<<keyfile>>",
     "cert": "<<certfile>>"
   },

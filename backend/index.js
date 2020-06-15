@@ -44,8 +44,6 @@ var spawn = require('child-process-promise').spawn;
 var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
-var start_times = require('./lib/start_times');
-var random_shuffle = require('./lib/random_shuffle');
 
 var config = JSON.parse(fs.readFileSync('config.json'));
 
@@ -641,6 +639,24 @@ async function update_database(connection) {
     await connection.queryAsync(`
       ALTER TABLE events
       ADD zone_wise_entry BOOLEAN
+    `);
+  }
+
+  if (await column_exists(connection, 'events', 'start_time')) {
+    console.log('Removing columns `start_time`, `start_interval`, `start_spec` in `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      DROP start_time,
+      DROP start_interval,
+      DROP start_spec
+    `);
+  }
+
+  if (!await column_exists(connection, 'classes', 'time_limit')) {
+    console.log('Adding column `time_limit` to `classes`');
+    await connection.queryAsync(`
+      ALTER TABLE classes
+      ADD time_limit TIME AFTER riding_time
     `);
   }
 }
@@ -1884,7 +1900,7 @@ function event_reset_numbers(riders) {
 }
 
 function reset_event(base_event, base_riders, event, riders, reset) {
-  if (reset == 'master' || reset == 'register' || reset == 'start_times' || reset == 'start') {
+  if (reset == 'master' || reset == 'register' || reset == 'start') {
     Object.values(riders).forEach((rider) => {
       rider.finish_time = null;
       rider.tie_break = 0;
@@ -1901,10 +1917,6 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       );
     });
     event.skipped_zones = {};
-  }
-
-  if (reset == 'start_times') {
-    set_start_times(event, riders);
   }
 
   if (reset == 'master' || reset == 'register') {
@@ -4184,93 +4196,6 @@ function random_tag() {
   return base64url(crypto.randomBytes(12));
 }
 
-function parse_time(time) {
-  var match = time.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-  if (match)
-    return (+match[1] * 60 + +match[2]) * 60 + +match[3];
-}
-
-function format_time(time) {
-  let seconds = time % 60;
-  time = Math.trunc(time / 60);
-  let minutes = time % 60;
-  time = Math.trunc(time / 60);
-  let hours = time % 24;
-  return ('0' + hours).slice(-2) + ':' +
-	 ('0' + minutes).slice(-2) + ':' +
-	 ('0' + seconds).slice(-2)
-}
-
-function set_start_times(event, riders) {
-  if (event.start_time == null)
-    throw new HTTPError(400, 'Startzeit in Einstellungen nicht definiert.');
-  if (event.start_interval == null)
-    throw new HTTPError(400, 'Startintervall in Einstellungen nicht definiert.');
-  if (event.start_spec == null)
-    throw new HTTPError(400, 'Startklassen in Einstellungen nicht definiert.');
-
-  let start_time = parse_time(event.start_time);
-  let start_interval = event.start_interval;
-  let tree = start_times.parse(event.start_spec);
-
-  if (tree == null)
-    throw new HTTPError(400, 'Startklassen in Einstellungen nicht korrekt gesetzt.');
-
-  function ranking_class(class_) {
-    if (class_ != null && event.classes[class_ - 1])
-      return event.classes[class_ - 1].ranking_class;
-  }
-
-  function riders_in_classes(riders, classes) {
-    classes = classes.reduce(function(result, cls) {
-      result[cls] = true;
-      return result;
-    }, {});
-    var numbers = [];
-    for (let number of Object.keys(riders)) {
-      let rider = riders[number];
-      if (rider.verified && rider.start &&
-	  classes[ranking_class(rider['class'])])
-	numbers.push(number);
-    };
-    return numbers;
-  }
-
-  function recursive_set(node) {
-    switch(node.op) {
-      case '|': // in parallel
-	let first_start_time = start_time;
-	let last_start_time = first_start_time;
-	for (let n = 0; n < node.args.length; n++) {
-	  recursive_set(node.args[n]);
-	  if (start_time > last_start_time)
-	    last_start_time = start_time;
-	  start_time = first_start_time;
-	}
-	start_time = last_start_time;
-	break;
-
-      case ' ': // sequential
-	for (let n = 0; n < node.args.length; n++) {
-	  recursive_set(node.args[n]);
-	}
-	break;
-
-      default: // class or classes
-	var numbers = riders_in_classes(riders, node.args);
-	for (let number of random_shuffle(numbers)) {
-	  let rider = riders[number];
-	  rider.start_time = format_time(start_time);
-	  start_time += start_interval;
-	};
-    }
-  }
-
-  for (let rider of Object.values(riders))
-    rider.start_time = null;
-  recursive_set(tree);
-}
-
 async function create_user_secret(connection, email, create_user) {
   var secret = random_tag();
   var expires =
@@ -6164,33 +6089,33 @@ app.get('/api/user/:user_tag', async function(req, res, next) {
 
 app.use(clientErrorHandler);
 
-try {
+require('systemd');
+
+if (!config.http && !config.https) {
   var http = require('http');
-  var server = http.createServer(app);
-
-  require('systemd');
-  server.listen('systemd');
-} catch (_) {
-  if (!config.http && !config.https)
+  try {
+    http.createServer(app).listen('systemd');
+  } catch (_) {
     config.http = {};
+  };
+}
 
-  if (config.http) {
-    var http = require('http');
-    var port = config.http.port || 80;
-    http.createServer(app).listen(port);
-  }
+if (config.http) {
+  var http = require('http');
+  var port = config.http.port || 80;
+  http.createServer(app).listen(port);
+}
 
-  if (config.https) {
-    var fs = require('fs');
-    var https = require('https');
-    var options = {
-      key: fs.readFileSync(config.https.key),
-      cert: fs.readFileSync(config.https.cert)
-    };
-    var port = config.https.port || 443;
-    https.createServer(options, app).listen(port);
-  }
-};
+if (config.https) {
+  var fs = require('fs');
+  var https = require('https');
+  var options = {
+    key: fs.readFileSync(config.https.key),
+    cert: fs.readFileSync(config.https.cert)
+  };
+  var port = config.https.port || 443;
+  https.createServer(options, app).listen(port);
+}
 
 (function() {
   const timer = setInterval(() => { cache.expire() }, cache_max_age / 10);

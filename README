@@ -206,13 +206,17 @@ Systemd
   -----------------------------------------
   [Socket]
   ListenStream=3080
+  Service=trialinfo.service
 
   [Install]
   WantedBy=sockets.target
 
 
   $ systemctl daemon-reload
+
   $ systemctl enable trialinfo.socket
+  - oder -
+  $ systemctl enable trialinfo-secure.socket
 
   $ journalctl -u trialinfo
   $ journalctl -f -u trialinfo

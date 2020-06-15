@@ -203,7 +203,8 @@ a:hover.updown {
 	<th style="text-align:center">Bezeichnung</th>
 	<th style="text-align:center">Spurfarbe</th>
 	<th style="text-align:center">Runden</th>
-	<th style="text-align:center">Fahrzeit</th>
+	<th style="text-align:center"><span title="Fahrzeit (HH:MM)">Fahrzeit</span></th>
+	<th style="text-align:center"><span title="Zeitlimit in Sektion (MM:SS)">Zeitlimit</span></th>
 	<th style="text-align:center">Wertung<br>in Klasse</th>
 	<th style="text-align:center">Keine<br>Wertung&nbsp;1</th>
 	<th style="text-align:center">Außer<br>Konkurrenz</th>
@@ -232,6 +233,9 @@ a:hover.updown {
 	<td style="text-align:center">
 	  <!-- FIXME: Wenn leeres Feld eingegeben wird, wird Wert auf "" statt auf null gesetzt. -->
 	  <input type="text" size="5" maxlength="8" ng-model="event.classes[class_active[index + 1] ? index : event.classes[index].ranking_class - 1].riding_time" iso-time style="text-align: center" ng-disabled="!class_active[index + 1]">
+	</td>
+	<td style="text-align:center">
+	  <input type="text" size="5" maxlength="5" ng-model="event.classes[class_active[index + 1] ? index : event.classes[index].ranking_class - 1].time_limit" iso-time-format="m:ss" style="text-align: center" ng-disabled="!class_active[index + 1]">
 	</td>
 	<td style="text-align:center">
 	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{index + 1}}" ng-model="event.classes[index].ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
@@ -406,29 +410,6 @@ a:hover.updown {
 	    <label for="feature_explain_rank">Erklärung der Platzierung statt Punkteverteilung</label><br>
 	</p>
     </fieldset>
-  </fieldset><br>
-  <fieldset style="display:inline">
-    <legend>Startzeiten zufällig vergeben</legend>
-    <table>
-      <tr>
-	<th><label for="start_time">Startzeit</label></th>
-	<td>
-	  <input type="text" size="6" maxlength="8" ng-model="event.start_time" id="start_time" iso-time>
-	</td>
-      </tr>
-      <tr>
-	<th><label for="start_interval">Startintervall</label></th>
-	<td>
-	  <input type="text" numeric min="1" max="600" size="3" ng-model="event.start_interval" id="start_interval"> Sekunden
-	</td>
-      </tr>
-      <tr>
-	<th><label for="start_spec">Klassen</label></th>
-	<td>
-	  <input type="text" size="20" maxlength="40" ng-model="event.start_spec" id="start_spec" title="Start hintereinander (' '), gemeinsam ('+'), oder gleichzeitig ('|')">
-	</td>
-      </tr>
-    </table>
   </fieldset><br>
   <fieldset style="display:inline">
     <legend>Zukünftige Veranstaltungen</legend>
