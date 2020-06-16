@@ -128,6 +128,7 @@ our $features_map = {
 };
 
 our $spalten_map = {
+  startnummer => 'number',
   club => 'club',
   fahrzeug => 'vehicle',
   lizenznummer => 'license',
@@ -139,6 +140,8 @@ our $spalten_map = {
 };
 
 our $result_columns_map = {
+  number => 'startnummer',
+  name => 'name',
   vehicle => 'fahrzeug',
   license => 'lizenznummer',
   applicant => 'bewerber',

@@ -38,8 +38,6 @@ my @spalten = $q->multi_param('spalte');
 my $spalten = @spalten ? join("", map { "&spalte=$_" } @spalten) : "";
 my $mit_kuerzel = $q->param('kuerzel');
 
-my $url = $q->param('url') // 'tageswertung.shtml';
-
 print "Content-type: text/html; charset=utf-8\n\n";
 
 my $sth = $dbh->prepare(q{
@@ -93,7 +91,7 @@ if (my @row = $sth->fetchrow_array) {
     print "<p>\n";
     while (my @row = $sth2->fetchrow_array) {
 	my ($id, $titel, $kuerzel) = @row;
-	print "<a href=\"$url?id=$id$spalten\">$titel</a>";
+	print "<a href=\"/event/$id/results\">$titel</a>";
 	print " ($kuerzel)"
 	    if defined $kuerzel && defined $mit_kuerzel;
 	print "<br>\n";
