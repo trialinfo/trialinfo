@@ -359,7 +359,9 @@ a:hover.updown {
 	  <input type="checkbox" ng-model="features.entry_fee" id="feature_entry_fee">
 	    <label for="feature_entry_fee">Nenngeld</label><br>
 	  <input type="checkbox" ng-model="features.insurance" id="feature_insurance">
-	    <label for="feature_insurance">Versicherung</label>
+	    <label for="feature_insurance">Versicherung</label><br>
+	  <input type="checkbox" ng-model="features.paid" id="feature_paid">
+	    <label for="feature_paid">Zahlungseingang</label>
 	</p>
 	<p>
 	  <input type="checkbox" ng-model="features.province" id="feature_province">
@@ -395,6 +397,7 @@ a:hover.updown {
 	    <option value="name">Name</option>
 	    <option value="name_applicant">Name (Bewerber)</option>
 	    <option value="number" ng-disabled="!features.number">Startnummer</option>
+	    <option value="paid" ng-disabled="!features.paid">Zahlungseingang</option>
 	  </select>
 	</div>
       </p>
