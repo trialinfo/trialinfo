@@ -659,6 +659,14 @@ async function update_database(connection) {
       ADD time_limit TIME AFTER riding_time
     `);
   }
+
+  if (!await column_exists(connection, 'riders', 'paid')) {
+    console.log('Adding column `paid` to `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD paid BOOLEAN AFTER tie_break
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -2570,7 +2578,7 @@ function result_marks_per_zone(rider, event, ranking_class) {
 
 var rider_public_fields = [
   'club', 'country', 'first_name', 'last_name', 'province', 'vehicle',
-  'year_of_manufacture', 'start_time', 'finish_time', 'applicant'
+  'year_of_manufacture', 'start_time', 'finish_time', 'applicant', 'paid'
 ];
 
 let rider_result_fields = [

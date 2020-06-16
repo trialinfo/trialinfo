@@ -430,6 +430,14 @@ var eventResultsController = [
 	  style: { 'text-align': 'left' },
 	  attr: { 'adjust-width': 'time' },
 	  when: function() { return features.finish_time } },
+      paid:
+        { name: 'Zahlungseingang',
+	  heading: 'Zahlungseingang',
+	  html_value: function(rider) {
+	    return $sce.trustAsHtml(`<input type="checkbox" ${rider.paid ? 'checked' : ''} disabled="disabled">`);
+	  },
+	  style: { 'text-align': 'center' },
+	  when: function() { return features.paid && results.registered } },
     };
     angular.forEach(defined_fields, function(field) {
       field.heading = $sce.trustAsHtml(field.heading);

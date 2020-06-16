@@ -208,6 +208,10 @@
 	    <tr>
 	      <th>Teilnahme</th>
 	      <td>
+		<span ng-if="features.paid">
+		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.paid" id="paid">
+		    <label for="paid" accesskey="z"><span class="accesskey">Z</span>ahlungseingang</label>
+		</span>
 		<span ng-if="features.registered">
 		  <input ng-disabled="!enabled.rider" type="checkbox" ng-model="rider.registered" id="registered">
 		    <label for="registered" accesskey="e">Nennungs<span class="accesskey">e</span>ingang</label>
