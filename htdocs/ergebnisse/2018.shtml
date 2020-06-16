@@ -11,13 +11,13 @@
 <body>
 <h1>ÖTSV Veranstaltungen 2018</h1>
 
-<h2><a href="jahreswertung.shtml?vareihe=37">ÖTSV Cup</a> und <a href="jahreswertung.shtml?vareihe=38">Jugendcup</a>, <a href="jahreswertung.shtml?vareihe=39">AMF Staatsmeisterschaft</a></h2>
+<h2><a href="/serie/37/results">ÖTSV Cup</a> und <a href="/serie/38/results">Jugendcup</a>, <a href="/serie/39/results">AMF Staatsmeisterschaft</a></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=37&kuerzel&nicht=36" -->
 
-<h2><a href="jahreswertung.shtml?vareihe=40">ÖTSV Kids e-Cup</a></h2>
+<h2><a href="/serie/40/results">ÖTSV Kids e-Cup</a></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=40&kuerzel&nicht=36&nicht=40" -->
 
-<h2>Bike und <a href="jahreswertung.shtml?vareihe=41">ÖTSV Bike Trial Cup</a></h2>
+<h2>Bike und <a href="/serie/41/results">ÖTSV Bike Trial Cup</a></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=42&kuerzel&nicht=36&nicht=42" -->
 
 <h2>Sonstiges</h2>

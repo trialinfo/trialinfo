@@ -12,20 +12,20 @@
 <h2>ÖTSV Cup und OSK Staatsmeisterschaft</h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=25&kuerzel&nicht=24" -->
 <p>
-<a href="jahreswertung.shtml?vareihe=25">ÖTSV Cup Gesamt</a><br>
-<a href="jahreswertung.shtml?vareihe=26">OSK Staatsmeisterschaft Gesamt</a><br>
+<a href="/serie/25/results">ÖTSV Cup Gesamt</a><br>
+<a href="/serie/26/results">OSK Staatsmeisterschaft Gesamt</a><br>
 </p>
 
 <h2>ÖTSV Kids e-Cup</h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=29&kuerzel&nicht=24&nicht=29" -->
 <p>
-<a href="jahreswertung.shtml?vareihe=29">Gesamt</a><br>
+<a href="/serie/29/results">Gesamt</a><br>
 </p>
 
 <h2>ÖTSV Bike Trial Cup</h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=27&kuerzel&nicht=24&nicht=27" -->
 <p>
-<a href="jahreswertung.shtml?vareihe=27">Gesamt</a>
+<a href="/serie/27/results">Gesamt</a>
 </p>
 
 <h2>Sonstiges</h2>

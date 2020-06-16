@@ -12,13 +12,13 @@ a { text-decoration:none }
 <body>
 <h1>ÖTSV Veranstaltungsergebnisse 2017</h1>
 
-<h2><a href="jahreswertung.shtml?vareihe=32">ÖTSV Cup</a> und <a href="jahreswertung.shtml?vareihe=35">Jugendcup</a>, <a href="jahreswertung.shtml?vareihe=33">AMF Staatsmeisterschaft</a></h2>
+<h2><a href="/serie/32/results">ÖTSV Cup</a> und <a href="/serie/35/results">Jugendcup</a>, <a href="/serie/33/results">AMF Staatsmeisterschaft</a></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=32&kuerzel&nicht=31" -->
 
-<h2><a href="jahreswertung.shtml?vareihe=30">ÖTSV Kids e-Cup</a></h2>
+<h2><a href="/serie/30/results">ÖTSV Kids e-Cup</a></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=30" -->
 
-<h2><a href="jahreswertung.shtml?vareihe=34">ÖTSV Bike Trial Cup</a></h2>
+<h2><a href="/serie/34/results">ÖTSV Bike Trial Cup</a></h2>
 <!--#include virtual="/cgi-bin/ergebnisse/vareihe-ssi.pl?vareihe=34" -->
 
 <h2>Sonstiges</h2>
