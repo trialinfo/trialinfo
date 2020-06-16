@@ -149,6 +149,7 @@ CREATE TABLE `future_events` (
   `location` varchar(40) DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
   `active` tinyint(1) NOT NULL DEFAULT 0,
+  `combine` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`,`fid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -272,6 +273,7 @@ CREATE TABLE `riders` (
   `start_time` time DEFAULT NULL,
   `finish_time` time DEFAULT NULL,
   `tie_break` int(11) DEFAULT 0,
+  `paid` tinyint(1) DEFAULT NULL,
   `registered` tinyint(1) DEFAULT NULL,
   `start` tinyint(1) DEFAULT NULL,
   `insurance` int(11) DEFAULT NULL,
