@@ -629,16 +629,16 @@ async function update_database(connection) {
   }
 
   if (await column_exists(connection, 'events', 'section_wise_entry')) {
-    console.log('Renaming column `section_wise_entry` to `zone_wise_entry` in `events`');
+    console.log('Removing column `section_wise_entry` from `events`');
     await connection.queryAsync(`
       ALTER TABLE events
-      CHANGE section_wise_entry zone_wise_entry BOOLEAN
+      DROP section_wise_entry
     `);
-  } else if (!await column_exists(connection, 'events', 'zone_wise_entry')) {
-    console.log('Adding column `zone_wise_entry` to `events`');
+  } else if (await column_exists(connection, 'events', 'zone_wise_entry')) {
+    console.log('Removing column `zone_wise_entry` from `events`');
     await connection.queryAsync(`
       ALTER TABLE events
-      ADD zone_wise_entry BOOLEAN
+      DROP zone_wise_entry
     `);
   }
 
