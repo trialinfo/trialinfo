@@ -8,6 +8,12 @@ var marksController = [
     $scope.event = event;
     $scope.features = event.features;
     $scope.starting_classes = starting_classes(event);
+    $scope.zone_wise_entry = false;
+
+    $scope.flip_zone_wise_entry = function() {
+      $scope.zone_wise_entry = !$scope.zone_wise_entry;
+      focus_marks();
+    };
 
     function ranking_class(rider) {
       if (!rider || !rider['class'])
@@ -96,7 +102,7 @@ var marksController = [
 	  }
 
 	  var rounds = event.classes[rc - 1].rounds;
-	  if (event.zone_wise_entry) {
+	  if ($scope.zone_wise_entry) {
 	    for (var index = 0; index < zones.length; index++) {
 	      for (var round = rider.rounds || 1; round <= rounds; round++) {
 		if (try_to_focus(round, zones[index]))
@@ -315,7 +321,7 @@ var marksController = [
 	    }
 
 	    var rounds = event.classes[rc - 1].rounds;
-	    if (event.zone_wise_entry) {
+	    if ($scope.zone_wise_entry) {
 	      check:
 	      for (var index = 0; index < zones.length; index++) {
 		for (round = 1; round <= rounds; round++) {
@@ -362,7 +368,7 @@ var marksController = [
     });
 
     function get_current_zone() {
-      if (event.zone_wise_entry) {
+      if ($scope.zone_wise_entry) {
 	var element = document.activeElement;
 	if (element && element.getAttribute('marks') != null) {
 	  var id = element.getAttribute('id');
@@ -391,7 +397,7 @@ var marksController = [
 	.then(function(response) {
 	  assign_rider(response.data);
 	  setFocus('#search_term');
-	  if (event.zone_wise_entry)
+	  if ($scope.zone_wise_entry)
 	    $scope.load_next_rider(current_zone);
 	})
 	.catch(network_error)
@@ -466,7 +472,7 @@ var marksController = [
       if (rider) {
 	var rc = ranking_class(rider);
 	var zones = event.zones[rc - 1];
-	if (event.zone_wise_entry) {
+	if ($scope.zone_wise_entry) {
 	  while (round++ < event.classes[rc - 1].rounds) {
 	    if (!zone_skipped(rc, round, zones[index]))
 	      return 'marks_' + round + '_' + zones[index];

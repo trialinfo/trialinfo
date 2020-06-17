@@ -17,11 +17,11 @@
 	      <legend>Punkte</legend>
 	      <table>
 		<tr>
-		  <th class="punktespalte"></th>
+		  <th class="punktespalte" style="text-align:right"><button tabindex="-1" style="padding-left:2.5pt; padding-right:2.5pt; border: 0 none !important" ng-click="flip_zone_wise_entry()"><span title="Eingabereihenfolge">{{zone_wise_entry ? '⇊' : '⇉'}}</span></button></th>
 		  <th class="punktespalte" ng-repeat="zone in zones_list()"><span title="Sektion {{zone}}">{{zone}}</span></th>
 		</tr>
 		<tr ng-repeat="round in rounds_list()">
-		  <th>
+		  <th style="text-align:right">
 		    <label for="marks_{{round}}_{{event.zones[ranking_class - 1][0]}}" title="Runde {{round}}" accesskey="{{round}}">
 		      R<span class="accesskey">{{round}}</span>
 		    </label>
