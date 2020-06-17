@@ -43,6 +43,8 @@ install -d %{buildroot}/var/lib/${package}/pdf
 install -d %{buildroot}/etc/systemd/system
 install -m 644 systemd/%{name}.service systemd/%{name}.socket \
 	%{buildroot}/etc/systemd/system/
+install -m 644 systemd/%{name}.service systemd/%{name}-secure.socket \
+	%{buildroot}/etc/systemd/system/
 
 %post
 useradd --system trialinfo || [ $? -eq 9 ]
