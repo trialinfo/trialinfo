@@ -2514,7 +2514,7 @@ async function get_riders_list(connection, id) {
     ['city', 'class', 'club', 'country', 'date_of_birth', 'email',
     'emergency_phone', 'entry_fee', 'failure', 'finish_time', 'first_name',
     'group', 'insurance', 'last_name', 'license', 'non_competing', 'number',
-    'phone', 'province', 'registered', 'riders', 'rounds', 'start',
+    'paid', 'phone', 'province', 'registered', 'riders', 'rounds', 'start',
     'start_time', 'street', 'vehicle', 'year_of_manufacture', 'zip',
     'guardian', 'comment', 'rider_comment', 'verified',
     'future_starts'].forEach(
