@@ -387,6 +387,15 @@ var eventListController = [
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'time' },
 	  when: function() { return features.finish_time; } },
+      paid:
+	{ name: 'Zahlungseingang',
+	  heading: 'Zahlungseingang',
+	  value: function(rider) {
+	    return rider.paid ? 'Ja' : null;
+	  },
+	  style: { 'text-align': 'center' },
+	  attr: { 'adjust-width': 'yesno' },
+	  when: function() { return features.paid; } },
       registered:
 	{ name: 'Nennungseingang',
 	  heading: 'Nennungseingang',
