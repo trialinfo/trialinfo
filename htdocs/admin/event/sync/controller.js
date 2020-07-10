@@ -100,7 +100,7 @@ var syncController = [
 	})
 	.catch(function(response) {
 	  // console.log(name + ' ' +
-	  //	    ($scope.running ? 'failed' : 'cancelled'));
+	  //	    ($scope.running ? 'failed' : 'canceled'));
 	  delete $scope.kill[name];
 	  next.reject(response);
 	});

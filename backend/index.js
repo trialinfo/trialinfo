@@ -5493,6 +5493,7 @@ var admin_config = {
   admin: true,
   weasyprint: config.weasyprint,
   sync_target: config.sync_target,
+  show_all_future_events: config.show_all_future_events,
   pdf_forms: Object.keys(pdf_forms).reduce(
     function(names, event_type) {
       names[event_type] = Object.keys(pdf_forms[event_type]).reduce(

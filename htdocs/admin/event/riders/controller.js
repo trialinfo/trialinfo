@@ -404,9 +404,7 @@ var ridersController = [
 
     $scope.future_events = event.future_events.reduce(
       function(future_events, future_event) {
-	if (future_event.active ||
-	    (event.registration_ends != null &&
-	     parse_timestamp(event.registration_ends).getTime() >= Date.now()))
+	if (future_event.active || config.show_all_future_events)
 	  future_events.push(future_event);
 	return future_events;
       }, []);
