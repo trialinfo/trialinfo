@@ -22,5 +22,6 @@
   "printers": {
     "Labels": "PT-P700"
   },
-  "sync_target": "<<url to sync to>>"
+  "sync_target": "<<url to sync to>>",
+  "show_all_future_events": true
 }
