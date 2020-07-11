@@ -982,14 +982,16 @@ var eventListController = [
       if (!value)
 	$scope.show.riding = false;
     });
-    $scope.$watch('show.any_start', function(value) {
-      if (value != null) {
-	$scope.show.registered = null;
-	$scope.show.start = null;
-      } else {
-	if (features.registered)
-	  $scope.show.registered = true;
-	$scope.show.start = true;
+    $scope.$watch('show.any_start', function(new_value, old_value) {
+      if (old_value != new_value) {
+	if (new_value != null) {
+	  $scope.show.registered = null;
+	  $scope.show.start = null;
+	} else {
+	  if (features.registered)
+	    $scope.show.registered = true;
+	  $scope.show.start = true;
+	}
       }
     });
     $scope.$watch('show.riding', function(value) {
