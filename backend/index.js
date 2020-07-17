@@ -2247,7 +2247,8 @@ async function delete_event(connection, id) {
 		     'events_groups_inherit', 'riders', 'riders_groups',
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
 		     'new_numbers', 'result_columns',
-		     'future_events', 'future_starts']) {
+		     'future_events', 'future_starts', 'scoring_zones',
+		     'scoring_registered_zones', 'scoring_marks', 'scoring_canceled_marks']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     log_sql(query);
