@@ -728,21 +728,8 @@ async function update_database(connection) {
 	zone INT NOT NULL,
 	marks INT NOT NULL,
 	penalty_marks INT,
-	PRIMARY KEY (id, device, seq)
-      )
-    `);
-  }
-
-  if (!await column_exists(connection, 'scoring_canceled_marks', 'device')) {
-    console.log('Creating table `scoring_canceled_marks`');
-    await connection.queryAsync(`
-      CREATE TABLE scoring_canceled_marks (
-	id INT,
-	device INT,
-	seq INT,
-	time TIMESTAMP NULL DEFAULT NULL,
-	canceled_device INT NOT NULL,
-	canceled_seq INT NOT NULL,
+	canceled_device INT,
+	canceled_seq INT,
 	PRIMARY KEY (id, device, seq)
       )
     `);
@@ -2248,7 +2235,7 @@ async function delete_event(connection, id) {
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
 		     'new_numbers', 'result_columns',
 		     'future_events', 'future_starts', 'scoring_zones',
-		     'scoring_registered_zones', 'scoring_marks', 'scoring_canceled_marks']) {
+		     'scoring_registered_zones', 'scoring_marks']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     log_sql(query);
@@ -5706,79 +5693,44 @@ async function scoring_get_info(connection, id) {
 async function scoring_get_protocol(connection, id, zones, seq) {
   let protocol = {};
   if (zones.length) {
-    function add_to_protocol(device_tag, row) {
-      delete row.id;
-      delete row.device;
-      if (row.time != null)
-	row.time = moment.utc(row.time).toDate();
-      if (protocol[device_tag] == null)
-	protocol[device_tag] = [];
-      protocol[device_tag].push(row);
-    }
+    let is_older = Object.keys(seq)
+      .map((device_tag) => `(device_tag = ${connection.escape(device_tag)} AND seq <= ${connection.escape(seq[device_tag])})`)
+      .join(` OR `);
+    let is_newer = is_older == `` ? `` : ` AND NOT (${is_older})`;
 
-    let scoring_devices = {};
-    let scoring_devices_rev = {};
     (await connection.queryAsync(`
-      SELECT device, device_tag
-      FROM scoring_devices
-    `)).map((row) => {
-      scoring_devices[row.device] = row.device_tag;
-      scoring_devices_rev[row.device_tag] = row.device;
-    });
-
-    let active_devices = {};
-    (await connection.queryAsync(`
-      SELECT DISTINCT device
+      SELECT scoring_marks.*, device_tag, canceled_device_tag
       FROM scoring_marks
-      WHERE id = ${connection.escape(id)} AND
-	zone IN (${zones.map((zone) => connection.escape(zone)).join(', ')})
-    `)).map((row) => {
-      active_devices[row.device] = true;
-    }, {});
-    (await connection.queryAsync(`
-      SELECT DISTINCT device
-      FROM scoring_canceled_marks
-      JOIN (
-        SELECT id, device AS canceled_device, seq AS canceled_seq
-	FROM scoring_marks
-	WHERE zone IN (${zones.map((zone) => connection.escape(zone)).join(', ')})
-      ) AS _ USING (id, canceled_device, canceled_seq)
-      WHERE id = ${connection.escape(id)}
-    `)).map((row) => {
-      active_devices[row.device] = true;
-    }, {});
-
-    if (Object.keys(active_devices).length) {
-      let is_older = Object.keys(seq)
-	.map((device_tag) => `(device = ${connection.escape(scoring_devices_rev[device_tag])} AND seq <= ${connection.escape(seq[device_tag])})`)
-	.join(` OR `);
-      let is_newer = is_older == `` ? `` : ` AND NOT (${is_older})`;
-
-      (await connection.queryAsync(`
-	SELECT *
+      JOIN scoring_devices AS _1 USING (device)
+      LEFT JOIN (
+        SELECT device AS canceled_device, device_tag AS canceled_device_tag
+	FROM scoring_devices) AS _2 USING (canceled_device)
+      WHERE id = ${connection.escape(id)} AND device IN (
+        SELECT DISTINCT device
 	FROM scoring_marks
 	WHERE id = ${connection.escape(id)} AND
-	  device IN (${Object.keys(active_devices).map((device) => connection.escape(+device)).join(', ')})
-	  ${is_newer}`))
-      .map((row) => {
-	add_to_protocol(scoring_devices[row.device], row);
-      });
+	  zone IN (${zones.map((zone) => connection.escape(zone)).join(', ')}))
+        ${is_newer}
+      ORDER BY device, seq
+      `)).forEach((row) => {
+	delete row.id;
+	delete row.device;
+	let device_tag = row.device_tag;
+	delete row.device_tag;
+	if (row.time != null)
+	  row.time = moment.utc(row.time).toDate();
+	if (is_cancel_item(row)) {
+	  row.canceled_device = row.canceled_device_tag;
+	} else {
+	  delete row.canceled_device;
+	  delete row.canceled_seq;
+	}
+	delete row.canceled_device_tag;
 
-      (await connection.queryAsync(`
-	SELECT *
-	FROM scoring_canceled_marks
-	WHERE id = ${connection.escape(id)} AND
-	  device IN (${Object.keys(active_devices).map((device) => connection.escape(+device)).join(', ')})
-	  ${is_newer}`))
-      .map((row) => {
-	row.canceled_device = scoring_devices[row.canceled_device];
-	add_to_protocol(scoring_devices[row.device], row);
+	if (protocol[device_tag] == null)
+	  protocol[device_tag] = [];
+	protocol[device_tag].push(row);
       });
-
-      for (let device_tag in protocol) {
-	protocol[device_tag].sort((a, b) => a.seq - b.seq);
-      }
-    }
   }
   return protocol;
 }
@@ -5820,7 +5772,7 @@ async function scoring_register(connection, scoring_device, id, query, data) {
   };
 }
 
-function is_canceled_item(item) {
+function is_cancel_item(item) {
   return item.canceled_device != null && item.canceled_seq != null;
 }
 
@@ -5835,7 +5787,7 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	  device: scoring_device.device
 	});
 	let table;
-	if (is_canceled_item(item)) {
+	if (is_cancel_item(item)) {
 	  let rows = await connection.queryAsync(`
 	    SELECT device
 	    FROM scoring_marks
@@ -5854,7 +5806,6 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	    continue;
 	  }
 	  item.canceled_device = rows[0].device;
-	  table = 'scoring_canceled_marks';
 	} else {
 	  if (device_tag != scoring_device.device_tag) {
 	    console.log(`Ignoring updates for device ${device_tag} from device ${scoring_device.device_tag}`);
@@ -5864,9 +5815,8 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	    console.log(`Ignoring updates for unregistered zone ${item.zone} from device ${scoring_device.device_tag}`);
 	    continue;
 	  }
-	  table = 'scoring_marks';
 	}
-	let sql = `INSERT IGNORE INTO ${table} SET ` + Object.keys(item)
+	let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
 	    .map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
 	    .join(', ')
 	log_sql(sql);
