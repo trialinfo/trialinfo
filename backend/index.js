@@ -1929,6 +1929,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
 
   if (reset == 'master' || reset == 'register') {
     Object.values(riders).forEach((rider) => {
+      rider.paid = false;
       rider.registered = false;
       rider.start = false;
       rider.start_time = null;
@@ -1960,8 +1961,12 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       if (base_rider) {
 	if (base_rider.future_starts[fid]) {
 	  rider.start = true;
-	  if (base_rider.registered && active)
-	    rider.registered = true;
+	  if (active) {
+	    if (base_rider.registered)
+	      rider.registered = true;
+	    if (base_rider.paid)
+	      rider.paid = true;
+	  }
 	}
       }
     });

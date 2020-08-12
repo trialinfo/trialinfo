@@ -313,6 +313,9 @@
 		</span>
 	      </span>
 	      <span ng-if="otsv_amf_event">
+		<span ng-if="(rider.class != null && !(rider.class >= 5 && rider.class <= 7)) && rider.rankings[1]" style="display:block">
+		  An der Damenwertung dürfen nur Fahrerinnen der Klassen 5−7 teilnehmen.
+		</span>
 		<span ng-if="rider.class >= 11 && rider.class <= 13">
 		  <span ng-if="!rider.license" style="display:block">
 		    Bitte die Lizenznummer eintragen.
