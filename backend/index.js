@@ -734,6 +734,18 @@ async function update_database(connection) {
       )
     `);
   }
+
+  if (!await column_exists(connection, 'scoring_seq', 'device')) {
+    console.log('Creating table `scoring_seq`');
+    await connection.queryAsync(`
+      CREATE TABLE scoring_seq (
+	id INT,
+	device INT,
+	seq INT,
+	PRIMARY KEY (id, device)
+      )
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -2235,7 +2247,7 @@ async function delete_event(connection, id) {
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
 		     'new_numbers', 'result_columns',
 		     'future_events', 'future_starts', 'scoring_zones',
-		     'scoring_registered_zones', 'scoring_marks']) {
+		     'scoring_registered_zones', 'scoring_marks', 'scoring_seq']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     log_sql(query);
@@ -5600,11 +5612,10 @@ async function scoring_get_registered_zones(connection, id) {
 
 async function scoring_get_seq(connection, id) {
   return (await connection.queryAsync(`
-    SELECT device_tag, MAX(seq) AS seq
-    FROM scoring_marks
+    SELECT device_tag, seq
+    FROM scoring_seq
     JOIN scoring_devices USING (device)
-    WHERE id = ?
-    GROUP BY device_tag`, [id]))
+    WHERE id = ?`, [id]))
     .reduce((seqs, row) => {
       seqs[row.device_tag]  = row.seq;
       return seqs;
@@ -5781,7 +5792,8 @@ async function scoring_update(connection, scoring_device, id, query, data) {
   try {
     let registered_zones = await scoring_get_registered_zones(connection, id);
     for (let device_tag in data.protocol) {
-      for (let item of data.protocol[device_tag]) {
+      let device_protocol = data.protocol[device_tag];
+      for (let item of device_protocol) {
 	item = Object.assign({}, item, {
 	  id: id,
 	  device: scoring_device.device
@@ -5822,6 +5834,14 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	log_sql(sql);
 	await connection.queryAsync(sql);
       }
+      let max_seq = device_protocol[device_protocol.length - 1].seq;
+      let sql = `INSERT INTO scoring_seq SET ` +
+	`id = ${connection.escape(id)}, ` +
+	`device = ${connection.escape(scoring_device.device)}, ` +
+	`seq = ${connection.escape(max_seq)} ` +
+	`ON DUPLICATE KEY UPDATE seq = ${connection.escape(max_seq)}`;
+      log_sql(sql);
+      await connection.queryAsync(sql);
     }
     await connection.queryAsync(`COMMIT`);
     return {

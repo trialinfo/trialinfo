@@ -372,6 +372,16 @@ CREATE TABLE `scoring_registered_zones` (
   PRIMARY KEY (`id`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `scoring_seq`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `scoring_seq` (
+  `id` int(11) NOT NULL,
+  `device` int(11) NOT NULL,
+  `seq` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`,`device`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `scoring_zones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
