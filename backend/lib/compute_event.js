@@ -462,7 +462,7 @@ function compute_event(cached_riders, event, compute_marks) {
     };
     for (let field of ['number', 'group', 'date_of_birth', 'class',
 		       'year_of_manufacture', 'penalty_marks', 'failure',
-		       'marks_per_zone'])
+		       'marks_per_zone', 'tie_break'])
       rider[field] = cached_rider[field];
     if (compute_marks) {
       rider.marks = null;
