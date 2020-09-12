@@ -560,6 +560,7 @@ var marksController = [
 
     $scope.keydown = function(event) {
       if (event.which == 13) {
+	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified()) {
 	    if ($scope.form.$valid)
@@ -570,6 +571,7 @@ var marksController = [
 	      $scope.load_next_rider(current_zone);
 	  }});
       } else if (event.which == 27) {
+	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.discard();

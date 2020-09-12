@@ -295,11 +295,13 @@ var serieController = [
 
     $scope.keydown = function(event) {
       if (event.which == 13) {
+	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() && $scope.form.$valid)
 	    $scope.save();
 	});
       } else if (event.which == 27) {
+	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.discard();
