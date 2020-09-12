@@ -783,11 +783,13 @@ var ridersController = [
     $scope.keydown = function(event) {
       if (event.which == 13 &&
 	  (document.activeElement.tagName != "TEXTAREA" || event.ctrlKey)) {
+	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() && $scope.form.$valid)
 	    $scope.save();
 	});
       } else if (event.which == 27) {
+	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() || $scope.enabled.discard)
 	    $scope.discard();
