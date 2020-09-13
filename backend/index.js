@@ -161,6 +161,8 @@ var acup = require('./lib/acup.js');
 var compute_event = require('./lib/compute_event.js');
 var compute_serie = require('./lib/compute_serie.js');
 String.prototype.latinize = require('./lib/latinize');
+var binary = require('./lib/binary');
+var scoring = require('./lib/scoring');
 
 /*
  * mysql: type cast TINYINT(1) to bool
@@ -745,6 +747,12 @@ async function update_database(connection) {
 	PRIMARY KEY (id, device)
       )
     `);
+    await connection.queryAsync(`
+      INSERT INTO scoring_seq (id, device, seq)
+      SELECT id, device, MAX(seq) AS seq
+      FROM scoring_marks
+      GROUP BY id, device
+    `);
   }
 }
 
@@ -810,6 +818,10 @@ var cache = {
   cached_event_timestamps: {},
   cached_events: {},
   saved_events: {},
+  cached_scoring_items: {},
+  cached_scoring_canceled_items: {},
+  cached_scoring_seq: {},
+  cached_compute_rounds: {},
 
   _access_event: function(id) {
     this.cached_event_timestamps[id] = Date.now();
@@ -976,6 +988,101 @@ var cache = {
       transaction.release();
     }
   },
+
+  scoring_seq: function(id) {
+    return this.cached_scoring_seq[id] || {};
+  },
+  add_scoring_item: function(id, number, item) {
+    let try_to_append = (cached_rider, item) => {
+      let last_time = null;
+      if (cached_rider.length > 0)
+	last_time = cached_rider[cached_rider.length - 1].time;
+      if (last_time != null && last_time.getTime() > item.time.getTime())
+	return false;
+      cached_rider.push(item);
+      return true;
+    };
+
+    let cache_cancel_item = (item) => {
+      let cached_event = this.cached_scoring_canceled_items[id];
+      if (!cached_event) {
+	cached_event = {};
+	this.cached_scoring_canceled_items[id] = cached_event;
+      }
+      let cached_device = cached_event[item.canceled_device];
+      if (!cached_device) {
+	cached_device = {};
+	cached_event[item.canceled_device] = cached_device;
+      }
+      cached_device[item.canceled_seq] = true;
+    };
+
+    let cache_item = (item) => {
+      let cached_event = this.cached_scoring_items[id];
+      if (!cached_event) {
+	cached_event = {};
+	this.cached_scoring_items[id] = cached_event;
+      }
+      let cached_rider = cached_event[number];
+      if (!cached_rider) {
+	cached_rider = [];
+	cached_event[number] = cached_rider;
+      }
+      let chronological = true;
+      if (!try_to_append(cached_rider, item)) {
+	binary.insert(cached_rider, item,
+	  (a, b) => a.time.getTime() - b.time.getTime());
+	chronological = false;
+      }
+      if (is_cancel_item(item)) {
+	cache_cancel_item(item);
+	chronological = false;
+      }
+
+      let cached_compute_round;
+      let compute_round = (item) => {
+	let canceled_items = this.cached_scoring_canceled_items[id];
+	let canceled = ((canceled_items || {})[item.device] || [])[item.seq];
+	item.round = cached_compute_round(item.zone, canceled || is_cancel_item(item));
+      };
+
+      if (this.cached_compute_rounds[id])
+        cached_compute_round = this.cached_compute_rounds[id][number];
+      if (chronological && cached_compute_round) {
+	compute_round(item);
+      } else {
+	let cached_compute_rounds = this.cached_compute_rounds[id];
+	if (!cached_compute_rounds) {
+	  cached_compute_rounds = {};
+	  this.cached_compute_rounds[id] = cached_compute_rounds;
+	}
+        cached_compute_round = scoring.compute_round();
+	cached_compute_rounds[number] = cached_compute_round;
+
+	for (let item of cached_rider)
+	  compute_round(item);
+      }
+    };
+
+    let cache_seq = (item) => {
+      let cached_event = this.cached_scoring_seq[id];
+      if (!cached_event) {
+	cached_event = {};
+	this.cached_scoring_seq[id] = cached_event;
+      }
+      let cached_seq = cached_event[item.device];
+      if (cached_seq == null || cached_seq < item.seq)
+	cached_event[item.device] = item.seq;
+    };
+
+    cache_item(item);
+    cache_seq(item);
+  },
+  get_scoring_items: function(id, number) {
+    this._access_event(id);
+    return (this.cached_scoring_items[id] || {})[number] || [];
+  },
+
   expire: function() {
     let expiry = Date.now() - cache_max_age;
     for (let id in this.cached_event_timestamps) {
@@ -985,6 +1092,10 @@ var cache = {
 	delete this.cached_events[id];
 	delete this.cached_riders[id];
 	delete this.cached_event_timestamps[id];
+	delete this.cached_scoring_items[id];
+	delete this.cached_scoring_canceled_items[id];
+	delete this.cached_scoring_seq[id];
+	delete this.cached_compute_rounds[id];
       }
     }
   }
@@ -1911,6 +2022,46 @@ function compute_update_event(id, event) {
   }
 }
 
+function ignore_scoring_zones(event, old_rider, rider) {
+  let scoring_zones = {};
+  for (let scoring_index in event.scoring_zones) {
+    if (event.scoring_zones[scoring_index])
+      scoring_zones[scoring_index + 1] = true;
+  }
+  if (!Object.keys(scoring_zones).length)
+    return;
+
+  let old_marks_per_zone = [], old_penalty_marks = null;
+  if (old_rider) {
+    old_marks_per_zone = old_rider.marks_per_zone;
+    old_penalty_marks = old_rider.penalty_marks;
+  }
+  if (deepEqual(old_marks_per_zone, rider.marks_per_zone) &&
+      old_penalty_marks == rider.penalty_marks)
+    return;
+
+  let marks_per_zone = [];
+  for (let round_index in rider.marks_per_zone) {
+    let marks_per_round = rider.marks_per_zone[round_index];
+    if (marks_per_round)
+      marks_per_zone[round_index] = marks_per_round.slice();
+  }
+  let max_round = Math.max(old_marks_per_zone.length, marks_per_zone.length);
+  for (let round = 1; round < max_round; round++) {
+    for (let zone in scoring_zones) {
+      let old_marks = (old_marks_per_zone[round - 1] || [])[zone - 1];
+      let marks_per_round = marks_per_zone[round - 1];
+      if (!marks_per_round) {
+	marks_per_round = [];
+	marks_per_zone[round - 1] = marks_per_round;
+      }
+      marks_per_round[zone - 1] = old_marks;
+    }
+  }
+  rider.marks_per_zone = marks_per_zone;
+  rider.penalty_marks = old_penalty_marks;
+}
+
 async function admin_save_rider(connection, id, number, rider, tag, query) {
   rider = admin_rider_from_api(rider);
 
@@ -1961,6 +2112,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
 	rider.rankings = event.rankings.map((ranking) =>
 	  (ranking && ranking.default) ?
 	    {"rank": null, "score": null} : null);
+      ignore_scoring_zones(event, old_rider, rider);
       rider = Object.assign(cache.modify_rider(id, number), rider);
     } else {
       await delete_rider(connection, id, number);
@@ -2650,6 +2802,50 @@ async function get_riders_list(connection, id) {
   });
 
   return list;
+}
+
+async function update_scoring_cache(connection, id) {
+  let cached_seq = cache.scoring_seq(id);
+  let is_newer = '';
+  if (Object.keys(cached_seq).length) {
+    let is_older = Object.keys(cached_seq)
+      .map((device) =>
+        `(device = ${connection.escape(device)} AND ` +
+	 `seq <= ${connection.escape(cached_seq[device])})`)
+      .join(`OR `);
+    is_newer = `AND NOT (${is_older})`;
+  }
+
+  let seq = await connection.queryAsync(`
+    SELECT device, seq
+    FROM scoring_seq
+    WHERE id = ${connection.escape(id)} ${is_newer}
+  `);
+  if (seq.length == 0)
+    return;
+
+  let items = await connection.queryAsync(`
+    SELECT *
+    FROM scoring_marks
+    WHERE id = ${connection.escape(id)} ${is_newer}
+    ORDER BY number, time
+  `);
+  for (let item of items) {
+    delete item.id;
+    let number = item.number;
+    delete item.number;
+    if (!is_cancel_item(item)) {
+      delete item.canceled_device;
+      delete item.canceled_seq;
+    }
+    item.time = moment.utc(item.time, 'YYYY-MM-DD HH:mm:ss').toDate();
+    cache.add_scoring_item(id, number, item);
+  }
+}
+
+async function get_event_scoring(connection, id, number) {
+  await update_scoring_cache(connection, id);
+  return cache.get_scoring_items(id, number) || null;
 }
 
 async function get_full_event(connection, id) {
@@ -6476,6 +6672,13 @@ app.get('/api/event/:id/groups', will_read_event, function(req, res, next) {
 
 app.get('/api/event/:id/list', will_read_event, function(req, res, next) {
   get_riders_list(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+app.get('/api/event/:id/rider/:number/scoring', will_read_event, function(req, res, next) {
+  get_event_scoring(req.conn, req.params.id, req.params.number)
   .then((result) => {
     res.json(result);
   }).catch(next);

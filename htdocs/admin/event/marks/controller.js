@@ -121,12 +121,165 @@ var marksController = [
       } catch (_) {};
     }
 
+    function is_cancel_item(item) {
+      return item.canceled_device != null && item.canceled_seq != null;
+    }
+
+    function load_scoring(number) {
+      $http.get('/api/event/' + event.id + '/rider/' + number + '/scoring')
+        .then(function(response) {
+	  let scoring_table = [];
+	  let items = response.data;
+	  let canceled = {};
+
+	  for (let item of items) {
+	    if (!is_cancel_item(item))
+	      continue;
+	    let canceled_device = canceled[item.canceled_device];
+	    if (!canceled_device) {
+	      canceled_device = {};
+	      canceled[item.canceled_device] = canceled_device;
+	    }
+	    canceled_device[item.canceled_seq] = item;
+	  }
+
+	  $scope.max_items_in_round = 0;
+	  let num_in_round = 0;
+	  for (let item of items) {
+	    if (is_cancel_item(item))
+	      continue;
+	    let canceled_item = (canceled[item.device] || {})[item.seq];
+	    if (canceled_item)
+	      item.canceled = canceled_item;
+	    delete item.device;
+	    delete item.seq;
+	    item.time = new Date(item.time);
+
+	    let scoring_round = scoring_table[item.round - 1];
+	    if (!scoring_round) {
+	      num_in_round = 0;
+	      scoring_round = [];
+	      scoring_table[item.round - 1] = scoring_round;
+	    }
+	    let scoring_zone = scoring_round[item.zone - 1];
+	    if (!scoring_zone) {
+	      scoring_zone = [];
+	      scoring_round[item.zone - 1] = scoring_zone;
+	    }
+	    item.num = num_in_round++;
+	    if (num_in_round > $scope.max_items_in_round)
+	      $scope.max_items_in_round = num_in_round;
+	    scoring_zone.push(item);
+	  }
+
+	  $scope.scoring_table = scoring_table;
+	  $scope.scoring_rounds =
+	    items.length ? items[items.length - 1].round : 0;
+	})
+	.catch(network_error);
+    }
+
+    $scope.enumerate = function(from, to) {
+      var list = [];
+      for (; from <= to; from++)
+	list.push(from);
+      return list;
+    };
+
+    function scoring_item_background_color(item) {
+      let n = item.num / ($scope.max_items_in_round - 1);
+      /* Yellow (h = 1/6) to red (h = 0) transition: */
+      let rgb = hsl2rgb(1/6 * (1 - n), 1, 3/4);
+      rgb = rgb.map(function(v) { return Math.floor(v * 0xff); });
+      return '#' + ((rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).padStart(6, '0');
+    }
+
+    function valid_scoring_item(round, zone) {
+      let items = (($scope.scoring_table[round - 1] || [])[zone - 1] || []);
+      for (let item of items) {
+	if (!item.canceled)
+	  return item;
+      }
+    }
+
+    $scope.scoring_cell_style = function(round, zone) {
+      let valid_item = valid_scoring_item(round, zone);
+      if (valid_item) {
+	return {
+	  'background-color': scoring_item_background_color(valid_item)
+	};
+      }
+    };
+
+    $scope.scoring_item_time_style = function(round, zone, item) {
+      let valid_item = valid_scoring_item(round, zone);
+      let style = {};
+      let color;
+      if (valid_item) {
+	let rgb = scoring_item_background_color(valid_item);
+	let r = ('0x' + rgb.substr(1, 2)) / 0xff;
+	let g = ('0x' + rgb.substr(3, 2)) / 0xff;
+	let b = ('0x' + rgb.substr(5, 2)) / 0xff;
+	let l = luminance(r, g, b);
+	// Luminances of different greytones:
+	// "#898989" ~ 0.25, "#bcbcbc" ~ 0.5, "#e1e1e1" ~ 0.75
+	color = l < 0.5 ? '#e1e1e1' : '#898989';
+	style.color = color;
+      }
+      if (item && item.canceled) {
+	style['text-decoration'] = 'line-through';
+	if (color)
+	  style['text-decoration-color'] = color;
+      }
+      return style;
+    };
+
+    $scope.scoring_item_marks_style = function(round, zone, item) {
+      let valid_item = valid_scoring_item(round, zone);
+      let style = {};
+      let color;
+      if (valid_item) {
+	let rgb = scoring_item_background_color(valid_item);
+	let r = ('0x' + rgb.substr(1, 2)) / 0xff;
+	let g = ('0x' + rgb.substr(3, 2)) / 0xff;
+	let b = ('0x' + rgb.substr(5, 2)) / 0xff;
+	let l = luminance(r, g, b);
+	color = l < 0.5 ? '#ffffff' : '#000000'
+	style.color = color;
+      }
+      if (item && item.canceled) {
+	style['text-decoration'] = 'line-through';
+	if (color)
+	  style['text-decoration-color'] = color;
+      }
+      return style;
+    };
+
+    $scope.scoring_marks = function(item) {
+      let marks = '';
+      if (item.marks != null)
+	marks += item.marks;
+      if (item.penalty_marks != null) {
+	if (item.penalty_marks >= 0)
+	  marks += '+';
+	marks += item.penalty_marks;
+      }
+      return marks;
+    };
+
+    $scope.has_scoring_zones = function(event) {
+      return event.scoring_zones.some((enabled) => enabled);
+    }
+
     function load_rider(promise, current_zone) {
       promise
 	.then(function(response) {
 	  let rider = response.data;
 	  if (Object.keys(rider).length) {
 	    assign_rider(rider);
+	    /* FIXME: Load scoring immediately as soon as we know the number;
+	     * cancel loading the scoring when we switch riders. */
+	    load_scoring(rider.number);
 	    focus_marks(current_zone);
 	  }
 	})
