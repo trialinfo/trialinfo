@@ -3196,7 +3196,7 @@ async function get_section_lists(connection, id) {
   hash.event.classes = [];
   for (let c in classes) {
     var class_ = {};
-    for (let field of ['rounds', 'name', 'color', 'ranking_class'])
+    for (let field of ['rounds', 'name', 'color', 'ranking_class', 'order'])
       class_[field] = event.classes[c - 1][field];
     hash.event.classes[c - 1] = class_;
   }

@@ -6,21 +6,72 @@ var eventSectionsController = [
     $scope.config = config;
     $scope.show = {
       zones: {},
-      subtitle: sections.event.subtitle
+      subtitle: sections.event.subtitle,
+      classes: {}
     };
 
+    let event = sections.event;
+    function starting_classes() {
+      var classes = {};
+      angular.forEach(sections.event.classes, function(class_) {
+	if (class_) {
+	  var ranking_class = class_.ranking_class;
+	    classes[ranking_class] = true;
+	}
+      });
+      return classes;
+    }
+
+    $scope.starting_classes =
+      Object.keys(starting_classes())
+      .sort(function(a, b) {
+	return event.classes[a - 1].order - event.classes[b - 1].order;
+      });
+
     function filter_zones() {
-      return $scope.zones.reduce(function(list, zone, idx) {
+      let classes = $scope.event.classes;
+      let starting_classes = [];
+      for (let class_idx = 0; class_idx < classes.length; class_idx++) {
+	if (!classes[class_idx])
+	  continue;
+	let ranking_class = classes[class_idx].ranking_class;
+	if ($scope.show.classes[ranking_class])
+	  starting_classes[class_idx] = true;
+      }
+
+      let filtered_zones = [];
+      for (let zone_idx in $scope.zones) {
+	let zone = $scope.zones[zone_idx];
+	if (!zone)
+	  continue;
+	let starting_riders = [];
+	for (let number of zone.riders) {
+	  let rider = $scope.riders[number];
+	  if (starting_classes[rider.class - 1])
+	    starting_riders.push(number);
+	}
+	if (starting_riders.length) {
+	  let filtered_zone = Object.assign({}, zone, {riders: starting_riders});
+	  filtered_zones[zone_idx] = filtered_zone;
+	}
+      }
+      if (!angular.equals(filtered_zones, $scope.filtered_zones))
+        $scope.filtered_zones = filtered_zones;
+
+      let zones_list = filtered_zones.reduce(function(list, zone, idx) {
 	if (zone && $scope.show.zones[idx + 1])
 	  list.push(idx + 1);
 	  return list;
       }, []);
+      if (!angular.equals(zones_list, $scope.zones_list))
+	$scope.zones_list = zones_list;
     }
 
     function assign_sections(sections) {
       $scope.event = sections.event;
       $scope.riders = sections.riders;
       $scope.zones = sections.zones;
+      $scope.filtered_zones = $scope.zones;
       angular.forEach($scope.zones, function(zone, idx) {
 	if (zone)
 	  $scope.show.zones[idx + 1] = true;
@@ -49,6 +100,15 @@ var eventSectionsController = [
 	search['hide-zone'] = Object.keys(hidden_zones);
       delete search.zones;
 
+      var hidden_classes = [];
+      angular.forEach(search.classes, function(value, key) {
+	if (value === false)
+	  hidden_classes.push(key);
+      });
+      if (hidden_classes.length)
+	search['hidden-class'] = hidden_classes;
+      delete search.classes;
+
       angular.forEach(search, function(value, key) {
 	if (value === null || value === '' || value === false)
 	  delete search[key];
@@ -72,9 +132,7 @@ var eventSectionsController = [
 
     function update() {
       $scope.$root.context($scope.event.title);
-      var zones_list = filter_zones();
-      if (!angular.equals(zones_list, $scope.zones_list))
-	$scope.zones_list = zones_list;
+      filter_zones();
       update_url();
     }
 
@@ -152,6 +210,19 @@ var eventSectionsController = [
       });
       show.zones = zones;
       delete show['hide-zone'];
+
+      var classes = starting_classes();
+      let hidden_classes = show['hidden-class'];
+      if (hidden_classes != null) {
+	if (!(hidden_classes instanceof Array))
+	  hidden_classes = [hidden_classes];
+	for (let class_ of hidden_classes) {
+	  if (classes[class_] !== undefined)
+	    classes[class_] = false;
+	}
+        delete show['hidden-class'];
+      }
+      show.classes = classes;
 
       if (show['font-size'] !== undefined)
 	show['font-size'] = +show['font-size'];
