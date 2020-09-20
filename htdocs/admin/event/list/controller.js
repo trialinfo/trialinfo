@@ -754,14 +754,19 @@ var eventListController = [
 	else
 	  show[option] = +show[option];
       });
-      var classes = starting_classes();
-      angular.forEach(show['hidden-class'], function(class_) {
-	if (classes[class_] !== undefined)
-	  classes[class_] = false;
-      });
-      show.classes = classes;
 
-      delete show['hidden-class'];
+      var classes = starting_classes();
+      let hidden_classes = show['hidden-class'];
+      if (hidden_classes != null) {
+        if (!(hidden_classes instanceof Array))
+	  hidden_classes = [hidden_classes];
+	for (let class_ of hidden_classes) {
+	  if (classes[class_] !== undefined)
+	    classes[class_] = false;
+	}
+	delete show['hidden-class'];
+      }
+      show.classes = classes;
       show.other_classes = show.other_classes == 'yes';
 
       var fields = show.field || [];
