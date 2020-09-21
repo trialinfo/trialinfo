@@ -825,9 +825,11 @@ var cache = {
     }
   },
 
-  begin: async function(connection) {
+  begin: async function(connection, id) {
     // assert(!this.transaction);
     await connection.queryAsync(`BEGIN`);
+    if (id)
+      this._access_event(id);
     this.transaction = true;
   },
   commit: async function(connection) {
@@ -1804,7 +1806,7 @@ function compute_update_event(id, event) {
 async function admin_save_rider(connection, id, number, rider, tag, query) {
   rider = admin_rider_from_api(rider);
 
-  await cache.begin(connection);
+  await cache.begin(connection, id);
   try {
     var event = await get_event(connection, id);
     if (event.version != query.event_version)
@@ -1995,7 +1997,7 @@ async function event_tag_to_id(connection, tag, email) {
 }
 
 async function admin_reset_event(connection, id, query, email) {
-  await cache.begin(connection);
+  await cache.begin(connection, id);
   var event = await get_event(connection, id);
   var riders = await get_riders(connection, id);
 
@@ -2181,7 +2183,7 @@ async function reduce_future_starts(event, riders) {
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
-  await cache.begin(connection);
+  await cache.begin(connection, id);
   try {
     var old_event;
     if (id) {
@@ -4757,7 +4759,7 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
 }
 
 async function register_save_rider(connection, id, number, rider, user, query) {
-  await cache.begin(connection);
+  await cache.begin(connection, id);
   try {
     var event = await get_event(connection, id);
     if (event.registration_ends == null ||
@@ -5324,7 +5326,7 @@ async function import_event(connection, existing_id, data, email) {
   if (data.format != 'TrialInfo 1')
     throw new HTTPError(415, 'Unsupported Media Type');
 
-  await cache.begin(connection);
+  await cache.begin(connection, existing_id);
   try {
     let event = data.event;
     let result;
