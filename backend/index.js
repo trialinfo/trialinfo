@@ -826,17 +826,14 @@ var cache = {
   },
 
   begin: async function(connection, id) {
-    // assert(!this.transaction);
     await connection.queryAsync(`BEGIN`);
     if (id)
       this._access_event(id);
-    this.transaction = true;
   },
   commit: async function(connection) {
     try {
       await commit_world(connection);
 
-      delete this.transaction;
       await connection.queryAsync(`COMMIT`);
       this._roll_forward();
     } catch (exception) {
@@ -869,15 +866,9 @@ var cache = {
   },
   rollback: async function(connection) {
     this._roll_back();
-    if (this.transaction) {
-      delete this.transaction;
-      await connection.queryAsync(`ROLLBACK`);
-    }
+    await connection.queryAsync(`ROLLBACK`);
   },
   expire: function() {
-    if (this.transaction)
-      return;
-
     let expiry = Date.now() - cache_max_age;
     for (let id in this.cached_event_timestamps) {
       let accessed = this.cached_event_timestamps[id];
