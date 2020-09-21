@@ -5350,7 +5350,6 @@ async function import_event(connection, existing_id, data, email) {
     /* For compatibility with mobile scoring: */
     delete event.access_token;
     delete event.scoring_zones;
-    delete event.recompute;
 
     if (existing_id) {
       id = existing_id;
