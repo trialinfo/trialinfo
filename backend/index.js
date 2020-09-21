@@ -681,6 +681,14 @@ async function update_database(connection) {
     `);
   }
 
+  if (!await column_exists(connection, 'events', 'recompute')) {
+    console.log('Adding column `recompute` to `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD recompute BOOLEAN NOT NULL DEFAULT 0 AFTER enabled
+    `);
+  }
+
   if (!await column_exists(connection, 'scoring_zones', 'id')) {
     console.log('Creating table `scoring_zones`');
     await connection.queryAsync(`
@@ -1609,6 +1617,13 @@ async function read_event(connection, id, revalidate) {
 async function get_event(connection, id) {
   var revalidate = make_revalidate_event(connection, id);
   return await read_event(connection, id, revalidate);
+}
+
+async function admin_get_event(connection, id) {
+  let event = await get_event(connection, id);
+  event = Object.assign({}, event);
+  delete event.recompute;
+  return event;
 }
 
 function make_revalidate_rider(id, number, version) {
@@ -6460,7 +6475,7 @@ app.get('/api/series', function(req, res, next) {
 });
 
 app.get('/api/event/:id', will_read_event, function(req, res, next) {
-  get_event(req.conn, req.params.id)
+  admin_get_event(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);

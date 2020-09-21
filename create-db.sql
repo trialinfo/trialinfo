@@ -72,6 +72,7 @@ CREATE TABLE `events` (
   `mtime` timestamp NULL DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
   `enabled` tinyint(1) DEFAULT NULL,
+  `recompute` tinyint(1) NOT NULL DEFAULT 0,
   `uci_x10` tinyint(1) DEFAULT NULL,
   `four_marks` tinyint(1) DEFAULT NULL,
   `equal_marks_resolution` int(11) DEFAULT NULL,
