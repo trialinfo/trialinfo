@@ -9,6 +9,7 @@ var marksController = [
     $scope.features = event.features;
     $scope.starting_classes = starting_classes(event);
     $scope.zone_wise_entry = false;
+    $scope.scoring_table = [];
 
     $scope.flip_zone_wise_entry = function() {
       $scope.zone_wise_entry = !$scope.zone_wise_entry;
@@ -126,6 +127,7 @@ var marksController = [
     }
 
     function load_scoring(number) {
+      $scope.scoring_table = [];
       $http.get('/api/event/' + event.id + '/rider/' + number + '/scoring')
         .then(function(response) {
 	  let scoring_table = [];
@@ -267,9 +269,31 @@ var marksController = [
       return marks;
     };
 
-    $scope.has_scoring_zones = function(event) {
-      return event.scoring_zones.some((enabled) => enabled);
+    $scope.scoring_zone_active = function(zone) {
+      let rider = $scope.rider;
+      if (rider && !rider.scoring)
+	return false;
+      return event.scoring_zones[zone - 1];
+    };
+
+    function has_scoring_zones() {
+      let rider = $scope.rider;
+      if (rider) {
+	let rc = ranking_class(rider);
+	if (rc != null) {
+	  let zones = event.zones[rc - 1] || [];
+	  return zones.some(function(zone) { return event.scoring_zones[zone - 1]; });
+	}
+      }
     }
+    $scope.has_scoring_zones = has_scoring_zones;
+
+    $scope.scoring_active = function() {
+      let rider = $scope.rider;
+      if (rider && !rider.scoring)
+	return false;
+      return has_scoring_zones();
+    };
 
     function load_rider(promise, current_zone) {
       promise

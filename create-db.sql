@@ -278,6 +278,7 @@ CREATE TABLE `riders` (
   `paid` tinyint(1) DEFAULT NULL,
   `registered` tinyint(1) DEFAULT NULL,
   `start` tinyint(1) DEFAULT NULL,
+  `scoring` tinyint(1) NOT NULL DEFAULT 1,
   `insurance` int(11) DEFAULT NULL,
   `rounds` int(11) DEFAULT NULL,
   `s0` int(11) DEFAULT NULL,
