@@ -6043,88 +6043,99 @@ function is_cancel_item(item) {
 }
 
 async function scoring_update(connection, scoring_device, id, query, data) {
-  await connection.queryAsync(`BEGIN`);
-  try {
-    let registered_zones = await scoring_get_registered_zones(connection, id);
-    for (let device_tag in data.protocol) {
-      let device_protocol = data.protocol[device_tag];
-      for (let item of device_protocol) {
-	item = Object.assign({}, item, {
-	  id: id,
-	  device: scoring_device.device
-	});
-	let table;
-	if (is_cancel_item(item)) {
-	  let rows = await connection.queryAsync(`
-	    SELECT device
-	    FROM scoring_marks
-	    JOIN scoring_devices USING (device)
-	    WHERE id = ${connection.escape(id)} AND
-	      device_tag = ${connection.escape(item.canceled_device)} AND
-	      seq = ${connection.escape(item.canceled_seq)} AND
-	      zone IN (
-	        SELECT zone
-		FROM scoring_registered_zones
-		WHERE device = ${connection.escape(scoring_device.device)}
-	      )
-	    `);
-	  if (!rows.length) {
-	    console.log(`No marks to cancel for device ${item.canceled_device}, seq ${item.seq}`);
-	    continue;
+  let empty = true;
+  for (let device_tag in data.protocol) {
+    let device_protocol = data.protocol[device_tag];
+    if (device_protocol.length) {
+      empty = false;
+      break;
+    }
+  }
+
+  if (!empty) {
+    await connection.queryAsync(`BEGIN`);
+    try {
+      let registered_zones = await scoring_get_registered_zones(connection, id);
+      for (let device_tag in data.protocol) {
+	let device_protocol = data.protocol[device_tag];
+	for (let item of device_protocol) {
+	  item = Object.assign({}, item, {
+	    id: id,
+	    device: scoring_device.device
+	  });
+	  let table;
+	  if (is_cancel_item(item)) {
+	    let rows = await connection.queryAsync(`
+	      SELECT device
+	      FROM scoring_marks
+	      JOIN scoring_devices USING (device)
+	      WHERE id = ${connection.escape(id)} AND
+		device_tag = ${connection.escape(item.canceled_device)} AND
+		seq = ${connection.escape(item.canceled_seq)} AND
+		zone IN (
+		  SELECT zone
+		  FROM scoring_registered_zones
+		  WHERE device = ${connection.escape(scoring_device.device)}
+		)
+	      `);
+	    if (!rows.length) {
+	      console.log(`No marks to cancel for device ${item.canceled_device}, seq ${item.seq}`);
+	      continue;
+	    }
+	    item.canceled_device = rows[0].device;
+	  } else {
+	    if (device_tag != scoring_device.device_tag) {
+	      console.log(`Ignoring updates for device ${device_tag} from device ${scoring_device.device_tag}`);
+	      continue;
+	    }
+	    if (registered_zones[item.zone] != device_tag) {
+	      console.log(`Ignoring updates for unregistered zone ${item.zone} from device ${scoring_device.device_tag}`);
+	      continue;
+	    }
 	  }
-	  item.canceled_device = rows[0].device;
-	} else {
-	  if (device_tag != scoring_device.device_tag) {
-	    console.log(`Ignoring updates for device ${device_tag} from device ${scoring_device.device_tag}`);
-	    continue;
-	  }
-	  if (registered_zones[item.zone] != device_tag) {
-	    console.log(`Ignoring updates for unregistered zone ${item.zone} from device ${scoring_device.device_tag}`);
-	    continue;
-	  }
+	  let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
+	      .map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
+	      .join(', ')
+	  log_sql(sql);
+	  await connection.queryAsync(sql);
 	}
-	let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
-	    .map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
-	    .join(', ')
+	let max_seq = device_protocol[device_protocol.length - 1].seq;
+	let sql = `INSERT INTO scoring_seq SET ` +
+	  `id = ${connection.escape(id)}, ` +
+	  `device = ${connection.escape(scoring_device.device)}, ` +
+	  `seq = ${connection.escape(max_seq)} ` +
+	  `ON DUPLICATE KEY UPDATE seq = ${connection.escape(max_seq)}`;
 	log_sql(sql);
 	await connection.queryAsync(sql);
       }
-      let max_seq = device_protocol[device_protocol.length - 1].seq;
-      let sql = `INSERT INTO scoring_seq SET ` +
-	`id = ${connection.escape(id)}, ` +
-	`device = ${connection.escape(scoring_device.device)}, ` +
-	`seq = ${connection.escape(max_seq)} ` +
-	`ON DUPLICATE KEY UPDATE seq = ${connection.escape(max_seq)}`;
+      let sql = `UPDATE events SET recompute = 1 WHERE id = ${connection.escape(id)}`;
       log_sql(sql);
       await connection.queryAsync(sql);
-    }
-    let sql = `UPDATE events SET recompute = 1 WHERE id = ${connection.escape(id)}`;
-    log_sql(sql);
-    await connection.queryAsync(sql);
-    await connection.queryAsync(`COMMIT`);
+      await connection.queryAsync(`COMMIT`);
 
-    let event = cache.get_event(id);
-    if (event) {
-      event.recompute = true;
-      (async function() {
-	try {
-	  await scoring_recompute_event(connection, id);
-	} catch (error) {
-	  console.log(error);
-	}
-      })();
-    } else {
-      /* The event will be recomputed in read_event(). */
+      let event = cache.get_event(id);
+      if (event) {
+	event.recompute = true;
+	(async function() {
+	  try {
+	    await scoring_recompute_event(connection, id);
+	  } catch (error) {
+	    console.log(error);
+	  }
+	})();
+      } else {
+	/* The event will be recomputed in read_event(). */
+      }
+    } catch (error) {
+      console.log(error);
+      await connection.queryAsync(`ROLLBACK`);
+      return new HTTPError(500, 'Internal Error');
     }
-
-    return {
-      seq: await scoring_get_seq(connection, id)
-    };
-  } catch (error) {
-    console.log(error);
-    await connection.queryAsync(`ROLLBACK`);
-    return new HTTPError(500, 'Internal Error');
   }
+
+  return {
+    seq: await scoring_get_seq(connection, id)
+  };
 }
 
 function scoring_update_riders(id, event, riders) {
