@@ -6088,10 +6088,6 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	      console.log(`Ignoring updates for device ${device_tag} from device ${scoring_device.device_tag}`);
 	      continue;
 	    }
-	    if (registered_zones[item.zone] != device_tag) {
-	      console.log(`Ignoring updates for unregistered zone ${item.zone} from device ${scoring_device.device_tag}`);
-	      continue;
-	    }
 	  }
 	  let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
 	      .map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)

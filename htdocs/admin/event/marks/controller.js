@@ -175,8 +175,6 @@ var marksController = [
 	  }
 
 	  $scope.scoring_table = scoring_table;
-	  $scope.scoring_rounds =
-	    items.length ? items[items.length - 1].round : 0;
 	})
 	.catch(network_error);
     }

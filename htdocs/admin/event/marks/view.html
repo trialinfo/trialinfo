@@ -126,12 +126,12 @@ table.scoring_table th, table.scoring_table td {
 	  </p>
 	  <fieldset ng-if="scoring_table.length || has_scoring_zones()" style="display:inline">
 	    <legend>Mobile Datenerfassung<span ng-if="has_scoring_zones()"> <input type="checkbox" ng-model="rider.scoring" id="scoring"><label for="scoring">aktiv</label></span></legend>
-	    <table class="scoring_table">
+	    <table class="scoring_table" ng-if="scoring_table.length">
 	      <tr>
 		<th style="text-align:center"></th>
 		<th ng-repeat="zone in zones_list()" style="text-align:center"><span title="Sektion {{zone}}">{{zone}}</span></th>
 	      </tr>
-	      <tr ng-repeat="round in enumerate(1, scoring_rounds)">
+	      <tr ng-repeat="round in enumerate(1, scoring_table.length)">
 		<th style="text-align:center"><span title="Runde {{round}}">R{{round}}</span></th>
 		<td style="min-width:3em;text-align:center" ng-style="scoring_cell_style(round, zone)" ng-repeat="zone in zones_list()">
 		  <span ng-repeat="item in scoring_table[round - 1][zone - 1]" style="display:inline-block">
