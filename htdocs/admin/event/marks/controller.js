@@ -396,9 +396,10 @@ var marksController = [
 		{params: params})
 	.then(function(response) {
 	  assign_rider(response.data);
-	  setFocus('#search_term');
 	  if ($scope.zone_wise_entry)
 	    $scope.load_next_rider(current_zone);
+	  else
+	    setFocus('#search_term');
 	})
 	.catch(network_error)
 	.finally(function() {
