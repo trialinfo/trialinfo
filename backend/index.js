@@ -5352,11 +5352,6 @@ async function import_event(connection, existing_id, data, email) {
     delete event.scoring_zones;
     delete event.recompute;
 
-    for (let number in data.riders) {
-      let rider = data.riders[number];
-      delete rider.scoring;
-    }
-
     if (existing_id) {
       id = existing_id;
     } else {
