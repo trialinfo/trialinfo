@@ -2627,6 +2627,8 @@ async function get_event_results(connection, id) {
     let hash = {};
     for (let field of rider_result_fields)
       hash[field] = rider[field];
+    if ((event.classes[rider.class - 1] || {}).non_competing)
+      hash.non_competing = true;
     hash.marks_per_zone = result_marks_per_zone(rider, event, ranking_class);
     return hash;
   }
@@ -2642,6 +2644,8 @@ async function get_event_results(connection, id) {
       for (let field of ['rank', 'marks', 'marks_distribution',
 			 'decisive_marks', 'failure', 'non_competing'])
 	rider[field] = cached_rider[field];
+      if ((last_event.classes[cached_rider.class - 1] || {}).non_competing)
+	rider.non_competing = true;
       let result = rider_result(cached_rider, events[0], ranking_class);
       for (let field of ['decisive_round'])
 	result[field] = cached_rider[field];
