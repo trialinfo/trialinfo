@@ -2254,6 +2254,8 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       if (riders[number].group)
 	delete riders[number];
     });
+    event.access_token = null;
+    event.scoring_zones = [];
   }
 
   if (reset == 'register' && event.base && event.base_fid) {
@@ -2535,7 +2537,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	await add_event_write_access(connection, id, email);
       }
 
-      if (event.scoring_zones.length) {
+      if (event.scoring_zones.some((enabled) => enabled)) {
 	if (event.access_token == null)
 	  event.access_token = random_tag();
       }
