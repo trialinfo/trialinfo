@@ -145,7 +145,6 @@ var marksController = [
 	    canceled_device[item.canceled_seq] = item;
 	  }
 
-	  $scope.max_items_in_round = 0;
 	  let num_in_round = 0;
 	  for (let item of items) {
 	    if (is_cancel_item(item))
@@ -168,13 +167,15 @@ var marksController = [
 	      scoring_zone = [];
 	      scoring_round[item.zone - 1] = scoring_zone;
 	    }
-	    item.num = num_in_round++;
-	    if (num_in_round > $scope.max_items_in_round)
-	      $scope.max_items_in_round = num_in_round;
+	    if (!item.canceled)
+	      item.num = num_in_round++;
 	    scoring_zone.push(item);
 	  }
 
 	  $scope.scoring_table = scoring_table;
+	  let rc = ranking_class($scope.rider);
+	  let zones = event.zones[rc - 1] || [];
+	  $scope.num_zones = zones.length;
 	})
 	.catch(network_error);
     }
@@ -187,11 +188,13 @@ var marksController = [
     };
 
     function scoring_item_background_color(item) {
-      let n = item.num / ($scope.max_items_in_round - 1);
-      /* Yellow (h = 1/6) to red (h = 0) transition: */
-      let rgb = hsl2rgb(1/6 * (1 - n), 1, 3/4);
-      rgb = rgb.map(function(v) { return Math.floor(v * 0xff); });
-      return '#' + ((rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).padStart(6, '0');
+      if ($scope.num_zones > 1) {
+	let n = item.num / ($scope.num_zones - 1);
+	/* Yellow (h = 1/6) to red (h = 0) transition: */
+	let rgb = hsl2rgb(1/6 * (1 - n), 1, 3/4);
+	rgb = rgb.map(function(v) { return Math.floor(v * 0xff); });
+	return '#' + ((rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).padStart(6, '0');
+      }
     }
 
     function valid_scoring_item(round, zone) {
