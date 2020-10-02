@@ -6179,8 +6179,8 @@ function scoring_update_riders(id, event, riders) {
 }
 
 async function scoring_recompute_event(connection, id) {
+  let transaction = await cache.begin(connection, id);
   try {
-    await cache.begin(connection, id);
     let event = await get_event(connection, id);
     if (event.scoring_zones.some((enabled) => enabled)) {
       let riders = await get_riders(connection, id);
@@ -6191,9 +6191,9 @@ async function scoring_recompute_event(connection, id) {
     Object.assign(cache.modify_event(id), {
       recompute: false
     });
-    await cache.commit(connection);
+    await cache.commit(transaction);
   } catch (error) {
-    await cache.rollback(connection);
+    await cache.rollback(transaction);
     throw error;
   }
 }
