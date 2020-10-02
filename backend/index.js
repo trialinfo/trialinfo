@@ -44,6 +44,7 @@ var spawn = require('child-process-promise').spawn;
 var tmp = require('tmp');
 var diff = require('diff');
 var cors = require('cors');
+var Mutex = require('async-mutex').Mutex;
 
 var config = JSON.parse(fs.readFileSync('config.json'));
 
@@ -711,10 +712,17 @@ async function validate_user(connection, user) {
   return user;
 }
 
+function Transaction(connection, release) {
+  this.connection = connection;
+  this.release = release;
+  return Object.freeze(this);
+}
+
 /*
  * Cache
  */
 var cache = {
+  mutex: new Mutex(),
   cached_event_timestamps: {},
   cached_events: {},
   saved_events: {},
@@ -826,19 +834,30 @@ var cache = {
   },
 
   begin: async function(connection, id) {
-    await connection.queryAsync(`BEGIN`);
-    if (id)
-      this._access_event(id);
+    const release = await this.mutex.acquire();
+    try {
+      await connection.queryAsync(`BEGIN`);
+      if (id)
+	this._access_event(id);
+      return new Transaction(connection, release);
+    } catch (error) {
+      release();
+      throw error;
+    }
   },
-  commit: async function(connection) {
+  commit: async function(transaction) {
+    let connection = transaction.connection;
     try {
       await commit_world(connection);
 
       await connection.queryAsync(`COMMIT`);
       this._roll_forward();
     } catch (exception) {
-      await this.rollback(connection);
+      this._roll_back();
+      await connection.queryAsync(`ROLLBACK`);
       throw exception;
+    } finally {
+      transaction.release();
     }
   },
   _roll_forward: function() {
@@ -864,9 +883,14 @@ var cache = {
     });
     this.saved_riders = {};
   },
-  rollback: async function(connection) {
-    this._roll_back();
-    await connection.queryAsync(`ROLLBACK`);
+  rollback: async function(transaction) {
+    let connection = transaction.connection;
+    try {
+      this._roll_back();
+      await connection.queryAsync(`ROLLBACK`);
+    } finally {
+      transaction.release();
+    }
   },
   expire: function() {
     let expiry = Date.now() - cache_max_age;
@@ -1797,7 +1821,7 @@ function compute_update_event(id, event) {
 async function admin_save_rider(connection, id, number, rider, tag, query) {
   rider = admin_rider_from_api(rider);
 
-  await cache.begin(connection, id);
+  let transaction = await cache.begin(connection, id);
   try {
     var event = await get_event(connection, id);
     if (event.version != query.event_version)
@@ -1866,7 +1890,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
       `, [user_tag]);
     }
 
-    await cache.commit(connection);
+    await cache.commit(transaction);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
       rider = await read_rider(connection, id, number, () => {});
@@ -1875,7 +1899,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
     if (rider)
       return await admin_rider_to_api(connection, id, rider, event);
   } catch (err) {
-    await cache.rollback(connection);
+    await cache.rollback(transaction);
     throw err;
   }
 }
@@ -1988,17 +2012,17 @@ async function event_tag_to_id(connection, tag, email) {
 }
 
 async function admin_reset_event(connection, id, query, email) {
-  await cache.begin(connection, id);
-  var event = await get_event(connection, id);
-  var riders = await get_riders(connection, id);
-
-  if (query.version && event.version != query.version)
-    throw new HTTPError(409, 'Conflict');
-
-  event = cache.modify_event(id);
-  riders = cache.modify_riders(id);
-
+  let transaction = await cache.begin(connection, id);
   try {
+    var event = await get_event(connection, id);
+    var riders = await get_riders(connection, id);
+
+    if (query.version && event.version != query.version)
+      throw new HTTPError(409, 'Conflict');
+
+    event = cache.modify_event(id);
+    riders = cache.modify_riders(id);
+
     if (query.reset == 'master') {
       let min_number = Math.min(0, Math.min.apply(this, Object.keys(riders)));
       for (let number of Object.keys(riders)) {
@@ -2024,9 +2048,9 @@ async function admin_reset_event(connection, id, query, email) {
 	DELETE FROM new_numbers
 	WHERE id = ?`, [id]);
     }
-    await cache.commit(connection);
+    await cache.commit(transaction);
   } catch (err) {
-    await cache.rollback(connection);
+    await cache.rollback(transaction);
     throw err;
   }
 }
@@ -2174,7 +2198,7 @@ async function reduce_future_starts(event, riders) {
 }
 
 async function admin_save_event(connection, id, event, version, reset, email) {
-  await cache.begin(connection, id);
+  let transaction = await cache.begin(connection, id);
   try {
     var old_event;
     if (id) {
@@ -2230,7 +2254,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       await delete_event(connection, id);
     }
 
-    await cache.commit(connection);
+    await cache.commit(transaction);
     if (!old_event) {
       /* Reload from database to get any default values defined there.  */
       event = await read_event(connection, id, () => {});
@@ -2238,7 +2262,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 
     return event;
   } catch (err) {
-    await cache.rollback(connection);
+    await cache.rollback(transaction);
     throw err;
   }
 }
@@ -4750,7 +4774,7 @@ async function notify_registration(id, number, old_rider, new_rider, event) {
 }
 
 async function register_save_rider(connection, id, number, rider, user, query) {
-  await cache.begin(connection, id);
+  let transaction = await cache.begin(connection, id);
   try {
     var event = await get_event(connection, id);
     if (event.registration_ends == null ||
@@ -4841,14 +4865,14 @@ async function register_save_rider(connection, id, number, rider, user, query) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    await cache.commit(connection);
+    await cache.commit(transaction);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
       rider = await read_rider(connection, id, number, () => {});
     }
     notify_registration(id, number, old_rider, rider, event);
   } catch (err) {
-    await cache.rollback(connection);
+    await cache.rollback(transaction);
     throw err;
   }
   if (rider)
@@ -5317,7 +5341,7 @@ async function import_event(connection, existing_id, data, email) {
   if (data.format != 'TrialInfo 1')
     throw new HTTPError(415, 'Unsupported Media Type');
 
-  await cache.begin(connection, existing_id);
+  let transaction = await cache.begin(connection, existing_id);
   try {
     let event = data.event;
     let result;
@@ -5441,10 +5465,10 @@ async function import_event(connection, existing_id, data, email) {
       }
     }
 
-    await cache.commit(connection);
+    await cache.commit(transaction);
     return {id: id};
   } catch (err) {
-    await cache.rollback(connection);
+    await cache.rollback(transaction);
     throw err;
   }
 }
