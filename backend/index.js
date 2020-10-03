@@ -2178,7 +2178,7 @@ function future_event_ids_equal(old_event, event) {
 }
 
 /* Delete future_starts for all removed future_events */
-async function reduce_future_starts(event, riders) {
+function reduce_future_starts(event, riders) {
   let future_events = {};
   event.future_events.forEach((future_event) => {
     let fid = future_event.fid;
@@ -2188,12 +2188,15 @@ async function reduce_future_starts(event, riders) {
 
   Object.values(riders).forEach((rider) => {
     var future_starts = Object.assign({}, rider.future_starts);
+    var modified = false;
     Object.keys(future_starts).forEach((fid) => {
       if (!future_events[fid]) {
 	delete future_starts[fid];
-	rider.future_starts = future_starts;
+	modified = true;
       }
     });
+    if (modified)
+      rider.future_starts = future_starts;
   });
 }
 
@@ -2242,11 +2245,11 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	cache.check_for_new_riders(id);
       }
 
-      if (!future_event_ids_equal(old_event, event)) {
+      if (!old_event || !future_event_ids_equal(old_event, event)) {
 	if (old_event)
 	  await get_riders(connection, id);
 	let riders = cache.modify_riders(id);
-	await reduce_future_starts(event, riders);
+	reduce_future_starts(event, riders);
       }
 
       compute_update_event(id, event);
