@@ -957,10 +957,10 @@ var cache = {
       throw error;
     }
   },
-  commit: async function(transaction) {
+  commit: async function(transaction, update_versions) {
     let connection = transaction.connection;
     try {
-      await commit_world(connection);
+      await commit_world(connection, update_versions);
 
       await connection.queryAsync(`COMMIT`);
       this._roll_forward();
@@ -1120,7 +1120,7 @@ var cache = {
   }
 };
 
-async function commit_world(connection) {
+async function commit_world(connection, update_versions) {
   var ids = Object.keys(cache.saved_riders);
   for (let id of ids) {
     let numbers = Object.keys(cache.saved_riders[id]);
@@ -1128,7 +1128,8 @@ async function commit_world(connection) {
       let old_rider = cache.saved_riders[id][number];
       let new_rider = cache.cached_riders[id][number];
       await update_rider(connection, id, number,
-			 old_rider, new_rider);
+			 old_rider, new_rider,
+			 update_versions);
     }
   }
 
@@ -1136,7 +1137,8 @@ async function commit_world(connection) {
   for (let id of ids) {
     let old_event = cache.saved_events[id];
     let new_event = cache.cached_events[id];
-    await update_event(connection, id, old_event, new_event);
+    await update_event(connection, id, old_event, new_event,
+		       update_versions);
   }
 }
 
@@ -2191,7 +2193,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
       `, [user_tag]);
     }
 
-    await cache.commit(transaction);
+    await cache.commit(transaction, true);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
       rider = await read_rider(connection, id, number, () => {});
@@ -2350,7 +2352,7 @@ async function admin_reset_event(connection, id, query, email) {
 	DELETE FROM new_numbers
 	WHERE id = ?`, [id]);
     }
-    await cache.commit(transaction);
+    await cache.commit(transaction, true);
   } catch (err) {
     await cache.rollback(transaction);
     throw err;
@@ -2563,7 +2565,7 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       await delete_event(connection, id);
     }
 
-    await cache.commit(transaction);
+    await cache.commit(transaction, true);
     if (!old_event) {
       /* Reload from database to get any default values defined there.  */
       event = await read_event(connection, id, () => {});
@@ -4201,7 +4203,7 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
   return changed;
 }
 
-async function update_rider(connection, id, number, old_rider, new_rider) {
+async function update_rider(connection, id, number, old_rider, new_rider, update_version) {
   var real_new_rider = new_rider;
   var changed = false;
 
@@ -4247,7 +4249,7 @@ async function update_rider(connection, id, number, old_rider, new_rider) {
     }
   }
 
-  if (changed && new_rider) {
+  if (changed && new_rider && update_version) {
     nonkeys.push('version');
     new_rider.version = old_rider ? old_rider.version + 1 : 1;
     real_new_rider.version = new_rider.version;
@@ -4409,7 +4411,7 @@ async function __update_event(connection, id, old_event, new_event) {
   return changed;
 }
 
-async function update_event(connection, id, old_event, new_event) {
+async function update_event(connection, id, old_event, new_event, update_version) {
   var changed = false;
 
   await __update_event(connection, id, old_event, new_event)
@@ -4446,7 +4448,7 @@ async function update_event(connection, id, old_event, new_event) {
   }
 
   if (new_event) {
-    if (changed) {
+    if (changed && update_version) {
       nonkeys.push('version');
       new_event.version = old_event ? old_event.version + 1 : 1;
     }
@@ -5227,7 +5229,7 @@ async function register_save_rider(connection, id, number, rider, user, query) {
     event = cache.modify_event(id);
     event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    await cache.commit(transaction);
+    await cache.commit(transaction, true);
     if (!old_rider) {
       /* Reload from database to get any default values defined there.  */
       rider = await read_rider(connection, id, number, () => {});
@@ -5817,7 +5819,7 @@ async function import_event(connection, existing_id, data, email) {
       }
     }
 
-    await cache.commit(transaction);
+    await cache.commit(transaction, true);
     return {id: id};
   } catch (err) {
     await cache.rollback(transaction);
@@ -6191,7 +6193,7 @@ async function scoring_recompute_event(connection, id) {
     Object.assign(cache.modify_event(id), {
       recompute: false
     });
-    await cache.commit(transaction);
+    await cache.commit(transaction, false);
   } catch (error) {
     await cache.rollback(transaction);
     throw error;
