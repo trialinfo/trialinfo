@@ -6121,13 +6121,17 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	log_sql(sql);
 	await connection.queryAsync(sql);
       }
-      let sql = `UPDATE events SET recompute = 1 WHERE id = ${connection.escape(id)}`;
+      let mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+      let sql = `UPDATE events
+        SET mtime = ${connection.escape(mtime)}, recompute = 1
+	WHERE id = ${connection.escape(id)}`;
       log_sql(sql);
       await connection.queryAsync(sql);
       await connection.queryAsync(`COMMIT`);
 
       let event = cache.get_event(id);
       if (event) {
+	event.mtime = mtime;
 	event.recompute = true;
 	(async function() {
 	  try {
