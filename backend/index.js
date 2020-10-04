@@ -128,7 +128,7 @@ var production_log_format =
 
 function log_sql(sql) {
   if (config.log_sql)
-    console.log(sql + ';');
+    console.log(sql.trim() + ';');
 }
 
 /*
@@ -2147,6 +2147,18 @@ async function inherit_from_event(connection, id, base_id, reset, email) {
 }
 
 async function delete_event(connection, id) {
+  let query = `
+    UPDATE series
+    SET mtime = NULL, version = version + 1
+    WHERE serie IN (
+      SELECT serie
+      FROM series_events
+      WHERE id = ${connection.escape(id)}
+    )
+  `;
+  log_sql(query);
+  await connection.queryAsync(query);
+
   for (let table of ['events', 'classes', 'rankings', 'card_colors', 'scores',
 		     'zones', 'skipped_zones', 'event_features',
 		     'events_admins', 'events_admins_inherit', 'events_groups',
