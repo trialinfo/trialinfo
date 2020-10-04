@@ -837,6 +837,7 @@ var cache = {
   cached_scoring_items: {},
   cached_scoring_canceled_items: {},
   cached_scoring_seq: {},
+  cached_scoring_devices: {},
   cached_compute_rounds: {},
 
   _access_event: function(id) {
@@ -1100,6 +1101,9 @@ var cache = {
   },
   scoring_item_canceled: function(id, number, item) {
     return ((this.cached_scoring_canceled_items[id] || {})[item.device] || {})[item.seq];
+  },
+  scoring_devices: function() {
+    return this.cached_scoring_devices;
   },
 
   expire: function() {
@@ -2919,9 +2923,29 @@ async function update_scoring_cache(connection, id) {
   }
 }
 
+async function update_scoring_device_cache(connection) {
+  let rows = await connection.queryAsync(`
+    SELECT device, device_tag
+    FROM scoring_devices
+  `);
+  let cached_devices = cache.scoring_devices();
+  for (let row of rows) {
+    cached_devices[row.device] = row.device_tag;
+  }
+}
+
 async function get_event_scoring(connection, id, number) {
   await update_scoring_cache(connection, id);
-  return cache.get_scoring_items(id, number) || null;
+  let scoring_items = cache.get_scoring_items(id, number);
+
+  let cached_devices = cache.scoring_devices();
+  if (!scoring_items.every((item) => item.device in cached_devices))
+    await update_scoring_device_cache(connection);
+
+  return scoring_items.map(
+    (item) => Object.assign(
+      {}, item, {device: cached_devices[item.device]}
+    ));
 }
 
 async function get_full_event(connection, id) {
