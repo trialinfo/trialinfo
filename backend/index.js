@@ -1097,7 +1097,10 @@ var cache = {
   },
   get_scoring_items: function(id, number) {
     this._access_event(id);
-    return (this.cached_scoring_items[id] || {})[number] || [];
+    let scoring_items = this.cached_scoring_items[id] || {};
+    if (number != null)
+      scoring_items = scoring_items[number] || [];
+    return scoring_items;
   },
   scoring_item_canceled: function(id, number, item) {
     return ((this.cached_scoring_canceled_items[id] || {})[item.device] || {})[item.seq];
@@ -5543,9 +5546,10 @@ function serie_index(view) {
   };
 }
 
-async function export_event(connection, id, email) {
+async function export_event(connection, id, email, seq) {
   let event = await get_event(connection, id);
   let riders = await get_riders(connection, id);
+  await update_scoring_cache(connection, id);
 
   let series = await connection.queryAsync(`
     SELECT serie
@@ -5603,11 +5607,66 @@ async function export_event(connection, id, email) {
       return riders;
   }, {});
 
+  let device_cache_updated = false;
+  let cached_device_tags = cache.scoring_device_tags();
+
+  let mapped_seq = {};
+  for (let device_tag in seq) {
+    let device = cached_device_tags[device_tag];
+    if (!device && !device_cache_updated) {
+      await update_scoring_device_cache(connection);
+      device_cache_updated = true;
+      cached_device_tags = cache.scoring_device_tags();
+      device = cached_device_tags[device_tag];
+    }
+    if (device)
+      mapped_seq[device] = seq[device_tag];
+  }
+
+  let scoring_items = {};
+  let cached_scoring_items = cache.get_scoring_items(id);
+  for (let number in cached_scoring_items) {
+    for (let item of cached_scoring_items[number]) {
+      let device = item.device;
+      let last_known_seq = mapped_seq[device];
+      if (item.seq <= last_known_seq)
+	continue;
+
+      let items = scoring_items[device];
+      if (!items) {
+	items = [];
+	scoring_items[device] = items;
+      }
+      item = Object.assign({number: +number}, item);
+      delete item.device;
+      delete item.round;
+      items.push(item);
+    }
+  }
+
+  let cached_devices = cache.scoring_devices();
+  if (!Object.keys(scoring_items).every((device) => device in cached_devices) &&
+      !device_cache_updated) {
+    await update_scoring_device_cache(connection);
+    device_cache_updated = true;
+    cached_devices = cache.scoring_devices();
+  }
+
+  let mapped_scoring_items = {};
+  for (let device in scoring_items) {
+    let device_tag = cached_devices[device];
+    let items = scoring_items[device];
+    items.sort((a, b) => a.seq - b.seq);
+    mapped_scoring_items[device_tag] = items;
+  }
+  scoring_items = mapped_scoring_items;
+
   return {
     format: 'TrialInfo 1',
     event: event,
     riders: riders,
-    series: series
+    series: series,
+    scoring: scoring_items
   };
 }
 
@@ -5621,7 +5680,7 @@ function basename(event) {
 }
 
 async function admin_export_event(connection, id, email) {
-  let data = await export_event(connection, id, email);
+  let data = await export_event(connection, id, email, {});
   return {
     filename: basename(data.event) + '.ti',
     data: zlib.gzipSync(JSON.stringify(data), {level: 9})
@@ -5883,15 +5942,15 @@ async function admin_import_event(connection, existing_id, data, email) {
   return await import_event(connection, existing_id, data, email);
 }
 
-async function admin_dump_event(connection, id, email) {
-  let data = await export_event(connection, id, email);
+async function admin_dump_event(connection, id, email, seq) {
+  let data = await export_event(connection, id, email, seq);
   delete data.event.bases;
   delete data.series;
   return data;
 }
 
 async function admin_patch_event(connection, id, patch, email) {
-  let event0 = await export_event(connection, id, email);
+  let event0 = await export_event(connection, id, email, {});
   let event1 = clone(event0, false);
   console.log('Patch: ' + JSON.stringify(patch));
   try {
@@ -6706,7 +6765,10 @@ app.post('/api/event/import', function(req, res, next) {
 });
 
 app.get('/api/event/:tag/dump', will_read_event, function(req, res, next) {
-  admin_dump_event(req.conn, req.params.id, req.user.email)
+  let seq = {};
+  if (req.query.seq)
+    seq = JSON.parse(decodeURIComponent(req.query.seq));
+  admin_dump_event(req.conn, req.params.id, req.user.email, seq)
   .then((result) => {
     res.json(result);
   }).catch(next);
