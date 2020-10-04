@@ -5787,6 +5787,16 @@ async function import_event(connection, existing_id, data, email) {
       }
     }
 
+    if (event.access_token != null) {
+      let rows = await connection.queryAsync(`
+        SELECT COUNT(*) AS events
+	FROM events
+	WHERE access_token = ?`,
+	[event.access_token]);
+      if (rows[0].events != 0)
+	event.access_token = null;
+    }
+
     Object.assign(cache.modify_event(id), event);
 
     Object.values(data.riders).forEach((rider) => {
