@@ -1108,6 +1108,13 @@ var cache = {
   scoring_devices: function() {
     return this.cached_scoring_devices;
   },
+  scoring_device_tags: function() {
+    let devices = this.cached_scoring_devices;
+    let device_tags = {};
+    for (let key in devices)
+      device_tags[devices[key]] = +key;
+    return device_tags;
+  },
 
   expire: function() {
     let expiry = Date.now() - cache_max_age;
@@ -5801,6 +5808,76 @@ async function title_of_copy(connection, event) {
 }
 */
 
+async function update_event_scoring(connection, id, scoring) {
+  let cached_device_tags = cache.scoring_device_tags();
+  let cache_updated = false;
+
+  let max_device;
+  for (let device_tag of Object.keys(scoring)) {
+    let device = cached_device_tags[device_tag];
+    if (device == null && !cache_updated) {
+      await update_scoring_device_cache(connection);
+      cached_device_tags = cache.scoring_device_tags();
+      device = cached_device_tags[device_tag];
+      cache_updated = true;
+    }
+
+    if (device == null) {
+      if (max_device == null) {
+	let rows = await connection.queryAsync(`
+	  SELECT COALESCE(MAX(device), 0) AS max_device
+	  FROM scoring_devices
+	`);
+	max_device = rows[0].max_device;
+      }
+      device = ++max_device;
+      let sql = `
+	INSERT INTO scoring_devices
+	SET device = ${connection.escape(device)}, device_tag = ${connection.escape(device_tag)}`;
+      log_sql(sql);
+      await connection.queryAsync(sql);
+      cached_device_tags[device_tag] = device;
+    }
+
+    let cached_seq = cache.scoring_seq(id);
+    let last_known_seq = cached_seq[device];
+    let items = scoring[device_tag];
+    for (let item of items) {
+      if (item.seq <= last_known_seq)
+	continue;
+
+      item = Object.assign({}, item, {
+	id: id,
+	device: device
+      });
+      let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
+	.map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
+	.join(', ')
+      log_sql(sql);
+      await connection.queryAsync(sql);
+
+      delete item.id;
+      let number = item.number;
+      delete item.number;
+      item.time = moment.utc(item.time, 'YYYY-MM-DD HH:mm:ss').toDate();
+      cache.add_scoring_item(id, number, item);
+    }
+  }
+
+  let sql = `DELETE FROM scoring_seq WHERE id = ${connection.escape(id)}`;
+  log_sql(sql);
+  await connection.queryAsync(sql);
+  sql = `
+    INSERT INTO scoring_seq (id, device, seq)
+    SELECT id, device, MAX(seq) AS seq
+    FROM scoring_marks
+    WHERE id = ${connection.escape(id)}
+    GROUP BY device
+  `;
+  log_sql(sql);
+  await connection.queryAsync(sql);
+}
+
 async function import_event(connection, existing_id, data, email) {
   if (data.format != 'TrialInfo 1')
     throw new HTTPError(415, 'Unsupported Media Type');
@@ -5929,6 +6006,25 @@ async function import_event(connection, existing_id, data, email) {
       }
     }
 
+    if (data.scoring)
+      await update_event_scoring(connection, id, data.scoring);
+
+    if (event.scoring_zones.some((enabled) => enabled)) {
+      /*
+       * When updating an existing event instead of importing a new event, we
+       * may already have more recent scoring data than our peer, so we need to
+       * recompute the event.
+       *
+       * In addition, we need to recompute the event after applying a patch:
+       * patches don't include computed fields because differences in computed
+       * fields could otherwise cause patches to not apply.
+       */
+      let riders = await get_riders(connection, id);
+      await update_scoring_cache(connection, id);
+      scoring_update_riders(id, event, riders);
+      compute_update_event(id, event);
+    }
+
     await cache.commit(transaction, true);
     return {id: id};
   } catch (err) {
@@ -5937,9 +6033,9 @@ async function import_event(connection, existing_id, data, email) {
   }
 }
 
-async function admin_import_event(connection, existing_id, data, email) {
+async function admin_import_event(connection, data, email) {
   data = JSON.parse(zlib.gunzipSync(Buffer.from(data, 'base64')));
-  return await import_event(connection, existing_id, data, email);
+  return await import_event(connection, null, data, email);
 }
 
 async function admin_dump_event(connection, id, email, seq) {
@@ -6758,7 +6854,7 @@ app.get('/api/event/:tag/csv', will_read_event, function(req, res, next) {
 });
 
 app.post('/api/event/import', function(req, res, next) {
-  admin_import_event(req.conn, null, req.body.data, req.user.email)
+  admin_import_event(req.conn, req.body.data, req.user.email)
   .then((result) => {
     res.json(result);
   }).catch(next);
