@@ -254,12 +254,12 @@ a:hover.updown {
     <table>
       <tr>
 	<th>Klasse</th>
-	<th ng-repeat="zone in zones_list track by $index" style="text-align:center"><span title="Sektion {{zone}}">{{zone}}</span></th>
+	<th ng-repeat="zone in zones_list track by $index" style="text-align:center"><span title="Sektion {{$index + 1}}">{{zone}}</span></th>
       </tr>
       <tr ng-repeat="index in class_order">
 	<th style="text-align:center">{{index + 1}}</th>
 	<td ng-repeat="zone in zones_list track by $index" style="text-align:center;padding:0.35em">
-	  <input type="checkbox" ng-model="zones[event.classes[index].ranking_class - 1][$index]" title="Sektion {{zone}}" ng-disabled="!class_active[index + 1]">
+	  <input type="checkbox" ng-model="zones[event.classes[index].ranking_class - 1][$index]" title="Sektion {{$index + 1}}" ng-disabled="!class_active[index + 1]">
 	</td>
       </tr>
     </table>
@@ -283,6 +283,28 @@ a:hover.updown {
 	</td>
       </tr>
     </table>
+  </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Mobile Datenerfassung</legend>
+    <table>
+      <tr>
+        <th><label for="access_token">Zugriffsschlüssel</label></th>
+	<td><input type="text" size="16" maxlength="16" ng-model="event.access_token" id="access_token" nullable>
+      </tr>
+    </table>
+    <fieldset style="display:inline">
+      <legend>Sektionen</legend>
+      <table>
+	<tr>
+	  <th ng-repeat="zone in scoring_zones_list track by $index" style="text-align:center"><span title="Sektion {{$index + 1}}">{{zone}}</span></th>
+	</tr>
+	<tr>
+	  <td ng-repeat="zone in scoring_zones_list track by $index" style="text-align:center;padding:0.35em">
+	    <input type="checkbox" ng-model="event.scoring_zones[$index]" title="Sektion {{$index + 1}}">
+	  </td>
+	</tr>
+      </table>
+    </fieldset>
   </fieldset><br>
   <fieldset style="display:inline">
     <legend>Dateneingabe</legend>

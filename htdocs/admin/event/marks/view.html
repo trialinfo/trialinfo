@@ -1,3 +1,12 @@
+<style>
+table.scoring_table {
+  border-collapse: collapse;
+  border-style: hidden;
+}
+table.scoring_table th, table.scoring_table td {
+    border:1px solid;
+}
+</style>
 <h1>{{event.title}} – Punktevergabe</h1>
 <table>
   <tr>
@@ -27,8 +36,8 @@
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" style="text-align:center">
-		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
-		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start() || scoring_zone_active(zone)" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start() || scoring_zone_active(zone)" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
 		  </td>
 		  <td style="text-align:right;font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
@@ -46,7 +55,7 @@
 	      <tr>
 		<th><label for="penalty_marks" accesskey="p">Straf<span class="accesskey">p</span>unkte</label></th>
 		<td>
-		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.penalty_marks" id="penalty_marks">
+		  <input ng-disabled="!rider.start || rider_does_not_start() || scoring_active()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.penalty_marks" id="penalty_marks">
 		</td>
 	      </tr>
 	      <tr ng-if="rider.additional_marks != null">
@@ -115,6 +124,23 @@
 	      </tr>
 	    </table>
 	  </p>
+	  <fieldset ng-if="scoring_table.length || has_scoring_zones()" style="display:inline">
+	    <legend>Mobile Datenerfassung<span ng-if="has_scoring_zones()"> <input type="checkbox" ng-model="rider.scoring" id="scoring"><label for="scoring">aktiv</label></span></legend>
+	    <table class="scoring_table" ng-if="scoring_table.length">
+	      <tr>
+		<th style="text-align:center"></th>
+		<th ng-repeat="zone in zones_list()" style="text-align:center"><span title="Sektion {{zone}}">{{zone}}</span></th>
+	      </tr>
+	      <tr ng-repeat="round in enumerate(1, scoring_table.length)">
+		<th style="text-align:center"><span title="Runde {{round}}">R{{round}}</span></th>
+		<td style="min-width:3em;text-align:center" ng-style="scoring_cell_style(round, zone)" ng-repeat="zone in zones_list()">
+		  <span ng-repeat="item in scoring_table[round - 1][zone - 1]" style="display:inline-block">
+		    <span style="font-style:italic;font-size:65%" ng-style="scoring_item_time_style(round, zone, item)">{{item.time | date:"H:mm"}}</span><br>
+		    <span ng-style="scoring_item_marks_style(round, zone, item)">{{scoring_marks(item)}}</span>
+		  </span>
+		</td>
+	      </tr>
+	    </table>
 	</fieldset>
       </form>
     </td>

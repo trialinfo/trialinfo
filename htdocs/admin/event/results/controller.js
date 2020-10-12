@@ -150,6 +150,13 @@ var eventResultsController = [
 		  let marks = (this.marks_per_zone[round - 1] || [])[zone - 1];
 		  return marks == -1 ? '-' : marks;
 		};
+		result.round_class = function(round, rider, class_ranking) {
+		  return {
+		    round: true,
+		    important: this.decisive_round == round,
+		    round_active: this.active_round == round
+		  };
+		};
 	      }
 	    });
 	  });

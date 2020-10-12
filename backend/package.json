@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "apache-md5": "^1.0.6",
+    "async-mutex": "^0.2.4",
     "autoquit": "^0.1.6",
     "base64url": "^3.0.1",
     "bluebird": "^3.5.3",

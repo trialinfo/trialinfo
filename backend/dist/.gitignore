@@ -2,3 +2,4 @@
 /lib/compute_event.js
 /lib/compute_serie.js
 /lib/latinize.js
+*.pem

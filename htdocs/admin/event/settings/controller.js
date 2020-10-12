@@ -212,6 +212,8 @@ var settingsController = [
       $scope.old_type = event.type;
 
       $scope.zones_list = zones_list(max_zone(event));
+      $scope.scoring_zones_list = $scope.zones_list.concat([]);
+      $scope.scoring_zones_list.pop();
       for (var class_ = 1; class_ <= 15; class_++) {
 	if (!event.classes[class_ - 1]) {
 	  event.classes[class_ - 1] = {
@@ -539,8 +541,11 @@ var settingsController = [
 	  max_zone--;
 	}
       }
-      if (old_max_zone != max_zone)
+      if (old_max_zone != max_zone) {
 	$scope.zones_list = zones_list(max_zone);
+        $scope.scoring_zones_list = $scope.zones_list.concat([]);
+        $scope.scoring_zones_list.pop();
+      }
     }, true);
 
     $scope.$watch('event.future_events', function() {
