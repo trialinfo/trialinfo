@@ -6049,17 +6049,25 @@ async function admin_dump_event(connection, id, email, seq) {
   return data;
 }
 
-async function admin_patch_event(connection, id, patch, email) {
-  let event0 = await export_event(connection, id, email, {});
+async function admin_patch_event(connection, id, body, query, email) {
+  let event0 = await export_event(connection, id, email, query.seq || {});
   let event1 = clone(event0, false);
+
+  let patch = body.patch;
   console.log('Patch: ' + JSON.stringify(patch));
+  console.log('Scoring: ' + JSON.stringify(body.scoring || {}));
   try {
     jsonpatch.apply(event1, patch);
   } catch (err) {
     console.error('Patch ' + JSON.stringify(patch) + ': ' + err);
     throw new HTTPError(409, 'Conflict');
   }
+
+  event1.scoring = body.scoring || {};
   await import_event(connection, id, event1, email);
+  return {
+    scoring: event0.scoring
+  };
 }
 
 async function scoring_get_registered_zones(connection, id) {
@@ -6875,9 +6883,9 @@ app.get('/api/event/:tag/dump', will_read_event, function(req, res, next) {
 });
 
 app.post('/api/event/:tag/patch', will_write_event, function(req, res, next) {
-  admin_patch_event(req.conn, req.params.id, req.body.patch, req.user.email)
+  admin_patch_event(req.conn, req.params.id, req.body, req.query, req.user.email)
   .then((result) => {
-    res.json({});
+    res.json(result);
   }).catch(next);
 });
 
