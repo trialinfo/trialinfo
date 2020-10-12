@@ -53,7 +53,7 @@ var syncController = [
       delete $scope.source_error;
       delete $scope.target_error;
       $scope.running = true;
-      make_target_request();
+      make_target_request(false);
     };
 
     $scope.stop = function() {
@@ -123,11 +123,62 @@ var syncController = [
       return url + ': ' + fehler;
     }
 
+    const computed_fields = [
+      'decisive_marks', 'decisive_round', 'marks', 'marks_distribution',
+      'marks_per_round', 'penalty_marks', 'rank', 'rounds', 'unfinished_zones'
+    ];
+
+    function reduce_dump(dump) {
+      delete dump.event.tag;
+      delete dump.scoring;
+
+      /*
+       * When using mobile scoring, the marks of the zones under scoring and
+       * the penalty marks are determined by the scoring data, so leave those
+       * and the other computed fields out of the diff.  Otherwise, if the two
+       * sides don't have the same scoring data, the diff might not apply.
+       */
+      let scoring_zones = dump.event.scoring_zones;
+      if (!scoring_zones.some(function(enabled) { return enabled }))
+	return dump;
+      let riders = dump.riders;
+      for (let number in riders) {
+	let rider = riders[number];
+	if (!rider.scoring)
+	  continue;
+	let marks_per_zone = [];
+	for (let round_index = 0;
+	     round_index < rider.marks_per_zone.length;
+	     round_index++) {
+	  let rider_marks_in_round =
+	    rider.marks_per_zone[round_index];
+	  if (!rider_marks_in_round)
+	    continue;
+	  let marks_in_round;
+	  for (let zone_index = 0;
+	       zone_index < rider_marks_in_round.length;
+	       zone_index++) {
+	    if (scoring_zones[zone_index])
+	      continue;
+	    let marks = rider_marks_in_round[zone_index];
+	    if (marks == null)
+	      continue;
+	    if (!marks_in_round) {
+	      marks_in_round = [];
+	      marks_per_zone[round_index] = marks_in_round;
+	    }
+	    marks_in_round[zone_index] = marks;
+	  }
+	}
+	rider.marks_per_zone = marks_per_zone;
+	for (let field in computed_fields)
+	  delete rider[field];
+      }
+    }
+
     function sync() {
-      angular.forEach([$scope.source_dump, $scope.target_dump], function(dump) {
-	delete dump.event.tag;
-	delete dump.event.sync_erlaubt;
-      });
+      reduce_dump($scope.source_dump);
+      reduce_dump($scope.target_dump);
       $scope.patch = json_diff($scope.target_dump, $scope.source_dump);
       if ($scope.patch.length) {
 	// $scope.patch.unshift({op: 'test', path: '/event/fahrer_version',
@@ -187,7 +238,7 @@ var syncController = [
 	});
     }
 
-    function make_target_request(kein_import) {
+    function make_target_request(prevent_import) {
       delete $scope.target_dump;
       var cancel = $q.defer();
       var target_request =
@@ -209,7 +260,7 @@ var syncController = [
 	  }
 	})
 	.catch(function(response) {
-	  if (kein_import) {
+	  if (prevent_import) {
 	    $scope.target_error = url_error($scope.url, 'Veranstaltung ' + $scope.to_tag + ' existiert nicht');
 	    $scope.stop();
 	    return;
