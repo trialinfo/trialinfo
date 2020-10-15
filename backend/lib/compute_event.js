@@ -22,78 +22,17 @@ var common = require('../htdocs/js/common');
 let acup = require('./acup.js');
 
 function compute_event(cached_riders, event, compute_marks) {
-  function compute_active_zones(riders) {
-    let active_zones = {};
-
-    riders.forEach((rider) => {
-      if (rider.start && rider.ranking_class) {
-	let marks_per_zone = rider.marks_per_zone;
-	for (let round = 1; round <= marks_per_zone.length; round++) {
-	  let marks_in_round =
-	    rider.marks_per_zone[rider.ranking_class - 1] || [];
-	  marks_in_round.forEach((marks, index) => {
-	    if (marks != null) {
-	      if (!active_zones[rider.ranking_class])
-		active_zones[rider.ranking_class] = {};
-	      if (!active_zones[rider.ranking_class][round])
-		active_zones[rider.ranking_class][round] = {};
-	      active_zones[rider.ranking_class][round][index + 1] = true;
-	    }
-	  });
-	}
-      }
-    });
-    return active_zones;
-  }
-
   function compute_rider_marks(riders) {
     let marks_skipped_zone = event.marks_skipped_zone || 0;
-    let trialtool_compatible = !event.features.skipped_zones;
     let active_zones;
-
-    /* Das Trialtool erlaubt es, Sektionen in der Punkte-Eingabemaske
-       auszulassen.  Die ausgelassenen Sektionen sind danach "leer" (in den
-       Trialtool-Dateien wird der Wert 6 verwendet; in der Datenbank verwenden
-       wir NULL).  Für die Punkteanzahl des Fahrers zählen diese Sektionen wie
-       ein 0er, was zu einer falschen Bewertung führt.
-
-       Derselbe Wert wird auch für Sektionen verwendet, die  aus der Wertung
-       genommen werden.  In diesem Fall soll die Sektion ignoriert werden.
-
-       Um diese Situation besser zu behandeln, überprüfen wir wenn wir eine
-       "leere" Sektion finden, ob die Sektion für alle anderen Fahrer auch
-       "leer" ist.  Das ist dann der Fall, wenn die Sektion noch nicht befahren
-       oder aus der Wertung genommen wurde; in beiden Fällen können wir die
-       Sektion ignorieren.  Wenn die Sektion für andere Fahrer nicht "leer"
-       ist, muss sie offensichtlich befahren werden, und wir dürfen sie nicht
-       ignorieren.
-
-       Wenn die Daten nicht vom Trialtool stammen, merken wir uns immer
-       explizit, welche Sektionen aus der Wertung genommen wurden
-       (skipped_zones); das Feature skipped_zones ist gesetzt.  Wir wissen
-       genau, welche Sektionen ein Fahrer noch befahren muss.
-
-       In jedem Fall werden die Fahrer zuerst nach der Anzahl der gefahrenen
-       Sektionen gereiht (bis zur ersten nicht erfassten Sektion, die befahren
-       werden muss), und erst danach nach den erzielten Punkten.  Das ergibt
-       auch eine brauchbare Zwischenwertung, wenn die Ergebnisse Sektion für
-       Sektion statt Runde für Runde eingegeben werden.
-
-       Das Trialtool setzt rider.rounds auf die letzte begonnene Runde, wodurch
-       wir dann nicht erkennen können, welche Fahrer in der letzten Runde und
-       welche Fahrer schon "fertig" sind.  Wir verhalten uns nur dann
-       kompatibel, wenn die Daten vom Trialtool stammen, weil das Auswertungen
-       wie "Fahrer auf der Strecke" stört.  */
 
     riders.forEach((rider) => {
       if (rider.group)
 	return;
 
-      let last_started_round, last_completed_round;
-
       if (rider.start && rider.ranking_class) {
 	rider.unfinished_zones = 0;
-	let zone_skipped;
+	rider.rounds = 0;
 
 	let zones = event.zones[rider.ranking_class - 1] || [];
 	let rounds = event.classes[rider.ranking_class - 1].rounds;
@@ -108,47 +47,34 @@ function compute_event(cached_riders, event, compute_marks) {
 	      continue;
 
 	    let marks = marks_in_round[zone - 1];
-	    if (marks != null) {
-	      if (zone_skipped) {
-		rider.unfinished_zones++;
-	      } else {
-		let actual_marks = (marks == -1) ? marks_skipped_zone : marks;
-		rider.marks_per_round[round - 1] += actual_marks;
-
-		let index;
-		if (event.uci_x10) {
-		  if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
-		    index = actual_marks / 10;
-		} else {
-		  if (actual_marks >= 0 && actual_marks <= 5)
-		    index = actual_marks;
-		}
-		if (index != null) {
-		  if (rider.marks_distribution.length == 0) {
-		    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
-		    if (event.uci_x10)
-		      rider.marks_distribution.push(0);
-		  }
-		  rider.marks_distribution[index]++;
-		}
-		last_started_round = round;
-	      }
-	    } else if (trialtool_compatible) {
-	      if (!active_zones)
-		active_zones = compute_active_zones(riders);
-	      if (((active_zones[rider.ranking_class] || {})[round] || {})[zone]) {
-		zone_skipped = true;
-		rider.unfinished_zones++;
-	      }
-	      if (last_completed_round == null)
-		last_completed_round = round - 1;
-	    } else {
-	      zone_skipped = true;
+	    if (marks == null) {
 	      rider.unfinished_zones++;
-	      if (last_completed_round == null)
-		last_completed_round = round - 1;
+	      continue;
+	    }
+
+	    let actual_marks = (marks == -1) ? marks_skipped_zone : marks;
+	    rider.marks_per_round[round - 1] += actual_marks;
+
+	    let index;
+	    if (event.uci_x10) {
+	      if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
+		index = actual_marks / 10;
+	    } else {
+	      if (actual_marks >= 0 && actual_marks <= 5)
+		index = actual_marks;
+	    }
+	    if (index != null) {
+	      if (rider.marks_distribution.length == 0) {
+		rider.marks_distribution = [0, 0, 0, 0, 0, 0];
+		if (event.uci_x10)
+		  rider.marks_distribution.push(0);
+	      }
+	      rider.marks_distribution[index]++;
 	    }
 	  }
+
+	  if (!rider.unfinished_zones)
+	    rider.rounds++;
 	}
 
 	for (let round = rider.marks_per_round.length; round >= 1; round--) {
@@ -157,11 +83,6 @@ function compute_event(cached_riders, event, compute_marks) {
 	  rider.marks_per_round.pop();
 	}
 
-	if (last_started_round == null)
-	  last_started_round = 0;
-	if (last_completed_round == null)
-	  last_completed_round = rounds;
-
 	if (rider.additional_marks != null)
 	  rider.marks += rider.additional_marks;
 	if (rider.penalty_marks != null)
@@ -169,8 +90,6 @@ function compute_event(cached_riders, event, compute_marks) {
 	for (let marks of rider.marks_per_round)
 	  rider.marks += marks;
       }
-
-      rider.rounds = trialtool_compatible ? last_started_round : last_completed_round;
     });
   }
 
@@ -305,6 +224,7 @@ function compute_event(cached_riders, event, compute_marks) {
       let cmp =
 	(a.non_competing - b.non_competing) ||
 	(!b.failure - !a.failure) ||
+	(b.rounds - a.rounds) ||
 	(a.unfinished_zones - b.unfinished_zones) ||
 	(event.uci_x10 ? (b.marks - a.marks) : (a.marks - b.marks)) ||
 	(a.tie_break - b.tie_break);
@@ -469,6 +389,7 @@ function compute_event(cached_riders, event, compute_marks) {
       rider.marks_distribution = [];
       rider.marks_per_round = [];
       rider.unfinished_zones = null;
+      rider.rounds = null;
       rider.additional_marks = null;
     } else {
       for (let field of ['marks', 'marks_distribution', 'marks_per_round',
