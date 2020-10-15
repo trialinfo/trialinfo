@@ -3073,7 +3073,7 @@ async function get_event_results(connection, id) {
       for (let field of ['decisive_round'])
 	result[field] = cached_rider[field];
       if (cached_rider.unfinished_zones && !cached_rider.failure)
-        result.active_round = cached_rider.rounds + 1;
+        result.rounds = cached_rider.rounds;
       rider.results.push(result);
 
       if (!riders_by_ranking_class[rc])

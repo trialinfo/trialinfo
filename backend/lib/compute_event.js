@@ -30,11 +30,9 @@ function compute_event(cached_riders, event, compute_marks) {
       if (rider.group)
 	return;
 
-      let last_completed_round;
-
       if (rider.start && rider.ranking_class) {
 	rider.unfinished_zones = 0;
-	let zone_skipped;
+	rider.rounds = 0;
 
 	let zones = event.zones[rider.ranking_class - 1] || [];
 	let rounds = event.classes[rider.ranking_class - 1].rounds;
@@ -49,37 +47,34 @@ function compute_event(cached_riders, event, compute_marks) {
 	      continue;
 
 	    let marks = marks_in_round[zone - 1];
-	    if (marks != null) {
-	      if (zone_skipped) {
-		rider.unfinished_zones++;
-	      } else {
-		let actual_marks = (marks == -1) ? marks_skipped_zone : marks;
-		rider.marks_per_round[round - 1] += actual_marks;
-
-		let index;
-		if (event.uci_x10) {
-		  if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
-		    index = actual_marks / 10;
-		} else {
-		  if (actual_marks >= 0 && actual_marks <= 5)
-		    index = actual_marks;
-		}
-		if (index != null) {
-		  if (rider.marks_distribution.length == 0) {
-		    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
-		    if (event.uci_x10)
-		      rider.marks_distribution.push(0);
-		  }
-		  rider.marks_distribution[index]++;
-		}
-	      }
-	    } else {
-	      zone_skipped = true;
+	    if (marks == null) {
 	      rider.unfinished_zones++;
-	      if (last_completed_round == null)
-		last_completed_round = round - 1;
+	      continue;
+	    }
+
+	    let actual_marks = (marks == -1) ? marks_skipped_zone : marks;
+	    rider.marks_per_round[round - 1] += actual_marks;
+
+	    let index;
+	    if (event.uci_x10) {
+	      if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
+		index = actual_marks / 10;
+	    } else {
+	      if (actual_marks >= 0 && actual_marks <= 5)
+		index = actual_marks;
+	    }
+	    if (index != null) {
+	      if (rider.marks_distribution.length == 0) {
+		rider.marks_distribution = [0, 0, 0, 0, 0, 0];
+		if (event.uci_x10)
+		  rider.marks_distribution.push(0);
+	      }
+	      rider.marks_distribution[index]++;
 	    }
 	  }
+
+	  if (!rider.unfinished_zones)
+	    rider.rounds++;
 	}
 
 	for (let round = rider.marks_per_round.length; round >= 1; round--) {
@@ -88,9 +83,6 @@ function compute_event(cached_riders, event, compute_marks) {
 	  rider.marks_per_round.pop();
 	}
 
-	if (last_completed_round == null)
-	  last_completed_round = rounds;
-
 	if (rider.additional_marks != null)
 	  rider.marks += rider.additional_marks;
 	if (rider.penalty_marks != null)
@@ -98,8 +90,6 @@ function compute_event(cached_riders, event, compute_marks) {
 	for (let marks of rider.marks_per_round)
 	  rider.marks += marks;
       }
-
-      rider.rounds = last_completed_round;
     });
   }
 
@@ -234,6 +224,7 @@ function compute_event(cached_riders, event, compute_marks) {
       let cmp =
 	(a.non_competing - b.non_competing) ||
 	(!b.failure - !a.failure) ||
+	(b.rounds - a.rounds) ||
 	(a.unfinished_zones - b.unfinished_zones) ||
 	(event.uci_x10 ? (b.marks - a.marks) : (a.marks - b.marks)) ||
 	(a.tie_break - b.tie_break);
@@ -398,6 +389,7 @@ function compute_event(cached_riders, event, compute_marks) {
       rider.marks_distribution = [];
       rider.marks_per_round = [];
       rider.unfinished_zones = null;
+      rider.rounds = null;
       rider.additional_marks = null;
     } else {
       for (let field of ['marks', 'marks_distribution', 'marks_per_round',

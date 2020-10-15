@@ -154,7 +154,7 @@ var eventResultsController = [
 		  return {
 		    round: true,
 		    important: this.decisive_round == round,
-		    round_active: this.active_round == round
+		    round_active: this.rounds != null && this.rounds < round
 		  };
 		};
 	      }
