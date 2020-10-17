@@ -2953,9 +2953,13 @@ async function get_event_scoring(connection, id, number) {
     await update_scoring_device_cache(connection);
 
   return scoring_items.map(
-    (item) => Object.assign(
-      {}, item, {device: cached_devices[item.device]}
-    ));
+    (item) => {
+      item = Object.assign({}, item);
+      item.device = cached_devices[item.device];
+      if (item.canceled_device)
+	item.canceled_device = cached_devices[item.canceled_device];
+      return item;
+    });
 }
 
 async function get_full_event(connection, id) {
