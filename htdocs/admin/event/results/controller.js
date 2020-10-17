@@ -152,9 +152,10 @@ var eventResultsController = [
 		};
 		result.round_class = function(round, rider, class_ranking) {
 		  return {
-		    round: true,
 		    important: this.decisive_round == round,
-		    round_active: this.rounds != null && this.rounds < round
+		    round_active: this.rounds != null &&
+				  this.rounds < round &&
+				  !features.individual_marks
 		  };
 		};
 	      }
