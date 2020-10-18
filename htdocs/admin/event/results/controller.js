@@ -474,13 +474,9 @@ var eventResultsController = [
     };
 
     $scope.failure = function(rider) {
-      var reasons = [];
-      if (rider.non_competing)
-	reasons.push('außer konkurrenz');
-      else if (rider.failure)
-	reasons.push(failures[rider.failure]);
-      return reasons.join(', ');
-    };
+      if (rider.failure)
+	return failures[rider.failure];
+    }
 
     $scope.fold = {};
     $scope.settings = function(event) {
