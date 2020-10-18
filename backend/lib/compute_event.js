@@ -123,21 +123,23 @@ function compute_event(cached_riders, event, compute_marks) {
     });
 
     let average_marks = [];
-    for (let index in zone_total_marks) {
-      average_marks[index] =
-	zone_total_marks[index] / zone_total_riders[index];
+    for (let index = 0; index < zone_total_riders.length; index++) {
+      if (zone_total_riders[index]) {
+	average_marks[index] =
+	  zone_total_marks[index] / zone_total_riders[index];
+      }
     }
     return average_marks;
   }
 
   function compute_projected_marks(riders, ranking_class) {
-    let have_unfinished_zones = false;
+    let compute = false;
     riders.forEach((rider) => {
       rider.projected_marks = rider.marks;
       if (rider.unfinished_zones && !rider.non_competing && !rider.failure)
-	have_unfinished_zones = true;
+	compute = true;
     });
-    if (!have_unfinished_zones)
+    if (!compute)
       return;
 
     let average_marks;
