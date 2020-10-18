@@ -30,6 +30,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	return;
 
       if (rider.start && rider.ranking_class) {
+	rider.finished_zones = 0;
 	rider.unfinished_zones = 0;
 	rider.rounds = 0;
 
@@ -50,6 +51,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	      rider.unfinished_zones++;
 	      continue;
 	    }
+	    rider.finished_zones++;
 
 	    let actual_marks = (marks == -1) ? marks_skipped_zone : marks;
 	    rider.marks_per_round[round - 1] += actual_marks;
@@ -318,6 +320,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	(a.failure &&
 	  ((b.rounds - a.rounds) ||
 	   (a.unfinished_zones - b.unfinished_zones))) ||
+	(!a.finished_zones - !b.finished_zones) ||
 	(event.uci_x10 ?
 	  (b.projected_marks - a.projected_marks) :
 	  (a.projected_marks - b.projected_marks)) ||
@@ -600,6 +603,7 @@ function compute_event(cached_riders, event, compute_marks) {
     delete rider.ranking_class;
     delete rider.start;
     delete rider.non_competing;
+    delete rider.finished_zones;
     delete rider.projected_marks;
   }
 
