@@ -6043,8 +6043,8 @@ async function import_event(connection, existing_id, data, email) {
        * patches don't include computed fields because differences in computed
        * fields could otherwise cause patches to not apply.
        */
-      let riders = await get_riders(connection, id);
       await update_scoring_cache(connection, id);
+      let riders = cache.get_riders(id);
       scoring_update_riders(id, event, riders);
       compute_update_event(id, event);
     }
