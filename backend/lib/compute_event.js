@@ -24,7 +24,6 @@ let acup = require('./acup.js');
 function compute_event(cached_riders, event, compute_marks) {
   function compute_rider_marks(riders) {
     let marks_skipped_zone = event.marks_skipped_zone || 0;
-    let active_zones;
 
     riders.forEach((rider) => {
       if (rider.group)
@@ -89,6 +88,96 @@ function compute_event(cached_riders, event, compute_marks) {
 	  rider.marks += rider.penalty_marks;
 	for (let marks of rider.marks_per_round)
 	  rider.marks += marks;
+      }
+    });
+  }
+
+  function compute_average_marks(riders, ranking_class) {
+    let zones = event.zones[ranking_class - 1] || [];
+    let rounds = event.classes[ranking_class - 1].rounds;
+
+    let zone_total_marks = [], zone_total_riders = [];
+    riders.forEach((rider) => {
+      for (let round = 1; round <= rounds; round++) {
+	let marks_in_round =
+	  rider.marks_per_zone[round - 1] || [];
+
+	for (let zone of zones) {
+	  if (((event.skipped_zones[ranking_class] || {})[round] || {})[zone])
+	    continue;
+
+	  let marks = marks_in_round[zone - 1];
+	  if (marks == null)
+	    continue;
+
+	  if (marks != -1) {
+	    if (zone_total_marks[zone - 1] == null) {
+	      zone_total_marks[zone - 1] = 0;
+	      zone_total_riders[zone - 1] = 0;
+	    }
+	    zone_total_marks[zone - 1] += marks;
+	    zone_total_riders[zone - 1]++;
+	  }
+	}
+      }
+    });
+
+    let average_marks = [];
+    for (let index in zone_total_marks) {
+      average_marks[index] =
+	zone_total_marks[index] / zone_total_riders[index];
+    }
+    return average_marks;
+  }
+
+  function compute_projected_marks(riders, ranking_class) {
+    let have_unfinished_zones = false;
+    riders.forEach((rider) => {
+      rider.projected_marks = rider.marks;
+      if (rider.unfinished_zones && !rider.non_competing && !rider.failure)
+	have_unfinished_zones = true;
+    });
+    if (!have_unfinished_zones)
+      return;
+
+    let average_marks;
+    riders.forEach((rider) => {
+      if (rider.unfinished_zones && !rider.non_competing && !rider.failure) {
+	let zones = event.zones[ranking_class - 1] || [];
+	let rounds = event.classes[ranking_class - 1].rounds;
+
+	for (let zone of zones) {
+	  let num_finished = 0, num_unfinished = 0, total_marks = 0;
+	  for (let round = 1; round <= rounds; round++) {
+	    if (((event.skipped_zones[ranking_class] || {})[round] || {})[zone])
+	      continue;
+
+	    let marks_in_round =
+	      rider.marks_per_zone[round - 1] || [];
+	    let marks = marks_in_round[zone - 1];
+	    if (marks == null) {
+	      num_unfinished++;
+	      continue;
+	    }
+	    total_marks += marks;
+	    num_finished++;
+	  }
+	  if (num_unfinished) {
+	    if (num_finished) {
+	      /* Assume the rider will be awarded its average number
+		 of marks in each unfinished round. */
+	      rider.projected_marks += num_unfinished * total_marks / num_finished;
+	    } else {
+	      if (!average_marks)
+		average_marks = compute_average_marks(riders, ranking_class);
+	      if (average_marks[zone - 1]) {
+		/* Assume the rider will be awarded the average number of marks
+		   of the zone in each unfinished round. */
+		rider.projected_marks += num_unfinished * average_marks[zone - 1];
+	      }
+	    }
+	  }
+	}
       }
     });
   }
@@ -224,12 +313,21 @@ function compute_event(cached_riders, event, compute_marks) {
       let cmp =
 	(a.non_competing - b.non_competing) ||
 	(!b.failure - !a.failure) ||
-	(b.rounds - a.rounds) ||
-	(a.unfinished_zones - b.unfinished_zones) ||
-	(event.uci_x10 ? (b.marks - a.marks) : (a.marks - b.marks)) ||
+	(a.failure &&
+	  ((b.rounds - a.rounds) ||
+	   (a.unfinished_zones - b.unfinished_zones))) ||
+	(event.uci_x10 ?
+	  (b.projected_marks - a.projected_marks) :
+	  (a.projected_marks - b.projected_marks)) ||
 	(a.tie_break - b.tie_break);
       if (cmp)
 	return cmp;
+
+      if (a.unfinished_zones || b.unfinished_zones) {
+	/* It doesn't make a huge amount of sense to further discriminate until
+	   all results are in. */
+	return a.unfinished_zones - b.unfinished_zones;
+      }
 
       if (event.type == 'otsv-acup') {
 	/* We only care about the number of clean sections. */
@@ -438,9 +536,15 @@ function compute_event(cached_riders, event, compute_marks) {
     }
   };
 
+  let riders_per_class = group_riders_per_class(riders);
+  for (let ranking_class in riders_per_class) {
+    if (ranking_class == 'G')
+      continue;
+    compute_projected_marks(riders_per_class[ranking_class], ranking_class);
+  }
+
   /* Compute overall ranking including all starters. The rank is stored in
      rider.rank, with no associated score.  */
-  let riders_per_class = group_riders_per_class(riders);
   for (let ranking_class in riders_per_class) {
     let riders_in_class = riders_per_class[ranking_class]
       .filter(rider_not_split);
@@ -494,6 +598,7 @@ function compute_event(cached_riders, event, compute_marks) {
     delete rider.ranking_class;
     delete rider.start;
     delete rider.non_competing;
+    delete rider.projected_marks;
   }
 
   return riders;
