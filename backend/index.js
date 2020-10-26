@@ -838,6 +838,7 @@ var cache = {
   cached_scoring_canceled_items: {},
   cached_scoring_seq: {},
   cached_scoring_devices: {},
+  cached_scoring_device_tags: {},
   cached_compute_rounds: {},
 
   _access_event: function(id) {
@@ -1109,11 +1110,7 @@ var cache = {
     return this.cached_scoring_devices;
   },
   scoring_device_tags: function() {
-    let devices = this.cached_scoring_devices;
-    let device_tags = {};
-    for (let key in devices)
-      device_tags[devices[key]] = +key;
-    return device_tags;
+    return this.cached_scoring_device_tags;
   },
 
   expire: function() {
@@ -2939,8 +2936,10 @@ async function update_scoring_device_cache(connection) {
     FROM scoring_devices
   `);
   let cached_devices = cache.scoring_devices();
+  let cached_device_tags = cache.scoring_device_tags();
   for (let row of rows) {
     cached_devices[row.device] = row.device_tag;
+    cached_device_tags[row.device_tag] = row.device;
   }
 }
 
@@ -5636,6 +5635,7 @@ async function export_event(connection, id, email, seq) {
 
   let scoring_items = {};
   let cached_scoring_items = cache.get_scoring_items(id);
+  let cached_devices = cache.scoring_devices();
   for (let number in cached_scoring_items) {
     for (let item of cached_scoring_items[number]) {
       let device = item.device;
@@ -5643,29 +5643,38 @@ async function export_event(connection, id, email, seq) {
       if (item.seq <= last_known_seq)
 	continue;
 
+      item = Object.assign({number: +number}, item);
+      delete item.device;
+      delete item.round;
+      if (item.canceled_device != null) {
+	let device_tag = cached_devices[item.canceled_device];
+	if (!device_tag && !device_cache_updated) {
+	  await update_scoring_device_cache(connection);
+	  device_cache_updated = true;
+	  cached_devices = cache.scoring_devices();
+	  device_tag = cached_devices[item.canceled_device];
+	}
+	item.canceled_device = device_tag;
+      }
+
       let items = scoring_items[device];
       if (!items) {
 	items = [];
 	scoring_items[device] = items;
       }
-      item = Object.assign({number: +number}, item);
-      delete item.device;
-      delete item.round;
       items.push(item);
     }
-  }
-
-  let cached_devices = cache.scoring_devices();
-  if (!Object.keys(scoring_items).every((device) => device in cached_devices) &&
-      !device_cache_updated) {
-    await update_scoring_device_cache(connection);
-    device_cache_updated = true;
-    cached_devices = cache.scoring_devices();
   }
 
   let mapped_scoring_items = {};
   for (let device in scoring_items) {
     let device_tag = cached_devices[device];
+    if (!device_tag && !device_cache_updated) {
+      await update_scoring_device_cache(connection);
+      device_cache_updated = true;
+      cached_devices = cache.scoring_devices();
+      device_tag = cached_devices[device];
+    }
     let items = scoring_items[device];
     items.sort((a, b) => a.seq - b.seq);
     mapped_scoring_items[device_tag] = items;
@@ -5817,7 +5826,8 @@ async function update_event_scoring(connection, id, scoring) {
   let cache_updated = false;
 
   let max_device;
-  for (let device_tag of Object.keys(scoring)) {
+
+  async function get_scoring_device(device_tag) {
     let device = cached_device_tags[device_tag];
     if (device == null && !cache_updated) {
       await update_scoring_device_cache(connection);
@@ -5842,7 +5852,11 @@ async function update_event_scoring(connection, id, scoring) {
       await connection.queryAsync(sql);
       cached_device_tags[device_tag] = device;
     }
+    return device;
+  }
 
+  for (let device_tag of Object.keys(scoring)) {
+    let device = await get_scoring_device(device_tag);
     let cached_seq = cache.scoring_seq(id);
     let last_known_seq = cached_seq[device];
     let items = scoring[device_tag];
@@ -5854,6 +5868,9 @@ async function update_event_scoring(connection, id, scoring) {
 	id: id,
 	device: device
       });
+      if (item.canceled_device)
+	item.canceled_device = await get_scoring_device(item.canceled_device);
+
       let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
 	.map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
 	.join(', ')
