@@ -5556,7 +5556,7 @@ function serie_index(view) {
   };
 }
 
-async function export_event(connection, id, email, seq) {
+async function export_event(connection, id, email, known_seq) {
   let event = await get_event(connection, id);
   let riders = await get_riders(connection, id);
   await update_scoring_cache(connection, id);
@@ -5620,8 +5620,8 @@ async function export_event(connection, id, email, seq) {
   let device_cache_updated = false;
   let cached_device_tags = cache.scoring_device_tags();
 
-  let mapped_seq = {};
-  for (let device_tag in seq) {
+  let mapped_known_seq = {};
+  for (let device_tag in known_seq) {
     let device = cached_device_tags[device_tag];
     if (!device && !device_cache_updated) {
       await update_scoring_device_cache(connection);
@@ -5630,16 +5630,19 @@ async function export_event(connection, id, email, seq) {
       device = cached_device_tags[device_tag];
     }
     if (device)
-      mapped_seq[device] = seq[device_tag];
+      mapped_known_seq[device] = known_seq[device_tag];
   }
 
   let scoring_items = {};
+  let seq = {};
   let cached_scoring_items = cache.get_scoring_items(id);
   let cached_devices = cache.scoring_devices();
   for (let number in cached_scoring_items) {
     for (let item of cached_scoring_items[number]) {
       let device = item.device;
-      let last_known_seq = mapped_seq[device];
+      if (!(item.seq <= seq[device]))
+	seq[device] = item.seq;
+      let last_known_seq = mapped_known_seq[device];
       if (item.seq <= last_known_seq)
 	continue;
 
@@ -5681,12 +5684,20 @@ async function export_event(connection, id, email, seq) {
   }
   scoring_items = mapped_scoring_items;
 
+  let mapped_seq = {};
+  for (let device in seq) {
+    let device_tag = cached_devices[device];
+    mapped_seq[device_tag] = seq[device];
+  }
+  seq = mapped_seq;
+
   return {
     format: 'TrialInfo 1',
     event: event,
     riders: riders,
     series: series,
-    scoring: scoring_items
+    scoring: scoring_items,
+    seq: seq
   };
 }
 
@@ -5701,6 +5712,7 @@ function basename(event) {
 
 async function admin_export_event(connection, id, email) {
   let data = await export_event(connection, id, email, {});
+  delete data.seq;
   return {
     filename: basename(data.event) + '.ti',
     data: zlib.gzipSync(JSON.stringify(data), {level: 9})
@@ -6068,6 +6080,7 @@ async function admin_dump_event(connection, id, email, seq) {
 
 async function admin_patch_event(connection, id, body, query, email) {
   let event0 = await export_event(connection, id, email, query.seq || {});
+  delete event0.seq;
   let event1 = clone(event0, false);
 
   let patch = body.patch;
