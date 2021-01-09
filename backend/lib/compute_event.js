@@ -40,7 +40,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	for (let round = 1; round <= rounds; round++) {
 	  rider.marks_per_round[round - 1] = null;
 	  let marks_in_round =
-	    rider.marks_per_zone[round - 1] || [];
+	    (rider.marks_per_zone || [])[round - 1] || [];
 
 	  for (let zone of zones) {
 	    if (((event.skipped_zones[rider.ranking_class] || {})[round] || {})[zone])
@@ -102,7 +102,7 @@ function compute_event(cached_riders, event, compute_marks) {
     riders.forEach((rider) => {
       for (let round = 1; round <= rounds; round++) {
 	let marks_in_round =
-	  rider.marks_per_zone[round - 1] || [];
+	  (rider.marks_per_zone || [])[round - 1] || [];
 
 	for (let zone of zones) {
 	  if (((event.skipped_zones[ranking_class] || {})[round] || {})[zone])
@@ -157,7 +157,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	      continue;
 
 	    let marks_in_round =
-	      rider.marks_per_zone[round - 1] || [];
+	      (rider.marks_per_zone || [])[round - 1] || [];
 	    let marks = marks_in_round[zone - 1];
 	    if (marks == null) {
 	      num_unfinished++;
@@ -219,7 +219,7 @@ function compute_event(cached_riders, event, compute_marks) {
 		let marks;
 		if (((event.skipped_zones[rider.ranking_class] || {})[round] || {})[zone])
 		  continue;
-		marks = (rider.marks_per_zone[round - 1] || [])[zone - 1];
+		marks = ((rider.marks_per_zone || [])[round - 1] || [])[zone - 1];
 		if (marks != null) {
 		  if (!marks_per_zone[round - 1])
 		    marks_per_zone[round - 1] = [];
