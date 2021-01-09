@@ -58,6 +58,7 @@ var views = {
   'ekids.html': require('./views/ekids.marko.js'),
   'other.html': require('./views/other.marko.js'),
   '2019.html': require('./views/2019.marko.js'),
+  '2020.html': require('./views/2020.marko.js'),
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
@@ -6532,6 +6533,7 @@ app.get('/bike.html', conn(pool), serie_index(views['bike.html']));
 app.get('/ekids.html', conn(pool), serie_index(views['ekids.html']));
 app.get('/other.html', conn(pool), serie_index(views['other.html']));
 app.get('/2019.html', conn(pool), serie_index(views['2019.html']));
+app.get('/2020.html', conn(pool), serie_index(views['2020.html']));
 
 app.get('/login/', function(req, res, next) {
   var params = {
