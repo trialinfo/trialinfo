@@ -5981,11 +5981,16 @@ async function import_event(connection, existing_id, data, email) {
     }
 
     if (event.access_token != null) {
+      let filters = [
+        `access_token = ${connection.escape(event.access_token)}`
+      ];
+      if (existing_id)
+	filters.push(`id != ${connection.escape(existing_id)}`);
+
       let rows = await connection.queryAsync(`
         SELECT COUNT(*) AS events
 	FROM events
-	WHERE access_token = ?`,
-	[event.access_token]);
+	WHERE ${filters.join(' AND ')}`);
       if (rows[0].events != 0)
 	event.access_token = null;
     }
