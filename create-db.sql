@@ -339,12 +339,10 @@ DROP TABLE IF EXISTS `scoring_devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `scoring_devices` (
-  `device` int(11) NOT NULL,
-  `device_tag` char(16) NOT NULL,
-  `name` varchar(30) DEFAULT NULL,
-  PRIMARY KEY (`device`),
-  UNIQUE KEY `device_tag` (`device_tag`),
-  UNIQUE KEY `name` (`name`)
+  `id` int(11) NOT NULL,
+  `zone` int(11) NOT NULL,
+  `device` char(16) NOT NULL,
+  PRIMARY KEY (`id`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `scoring_marks`;
@@ -352,26 +350,16 @@ DROP TABLE IF EXISTS `scoring_marks`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `scoring_marks` (
   `id` int(11) NOT NULL,
-  `device` int(11) NOT NULL,
+  `device` char(16) NOT NULL,
   `seq` int(11) NOT NULL,
   `time` timestamp NULL DEFAULT NULL,
   `number` int(11) NOT NULL,
   `zone` int(11) NOT NULL,
   `marks` int(11) NOT NULL,
   `penalty_marks` int(11) DEFAULT NULL,
-  `canceled_device` int(11) DEFAULT NULL,
+  `canceled_device` char(16) DEFAULT NULL,
   `canceled_seq` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`device`,`seq`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `scoring_registered_zones`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `scoring_registered_zones` (
-  `id` int(11) NOT NULL,
-  `zone` int(11) NOT NULL,
-  `device` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `scoring_seq`;
@@ -379,7 +367,7 @@ DROP TABLE IF EXISTS `scoring_seq`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `scoring_seq` (
   `id` int(11) NOT NULL,
-  `device` int(11) NOT NULL,
+  `device` char(16) NOT NULL,
   `seq` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`device`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

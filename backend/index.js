@@ -122,11 +122,8 @@ var LocalStrategy = require('passport-local').Strategy;
 logger.token('email', function (req, res) {
   if (req.user)
     return req.user.email;
-  if (req.scoring_device) {
-    if (req.scoring_device.name != null)
-      return encodeURIComponent(req.scoring_device.name);
+  if (req.scoring_device)
     return req.scoring_device.device_tag;
-  }
   return '-';
 });
 
@@ -196,6 +193,83 @@ async function column_exists(connection, table, column) {
 }
 
 async function update_database(connection) {
+  if (await column_exists(connection, 'scoring_registered_zones', 'device')) {
+    console.log('Replacing table `scoring_devices`');
+    await connection.queryAsync(`
+      ALTER TABLE scoring_marks
+      DROP PRIMARY KEY
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE scoring_marks
+      ADD COLUMN device_tag CHAR(16) AFTER device,
+      ADD COLUMN canceled_device_tag CHAR(16) AFTER canceled_device,
+      CHANGE COLUMN marks marks INT
+    `);
+    await connection.queryAsync(`
+      UPDATE scoring_marks
+      JOIN scoring_devices USING (device)
+      SET scoring_marks.device_tag = scoring_devices.device_tag
+    `);
+    await connection.queryAsync(`
+      UPDATE scoring_marks
+      JOIN scoring_devices ON scoring_marks.canceled_device = scoring_devices.device
+      SET scoring_marks.canceled_device_tag = scoring_devices.device_tag
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE scoring_marks
+      DROP COLUMN device,
+      CHANGE COLUMN device_tag device CHAR(16) NOT NULL,
+      DROP COLUMN canceled_device,
+      CHANGE COLUMN canceled_device_tag canceled_device CHAR(16),
+      ADD PRIMARY KEY (id, device, seq)
+    `);
+
+    await connection.queryAsync(`
+      UPDATE scoring_marks
+      SET marks = NULL, penalty_marks = NULL
+      WHERE canceled_device IS NOT NULL AND canceled_seq IS NOT NULL
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE scoring_registered_zones
+      ADD COLUMN device_tag CHAR(16) AFTER device
+    `);
+    await connection.queryAsync(`
+      UPDATE scoring_registered_zones
+      JOIN scoring_devices USING (device)
+      SET scoring_registered_zones.device_tag = scoring_devices.device_tag
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE scoring_registered_zones
+      DROP COLUMN device,
+      CHANGE COLUMN device_tag device CHAR(16) NOT NULL
+    `);
+
+    await connection.queryAsync(`
+      ALTER TABLE scoring_seq
+      DROP PRIMARY KEY,
+      ADD COLUMN device_tag CHAR(16) AFTER device
+    `);
+    await connection.queryAsync(`
+      UPDATE scoring_seq
+      JOIN scoring_devices USING (device)
+      SET scoring_seq.device_tag = scoring_devices.device_tag
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE scoring_seq
+      DROP COLUMN device,
+      CHANGE COLUMN device_tag device CHAR(16) NOT NULL,
+      ADD PRIMARY KEY (id, device)
+    `);
+
+    await connection.queryAsync(`
+      DROP TABLE scoring_devices
+    `);
+
+    await connection.queryAsync(`
+      RENAME TABLE scoring_registered_zones to scoring_devices
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -263,8 +337,6 @@ var cache = {
   cached_scoring_items: {},
   cached_scoring_canceled_items: {},
   cached_scoring_seq: {},
-  cached_scoring_devices: {},
-  cached_scoring_device_tags: {},
   cached_compute_rounds: {},
 
   _access_event: function(id) {
@@ -531,12 +603,6 @@ var cache = {
   },
   scoring_item_canceled: function(id, number, item) {
     return ((this.cached_scoring_canceled_items[id] || {})[item.device] || {})[item.seq];
-  },
-  scoring_devices: function() {
-    return this.cached_scoring_devices;
-  },
-  scoring_device_tags: function() {
-    return this.cached_scoring_device_tags;
   },
 
   expire: function() {
@@ -1909,7 +1975,7 @@ async function delete_event(connection, id) {
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
 		     'new_numbers', 'result_columns',
 		     'future_events', 'future_starts', 'scoring_zones',
-		     'scoring_registered_zones', 'scoring_marks', 'scoring_seq']) {
+		     'scoring_devices', 'scoring_marks', 'scoring_seq']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
 		' WHERE id = ' + connection.escape(id);
     log_sql(query);
@@ -2322,9 +2388,9 @@ async function update_scoring_cache(connection, id) {
   let is_newer = '';
   if (Object.keys(cached_seq).length) {
     let is_older = Object.keys(cached_seq)
-      .map((device) =>
-        `(device = ${connection.escape(device)} AND ` +
-	 `seq <= ${connection.escape(cached_seq[device])})`)
+      .map((device_tag) =>
+        `(device = ${connection.escape(device_tag)} AND ` +
+	 `seq <= ${connection.escape(cached_seq[device_tag])})`)
       .join(`OR `);
     is_newer = `AND NOT (${is_older})`;
   }
@@ -2356,35 +2422,9 @@ async function update_scoring_cache(connection, id) {
   }
 }
 
-async function update_scoring_device_cache(connection) {
-  let rows = await connection.queryAsync(`
-    SELECT device, device_tag
-    FROM scoring_devices
-  `);
-  let cached_devices = cache.scoring_devices();
-  let cached_device_tags = cache.scoring_device_tags();
-  for (let row of rows) {
-    cached_devices[row.device] = row.device_tag;
-    cached_device_tags[row.device_tag] = row.device;
-  }
-}
-
 async function get_event_scoring(connection, id, number) {
   await update_scoring_cache(connection, id);
-  let scoring_items = cache.get_scoring_items(id, number);
-
-  let cached_devices = cache.scoring_devices();
-  if (!scoring_items.every((item) => item.device in cached_devices))
-    await update_scoring_device_cache(connection);
-
-  return scoring_items.map(
-    (item) => {
-      item = Object.assign({}, item);
-      item.device = cached_devices[item.device];
-      if (item.canceled_device)
-	item.canceled_device = cached_devices[item.canceled_device];
-      return item;
-    });
+  return cache.get_scoring_items(id, number);
 }
 
 async function get_full_event(connection, id) {
@@ -5044,47 +5084,22 @@ async function export_event(connection, id, email, known_seq) {
   }, {});
 
   let device_cache_updated = false;
-  let cached_device_tags = cache.scoring_device_tags();
-
-  let mapped_known_seq = {};
-  for (let device_tag in known_seq) {
-    let device = cached_device_tags[device_tag];
-    if (!device && !device_cache_updated) {
-      await update_scoring_device_cache(connection);
-      device_cache_updated = true;
-      cached_device_tags = cache.scoring_device_tags();
-      device = cached_device_tags[device_tag];
-    }
-    if (device)
-      mapped_known_seq[device] = known_seq[device_tag];
-  }
 
   let scoring_items = {};
   let seq = {};
   let cached_scoring_items = cache.get_scoring_items(id);
-  let cached_devices = cache.scoring_devices();
   for (let number in cached_scoring_items) {
     for (let item of cached_scoring_items[number]) {
       let device = item.device;
       if (!(item.seq <= seq[device]))
 	seq[device] = item.seq;
-      let last_known_seq = mapped_known_seq[device];
+      let last_known_seq = known_seq[device];
       if (item.seq <= last_known_seq)
 	continue;
 
       item = Object.assign({number: +number}, item);
       delete item.device;
       delete item.round;
-      if (item.canceled_device != null) {
-	let device_tag = cached_devices[item.canceled_device];
-	if (!device_tag && !device_cache_updated) {
-	  await update_scoring_device_cache(connection);
-	  device_cache_updated = true;
-	  cached_devices = cache.scoring_devices();
-	  device_tag = cached_devices[item.canceled_device];
-	}
-	item.canceled_device = device_tag;
-      }
 
       let items = scoring_items[device];
       if (!items) {
@@ -5095,27 +5110,10 @@ async function export_event(connection, id, email, known_seq) {
     }
   }
 
-  let mapped_scoring_items = {};
   for (let device in scoring_items) {
-    let device_tag = cached_devices[device];
-    if (!device_tag && !device_cache_updated) {
-      await update_scoring_device_cache(connection);
-      device_cache_updated = true;
-      cached_devices = cache.scoring_devices();
-      device_tag = cached_devices[device];
-    }
     let items = scoring_items[device];
     items.sort((a, b) => a.seq - b.seq);
-    mapped_scoring_items[device_tag] = items;
   }
-  scoring_items = mapped_scoring_items;
-
-  let mapped_seq = {};
-  for (let device in seq) {
-    let device_tag = cached_devices[device];
-    mapped_seq[device_tag] = seq[device];
-  }
-  seq = mapped_seq;
 
   return {
     format: 'TrialInfo 1',
@@ -5260,43 +5258,14 @@ async function title_of_copy(connection, event) {
 */
 
 async function update_event_scoring(connection, id, scoring) {
-  let cached_device_tags = cache.scoring_device_tags();
   let cache_updated = false;
 
   let max_device;
 
-  async function get_scoring_device(device_tag) {
-    let device = cached_device_tags[device_tag];
-    if (device == null && !cache_updated) {
-      await update_scoring_device_cache(connection);
-      cached_device_tags = cache.scoring_device_tags();
-      device = cached_device_tags[device_tag];
-      cache_updated = true;
-    }
-
-    if (device == null) {
-      if (max_device == null) {
-	let rows = await connection.queryAsync(`
-	  SELECT COALESCE(MAX(device), 0) AS max_device
-	  FROM scoring_devices
-	`);
-	max_device = rows[0].max_device;
-      }
-      device = ++max_device;
-      let sql = `
-	INSERT INTO scoring_devices
-	SET device = ${connection.escape(device)}, device_tag = ${connection.escape(device_tag)}`;
-      log_sql(sql);
-      await connection.queryAsync(sql);
-      cached_device_tags[device_tag] = device;
-    }
-    return device;
-  }
-
   for (let device_tag of Object.keys(scoring)) {
-    let device = await get_scoring_device(device_tag);
+    console.log(device_tag);
     let cached_seq = cache.scoring_seq(id);
-    let last_known_seq = cached_seq[device];
+    let last_known_seq = cached_seq[device_tag];
     let items = scoring[device_tag];
     for (let item of items) {
       if (item.seq <= last_known_seq)
@@ -5304,10 +5273,8 @@ async function update_event_scoring(connection, id, scoring) {
 
       item = Object.assign({}, item, {
 	id: id,
-	device: device
+	device: device_tag
       });
-      if (item.canceled_device)
-	item.canceled_device = await get_scoring_device(item.canceled_device);
 
       let sql = `INSERT IGNORE INTO scoring_marks SET ` + Object.keys(item)
 	.map((name) => `${connection.escapeId(name)} = ${connection.escape(item[name])}`)
@@ -5533,25 +5500,23 @@ async function admin_patch_event(connection, id, body, query, email) {
 
 async function scoring_get_registered_zones(connection, id) {
   return (await connection.queryAsync(`
-    SELECT zone, device_tag
+    SELECT zone, device
     FROM scoring_zones
-    LEFT JOIN scoring_registered_zones USING (id, zone)
-    LEFT JOIN scoring_devices USING (device)
+    LEFT JOIN scoring_devices USING (id, zone)
     WHERE id = ?`, [id]))
     .reduce((zones, row) => {
-      zones[row.zone] = row.device_tag;
+      zones[row.zone] = row.device;
       return zones;
     }, {});
 }
 
 async function scoring_get_seq(connection, id) {
   return (await connection.queryAsync(`
-    SELECT device_tag, seq
+    SELECT device, seq
     FROM scoring_seq
-    JOIN scoring_devices USING (device)
     WHERE id = ?`, [id]))
     .reduce((seqs, row) => {
-      seqs[row.device_tag]  = row.seq;
+      seqs[row.device]  = row.seq;
       return seqs;
     }, {});
 }
@@ -5624,14 +5589,6 @@ async function scoring_get_info(connection, id) {
 
   hash.registered_zones = await scoring_get_registered_zones(connection, id);
 
-  hash.devices = (await connection.queryAsync(`
-    SELECT device_tag, name
-    FROM scoring_devices
-    WHERE name IS NOT NULL`)).reduce((devices, row) => {
-      devices[row.device_tag] = row.name;
-      return devices;
-    }, {});
-
   return hash;
 }
 
@@ -5639,17 +5596,13 @@ async function scoring_get_protocol(connection, id, zones, seq) {
   let protocol = {};
   if (zones.length) {
     let is_older = Object.keys(seq)
-      .map((device_tag) => `(device_tag = ${connection.escape(device_tag)} AND seq <= ${connection.escape(seq[device_tag])})`)
+      .map((device_tag) => `(device = ${connection.escape(device_tag)} AND seq <= ${connection.escape(seq[device_tag])})`)
       .join(` OR `);
     let is_newer = is_older == `` ? `` : ` AND NOT (${is_older})`;
 
     (await connection.queryAsync(`
-      SELECT scoring_marks.*, device_tag, canceled_device_tag
+      SELECT *
       FROM scoring_marks
-      JOIN scoring_devices AS _1 USING (device)
-      LEFT JOIN (
-        SELECT device AS canceled_device, device_tag AS canceled_device_tag
-	FROM scoring_devices) AS _2 USING (canceled_device)
       WHERE id = ${connection.escape(id)} AND device IN (
         SELECT DISTINCT device
 	FROM scoring_marks
@@ -5659,18 +5612,14 @@ async function scoring_get_protocol(connection, id, zones, seq) {
       ORDER BY device, seq
       `)).forEach((row) => {
 	delete row.id;
+	let device_tag = row.device;
 	delete row.device;
-	let device_tag = row.device_tag;
-	delete row.device_tag;
 	if (row.time != null)
 	  row.time = moment.utc(row.time).toDate();
-	if (is_cancel_item(row)) {
-	  row.canceled_device = row.canceled_device_tag;
-	} else {
+	if (!is_cancel_item(row)) {
 	  delete row.canceled_device;
 	  delete row.canceled_seq;
 	}
-	delete row.canceled_device_tag;
 
 	if (protocol[device_tag] == null)
 	  protocol[device_tag] = [];
@@ -5685,10 +5634,10 @@ async function scoring_register(connection, scoring_device, id, query, data) {
   try {
     let old_zones = (await connection.queryAsync(`
       SELECT zone
-      FROM scoring_registered_zones
+      FROM scoring_devices
       WHERE id = ?
       AND device = ?`,
-      [id, scoring_device.device]))
+      [id, scoring_device.device_tag]))
       .map((row) => row.zone);
 
     function hash_zones(zones) {
@@ -5701,8 +5650,8 @@ async function scoring_register(connection, scoring_device, id, query, data) {
     await zipHashAsync(
       hash_zones(old_zones), hash_zones(data.zones),
       async function(a, b, zone) {
-	await update(connection, 'scoring_registered_zones',
-	  {id: id, device: scoring_device.device, zone: zone},
+	await update(connection, 'scoring_devices',
+	  {id: id, device: scoring_device.device_tag, zone: zone},
 	  [],
 	  a != null && {}, b != null && {});
       });
@@ -5740,21 +5689,20 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	for (let item of device_protocol) {
 	  item = Object.assign({}, item, {
 	    id: id,
-	    device: scoring_device.device
+	    device: scoring_device.device_tag
 	  });
 	  let table;
 	  if (is_cancel_item(item)) {
 	    let rows = await connection.queryAsync(`
 	      SELECT device
 	      FROM scoring_marks
-	      JOIN scoring_devices USING (device)
 	      WHERE id = ${connection.escape(id)} AND
-		device_tag = ${connection.escape(item.canceled_device)} AND
+		device = ${connection.escape(item.canceled_device)} AND
 		seq = ${connection.escape(item.canceled_seq)} AND
 		zone IN (
 		  SELECT zone
-		  FROM scoring_registered_zones
-		  WHERE device = ${connection.escape(scoring_device.device)}
+		  FROM scoring_devices
+		  WHERE device = ${connection.escape(scoring_device.device_tag)}
 		)
 	      `);
 	    if (!rows.length) {
@@ -5777,7 +5725,7 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	let max_seq = device_protocol[device_protocol.length - 1].seq;
 	let sql = `INSERT INTO scoring_seq SET ` +
 	  `id = ${connection.escape(id)}, ` +
-	  `device = ${connection.escape(scoring_device.device)}, ` +
+	  `device = ${connection.escape(scoring_device.device_tag)}, ` +
 	  `seq = ${connection.escape(max_seq)} ` +
 	  `ON DUPLICATE KEY UPDATE seq = ${connection.escape(max_seq)}`;
 	log_sql(sql);
@@ -6123,29 +6071,7 @@ async function will_take_scores(req, res, next) {
     };
     if (scoring_device.device_tag == null)
       return next(new HTTPError(403, 'Forbidden'));
-
-    let result = await req.conn.queryAsync(`
-      SELECT device, name
-      FROM scoring_devices
-      WHERE device_tag = ? `,
-      [scoring_device.device_tag]);
-    if (result.length == 1) {
-      scoring_device.device = result[0].device;
-      scoring_device.name = result[0].name;
-    } else {
-      await req.conn.queryAsync(`BEGIN`);
-      result = await req.conn.queryAsync(`
-	SELECT COALESCE(MAX(device), 0) + 1 AS device
-	FROM scoring_devices`);
-      scoring_device.device = result[0].device;
-      await req.conn.queryAsync(`
-	INSERT INTO scoring_devices
-	SET device = ?, device_tag = ?`,
-	[scoring_device.device, scoring_device.device_tag]);
-      await req.conn.queryAsync(`COMMIT`);
-    }
     req.scoring_device = scoring_device;
-
     next();
   } catch (error) {
     next(error);
