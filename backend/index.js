@@ -1766,7 +1766,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
       if (riders[number].group)
 	delete riders[number];
     });
-    event.access_token = null;
+    event.access_token = random_tag();
     event.scoring_zones = [];
     event.scoring_devices = [];
   }
@@ -2065,10 +2065,8 @@ async function admin_save_event(connection, id, event, version, reset, email) {
 	await add_event_write_access(connection, id, email);
       }
 
-      if (event.scoring_zones.some((enabled) => enabled)) {
-	if (event.access_token == null)
-	  event.access_token = random_tag();
-      }
+      if (event.access_token == null)
+	event.access_token = random_tag();
 
       event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
@@ -5406,7 +5404,7 @@ async function import_event(connection, existing_id, data, email) {
 	FROM events
 	WHERE ${filters.join(' AND ')}`);
       if (rows[0].events != 0)
-	event.access_token = null;
+	event.access_token = random_tag();
     }
 
     Object.assign(cache.modify_event(id), event);
@@ -5858,6 +5856,7 @@ function query_string(query) {
 var admin_config = {
   admin: true,
   weasyprint: config.weasyprint,
+  url: config.url,
   sync_target: config.sync_target,
   show_all_future_events: config.show_all_future_events,
   pdf_forms: Object.keys(pdf_forms).reduce(

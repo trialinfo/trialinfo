@@ -459,6 +459,11 @@ var syncController = [
       $scope.visible = true;
       $scope.start();
     });
+
+    $scope.$on('get_sync_target', function(event, cb) {
+      if ($scope.url != null)
+        cb($scope.url);
+    });
   }];
 
 angular.module('application').controller('syncController', syncController);
