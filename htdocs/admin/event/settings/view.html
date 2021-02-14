@@ -296,11 +296,18 @@ a:hover.updown {
       <legend>Sektionen</legend>
       <table>
 	<tr>
+	  <th></th>
 	  <th ng-repeat="zone in scoring_zones_list track by $index" style="text-align:center"><span title="Sektion {{$index + 1}}">{{zone}}</span></th>
 	</tr>
 	<tr>
+	  <th>Aktiv</th>
 	  <td ng-repeat="zone in scoring_zones_list track by $index" style="text-align:center;padding:0.35em">
-	    <input type="checkbox" ng-model="event.scoring_zones[$index]" title="Sektion {{$index + 1}}">
+	    <input type="checkbox" ng-model="event.scoring_zones[$index]">
+	  </td>
+	<tr>
+	  <th>Registriert</th>
+	  <td ng-repeat="zone in scoring_zones_list track by $index" style="text-align:center;padding:0.35em">
+	    <input type="checkbox" ng-model="scoring_registered[$index]" ng-disabled="!event.scoring_devices[$index]">
 	  </td>
 	</tr>
       </table>

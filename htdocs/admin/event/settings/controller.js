@@ -112,6 +112,7 @@ var settingsController = [
 	});
 	return !(angular.equals($scope.old_event, $scope.event) &&
 		 angular.equals($scope.old_zones, $scope.zones) &&
+		 angular.equals(scoring_registered($scope.event), $scope.scoring_registered) &&
 		 angular.equals($scope.features_alt, $scope.features));
       } catch (_) {
 	return false;
@@ -175,6 +176,12 @@ var settingsController = [
       return name;
     }
 
+    function scoring_registered(event) {
+      return $scope.scoring_zones_list.map(
+	(zone) => event.scoring_devices[zone - 1] != null
+      );
+    }
+
     function assign_event(event, modify) {
       if (event === undefined)
 	event = $scope.old_event;
@@ -205,6 +212,8 @@ var settingsController = [
 	  equal_marks_resolution: 0,
 	  insurance: 0,
 	  future_events: [],
+	  scoring_zones: [],
+	  scoring_devices: []
 	};
 	$scope.internal.base = null;
 	$scope.internal.reset = null;
@@ -214,6 +223,8 @@ var settingsController = [
       $scope.zones_list = zones_list(max_zone(event));
       $scope.scoring_zones_list = $scope.zones_list.concat([]);
       $scope.scoring_zones_list.pop();
+      $scope.scoring_registered = scoring_registered(event);
+
       for (var class_ = 1; class_ <= 15; class_++) {
 	if (!event.classes[class_ - 1]) {
 	  event.classes[class_ - 1] = {
@@ -279,6 +290,11 @@ var settingsController = [
       event.zones = zones_from_bool($scope.zones);
       event.features = $scope.features;
       collapse_scores(event.scores);
+
+      for (let zone_index in $scope.scoring_registered) {
+	if (!$scope.scoring_registered[zone_index])
+	  event.scoring_devices[zone_index] = null;
+      }
 
       function trim_array(array) {
 	while (array.length && array[array.length - 1] == null)

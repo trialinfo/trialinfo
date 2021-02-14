@@ -1111,6 +1111,15 @@ async function read_event(connection, id, revalidate) {
     event.scoring_zones[row.zone - 1] = true;
   });
 
+  event.scoring_devices = [];
+  (await connection.queryAsync(`
+    SELECT zone, device
+    FROM scoring_devices
+    WHERE id = ?`, [id])
+  ).forEach((row) => {
+    event.scoring_devices[row.zone - 1] = row.device;
+  });
+
   event.series = (await connection.queryAsync(`
     SELECT DISTINCT abbreviation
     FROM series_events
@@ -1759,6 +1768,7 @@ function reset_event(base_event, base_riders, event, riders, reset) {
     });
     event.access_token = null;
     event.scoring_zones = [];
+    event.scoring_devices = [];
   }
 
   if (reset == 'register' && event.base && event.base_fid) {
@@ -3928,6 +3938,16 @@ async function __update_event(connection, id, old_event, new_event) {
         a && {}, b && {})
       && (changed = true);
     });
+
+  await zipAsync(old_event.scoring_devices, new_event.scoring_devices,
+    async function(a, b, zone_index) {
+      await update(connection, 'scoring_devices',
+        {id: id, zone: zone_index + 1},
+        undefined,
+        a && { device: a }, b && { device: b })
+      && (changed = true);
+    });
+
   return changed;
 }
 
@@ -3951,7 +3971,8 @@ async function update_event(connection, id, old_event, new_event, update_version
     result_columns: true,
     future_events: true,
     series: true,
-    scoring_zones: true
+    scoring_zones: true,
+    scoring_devices: true
   };
 
   var nonkeys = Object.keys(new_event || {}).filter(
@@ -5498,16 +5519,14 @@ async function admin_patch_event(connection, id, body, query, email) {
   };
 }
 
-async function scoring_get_registered_zones(connection, id) {
-  return (await connection.queryAsync(`
-    SELECT zone, device
-    FROM scoring_zones
-    LEFT JOIN scoring_devices USING (id, zone)
-    WHERE id = ?`, [id]))
-    .reduce((zones, row) => {
-      zones[row.zone] = row.device;
-      return zones;
-    }, {});
+function scoring_registered_zones(event) {
+  let registered_zones = {};
+  for (let zone_idx in event.scoring_zones) {
+    if (!event.scoring_zones[zone_idx])
+      continue;
+    registered_zones[+zone_idx + 1] = event.scoring_devices[zone_idx] || null;
+  }
+  return registered_zones;
 }
 
 async function scoring_get_seq(connection, id) {
@@ -5532,8 +5551,7 @@ async function scoring_get_info(connection, id) {
       zones: [],
       skipped_zones: {}
     },
-    riders: {},
-    seq: {}
+    riders: {}
   };
   for (let field of ['date', 'location', 'four_marks', 'uci_x10']) {
     hash.event[field] = event[field];
@@ -5587,7 +5605,7 @@ async function scoring_get_info(connection, id) {
     }
   }
 
-  hash.registered_zones = await scoring_get_registered_zones(connection, id);
+  hash.registered_zones = scoring_registered_zones(event);
 
   return hash;
 }
@@ -5630,40 +5648,31 @@ async function scoring_get_protocol(connection, id, zones, seq) {
 }
 
 async function scoring_register(connection, scoring_device, id, query, data) {
-  await connection.queryAsync(`BEGIN`);
+  let transaction = await cache.begin(connection, id);
   try {
-    let old_zones = (await connection.queryAsync(`
-      SELECT zone
-      FROM scoring_devices
-      WHERE id = ?
-      AND device = ?`,
-      [id, scoring_device.device_tag]))
-      .map((row) => row.zone);
+    let event = await get_event(connection, id);
+    event = cache.modify_event(id);
 
-    function hash_zones(zones) {
-      let hash = {};
-      for (let zone of zones)
-	hash[zone] = true;
-      return hash;
+    let scoring_devices = event.scoring_devices.slice();
+    event.scoring_devices = scoring_devices;
+    for (let zone_idx = 0; zone_idx < scoring_devices.length; zone_idx++) {
+      if (scoring_devices[zone_idx] == scoring_device.device_tag)
+	scoring_devices[zone_idx] = null;
+    }
+    for (let zone of data.zones) {
+      scoring_devices[zone - 1] = scoring_device.device_tag;
     }
 
-    await zipHashAsync(
-      hash_zones(old_zones), hash_zones(data.zones),
-      async function(a, b, zone) {
-	await update(connection, 'scoring_devices',
-	  {id: id, device: scoring_device.device_tag, zone: zone},
-	  [],
-	  a != null && {}, b != null && {});
-      });
-    await connection.queryAsync(`COMMIT`);
-  } catch (error) {
-      await connection.queryAsync(`ROLLBACK`);
-  }
+    await cache.commit(transaction, true);
 
-  return {
-    registered_zones: await scoring_get_registered_zones(connection, id),
-    protocol: await scoring_get_protocol(connection, id, data.zones, data.seq)
-  };
+    return {
+      registered_zones: scoring_registered_zones(event),
+      protocol: await scoring_get_protocol(connection, id, data.zones, data.seq)
+    };
+  } catch (error) {
+    await cache.rollback(transaction);
+    throw error;
+  }
 }
 
 function is_cancel_item(item) {
@@ -5683,7 +5692,6 @@ async function scoring_update(connection, scoring_device, id, query, data) {
   if (!empty) {
     await connection.queryAsync(`BEGIN`);
     try {
-      let registered_zones = await scoring_get_registered_zones(connection, id);
       for (let device_tag in data.protocol) {
 	let device_protocol = data.protocol[device_tag];
 	for (let item of device_protocol) {
