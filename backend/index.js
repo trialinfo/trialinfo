@@ -335,6 +335,7 @@ var cache = {
   cached_events: {},
   saved_events: {},
   cached_scoring_items: {},
+  cached_scoring_items_time: {},
   cached_scoring_canceled_items: {},
   cached_scoring_seq: {},
   cached_compute_rounds: {},
@@ -509,16 +510,6 @@ var cache = {
     return this.cached_scoring_seq[id] || {};
   },
   add_scoring_item: function(id, number, item) {
-    let try_to_append = (cached_rider, item) => {
-      let last_time = null;
-      if (cached_rider.length > 0)
-	last_time = cached_rider[cached_rider.length - 1].time;
-      if (last_time != null && last_time.getTime() > item.time.getTime())
-	return false;
-      cached_rider.push(item);
-      return true;
-    };
-
     let cache_cancel_item = (item) => {
       let cached_event = this.cached_scoring_canceled_items[id];
       if (!cached_event) {
@@ -544,10 +535,53 @@ var cache = {
 	cached_rider = [];
 	cached_event[number] = cached_rider;
       }
+
+      let event_item_times = this.cached_scoring_items_time[id];
+      if (!event_item_times) {
+	event_item_times = {};
+	this.cached_scoring_items_time[id] = event_item_times;
+      }
+      let item_time = (item) => {
+	if (!is_cancel_item(item))
+	  return item.time;
+	let item_times = event_item_times[item.device];
+	if (!item_times) {
+	  item_times = {};
+	  event_item_times[item.device] = item_times;
+	}
+	if (item_times[item.seq])
+	  return item_times[item.seq];
+
+	let canceled_item = cached_rider.find((canceled_item) =>
+	  canceled_item.device == item.canceled_device &&
+	  canceled_item.seq == item.canceled_seq);
+	if (canceled_item) {
+	  item_times[item.seq] = canceled_item.time;
+	  return canceled_item.time;
+        }
+	return item.time;
+      };
+
+      let item_compare = (a, b) => {
+	let cmp = item_time(a).getTime() - item_time(b).getTime();
+	if (!cmp)
+	  cmp = a.time.getTime() - b.time.getTime();
+	return cmp;
+      };
+
+      let try_to_append = (item) => {
+	let last_item;
+	if (cached_rider.length > 0)
+	  last_item = cached_rider[cached_rider.length - 1];
+	if (last_item && item_compare(last_item, item) > 0)
+	  return false;
+	cached_rider.push(item);
+	return true;
+      };
+
       let chronological = true;
-      if (!try_to_append(cached_rider, item)) {
-	binary.insert(cached_rider, item,
-	  (a, b) => a.time.getTime() - b.time.getTime());
+      if (!try_to_append(item)) {
+	binary.insert(cached_rider, item, item_compare);
 	chronological = false;
       }
       if (is_cancel_item(item)) {
@@ -559,7 +593,7 @@ var cache = {
       let compute_round = (item) => {
 	let canceled_items = this.cached_scoring_canceled_items[id];
 	let canceled = ((canceled_items || {})[item.device] || [])[item.seq];
-	item.round = cached_compute_round(item.zone, canceled || is_cancel_item(item));
+	item.round = cached_compute_round(item.zone, canceled || is_null_item(item));
       };
 
       if (this.cached_compute_rounds[id])
@@ -615,6 +649,7 @@ var cache = {
 	delete this.cached_riders[id];
 	delete this.cached_event_timestamps[id];
 	delete this.cached_scoring_items[id];
+	delete this.cached_scoring_items_time[id];
 	delete this.cached_scoring_canceled_items[id];
 	delete this.cached_scoring_seq[id];
 	delete this.cached_compute_rounds[id];
@@ -5677,6 +5712,10 @@ function is_cancel_item(item) {
   return item.canceled_device != null && item.canceled_seq != null;
 }
 
+function is_null_item(item) {
+  return item.marks == null && item.penalty_marks == null;
+}
+
 async function scoring_update(connection, scoring_device, id, query, data) {
   let empty = true;
   for (let device_tag in data.protocol) {
@@ -5795,7 +5834,7 @@ function scoring_update_riders(id, event, riders) {
 
     let items = cache.get_scoring_items(id, rider.number);
     for (let item of items) {
-      if (is_cancel_item(item) ||
+      if (is_null_item(item) ||
 	  cache.scoring_item_canceled(id, rider.number, item))
 	continue;
       if (!scoring_zones[item.zone - 1])
