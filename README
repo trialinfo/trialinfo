@@ -85,13 +85,16 @@ Die anfängliche Datenbankstruktur lässt sich danach folgendermaßen erzeugen:
 
   $ mysql --user=trialinfo --password=password < create-db.sql
 
-
   /etc/my.cnf.d/server.cnf
   ------------------------
   Add STRICT_TRANS_TABLES to sql_mode:
 
   [server]
   sql_mode=STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+
+Nach Veränderungen kann man create-db.sql folgendermaßen aktualisieren:
+
+  $ mysqldump --user=root --password --dump --no-data --skip-comments > create-db.sql
 
 
 Herunterladen und erzeugen diverser Dateien
