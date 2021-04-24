@@ -126,6 +126,18 @@ var marksController = [
       return item.canceled_device != null && item.canceled_seq != null;
     }
 
+    function is_null_item(item) {
+      return item.marks == null && item.penalty_marks == null;
+    }
+
+    function scoring_item_eventually_canceled(item) {
+      if (!item.canceled)
+	return false;
+      while (item.canceled)
+	item = item.canceled;
+      return is_null_item(item);
+    }
+
     function load_scoring(number) {
       $scope.scoring_table = [];
       $http.get('/api/event/' + event.id + '/rider/' + number + '/scoring')
@@ -147,7 +159,7 @@ var marksController = [
 
 	  let num_in_round = 0;
 	  for (let item of items) {
-	    if (is_cancel_item(item))
+	    if (is_null_item(item))
 	      continue;
 	    let canceled_item = (canceled[item.device] || {})[item.seq];
 	    if (canceled_item)
@@ -158,7 +170,6 @@ var marksController = [
 
 	    let scoring_round = scoring_table[item.round - 1];
 	    if (!scoring_round) {
-	      num_in_round = 0;
 	      scoring_round = [];
 	      scoring_table[item.round - 1] = scoring_round;
 	    }
@@ -167,9 +178,32 @@ var marksController = [
 	      scoring_zone = [];
 	      scoring_round[item.zone - 1] = scoring_zone;
 	    }
-	    if (!item.canceled)
-	      item.num = num_in_round++;
 	    scoring_zone.push(item);
+	  }
+
+	  function scoring_time(scoring_zone) {
+	    for (let item of scoring_zone) {
+	      if (!scoring_item_eventually_canceled(item))
+		return item.time.getTime();
+	    }
+	    return 0;
+	  };
+
+	  for (let scoring_round of scoring_table) {
+	    let scoring_zones = [];
+	    for (let scoring_zone of scoring_round) {
+	      if (scoring_zone)
+		scoring_zones.push(scoring_zone);
+	    }
+	    scoring_zones.sort((a, b) => scoring_time(a) - scoring_time(b));
+	    let num = 0;
+	    for (let scoring_zone of scoring_zones) {
+	      if (scoring_zone.length) {
+		for (let item of scoring_zone)
+		  item.num = num;
+		num++;
+	      }
+	    }
 	  }
 
 	  $scope.scoring_table = scoring_table;
@@ -229,7 +263,8 @@ var marksController = [
 	color = l < 0.5 ? '#e1e1e1' : '#898989';
 	style.color = color;
       }
-      if (item && item.canceled) {
+      if (scoring_item_eventually_canceled(item) ||
+	  (is_cancel_item(item) && !is_null_item(item))) {
 	style['text-decoration'] = 'line-through';
 	if (color)
 	  style['text-decoration-color'] = color;
