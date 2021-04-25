@@ -1,12 +1,13 @@
 'use strict';
 
 var settingsController = [
-  '$scope', '$http', '$timeout', '$location', 'eventName', 'event', 'events',
-  function ($scope, $http, $timeout, $location, eventName, event, events) {
+  '$scope', '$sce', '$http', '$timeout', '$location', 'eventName', 'event', 'events',
+  function ($scope, $sce, $http, $timeout, $location, eventName, event, events) {
     $scope.$root.context(event ? event.title : 'Neue Veranstaltung');
     $scope.internal = {
       base: null,
       reset: null,
+      sync_target: config.sync_target,
     };
     var min_zones = 8;
 
@@ -21,6 +22,41 @@ var settingsController = [
 
     assign_event(event);
     event = undefined;
+
+    $scope.$root.$broadcast('get_sync_target', (sync_target) => {
+      $scope.internal.sync_target = sync_target;
+    });
+
+    $scope.scoring_enabled = function() {
+      let event = $scope.event;
+      return event.access_token != null &&
+	     event.scoring_zones.some((enabled) => enabled);
+    };
+
+    $scope.internal.url = (() => {
+      let url = config.url;
+      if (url == null) {
+	url = $location.absUrl();
+	let tail = '/admin' + $location.url();
+	if (url.endsWith(tail))
+	  url = url.substr(0, url.length - tail.length);
+      }
+      return url;
+    })();
+
+    $scope.scoring_qrcode = function() {
+      let event = $scope.event;
+      let internal = $scope.internal;
+      let sync_target = internal.sync_target;
+      let data = `tr:token=${encodeURIComponent(event.access_token)}`;
+      data = data + `&url=${encodeURIComponent(internal.url)}`;
+      if (sync_target != null)
+	data = data + `&sync=${encodeURIComponent(sync_target)}`;
+      let qr = qrcode(0, 'M');
+      qr.addData(data);
+      qr.make();
+      return $sce.trustAsHtml(qr.createSvgTag({cellSize:5}));
+    };
 
     function expand_scores(scores) {
       var l = scores.length;
@@ -112,6 +148,7 @@ var settingsController = [
 	});
 	return !(angular.equals($scope.old_event, $scope.event) &&
 		 angular.equals($scope.old_zones, $scope.zones) &&
+		 angular.equals(scoring_registered($scope.event), $scope.scoring_registered) &&
 		 angular.equals($scope.features_alt, $scope.features));
       } catch (_) {
 	return false;
@@ -175,6 +212,12 @@ var settingsController = [
       return name;
     }
 
+    function scoring_registered(event) {
+      return $scope.scoring_zones_list.map(
+	(zone) => event.scoring_devices[zone - 1] != null
+      );
+    }
+
     function assign_event(event, modify) {
       if (event === undefined)
 	event = $scope.old_event;
@@ -205,6 +248,8 @@ var settingsController = [
 	  equal_marks_resolution: 0,
 	  insurance: 0,
 	  future_events: [],
+	  scoring_zones: [],
+	  scoring_devices: []
 	};
 	$scope.internal.base = null;
 	$scope.internal.reset = null;
@@ -214,6 +259,8 @@ var settingsController = [
       $scope.zones_list = zones_list(max_zone(event));
       $scope.scoring_zones_list = $scope.zones_list.concat([]);
       $scope.scoring_zones_list.pop();
+      $scope.scoring_registered = scoring_registered(event);
+
       for (var class_ = 1; class_ <= 15; class_++) {
 	if (!event.classes[class_ - 1]) {
 	  event.classes[class_ - 1] = {
@@ -279,6 +326,11 @@ var settingsController = [
       event.zones = zones_from_bool($scope.zones);
       event.features = $scope.features;
       collapse_scores(event.scores);
+
+      for (let zone_index in $scope.scoring_registered) {
+	if (!$scope.scoring_registered[zone_index])
+	  event.scoring_devices[zone_index] = null;
+      }
 
       function trim_array(array) {
 	while (array.length && array[array.length - 1] == null)
@@ -403,6 +455,8 @@ var settingsController = [
 	      event.base_fid = null;
 	      if (future_events.length)
 		event.base_fid = future_events[0].fid;
+	      delete event.access_token;
+	      event.scoring_devices = [];
 	      assign_event(event, true);
 	      $scope.internal.reset = 'register';
 	      watch_base_fid();

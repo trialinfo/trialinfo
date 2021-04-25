@@ -21,7 +21,8 @@ DOWNLOAD_FILES = \
 	htdocs/js/angular-$(ANGULAR_VERSION)/angular-locale_de-at.js \
 	htdocs/js/moment.js \
 	htdocs/js/moment.min.js \
-	htdocs/js/json-diff.js
+	htdocs/js/json-diff.js \
+	htdocs/js/qrcode.js
 
 MARKO_FILES = \
 	$(wildcard backend/views/*.marko) \
@@ -112,6 +113,11 @@ htdocs/js/json-diff.js:
 	@mkdir -p  $(dir $@)
 	$(CURL) -o $@ --silent --location \
 		https://github.com/trialinfo/json-diff/raw/master/json-diff.js
+
+htdocs/js/qrcode.js:
+	@mkdir -p  $(dir $@)
+	$(CURL) -o $@ --silent --location \
+		https://github.com/kazuhikoarase/qrcode-generator/raw/master/js/qrcode.js
 
 clean:
 	rm -f $(MARKO_FILES:%=%.js)

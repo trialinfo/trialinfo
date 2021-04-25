@@ -339,12 +339,10 @@ DROP TABLE IF EXISTS `scoring_devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `scoring_devices` (
-  `device` int(11) NOT NULL,
-  `device_tag` char(16) NOT NULL,
-  `name` varchar(30) DEFAULT NULL,
-  PRIMARY KEY (`device`),
-  UNIQUE KEY `device_tag` (`device_tag`),
-  UNIQUE KEY `name` (`name`)
+  `id` int(11) NOT NULL,
+  `zone` int(11) NOT NULL,
+  `device` char(16) NOT NULL,
+  PRIMARY KEY (`id`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `scoring_marks`;
@@ -352,26 +350,16 @@ DROP TABLE IF EXISTS `scoring_marks`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `scoring_marks` (
   `id` int(11) NOT NULL,
-  `device` int(11) NOT NULL,
+  `device` char(16) NOT NULL,
   `seq` int(11) NOT NULL,
   `time` timestamp NULL DEFAULT NULL,
   `number` int(11) NOT NULL,
   `zone` int(11) NOT NULL,
   `marks` int(11) NOT NULL,
   `penalty_marks` int(11) DEFAULT NULL,
-  `canceled_device` int(11) DEFAULT NULL,
+  `canceled_device` char(16) DEFAULT NULL,
   `canceled_seq` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`device`,`seq`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `scoring_registered_zones`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `scoring_registered_zones` (
-  `id` int(11) NOT NULL,
-  `zone` int(11) NOT NULL,
-  `device` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`zone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `scoring_seq`;
@@ -379,7 +367,7 @@ DROP TABLE IF EXISTS `scoring_seq`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `scoring_seq` (
   `id` int(11) NOT NULL,
-  `device` int(11) NOT NULL,
+  `device` char(16) NOT NULL,
   `seq` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`device`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -534,7 +522,7 @@ CREATE TABLE `zones` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `events_all_admins` AS select distinct `events`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,0 AS `read_only` from (`events` join `users`) where `users`.`password` is not null and `users`.`admin` <> 0 and `users`.`super_admin` <> 0 union select `events_admins`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,`events_admins`.`read_only` AS `read_only` from (`events_admins` join `users` on(`events_admins`.`user` = `users`.`user`)) where `users`.`password` is not null and `users`.`admin` <> 0 union select `events_groups`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,`events_groups`.`read_only` AS `read_only` from (((`events_groups` join `groups` on(`events_groups`.`group` = `groups`.`group`)) join `admins_groups` on(`events_groups`.`group` = `admins_groups`.`group`)) join `users` on(`admins_groups`.`user` = `users`.`user`)) where `users`.`password` is not null and `users`.`admin` <> 0 */;
+/*!50001 VIEW `events_all_admins` AS select distinct `events`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,0 AS `read_only` from (`events` join `users`) where `users`.`admin` <> 0 and `users`.`super_admin` <> 0 union select `events_admins`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,`events_admins`.`read_only` AS `read_only` from (`events_admins` join `users` on(`events_admins`.`user` = `users`.`user`)) where `users`.`admin` <> 0 union select `events_groups`.`id` AS `id`,`users`.`email` AS `email`,`users`.`password` AS `password`,`events_groups`.`read_only` AS `read_only` from (((`events_groups` join `groups` on(`events_groups`.`group` = `groups`.`group`)) join `admins_groups` on(`events_groups`.`group` = `admins_groups`.`group`)) join `users` on(`admins_groups`.`user` = `users`.`user`)) where `users`.`admin` <> 0 */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -547,7 +535,7 @@ CREATE TABLE `zones` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `series_all_admins` AS select distinct `series`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,0 AS `read_only` from (`series` join `users`) where `users`.`password` is not null and `users`.`admin` <> 0 and `users`.`super_admin` <> 0 union select `series_admins`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,`series_admins`.`read_only` AS `read_only` from (`series_admins` join `users` on(`series_admins`.`user` = `users`.`user`)) where `users`.`password` is not null and `users`.`admin` <> 0 union select `series_groups`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,`series_groups`.`read_only` AS `read_only` from (((`series_groups` join `groups` on(`series_groups`.`group` = `groups`.`group`)) join `admins_groups` on(`series_groups`.`group` = `admins_groups`.`group`)) join `users` on(`admins_groups`.`user` = `users`.`user`)) where `users`.`password` is not null and `users`.`admin` <> 0 */;
+/*!50001 VIEW `series_all_admins` AS select distinct `series`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,0 AS `read_only` from (`series` join `users`) where `users`.`admin` <> 0 and `users`.`super_admin` <> 0 union select `series_admins`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,`series_admins`.`read_only` AS `read_only` from (`series_admins` join `users` on(`series_admins`.`user` = `users`.`user`)) where `users`.`admin` <> 0 union select `series_groups`.`serie` AS `serie`,`users`.`email` AS `email`,`users`.`password` AS `password`,`series_groups`.`read_only` AS `read_only` from (((`series_groups` join `groups` on(`series_groups`.`group` = `groups`.`group`)) join `admins_groups` on(`series_groups`.`group` = `admins_groups`.`group`)) join `users` on(`admins_groups`.`user` = `users`.`user`)) where `users`.`admin` <> 0 */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;

@@ -135,8 +135,10 @@ table.scoring_table th, table.scoring_table td {
 		<th style="text-align:center"><span title="Runde {{round}}">R{{round}}</span></th>
 		<td style="min-width:3em;text-align:center" ng-style="scoring_cell_style(round, zone)" ng-repeat="zone in zones_list()">
 		  <span ng-repeat="item in scoring_table[round - 1][zone - 1]" style="display:inline-block">
-		    <span style="font-style:italic;font-size:65%" ng-style="scoring_item_time_style(round, zone, item)">{{item.time | date:"H:mm"}}</span><br>
-		    <span ng-style="scoring_item_marks_style(round, zone, item)">{{scoring_marks(item)}}</span>
+		    <span title="{{item.time | date:' d.M.yyyy H:mm:ss'}}">
+		      <span style="font-style:italic;font-size:65%" ng-style="scoring_item_time_style(round, zone, item)">{{item.time | date:"H:mm"}}</span><br>
+		      <span ng-style="scoring_item_marks_style(round, zone, item)">{{scoring_marks(item)}}</span>
+		    </span>
 		  </span>
 		</td>
 	      </tr>
@@ -150,8 +152,8 @@ table.scoring_table th, table.scoring_table td {
 	  <legend>Navigation</legend>
 	  <p>
 	    <button type="button" ng-disabled="modified()" ng-click="load_first_rider()" tabindex="-1">|&lt;</button>
-	    <button type="button" ng-disabled="modified()" ng-click="load_previous_rider()" tabindex="-1">&lt;</button>
-	    <button type="button" ng-disabled="modified()" ng-click="load_next_rider()" tabindex="-1">&gt;</button>
+	    <button type="button" ng-disabled="modified() || !rider" ng-click="load_previous_rider()" tabindex="-1">&lt;</button>
+	    <button type="button" ng-disabled="modified() || !rider" ng-click="load_next_rider()" tabindex="-1">&gt;</button>
 	    <button type="button" ng-disabled="modified()" ng-click="load_last_rider()" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
