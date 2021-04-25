@@ -152,8 +152,8 @@ table.scoring_table th, table.scoring_table td {
 	  <legend>Navigation</legend>
 	  <p>
 	    <button type="button" ng-disabled="modified()" ng-click="load_first_rider()" tabindex="-1">|&lt;</button>
-	    <button type="button" ng-disabled="modified()" ng-click="load_previous_rider()" tabindex="-1">&lt;</button>
-	    <button type="button" ng-disabled="modified()" ng-click="load_next_rider()" tabindex="-1">&gt;</button>
+	    <button type="button" ng-disabled="modified() || !rider" ng-click="load_previous_rider()" tabindex="-1">&lt;</button>
+	    <button type="button" ng-disabled="modified() || !rider" ng-click="load_next_rider()" tabindex="-1">&gt;</button>
 	    <button type="button" ng-disabled="modified()" ng-click="load_last_rider()" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
