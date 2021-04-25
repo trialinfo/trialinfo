@@ -2964,7 +2964,7 @@ async function get_event_results(connection, id) {
 
   for (let event of events) {
     let event_hash = {};
-    ['date', 'location'].forEach((field) => {
+    ['date', 'location', 'skipped_zones'].forEach((field) => {
       event_hash[field] = event[field];
     });
     hash.events.push(event_hash);
