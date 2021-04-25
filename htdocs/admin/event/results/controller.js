@@ -128,12 +128,19 @@ var eventResultsController = [
 	      });
 	    }
 
-	    rider.results.forEach(function(result) {
+	    rider.results.forEach(function(result, event_idx) {
 	      if (result) {
 		result.marks_in_round = function(round) {
 		  var marks_in_round = this.marks_per_round[round - 1];
 		  if (marks_in_round === undefined)
 		    marks_in_round = this.failure ? '-' : null;
+		  if (!features.individual_marks) {
+		    if (marks_in_round != null && !rider.failure) {
+		      let unfinished = this.unfinished_zones[round - 1];
+		      if (unfinished)
+			marks_in_round += `<sub>${unfinished}</sub>`;
+		    }
+		  }
 		  if (marks_in_round == null)
 		    marks_in_round = '\u200B';  // zero-width space
 		  if (features.individual_marks)
@@ -158,6 +165,19 @@ var eventResultsController = [
 				  !features.individual_marks
 		  };
 		};
+		let zones = class_.events[event_idx].zones;
+		let skipped_zones = results.events[event_idx].skipped_zones[class_.ranking_class] || {};
+		result.unfinished_zones = [];
+		for (let round = 1; round <= result.marks_per_zone.length; round++) {
+		  let marks_per_zone = result.marks_per_zone[round - 1];
+		  result.unfinished_zones[round - 1] = 0;
+		  for (let zone of zones) {
+		    if (marks_per_zone[zone - 1] == null &&
+		        !(skipped_zones[round] || {})[zone]) {
+		      result.unfinished_zones[round - 1]++;
+		    }
+		  }
+		}
 	      }
 	    });
 	  });
