@@ -14,7 +14,7 @@
 <p>TrialInfo ist ein Auswertungssystem für Motorrad- und
 Fahrrad-Trial-Wettbewerbe, das alle wesentlichen Schritte zur Verwaltung von
 Veranstaltungen und Veranstaltungsreihen unterstützt (Fahrer, Gruppen,
-Punktevergabe, Fahrerlisten, Auswertungen, usw.).</p>
+Punktevergabe, Fahrerlisten, Sektionslisten, Auswertungen, usw.).</p>
 
 <p>Das Auswertungssystem ist eine Web-Applikation, die über einen Browser
 bedient wird.  Die Applikation kann je nach Bedarf gleichzeitig auf mehreren
@@ -24,10 +24,13 @@ das erkannt und verhindert.</p>
 
 <p>Da Trial-Wettbewerbe teilweise an Orten stattfinden, an denen keine
 verlässliche Internet-Verbindung möglich ist, läuft das Auswertungssystem
-üblicherweise auf einem Notebook lokal vor Ort der Veranstaltungen.  Wenn eine
-Internet-Verbindung besteht, können die Daten im Hintergrund laufend ins
+üblicherweise auf einem Notebook lokal vor Ort der Veranstaltungen.  Sofern
+eine Internet-Verbindung besteht, können die Daten im Hintergrund laufend ins
 Internet synchronisiert werden, sodass die Ergebnisse dort trotzdem "live"
 einsehbar sind.</p>
+
+<p>Eine weitere Möglichkeit ist die Eingabe der Ergebnisse direkt in den
+Sektionen über die TrialInfo-App (Android).</p>
 
 <h2>Grundsätzlicher Ablauf</h2>
 
@@ -68,7 +71,7 @@ gelöscht.</p>
 
 <h3>Online-Voranmeldung</h3>
 
-<p>Es gibt auch die Möglichkeit, dass sich die Fahrer vor der Veranstaltung
+<p>Es gibt die Möglichkeit, dass sich die Fahrer vor der Veranstaltung
 selbständig über das Internet registrieren.  Das ist maximal bis zum Vortag der
 Veranstaltung sinnvoll, da die Daten der Veranstaltung nach dem Ende der
 Online-Voranmeldung meist erst auf das bei der Veranstaltung eingesetzte
@@ -78,19 +81,19 @@ Veranstaltung nicht online eingesetzt wird).</p>
 <p>Bei Einsatz dieser Online-Voranmeldung ändert sich der Ablauf wie folgt:</p>
 
 <ul>
-<li><p>Neu angelegte Fahrer werden zunächst als <em>nicht verifiziert</em>
+<li>Neu angelegte Fahrer werden zunächst als <em>nicht verifiziert</em>
 markiert.  Bei diesen Fahrern ändert sich die <em>Speichern</em>-Schaltfläche
 im Fahrer-Nennformular auf <em>Verifizieren</em>.  Es ist Aufgabe des
 Nennbüros, zu verifizieren, dass die vom Fahrer eingegebenen Daten sinnvoll und
-vollständig sind; diese Verifizierung erfolgt über das Fahrer-Nennformular.</p>
+vollständig sind; diese Verifizierung erfolgt über das Fahrer-Nennformular.
+<br><br>
+Beim Anlegen eines Fahrers und bei weiteren Änderungen werden
+Benachrichtigungs-E-Mails an das Nennbüro verschickt.
+<br><br>
+Weitere Änderungen der Daten eines Fahrers führen zu keinem Zurücksetzen der
+Verifizierung.
 
-<p>Beim Anlegen eines Fahrers und bei weiteren Änderungen werden
-Benachrichtigungs-E-Mails an das Nennbüro verschickt.</p>
-
-<p>Weitere Änderungen der Daten eines Fahrers führen zu keinem Zurücksetzen der
-Verifizierung.</p>
-
-<li><p>Die Fahrer haben in der Online-Voranmeldung selbst Kontrolle über das
+<li>Die Fahrer haben in der Online-Voranmeldung selbst Kontrolle über das
 <em>Start</em>-Häkchen.  Um dennoch die Kontrolle über die Starter bei der
 Veranstaltung zu erhalten, muss die Einstellung <em>Nennungseingang</em>
 aktiviert werden; das führt dazu, dass es in der Fahrerverwaltung ein
@@ -98,17 +101,62 @@ zusätzliches <em>Nennungseingang</em>-Häkchen gibt.  Das Nennbüro aktiviert
 dann bei allen Starten dieses Häkchen.  Die Fahrer bestimmen bei der
 Online-Voranmeldung also, an welchen Tagen sie starten wollen, und das Nennbüro
 bestätigt das bei der eigentlichen Nennung vor Ort über das
-<em>Nennungseingang</em>-Häkchen.</p>
-
-<p>Zusätzlich ist es möglich, weitere zukünftige Veranstaltungen zu definieren,
+<em>Nennungseingang</em>-Häkchen.
+<br><br>
+Zusätzlich ist es möglich, weitere zukünftige Veranstaltungen zu definieren,
 zum Beispiel beide Tage eines Veranstaltungs-Wochenendes, oder alle
 Veranstaltungen eines Jahres.  Dadurch besteht dann die Möglichkeit, sich bei
-all diesen Veranstaltungen voranzumelden.</p>
+all diesen Veranstaltungen voranzumelden.
 
-<li><p>Vor der Veranstaltung werden neben der Übernahme der Veranstaltungsdaten
+<li>Vor der Veranstaltung werden neben der Übernahme der Veranstaltungsdaten
 auf das Notebook auch noch Nennformulare für die Fahrer ausgedruckt, die online
 vorgenannt haben.  Die Fahrer müssen diese Nennformulare dann nur noch vor Ort
-unterschreiben.</p>
+unterschreiben.
+</ul>
+
+<h3>Erfassung der Ergebnisse</h3>
+
+<p>Zur Erfassung der Ergebnisse gibt es folgende drei Möglichkeiten:
+</p>
+<ul>
+<li>Auf Punktekarten, die im Nennbüro rundenweise ausgegeben werden.  Die
+ausgefüllten bzw. gezwickten Punktekarten werden im Nennbüro gesammelt und
+eingegeben, sodass es einen laufenden rundenweisen Zwischenstand gibt.
+<li>Auf Sektionslisten, in die die Ergebnisse eingetragen werden.  Bei dieser
+Variante werden die Sektionslisten am Ende der Veranstaltung eingegeben, es
+gibt also keinen Zwischenstand.
+<li>Über die TrialInfo-App.  In diesem Fall gibt es je nach
+Internet-Datenverbindung in den Sektionen und im Nennbüro einen mehr oder
+weniger vollständigen sektionsweisen Zwischenstand.  Es kann sinnvoll sein, das
+mit Sektionslisten zu kombinieren.
+</ul>
+
+<h3>Mobile Datenerfassung (TrialInfo-App)</h3>
+
+<p>Die TrialInfo-App bietet die Möglichkeit, Ergebnisse direkt in den Sektionen
+zu erfassen.  Um das möglichst reibungslos zu gestalten, sollten die
+Mobiltelefone sowohl über eine mobile Datenverbindung verfügen, als auch
+eine automatische WLAN-Verbindung zum Auswertungs-Notebook vor Ort aufbauen,
+sobald sie in ausreichender Nähe zum Nennbüro sind.  Das kann erfolgen, indem
+man das Notebook zu einem Hotspot macht, oder indem man einen eigenen Hotspot
+einrichtet.</p>
+
+<p>Zusätzlich sollte das Notebook so konfiguriert sein, dass es seine Daten ins
+Internet synchronisiert; diese Synchronisierung beinhaltet dann auch die mobil
+erfassten Daten.  Ein Einsatz der App mit nur einem Gegenüber (also nur
+mit dem Auswertungs-Notebook oder nur mit einem Server im Internet) ist nicht
+zu empfehlen, da dann bei Ausfall des Notebooks, der Internet-Verbindung,
+oder des Servers kein Backup besteht.</p>
+
+<p>Um die TrialInfo-App auf einem Mobiltelefon zu verwenden, sind
+folgende Schritte notwendig:</p>
+
+<ul>
+<li>Die TrialInfo-App (Android) installieren.
+<li>Die TrialInfo-App mit der Veranstaltung verbinden.  Das erfolgt über
+Scannen des QR-Codes in den Veranstaltungs-Einstellungen.
+<li>In der TrialInfo-App: Auswahl der Sektion, in der die App eingesetzt werden
+soll.
 </ul>
 
 <h2>Formulare und Navigation</h2>
@@ -118,16 +166,17 @@ Daten-Eingabemasken.  Diese Formulare und die ganze Web-Applikation sind so
 gestaltet, dass häufige Tätigkeiten über die Tastatur ausgeführt werden können.
 Wichtige Felder in den Formularen können über die Tastatur angesprungen,
 wichtige Aktionen über die Tastatur ausgelöst werden:
+</p>
+
 <ul>
-<li><p>Die Eingabetaste (⏎) speichert ein Formular.</p>
-<li><p>Die Escape-Taste (⎋) verwirft die Änderungen in einem Formular.</p>
-<li><p>Unterstrichene Buchstaben in Formularen kennzeichnen, dass eine
+<li>Die Eingabetaste (⏎) speichert ein Formular.
+<li>Die Escape-Taste (⎋) verwirft die Änderungen in einem Formular.
+<li>Unterstrichene Buchstaben in Formularen kennzeichnen, dass eine
 browserabhängige Tastenkombination plus der unterstrichene Buchstabe das Feld
 anspringt oder die Aktion auslöst.  Auf PCs ist diese Tastenkombination oft Alt
 + Umschalttaste (⎇ ⇧), auf MacOS Ctrl + Option (^⌥). Es gibt dazu eine
-Übersicht auf <a href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.</p>
+Übersicht auf <a href="http://en.wikipedia.org/wiki/Access_key">Wikipedia</a>.
 </ul>
-</p>
 
 <p>Änderungen in Formularen werden nicht automatisch gespeichert, sondern erst,
 wenn die Änderungen mit der Eingabetaste (⏎) bestätigt werden. Der Web-Browser
@@ -163,11 +212,11 @@ href="#veranstaltung_aktiv">Veranstaltung anzeigen und in Wertungen
 berücksichtigen</a>).</p>
 
 <p>Bei Auswahl einer Veranstaltung erscheint die Veranstaltungsübersicht.
-Dort kann man zur Auswertung dieser Veranstaltung springen, Fahrerlisten
-erstellen, die Fahrer und Gruppen verwalten, Ergebnisse eingeben, Einstellungen
-vornehmen, Sektionen aus der Wertung nehmen, die Daten der Veranstaltung
-exportieren, ins Internet synchronisieren, und die Veranstaltung zurücksetzen
-oder löschen.</p>
+Dort kann man zur Auswertung dieser Veranstaltung springen, Fahrer- und
+Sektionslisten erstellen, die Fahrer und Gruppen verwalten, Ergebnisse
+eingeben, Einstellungen vornehmen, Sektionen aus der Wertung nehmen, die Daten
+der Veranstaltung exportieren, ins Internet synchronisieren, und die
+Veranstaltung zurücksetzen oder löschen.</p>
 
 <p>Bei Auswahl einer Veranstaltungsreihe kann man zur Gesamtwertung der
 Veranstaltungsreihe springen, Eigenschaften der Veranstaltungsreihe
@@ -178,9 +227,8 @@ Startnummernänderungen innerhalb der Veranstaltungsreihe vornehmen.</p>
 
 <p>Von der Veranstaltungsübersicht kann man zur Auswertung einer Veranstaltung
 springen. Zunächst erscheint dort eine Standard-Ansicht; durch Auswahl der
-Überschrift kann die Anzeige verändert werden: die Anzeige kann auf bestimmte
-Klassen eingeschränkt werden, und Zusatzinformationen können eingeblendet
-werden.</p>
+Überschrift kann die Anzeige verändert werden (Einschränkung auf bestimmte
+Klassen, Anzeige von Zusatzinformationen, usw.).</p>
 
 <p>Die Einstellungsmöglichkeiten verändern sich entsprechend der Einstellungen
 der Veranstaltung.  Wenn eine bestimmte Einstellung nicht verfügbar ist, kann
@@ -203,6 +251,18 @@ Bildschirm anzuzeigen.  Es ist dazu sinnvoll, die Auswertung in einem
 neuen Fenster zu öffnen, das Fenster auf den weiteren Bildschirm zu
 verschieben, und den Fensterrahmen zu verbergen (in Firefox üblicherweise
 mit der Taste F11).</p>
+
+<p>Die Fahrer werden nach ihrem erwartbaren Ergebnis gereiht, d.h. dass für
+Sektionen, die der Fahrer noch nicht befahren hat, das durchschnittliche
+Ergebnis der Klasse herangezogen wird, und für noch nicht gefahrene Runden der
+Durchschnitt der bisherigen Ergebnisse des Fahrers in der jeweiligen Sektion.</p>
+
+<p>In den Einstellungen kann man wählen, ob die Ergebnisse in der Auswertung
+rundenweise zusammengefasst werden sollen, oder ob die
+<a href="#einzelpunkte">Einzelpunkte</a> angezeigt werden sollen.  In der
+rundenweisen Darstellung blinkt bei Runden, die nur teilweise erfasst sind die
+Rundensumme, und die Anzahl der offenen Sektionen wird angezeigt. (2<sub>3</sub>
+bedeutet beispielsweise zwei Punkte bei drei noch nicht erfassten Sektionen.)</p>
 
 <h2>Fahrerliste und Fahrer auf der Strecke</h2>
 
@@ -229,6 +289,18 @@ hängen vom Typ der Veranstaltung ab (siehe Veranstaltungs-Einstellungen).</p>
 Wettbewerb noch nicht abgeschlossen haben und die nicht ausgefallen sind. Das
 dient dazu, einen Überblick über den aktuellen Stand der Veranstaltung zu
 bekommen.</p>
+
+<h2 id="zone_list">Sektionslisten</h2>
+
+<p>Die Sektionslisten bestehen aus eine Tabelle der Fahrer pro Sektion,
+geordnet nach Startnummer, mit einer Spalte der Punkte pro Runde.  Sie werden
+üblicherweise verwendet, um die Punkte in den Sektionen zu erfassen, geben aber
+am Ende eines Wettbewerbs auch eine Übersicht über die einzelnen erzielten
+Punkte.</p>
+
+<p>In den Anzeigeeinstellungen kann die Anzeige auf bestimmte Sektionen und
+Klassen eingeschränkt werden, sodass auch Teillisten erstellt werden
+können.</p>
 
 <h2>Fahrer</h2>
 
@@ -287,22 +359,59 @@ typischerweise rundenweise.</p>
 Punktefeld eingetragen werden. Die Sektion wird dann mit den in den
 Einstellungen definierten Strafpunkten bewertet.</p>
 
+<p>Im linken oberen Eck der Punktetabelle befindet sich eine kleine
+Doppelpfeil-Schaltfläche.  Durch Betätigung wechselt die Richtung der Pfeile
+von horizontal (⇉) auf vertikal (⇊) und zurück; das gibt die Eingabereihenfolge
+vor.  Bei rundenweiser Eingabe springt der Cursor spaltenweise weiter.  Bei
+sektionsweiser Eingabe (<a href="#zone_list">Sektionslisten</a>) springt der
+Cursor zeilenweise weiter.  Außerdem springt das Formular bei sektionsweiser
+Eingabe nach dem Speichern automatisch auf den nächsten Fahrer in der Sektion;
+bei rundenweiser Eingabe zum Feld für die Eingabe der nächsten Startnummer.
+</p>
+
 <p>Die Punkte von Gruppen ergeben sich aus der Summe der Punkte der Mitglieder.
 Es können aber Gruppen-Zusatzpunkte vergeben und Gruppen als ausgefallen
 markiert werden.</p>
+
+<h3>Punktevergabe bei mobiler Datenerfassung</h3>
+
+<p>Bei Verwendung der mobilen Datenerfassung wird eine Tabelle der mobil
+erfassten Daten in der Punktevergabe angezeigt, zusammen mit dem Zeitpunkt der
+jeweiligen Eingaben.  Die Sektionen sind der Eingabereihenfolge nach farblich
+gekennzeichnet.  In bestimmten Klassen bzw. bei bestimmten Wettbewerben ist die
+Reihenfolge der Sektionen vorgeschrieben; die Farbcodierung erlaubt es, Fehler
+rasch zu erkennen.  Eine automatische Vergabe von Strafpunkten aufgrund solcher
+Fehler erfolgt derzeit nicht.</p>
+
+<p>Während der mobilen Datenerfassung ist die händische Eingabe von Punkten
+nicht möglich.  Die Sperre hebt sich auf, wenn die mobile Datenerfassung in den
+Einstellungen beendet wird (keine Sektionen aktiv) oder wenn die Erfassung für
+einen bestimmten Fahrer beendet wird (Häkchen „aktiv“ in der Punktevergabe
+nicht gesetzt).  Wenn die mobile Datenerfassung nur für einige der Sektionen
+aktiv ist, ist die Eingabe teilweise gesperrt.</p>
+
+<p>Bei der Erfassung der Punkte in den Sektionen ergibt sich die Frage, wie die
+Ergebnisse den einzelnen Runden zugeordnet werden können.  Es muss
+sichergestellt sein, dass die Fahrer alle Sektionen einer Runde abfahren,
+bevor sie die nächste Runde beginnen.  Daher gilt eine Runde als beendet,
+sobald ein Fahrer eine Sektion erneut befährt.  Das setzt auch voraus, dass die
+Ergebnisse in den Sektionen rasch eingegeben werden; bei zeitverzögerter
+Eingabe (z.B. Nachtragen von einer Sektionsliste) kann es zu Unstimmigkeiten in
+der Rundenzählung kommen.  Tritt dieses Problem auf, so müssen die Einzelpunkte
+von Hand korrigiert werden.</p>
 
 <h2>Suche in den Fahrern, Gruppen, und in der Punktevergabe</h2>
 
 <p>Die Suche ist über die Startnummer oder über Bestandteile des Namens
 möglich. Beispiele:
-<ul>
-<li><p>„470“ findet den Fahrer mit der Startnummer 470.</p>
-
-<li><p>„an gr“ findet sowohl Andreas Grünbacher als auch Andreas Gradl.</p>
-
-<li><p>„*bacher“ findet alle Fahrer mit dem Namensbestandteil „bacher“.</p>
-</ul>
 </p>
+<ul>
+<li>„470“ findet den Fahrer mit der Startnummer 470.
+
+<li>„an gr“ findet sowohl Andreas Grünbacher als auch Andreas Gradl.
+
+<li>„*bacher“ findet alle Fahrer mit dem Namensbestandteil „bacher“.
+</ul>
 
 <p>Wenn die Suche kein eindeutiges Ergebnis liefert, werden die Treffer in
 einer Liste angezeigt, aus der der gesuchte Fahrer bzw. die gesuchte Gruppe
@@ -369,6 +478,19 @@ betroffenen Fahrer und Gruppen einzeln aus Wertung&nbsp;1 zu nehmen.</p>
 <p>Das Feld <em>Außer Konkurrenz</em> gibt an, dass Fahrer in dieser Klasse
 nur außer Konkurrenz starten können.</p>
 
+<h3>Mobile Datenerfassung</h3>
+
+<p>Hier wird konfiguriert, in welchen Sektionen die mobile Datenerfassung
+eingesetzt werden soll (Häkchen „Aktiv“).  Die „Registriert“-Häkchen zeigen an,
+für welche Sektionen bereits eine Registrierung vorliegt (d.h. TrialInfo-App
+verbunden und Sektion ausgewählt).  Bei Ausfall eines Mobiltelefons kann eine
+bestehende Registrierung hier zurückgesetzt werden.</p>
+
+<p>Der hier angezeigte QR-Code dient dazu, die TrialInfo-App auf einem
+Mobiltelefon mit der Veranstaltung zu verbinden.  Sollte das Verbinden über den
+QR-Code nicht möglich sein, kann die Verbindung auch über die rechts vom
+QR-Code angezeigten Daten erfolgen.</p>
+
 <h3 id="registered">Nennformular / Sichtbare Felder / Nennungseingang</h3>
 
 <p>Wenn die Einstellung Nennungseingang aktiviert ist, gibt es im
@@ -389,15 +511,15 @@ Nennbüro das <em>Nennungseingang</em>-Häkchen, und der Fahrer kann starten.</p
 
 Diese Liste definiert, welche Zusatzinformationen neben Startnummer und Name in
 den Ergebnislisten angezeigt werden sollen.  Die tatsächlich angezeigten
-Spalten können nachträglich auch nich in den Einstellungen der Auswertung
-angepasst werden.
+Spalten können nachträglich auch in den Einstellungen der Auswertung angepasst
+werden.
 
 <h3>Auswertung / Zusätzliche Informationen</h3>
 
-<p>Durch die Option <em>Einzelpunkte statt Punkteverteilung</em> werden in der
-Auswertung zusätzlich zu den Punkten pro Runde auch die Punkte pro Sektion
-angezeigt, dafür entfallen die Spalten für die Punkteverteilung (Anzahl der
-Nuller usw.)</p>
+<p id="einzelpunkte">Durch die Option <em>Einzelpunkte statt
+Punkteverteilung</em> werden in der Auswertung zusätzlich zu den Punkten pro
+Runde auch die Punkte pro Sektion angezeigt, dafür entfallen die Spalten für
+die Punkteverteilung (Anzahl der Nuller usw.)</p>
 
 <p>Durch die Option <em>Spalte für Fünfer in Punkteverteilung</em> wird auch die
 Anzahl der Fünfer angezeigt, falls die Punkteverteilung angezeigt wird. (Die
@@ -489,19 +611,21 @@ Wertungsberechnung ignoriert, aber nicht endgültig gelöscht.</p>
 
 <p>Hier kann eine Veranstaltung auf einen definierten Stand zurückgesetzt
 werden. Die Auswahlmöglichkeiten sind:
-<ul>
-<li><p>Start: löscht alle aus der Wertung genommenen Sektionen und alle Daten
-der Punktevergabe außer der Startzeit.  Die Nennungen von Fahrern und Gruppen
-sind davon nicht betroffen.</p>
+</p>
 
-<li><p>Nennbeginn: Löscht zusätzlich <em>Nennungseingang</em>, <em>Start</em>,
+<ul>
+<li>Start: löscht alle aus der Wertung genommenen Sektionen und alle Daten
+der Punktevergabe außer der Startzeit.  Die Nennungen von Fahrern und Gruppen
+sind davon nicht betroffen.
+
+<li>Nennbeginn: Löscht zusätzlich <em>Nennungseingang</em>, <em>Start</em>,
 die Startzeit und das Nenngeld aller Fahrer und Gruppen.
 Wenn in der vorigen Veranstaltung Fahrer oder Gruppen für den <em>Start</em>
 bei dieser Veranstaltung markiert sind, wird bei diesen Fahrern und Gruppen
-<em>Start</em> gesetzt und <em>Nennungseingang</em> übernommen.</p>
+<em>Start</em> gesetzt und <em>Nennungseingang</em> übernommen.
 
-<li><p>Stammdaten: Löscht alles außer den Stammdaten der Fahrer und Gruppen,
-also auch die Startnummern und Lizenznummern.</p>
+<li>Stammdaten: Löscht alles außer den Stammdaten der Fahrer und Gruppen,
+also auch die Startnummern und Lizenznummern.
 </ul>
 
 <p>Nach einer Rückfrage wird die Veranstaltung zurückgesetzt. Achtung, die dabei
