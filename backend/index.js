@@ -55,7 +55,7 @@ var views = {
   'otsv.html': require('./views/otsv.marko.js'),
   'acup.html': require('./views/acup.marko.js'),
   'bike.html': require('./views/bike.marko.js'),
-  'ekids.html': require('./views/ekids.marko.js'),
+  'ecup.html': require('./views/ecup.marko.js'),
   'other.html': require('./views/other.marko.js'),
   '2019.html': require('./views/2019.marko.js'),
   '2020.html': require('./views/2020.marko.js'),
@@ -5916,7 +5916,7 @@ app.get('/', conn(pool), function(req, res, next) {
 app.get('/otsv.html', conn(pool), serie_index(views['otsv.html']));
 app.get('/acup.html', conn(pool), serie_index(views['acup.html']));
 app.get('/bike.html', conn(pool), serie_index(views['bike.html']));
-app.get('/ekids.html', conn(pool), serie_index(views['ekids.html']));
+app.get('/ecup.html', conn(pool), serie_index(views['ecup.html']));
 app.get('/other.html', conn(pool), serie_index(views['other.html']));
 app.get('/2019.html', conn(pool), serie_index(views['2019.html']));
 app.get('/2020.html', conn(pool), serie_index(views['2020.html']));
