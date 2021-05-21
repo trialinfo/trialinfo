@@ -182,18 +182,25 @@ var eventController = [
 	  }
 	} else if (event.type.match(/^otsv-ecup/)) {
 	  if (class_ == 1) {
+	    $scope.min_age_year = 2;
 	    $scope.max_age_year = 6;
 	  } else if (class_ == 2) {
 	    $scope.min_age_year = 7;
 	    $scope.max_age_year = 8;
 	  } else if (class_ == 3) {
-	    // $scope.min_age_year = 7;
+	    $scope.min_age_year = 2;
 	    $scope.max_age_year = 9;
 	  } else if (class_ == 4) {
 	    $scope.min_age_year = 10;
-	    $scope.max_age_year = 15;
+	    $scope.max_age_year = 12;
 	  } else if (class_ == 5 || class_ == 6) {
-	    $scope.max_age_year = 15;
+	    $scope.min_age_year = 2;
+	    $scope.max_age_year = 12;
+	  } else if (class_ == 7) {
+	    $scope.min_age_year = 10;
+	    $scope.max_age_year = 16;
+	  } else if (class_ >= 8 && class_ <= 11) {
+	    $scope.min_age_year = 13;
 	  }
 	}
       }
