@@ -2569,28 +2569,37 @@ async function get_event_results(connection, id) {
 
     for (let rc in riders_by_ranking_class) {
       for (let rider of riders_by_ranking_class[rc]) {
+	rider.skipped_event = 0;
 	rider.unfinished_zones = 0;
 	for (let ev = 0; ev < events.length; ev++) {
 	  let result = rider.results[ev];
-	  if (!result || result.failure || result.non_competing ||
-	      result.unfinished_zones != 0) {
-	    if (result && !(result.failure || result.non_competing)) {
-	      rider.unfinished_zones += result.unfinished_zones || 0;
-	      ev++;
-	    }
-	    /*
-	     * Instead of computing the actual number of zones in this class in
-	     * each unfinished event, we simply add 1000, assuming that no event
-	     * will ever have more than 1000 zones to ride.
-	     */
-	    rider.unfinished_zones += (events.length - ev) * 1000;
-	    break;
+	  if (!result || result.failure || result.non_competing) {
+	    if (rider.skipped_event == 0)
+	      rider.skipped_event = ev + 1;
+	  } else {
+	    rider.unfinished_zones += result.unfinished_zones || 0;
 	  }
 	}
 	for (let ev = 0; ev < events.length; ev++) {
 	  let result = rider.results[ev];
 	  if (result)
 	    delete result.unfinished_zones;
+	}
+
+	if (rider.skipped_event) {
+	  non_competing: {
+	    let result_0 = rider.results[0];
+	    if (!result_0)
+	      break non_competing;
+	    for (let ev = 1; ev < events.length; ev++) {
+	      let result_n = rider.results[ev];
+	      if (!result_n)
+		break non_competing;
+	      if (result_0.non_competing != result_n.non_competing)
+		break non_competing;
+	    }
+	    rider.non_competing = result_0.non_competing;
+	  }
 	}
       }
     }
@@ -2697,6 +2706,7 @@ async function get_event_results(connection, id) {
 	}
       }
       delete rider.rankings;
+      delete rider.skipped_event;
       delete rider.unfinished_zones;
       return rider;
     }
