@@ -2578,6 +2578,22 @@ async function get_event_results(connection, id) {
 	  if (result)
 	    delete result.unfinished_zones;
 	}
+
+	if (rider.skipped_event) {
+	  non_competing: {
+	    let result_0 = rider.results[0];
+	    if (!result_0)
+	      break non_competing;
+	    for (let ev = 1; ev < events.length; ev++) {
+	      let result_n = rider.results[ev];
+	      if (!result_n)
+		break non_competing;
+	      if (result_0.non_competing != result_n.non_competing)
+		break non_competing;
+	    }
+	    rider.non_competing = result_0.non_competing;
+	  }
+	}
       }
     }
 
