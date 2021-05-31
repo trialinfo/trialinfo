@@ -315,6 +315,7 @@ function compute_event(cached_riders, event, compute_marks) {
       }
 
       let cmp =
+	(a.skipped_event - b.skipped_event) ||
 	(a.non_competing - b.non_competing) ||
 	(!b.failure - !a.failure) ||
 	(a.failure &&
@@ -496,7 +497,7 @@ function compute_event(cached_riders, event, compute_marks) {
       rider.additional_marks = null;
     } else {
       for (let field of ['marks', 'marks_distribution', 'marks_per_round',
-			 'unfinished_zones', 'additional_marks'])
+			 'skipped_event', 'unfinished_zones', 'additional_marks'])
 	rider[field] = cached_rider[field];
     }
     riders.push(rider);
