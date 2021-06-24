@@ -220,8 +220,6 @@ table.ranking tr td.important {
 	    <td ng-if-start="!rider.failure" style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rider.marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-repeat="k in distribution" class="distribution {{rider.decisive_marks == k ? 'important' : ''}}">{{rider.marks_distribution[k]}}</td>
-	    <td ng-if-end style="display:none"></td>
-	    <td ng-if-start="!rider.failure" style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:left" ng-if="features.explain_rank && class_ranking.explain_rank">{{explain_rank(class_ranking.riders, $index)}}</td>
 	    <td ng-if-end style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.scores">{{rider.score | fractional}}</td>
