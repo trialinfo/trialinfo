@@ -344,7 +344,7 @@ var eventResultsController = [
       }
       return marks.map(
         (marks) => rider.marks_distribution[marks] + '×' +
-		   marks + (features.uci_x10 ? '0' : '')
+		   marks + (event.uci_x10 ? '0' : '')
       ).join(', ');
     }
 
