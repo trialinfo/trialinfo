@@ -193,6 +193,17 @@ async function column_exists(connection, table, column) {
 }
 
 async function update_database(connection) {
+  if (!await column_exists(connection, 'events', 'ctime')) {
+    console.log('Adding column `ctime` to table `events`');
+    await connection.queryAsync(`
+      ALTER TABLE events
+      ADD ctime TIMESTAMP NULL DEFAULT NULL AFTER date
+    `);
+    await connection.queryAsync(`
+      UPDATE events
+      SET ctime = mtime
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1647,7 +1658,9 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
     }
 
     event = cache.modify_event(id);
-    event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+    let current_timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+    event.ctime = current_timestamp;
+    event.mtime = current_timestamp;
 
     compute_update_event(id, event);
 
@@ -2026,8 +2039,10 @@ async function admin_save_event(connection, id, event, version, reset, email) {
       if (event.access_token == null)
 	event.access_token = random_tag();
 
-      event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+      let current_timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
       event = Object.assign(cache.modify_event(id), event);
+      event.ctime = current_timestamp;
+      event.mtime = current_timestamp;
 
       if (reset) {
 	let base_event = await get_event(connection, base_id);
@@ -4734,7 +4749,9 @@ async function register_save_rider(connection, id, number, rider, user, query) {
      */
 
     event = cache.modify_event(id);
-    event.mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+    let current_timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+    event.ctime = current_timestamp;
+    event.mtime = current_timestamp;
 
     await cache.commit(transaction, true);
     if (!old_rider) {
@@ -5517,7 +5534,8 @@ async function scoring_get_info(connection, id) {
       zones: [],
       skipped_zones: {}
     },
-    riders: {}
+    riders: {},
+    ctime: event.ctime
   };
   for (let field of ['date', 'location', 'four_marks', 'uci_x10']) {
     hash.event[field] = event[field];
@@ -5709,9 +5727,9 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 	log_sql(sql);
 	await connection.queryAsync(sql);
       }
-      let mtime = moment().format('YYYY-MM-DD HH:mm:ss');
+      let current_timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
       let sql = `UPDATE events
-        SET mtime = ${connection.escape(mtime)}, recompute = 1
+        SET mtime = ${connection.escape(current_timestamp)}, recompute = 1
 	WHERE id = ${connection.escape(id)}`;
       log_sql(sql);
       await connection.queryAsync(sql);
@@ -5719,7 +5737,7 @@ async function scoring_update(connection, scoring_device, id, query, data) {
 
       let event = cache.get_event(id);
       if (event) {
-	event.mtime = mtime;
+	event.mtime = current_timestamp;
 	event.recompute = true;
 	(async function() {
 	  try {
