@@ -524,6 +524,9 @@ function compute_event(cached_riders, event, compute_marks) {
   }
 
   function rider_not_split(rider) {
+    if (event.main_ranking != null &&
+	rider.rankings[event.main_ranking - 1])
+      return true;
     for (let n = 0; n < event.rankings.length; n++) {
       try {
 	if (event.rankings[n].split && rider.rankings[n])

@@ -69,6 +69,7 @@ CREATE TABLE `events` (
   `subtitle` varchar(70) DEFAULT NULL,
   `location` varchar(40) DEFAULT NULL,
   `date` date DEFAULT NULL,
+  `ctime` timestamp NULL DEFAULT NULL,
   `mtime` timestamp NULL DEFAULT NULL,
   `type` varchar(20) DEFAULT NULL,
   `enabled` tinyint(1) DEFAULT NULL,
