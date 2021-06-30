@@ -342,6 +342,8 @@ var cache = {
   },
   modify_riders: function(id) {
     this._access_event(id);
+    if (!this.cached_riders[id])
+      this.cached_riders[id] = {};
     for (let number in this.cached_riders[id])
       this.modify_rider(id, number);
     return this.cached_riders[id];
