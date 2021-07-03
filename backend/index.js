@@ -3949,6 +3949,7 @@ async function update_event(connection, id, old_event, new_event, update_version
     zones: true,
     skipped_zones: true,
     features: true,
+    ctime: true,
     mtime: true,
     version: true,
     result_columns: true,
