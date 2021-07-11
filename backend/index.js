@@ -265,6 +265,7 @@ function Transaction(connection, release) {
  */
 var cache = {
   mutex: new Mutex(),
+
   cached_event_timestamps: {},
   cached_events: {},
   saved_events: {},
@@ -273,6 +274,9 @@ var cache = {
   cached_scoring_canceled_items: {},
   cached_scoring_seq: {},
   cached_compute_rounds: {},
+
+  cached_riders: {},
+  saved_riders: {},
 
   _access_event: function(id) {
     this.cached_event_timestamps[id] = Date.now();
@@ -300,16 +304,22 @@ var cache = {
     return this.cached_events[id];
   },
   delete_event: function(id) {
-    this._access_event(id);
-    delete this.saved_events[id];
+    delete this.cached_event_timestamps[id];
     delete this.cached_events[id];
+    delete this.saved_events[id];
+    delete this.cached_scoring_items[id];
+    delete this.cached_scoring_items_time[id];
+    delete this.cached_scoring_canceled_items[id];
+    delete this.cached_scoring_seq[id];
+    delete this.cached_compute_rounds[id];
+
+    delete this.cached_riders[id];
+    delete this.saved_riders[id];
   },
 
   /*
    * Riders include the groups of riders as well (rider.group trueish).
    */
-  cached_riders: {},
-  saved_riders: {},
   get_riders: function(id) {
     this._access_event(id);
     return this.cached_riders[id] || {};
@@ -581,14 +591,7 @@ var cache = {
       let accessed = this.cached_event_timestamps[id];
       if (accessed < expiry) {
 	console.log('Expiring cache for event ' + id);
-	delete this.cached_events[id];
-	delete this.cached_riders[id];
-	delete this.cached_event_timestamps[id];
-	delete this.cached_scoring_items[id];
-	delete this.cached_scoring_items_time[id];
-	delete this.cached_scoring_canceled_items[id];
-	delete this.cached_scoring_seq[id];
-	delete this.cached_compute_rounds[id];
+	this.delete_event(id);
       }
     }
   }
