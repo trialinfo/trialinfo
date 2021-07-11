@@ -3979,8 +3979,10 @@ async function update_event(connection, id, old_event, new_event, update_version
     }
 
     /* Don't account for mtime changes in the version.  */
-    if (!(old_event || {}).mtime != new_event.mtime)
-      nonkeys.push('mtime');
+    for (let field of ['ctime', 'mtime']) {
+      if ((old_event || {})[field] != new_event[field])
+	nonkeys.push(field);
+    }
   }
 
   await update(connection, 'events',
