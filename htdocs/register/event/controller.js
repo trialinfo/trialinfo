@@ -192,10 +192,10 @@ var eventController = [
 	    $scope.max_age_year = 9;
 	  } else if (class_ == 4) {
 	    $scope.min_age_year = 10;
-	    $scope.max_age_year = 12;
+	    $scope.max_age_year = 13;
 	  } else if (class_ == 5 || class_ == 6) {
 	    $scope.min_age_year = 2;
-	    $scope.max_age_year = 12;
+	    $scope.max_age_year = 13;
 	  } else if (class_ == 7) {
 	    $scope.min_age_year = 10;
 	    $scope.max_age_year = 16;
