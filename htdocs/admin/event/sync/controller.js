@@ -266,12 +266,12 @@ var syncController = [
       let target_dump = dump_without_scoring($scope.target_dump);
       $scope.target_patch = json_diff(target_dump, source_dump);
 
-      /*
       let scoring_active = $scope.source_dump.event.scoring_zones
         .some(function(enabled) { return enabled; });
-      */
 
-      if ($scope.target_patch.length || Object.keys(source_scoring).length /*|| scoring_active*/) {
+      if ($scope.target_patch.length ||
+	  Object.keys(source_scoring).length ||
+	  scoring_active) {
 	let seq = Object.assign({}, $scope.target_seq);
 	update_seq(seq, $scope.target_dump.scoring);
 	var params = {
