@@ -5275,7 +5275,6 @@ async function update_event_scoring(connection, id, scoring) {
   let max_device;
 
   for (let device_tag of Object.keys(scoring)) {
-    console.log(device_tag);
     let cached_seq = cache.scoring_seq(id);
     let last_known_seq = cached_seq[device_tag];
     let items = scoring[device_tag];
@@ -5302,6 +5301,7 @@ async function update_event_scoring(connection, id, scoring) {
     }
   }
 
+  /* FIXME: Skip when nothing has changed! */
   let sql = `DELETE FROM scoring_seq WHERE id = ${connection.escape(id)}`;
   log_sql(sql);
   await connection.queryAsync(sql);
