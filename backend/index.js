@@ -5275,7 +5275,6 @@ async function update_event_scoring(connection, id, scoring) {
   let max_device;
 
   for (let device_tag of Object.keys(scoring)) {
-    console.log(device_tag);
     let cached_seq = cache.scoring_seq(id);
     let last_known_seq = cached_seq[device_tag];
     let items = scoring[device_tag];
@@ -5302,6 +5301,7 @@ async function update_event_scoring(connection, id, scoring) {
     }
   }
 
+  /* FIXME: Skip when nothing has changed! */
   let sql = `DELETE FROM scoring_seq WHERE id = ${connection.escape(id)}`;
   log_sql(sql);
   await connection.queryAsync(sql);
@@ -5489,7 +5489,10 @@ async function admin_dump_event(connection, id, email, seq) {
 }
 
 async function admin_patch_event(connection, id, body, query, email) {
-  let event0 = await export_event(connection, id, email, query.seq || {});
+  let seq = {};
+  if (query.seq)
+    seq = JSON.parse(decodeURIComponent(query.seq));
+  let event0 = await export_event(connection, id, email, seq);
   delete event0.seq;
   let event1 = clone(event0, false);
 
