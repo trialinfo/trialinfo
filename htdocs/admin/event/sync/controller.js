@@ -242,7 +242,7 @@ var syncController = [
 	  .then(function(response) {
 	    update_seq($scope.source_seq, target_scoring);
 	    $scope.target_dump.scoring = {};
-	    /* response.scoring could end up non-empty here, but that doesn't
+	    /* response.data.scoring could end up non-empty here, but that doesn't
 	     * matter because we'll pick up any additional scoring items in the
 	     * next iteration.  */
 	  })
@@ -290,7 +290,7 @@ var syncController = [
 	  .then(function(response) {
 	    update_seq($scope.target_seq, source_scoring);
 	    $scope.target_dump = Object.assign({}, $scope.source_dump);
-	    $scope.target_dump.scoring = response.scoring;
+	    $scope.target_dump.scoring = response.data.scoring;
 	    $scope.source_dump.scoring = {};
 	    delete $scope.target_patch;
 	    delete $scope.target_error;
