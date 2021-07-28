@@ -5291,10 +5291,7 @@ async function title_of_copy(connection, event) {
 */
 
 async function update_event_scoring(connection, id, scoring) {
-  let cache_updated = false;
-
-  let max_device;
-
+  let max_seq = {};
   for (let device_tag of Object.keys(scoring)) {
     let cached_seq = cache.scoring_seq(id);
     let last_known_seq = cached_seq[device_tag];
@@ -5302,6 +5299,7 @@ async function update_event_scoring(connection, id, scoring) {
     for (let item of items) {
       if (item.seq <= last_known_seq)
 	continue;
+      max_seq[device_tag] = Math.max(max_seq[device_tag] || 0, item.seq);
 
       item = Object.assign({}, item, {
 	id: id,
@@ -5322,19 +5320,17 @@ async function update_event_scoring(connection, id, scoring) {
     }
   }
 
-  /* FIXME: Skip when nothing has changed! */
-  let sql = `DELETE FROM scoring_seq WHERE id = ${connection.escape(id)}`;
-  log_sql(sql);
-  await connection.queryAsync(sql);
-  sql = `
-    INSERT INTO scoring_seq (id, device, seq)
-    SELECT id, device, MAX(seq) AS seq
-    FROM scoring_marks
-    WHERE id = ${connection.escape(id)}
-    GROUP BY device
-  `;
-  log_sql(sql);
-  await connection.queryAsync(sql);
+  for (let device_tag in max_seq) {
+    let sql = `
+      INSERT INTO scoring_seq
+      SET id = ${connection.escape(id)},
+	  device = ${connection.escape(device_tag)},
+	  seq = ${connection.escape(max_seq[device_tag])}
+      ON DUPLICATE KEY UPDATE seq = ${connection.escape(max_seq[device_tag])}
+    `;
+    log_sql(sql);
+    await connection.queryAsync(sql);
+  }
 }
 
 async function import_event(connection, existing_id, data, email) {
