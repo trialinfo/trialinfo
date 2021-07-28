@@ -48,6 +48,11 @@ var Mutex = require('async-mutex').Mutex;
 
 var config = JSON.parse(fs.readFileSync('config.json'));
 
+try {
+  config.version = fs.readFileSync('version.txt').toString().trim();
+} catch (error) {
+}
+
 const cache_max_age = 5 * 60 * 1000;  /* 5 min */
 
 var views = {
@@ -5872,6 +5877,7 @@ function query_string(query) {
 }
 
 var admin_config = {
+  version: config.version,
   admin: true,
   weasyprint: config.weasyprint,
   url: config.url,

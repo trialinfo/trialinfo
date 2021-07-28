@@ -40,6 +40,11 @@ $(MARKO_FILES:%=%.js): $(MARKOC)
 %.marko.js: %.marko
 	cd backend && ../$(MARKOC) ../$<
 
+.PHONY: backend/version.txt
+backend/version.txt:
+	@git describe --tag --match "trialinfo-*" | sed -e 's:^trialinfo-::' > $@.tmp
+	@if cmp $@ $@.tmp 2>/dev/null; then rm $@.tmp; else echo $@; mv $@.tmp $@; fi
+
 start: $(MARKO_FILES:%=%.js)
 	cd backend && npm start
 

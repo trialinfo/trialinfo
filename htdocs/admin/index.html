@@ -45,6 +45,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="serie/controller.js"></script>
     <script src="serie/results/controller.js"></script>
     <script src="import/controller.js"></script>
+    <script src="help/controller.js"></script>
     <script>
       application.config([
         '$routeProvider',
@@ -139,7 +140,9 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      resolve: importController.resolve,
 	      reloadOnSearch: false
 	    }).when('/help', {
-	      templateUrl: 'help/index.html'
+	      title: 'Hilfe',
+	      controller: 'helpController',
+	      templateUrl: 'help/view.html'
 	    }).otherwise({
 	      redirectTo: '/'
 	    });

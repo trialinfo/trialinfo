@@ -7,6 +7,8 @@ var mainController = [
       $scope.user = JSON.parse(atob($cookies.get('trialinfo.session'))).passport.user;
     } catch (_) { }
 
+    $scope.config = config;
+
     $scope.events = events;
     $scope.series = series;
     $scope.show = {};

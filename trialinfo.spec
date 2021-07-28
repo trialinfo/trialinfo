@@ -45,6 +45,7 @@ install -m 644 systemd/%{name}.service systemd/%{name}.socket \
 	%{buildroot}/etc/systemd/system/
 install -m 644 systemd/%{name}.service systemd/%{name}-secure.socket \
 	%{buildroot}/etc/systemd/system/
+echo %{VERSION} > %{buildroot}/var/lib/%{name}/backend/version.txt
 
 %post
 useradd --system trialinfo || [ $? -eq 9 ]
