@@ -216,7 +216,7 @@
 	  <select ng-model="rider.class" ng-disabled="rider.number > 0" required ng-options="class.class as class.name disable when class_disabled[class.class - 1] for class in defined_classes" name="class">
 	    <option value=""></option>
 	  </select><span ng-if="required_error(form.class)" style="color:red">*</span><span ng-if="event.classes[rider.class - 1].ranking_class != rider.class" style="color:green">*</span>
-	  <span ng-if="age && age_year" style="color:red">
+	  <span ng-if="age && age_year && otsv_event() && !rider.rankings[1]" style="color:red">
 	    <span ng-if="min_age && age < min_age" style="display:block">
 	      <em>Fahrer ist unter {{min_age}} Jahre alt, und darf in Klasse „{{event.classes[rider.class - 1].name}}“ noch nicht starten.</em>
 	    </span>
@@ -229,6 +229,15 @@
 	    <span ng-if="max_age_year && age_year > max_age_year" style="display:block">
 	      <em>Fahrer ist vor Jahrgang {{year_for_age(max_age_year)}} geboren, und darf in Klasse „{{event.classes[rider.class - 1].name}}“ nicht mehr starten.</em>
 	    </span>
+	  </span>
+	</td>
+      </tr>
+      <tr ng-if="event.rankings[1]">
+	<th><label for="class">Wertungen</label></th>
+	<td>
+	  <span ng-repeat="ranking in event.rankings">
+	    <input type="checkbox" ng-model="rider.rankings[$index]" id="ranking{{$index}}" ng-disabled="rider.number > 0">
+	    <label for="ranking{{$index}}">{{event.rankings[$index].name}}</label>
 	  </span>
 	</td>
       </tr>
