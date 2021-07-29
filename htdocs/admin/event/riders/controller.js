@@ -1,9 +1,9 @@
 'use strict';
 
 var ridersController = [
-  '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window', 'setFocus',
+  '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window', '$document', 'setFocus',
   'riderName', 'riderInfo', 'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
-  function ($scope, $sce, $http, $timeout, $q, $route, $location, $window, setFocus,
+  function ($scope, $sce, $http, $timeout, $q, $route, $location, $window, $document, setFocus,
 	    riderName, riderInfo, event, suggestions, groups, riders_hash, groups_hash) {
     $scope.$root.context(event.title);
 
@@ -779,23 +779,45 @@ var ridersController = [
       });
     }
 
-    /* FIXME: Wie kann dieser Code für alle Formulare verallgemeinert werden? */
-    $scope.keydown = function(event) {
-      if (event.which == 13 &&
-	  (document.activeElement.tagName != "TEXTAREA" || event.ctrlKey)) {
+    function keydownHandler(event) {
+      if (event.key == 'PageUp') {
+	event.preventDefault();
+	if (!$scope.modified()) {
+	  if ($scope.rider)
+	    $scope.load_previous_rider();
+	  else
+	    $scope.load_first_rider();
+	}
+      } else if (event.key == 'PageDown') {
+	event.preventDefault();
+	if (!$scope.modified()) {
+	  if ($scope.rider)
+	    $scope.load_next_rider();
+	  else
+	    $scope.load_last_rider();
+	}
+      } else if (event.key == 'Enter' &&
+		 (document.activeElement.tagName != "TEXTAREA" ||
+		  event.ctrlKey)) {
 	event.preventDefault();
 	$timeout(function() {
-	  if ($scope.modified() && $scope.form.$valid)
-	    $scope.save();
-	});
-      } else if (event.which == 27) {
+	  if ($scope.modified()) {
+	    if ($scope.form.$valid)
+	      $scope.save();
+	  }});
+      } else if (event.key == 'Escape') {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() || $scope.enabled.discard)
 	    $scope.discard();
 	});
       }
-    };
+    }
+
+    $document.on('keydown', keydownHandler);
+    $scope.$on('$destroy', () => {
+      $document.off('keydown', keydownHandler);
+    });
 
     warn_before_unload($scope, $scope.modified);
 

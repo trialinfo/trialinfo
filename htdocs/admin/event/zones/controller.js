@@ -1,8 +1,8 @@
 'use strict';
 
 var zonesController = [
-  '$scope', '$http', '$timeout', 'event',
-  function ($scope, $http, $timeout, event) {
+  '$scope', '$http', '$timeout', '$document', 'event',
+  function ($scope, $http, $timeout, $document, event) {
     $scope.$root.context(event.title);
 
     $scope.starting_classes = function() {
@@ -94,21 +94,28 @@ var zonesController = [
       assign_event(undefined);
     };
 
-    $scope.keydown = function(event) {
-      if (event.which == 13) {
+    function keydownHandler(event) {
+      if (event.key == 'Enter' &&
+	  (document.activeElement.tagName != "TEXTAREA" ||
+	   event.ctrlKey)) {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() && $scope.form.$valid)
 	    $scope.save();
 	});
-      } else if (event.which == 27) {
+      } else if (event.key == 'Escape') {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.discard();
 	});
       }
-    };
+    }
+
+    $document.on('keydown', keydownHandler);
+    $scope.$on('$destroy', () => {
+      $document.off('keydown', keydownHandler);
+    });
 
     warn_before_unload($scope, $scope.modified);
   }];

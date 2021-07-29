@@ -1,8 +1,8 @@
 'use strict';
 
 var serieController = [
-  '$scope', '$http', '$timeout', '$location', '$window', 'eventName', 'serie', 'events',
-  function ($scope, $http, $timeout, $location, $window, eventName, serie, events) {
+  '$scope', '$http', '$timeout', '$location', '$window', '$document', 'eventName', 'serie', 'events',
+  function ($scope, $http, $timeout, $location, $window, $document, eventName, serie, events) {
     $scope.$root.context(serie ? serie.name : 'Neue Veranstaltungsreihe');
 
     var event_dates = {};
@@ -293,21 +293,28 @@ var serieController = [
       }
     };
 
-    $scope.keydown = function(event) {
-      if (event.which == 13) {
+    function keydownHandler(event) {
+      if (event.key == 'Enter' &&
+	  (document.activeElement.tagName != "TEXTAREA" ||
+	   event.ctrlKey)) {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() && $scope.form.$valid)
 	    $scope.save();
 	});
-      } else if (event.which == 27) {
+      } else if (event.key == 'Escape') {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.discard();
 	});
       }
-    };
+    }
+
+    $document.on('keydown', keydownHandler);
+    $scope.$on('$destroy', () => {
+      $document.off('keydown', keydownHandler);
+    });
 
     $scope.in_serie = function(event) {
       var events = $scope.serie.events;

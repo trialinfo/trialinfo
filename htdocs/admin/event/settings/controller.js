@@ -1,8 +1,8 @@
 'use strict';
 
 var settingsController = [
-  '$scope', '$sce', '$http', '$timeout', '$location', 'eventName', 'event', 'events',
-  function ($scope, $sce, $http, $timeout, $location, eventName, event, events) {
+  '$scope', '$sce', '$http', '$timeout', '$location', '$document', 'eventName', 'event', 'events',
+  function ($scope, $sce, $http, $timeout, $location, $document, eventName, event, events) {
     $scope.$root.context(event ? event.title : 'Neue Veranstaltung');
     $scope.internal = {
       base: null,
@@ -390,22 +390,28 @@ var settingsController = [
       assign_event(undefined);
     }
 
-    $scope.keydown = function(event) {
-      if (event.which == 13 &&
-	  (document.activeElement.tagName != "TEXTAREA" || event.ctrlKey)) {
+    function keydownHandler(event) {
+      if (event.key == 'Enter' &&
+	  (document.activeElement.tagName != "TEXTAREA" ||
+	   event.ctrlKey)) {
 	event.preventDefault();
 	$timeout(function() {
-	  if ($scope.modified())
+	  if ($scope.modified() && $scope.form.$valid)
 	    $scope.save();
 	});
-      } else if (event.which == 27) {
+      } else if (event.key == 'Escape') {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.discard();
 	});
       }
-    };
+    }
+
+    $document.on('keydown', keydownHandler);
+    $scope.$on('$destroy', () => {
+      $document.off('keydown', keydownHandler);
+    });
 
     warn_before_unload($scope, $scope.modified);
 

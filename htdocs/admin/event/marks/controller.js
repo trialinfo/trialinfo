@@ -1,8 +1,8 @@
 'use strict';
 
 var marksController = [
-  '$scope', '$sce', '$http', '$timeout', '$route', '$location', 'setFocus', 'riderName', 'riderInfo', 'event',
-  function ($scope, $sce, $http, $timeout, $route, $location, setFocus, riderName, riderInfo, event) {
+  '$scope', '$sce', '$http', '$timeout', '$route', '$location', '$document', 'setFocus', 'riderName', 'riderInfo', 'event',
+  function ($scope, $sce, $http, $timeout, $route, $location, $document, setFocus, riderName, riderInfo, event) {
     $scope.$root.context(event.title);
 
     $scope.event = event;
@@ -772,8 +772,26 @@ var marksController = [
       } catch (_) {}
     };
 
-    $scope.keydown = function(event) {
-      if (event.which == 13) {
+    function keydownHandler(event) {
+      if (event.key == 'PageUp') {
+	event.preventDefault();
+	if (!$scope.modified()) {
+	  if ($scope.rider)
+	    $scope.load_previous_rider();
+	  else
+	    $scope.load_first_rider();
+	}
+      } else if (event.key == 'PageDown') {
+	event.preventDefault();
+	if (!$scope.modified()) {
+	  if ($scope.rider)
+	    $scope.load_next_rider();
+	  else
+	    $scope.load_last_rider();
+	}
+      } else if (event.key == 'Enter' &&
+		 (document.activeElement.tagName != "TEXTAREA" ||
+		  event.ctrlKey)) {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified()) {
@@ -784,14 +802,19 @@ var marksController = [
 	    if (current_zone)
 	      $scope.load_next_rider(current_zone);
 	  }});
-      } else if (event.which == 27) {
+      } else if (event.key == 'Escape') {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified())
 	    $scope.discard();
 	});
       }
-    };
+    }
+
+    $document.on('keydown', keydownHandler);
+    $scope.$on('$destroy', () => {
+      $document.off('keydown', keydownHandler);
+    });
 
     warn_before_unload($scope, $scope.modified);
 
