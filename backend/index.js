@@ -4041,7 +4041,8 @@ const register_event_fields = {
   registration_info: true,
   type: true,
   country: true,
-  version: true
+  version: true,
+  rankings: true
 };
 
 async function register_get_event(connection, id, user) {
@@ -4088,6 +4089,7 @@ const register_rider_fields = {
   number: true,
   phone: true,
   province: true,
+  rankings: true,
   registered: true,
   registration: true,
   rider_comment: true,
@@ -4716,9 +4718,10 @@ async function register_save_rider(connection, id, number, rider, user, query) {
 	if (!register_rider_fields[key])
 	  delete rider[key];
       });
+      if (rider.number > 0)
+	delete rider.rankings;
       rider.number = +number;
 
-      delete rider.rankings;
       if (old_rider) {
 	if (old_rider.number > 0)
 	  delete rider['class'];

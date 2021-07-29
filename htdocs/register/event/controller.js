@@ -92,9 +92,16 @@ var eventController = [
       if (rider == null)
 	return;
 
+      let damencup = rider.rankings[1];
+
       if (event.type != null &&
 	  event.type.match(/^otsv(\+amf)?$/)) {
-	if ($scope.age_year) {
+	if (damencup) {
+	  if ((rider.class >= 1 && rider.class <= 4) ||
+	      rider.class == 6 ||
+	      (rider.class >= 11 && rider.class <= 13))
+	    rider.class = 5;
+	} else if ($scope.age_year) {
 	  if ($scope.age_year >= 45) {
 	    if (rider.class == 3)
 	      rider.class = 4;
@@ -108,26 +115,28 @@ var eventController = [
 	  }
 	}
 
-	disable_class(3, $scope.age_year && $scope.age_year >= 45);
-	disable_class(4, $scope.age_year && $scope.age_year < 45);
-	disable_class(5, $scope.age_year && $scope.age_year >= 45);
-	disable_class(6, $scope.age_year && $scope.age_year < 45);
+	disable_class(1, damencup);
+	disable_class(2, damencup);
+	disable_class(3, ($scope.age_year && $scope.age_year >= 45) || damencup);
+	disable_class(4, ($scope.age_year && $scope.age_year < 45) || damencup);
+	disable_class(5, $scope.age_year && $scope.age_year >= 45 && !damencup);
+	disable_class(6, ($scope.age_year && $scope.age_year < 45) || damencup);
 
-	disable_class(11, $scope.age && $scope.age < 14);
-	disable_class(12, ($scope.age && $scope.age < 12) ||
-			  ($scope.age_year && $scope.age_year > 17));
-	disable_class(13, ($scope.age && $scope.age < 10) ||
-			  ($scope.age_year && $scope.age_year > 15));
+	disable_class(11, ($scope.age && $scope.age < 14) || damencup);
+	disable_class(12, (($scope.age && $scope.age < 12) ||
+			   ($scope.age_year && $scope.age_year > 17)) || damencup);
+	disable_class(13, (($scope.age && $scope.age < 10) ||
+			   ($scope.age_year && $scope.age_year > 15)) || damencup);
       }
 
       $scope.form.$setValidity('min-age',
-	!$scope.min_age || $scope.age >= $scope.min_age);
+	!$scope.min_age || $scope.age >= $scope.min_age || damencup);
       $scope.form.$setValidity('max-age',
-	!$scope.max_age || $scope.age <= $scope.max_age);
+	!$scope.max_age || $scope.age <= $scope.max_age || damencup);
       $scope.form.$setValidity('min-age-year',
-	!$scope.min_age_year || $scope.age_year >= $scope.min_age_year);
+	!$scope.min_age_year || $scope.age_year >= $scope.min_age_year || damencup);
       $scope.form.$setValidity('max-age-year',
-	!$scope.max_age_year || $scope.age_year <= $scope.max_age_year);
+	!$scope.max_age_year || $scope.age_year <= $scope.max_age_year || damencup);
     }
 
     $scope.$watch('rider.date_of_birth', function(date_of_birth) {
@@ -153,6 +162,10 @@ var eventController = [
 
       otsv_check_class();
     });
+
+    $scope.$watch('rider.rankings', function() {
+      otsv_check_class();
+    }, true);
 
     var year_of_event = (date_of_event(event) || new Date()).getFullYear();
     $scope.year_for_age = function(age) {

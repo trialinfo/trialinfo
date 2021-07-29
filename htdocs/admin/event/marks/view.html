@@ -167,7 +167,7 @@ table.scoring_table th, table.scoring_table td {
 	    <span ng-if="riders_list != null && riders_list.length == 0">Keine Fahrer gefunden.</span>
 	  </p>
 	  <p>
-	    <span ng-if="zones_skipped" style="color: red">
+	    <span ng-if="zones_skipped && !scoring_active()" style="color: red">
 	    Tragen Sie für ausgelassene Sektionen bitte ‚-‘ für die Punkte ein.</span>
 	  </p>
 	  <p>
