@@ -298,7 +298,12 @@
 	      ausgewählt, die Klasse startet daher nicht.
 	    </span>
 	    <span ng-if="!rider.non_competing">
-	      <span ng-if="age && age_year">
+	      <span ng-if="otsv_amf_event && rider.rankings[1]">
+		<span ng-if="rider.class != 5 && rider.class != 7" style="display:block">
+		  Fahrerinnen im Damencup dürfen nur in den Klassen 5 und 7 starten.
+		</span>
+	      </span>
+	      <span ng-if="age && age_year && !(otsv_amf_event && rider.rankings[1])">
 		<span ng-if="min_age && age < min_age" style="display:block">
 		  Fahrer ist unter {{min_age}} Jahre alt<br>und darf in Klasse {{rider.class}} noch nicht starten.
 		</span>
