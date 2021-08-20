@@ -780,6 +780,9 @@ var ridersController = [
     }
 
     function keydownHandler(event) {
+      if (event.target.classList.contains('default-keydown'))
+	return;
+
       if (event.key == 'PageUp') {
 	event.preventDefault();
 	if (!$scope.modified()) {

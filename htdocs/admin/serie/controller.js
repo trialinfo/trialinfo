@@ -294,6 +294,9 @@ var serieController = [
     };
 
     function keydownHandler(event) {
+      if (event.target.classList.contains('default-keydown'))
+	return;
+
       if (event.key == 'Enter' &&
 	  (document.activeElement.tagName != "TEXTAREA" ||
 	   event.ctrlKey)) {
