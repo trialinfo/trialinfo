@@ -1,5 +1,5 @@
 <h1>{{event.title}} – Sektionen aus der Wertung</h1>
-<form name="form" ng-keydown="keydown($event)">
+<form name="form">
   <div ng-repeat="class_ in starting_classes">
     <fieldset style="display:inline">
       <legend>{{class_}}: {{event.classes[class_ - 1].name}}</legend>
