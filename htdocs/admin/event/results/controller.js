@@ -169,7 +169,7 @@ var eventResultsController = [
 		let skipped_zones = results.events[event_idx].skipped_zones[class_.ranking_class] || {};
 		result.unfinished_zones = [];
 		for (let round = 1; round <= result.marks_per_zone.length; round++) {
-		  let marks_per_zone = result.marks_per_zone[round - 1];
+		  let marks_per_zone = result.marks_per_zone[round - 1] || [];
 		  result.unfinished_zones[round - 1] = 0;
 		  for (let zone of zones) {
 		    if (marks_per_zone[zone - 1] == null &&
