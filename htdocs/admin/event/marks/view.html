@@ -6,6 +6,10 @@ table.scoring_table {
 table.scoring_table th, table.scoring_table td {
     border:1px solid;
 }
+.marks-mismatch {
+  font-weight:bold;
+  color:darkred;
+}
 </style>
 <h1>{{event.title}} – Punktevergabe</h1>
 <table>
@@ -36,8 +40,8 @@ table.scoring_table th, table.scoring_table td {
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" style="text-align:center">
-		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start() || scoring_zone_active(zone)" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
-		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-model="rider.marks_per_zone[round - 1][zone - 1]" ng-disabled="!rider.start || rider.group || rider_does_not_start() || scoring_zone_active(zone)" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-class="marks_class(round, zone)" ng-model="rider.marks_per_zone[round - 1][zone - 1]" placeholder="{{rider.computed_marks[round - 1][zone - 1]}}" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-class="marks_class(round, zone)" ng-model="rider.marks_per_zone[round - 1][zone - 1]" placeholder="{{rider.computed_marks[round - 1][zone - 1]}}" ng-disabled="!rider.start || rider.group || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
 		  </td>
 		  <td style="text-align:right;font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
@@ -55,7 +59,7 @@ table.scoring_table th, table.scoring_table td {
 	      <tr>
 		<th><label for="penalty_marks" accesskey="p">Straf<span class="accesskey">p</span>unkte</label></th>
 		<td>
-		  <input ng-disabled="!rider.start || rider_does_not_start() || scoring_active()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.penalty_marks" id="penalty_marks">
+		  <input ng-disabled="!rider.start || rider_does_not_start()" type="text" fractional size="4" maxsize="10" min="-999" max="999" ng-model="rider.penalty_marks" placeholder="{{rider.computed_penalty_marks}}" ng-class="penalty_marks_class()" id="penalty_marks">
 		</td>
 	      </tr>
 	      <tr ng-if="rider.additional_marks != null">
@@ -124,8 +128,8 @@ table.scoring_table th, table.scoring_table td {
 	      </tr>
 	    </table>
 	  </p>
-	  <fieldset ng-if="scoring_table.length || has_scoring_zones()" style="display:inline">
-	    <legend>Mobile Datenerfassung<span ng-if="has_scoring_zones()"> <input type="checkbox" ng-model="rider.scoring" id="scoring"><label for="scoring">aktiv</label></span></legend>
+	  <fieldset ng-if="scoring_table.length" style="display:inline">
+	    <legend>Mobile Datenerfassung</legend>
 	    <table class="scoring_table" ng-if="scoring_table.length">
 	      <tr>
 		<th style="text-align:center"></th>
@@ -167,7 +171,7 @@ table.scoring_table th, table.scoring_table td {
 	    <span ng-if="riders_list != null && riders_list.length == 0">Keine Fahrer gefunden.</span>
 	  </p>
 	  <p>
-	    <span ng-if="zones_skipped && !scoring_active()" style="color: red">
+	    <span ng-if="zones_skipped" style="color: red">
 	    Tragen Sie für ausgelassene Sektionen bitte ‚-‘ für die Punkte ein.</span>
 	  </p>
 	  <p>

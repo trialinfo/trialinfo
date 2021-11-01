@@ -185,7 +185,8 @@ CREATE TABLE `marks` (
   `round` int(11) NOT NULL,
   `zone` int(11) NOT NULL,
   `marks` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`number`,`round`,`zone`)
+  `computed` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id`,`number`,`round`,`zone`,`computed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `new_numbers`;
@@ -279,7 +280,6 @@ CREATE TABLE `riders` (
   `paid` tinyint(1) DEFAULT NULL,
   `registered` tinyint(1) DEFAULT NULL,
   `start` tinyint(1) DEFAULT NULL,
-  `scoring` tinyint(1) NOT NULL DEFAULT 1,
   `insurance` int(11) DEFAULT NULL,
   `rounds` int(11) DEFAULT NULL,
   `s0` int(11) DEFAULT NULL,
@@ -292,6 +292,7 @@ CREATE TABLE `riders` (
   `non_competing` tinyint(1) DEFAULT NULL,
   `failure` int(11) DEFAULT 0,
   `penalty_marks` float DEFAULT NULL,
+  `computed_penalty_marks` float DEFAULT NULL,
   `additional_marks` float DEFAULT NULL,
   `marks` float DEFAULT NULL,
   `rank` int(11) DEFAULT NULL,

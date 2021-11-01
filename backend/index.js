@@ -209,6 +209,55 @@ async function update_database(connection) {
       SET ctime = mtime
     `);
   }
+  if (!await column_exists(connection, 'marks', 'computed')) {
+    console.log('Adding column `computed` to table `marks`');
+    await connection.queryAsync(`
+      ALTER TABLE marks
+      DROP PRIMARY KEY
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE marks
+      ADD COLUMN computed BOOLEAN NOT NULL
+    `);
+    await connection.queryAsync(`
+      ALTER TABLE marks
+      ADD PRIMARY KEY (id, number, round, zone, computed)
+    `);
+    let backtick='`';
+    await connection.queryAsync(`
+      UPDATE marks
+      JOIN riders USING (id, number)
+      LEFT JOIN (
+        SELECT DISTINCT id, number, 1 AS computed
+	FROM scoring_zones
+	JOIN zones USING (id, zone)
+	JOIN riders USING (id, ${backtick}class${backtick})
+      ) AS _1 USING (id, number)
+      SET marks.computed = COALESCE(_1.computed, 0) AND scoring;
+    `);
+    await connection.queryAsync(`
+      UPDATE events
+      SET recompute = 1
+      WHERE id IN (
+        SELECT DISTINCT id
+	FROM scoring_marks
+      )
+    `);
+  }
+  if (!await column_exists(connection, 'riders', 'computed_penalty_marks')) {
+    console.log('Adding column `computed_penalty_marks` to table `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      ADD COLUMN computed_penalty_marks FLOAT AFTER penalty_marks
+    `);
+  }
+  if (await column_exists(connection, 'riders', 'scoring')) {
+    console.log('Removing column `scoring` from table `riders`');
+    await connection.queryAsync(`
+      ALTER TABLE riders
+      DROP COLUMN scoring
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1187,6 +1236,7 @@ async function read_riders(connection, id, revalidate, number) {
       delete row['s'+n];
     }
     row.marks_per_zone = [];
+    row.computed_marks = [];
     row.marks_per_round = [];
     row.rankings = [];
     if (row.group)
@@ -1195,15 +1245,17 @@ async function read_riders(connection, id, revalidate, number) {
   });
 
   (await connection.queryAsync(`
-    SELECT number, round, zone, marks
+    SELECT number, round, zone, marks, computed
     FROM marks
     WHERE ` + filters)
   ).forEach((row) => {
-    if (riders[row.number]) {
-      var marks_per_zone = riders[row.number].marks_per_zone;
-      var round = marks_per_zone[row.round - 1];
+    let rider = riders[row.number];
+    if (rider) {
+      let marks = row.computed ?
+        rider.computed_marks : rider.marks_per_zone;
+      var round = marks[row.round - 1];
       if (!round)
-	round = marks_per_zone[row.round - 1] = [];
+	round = marks[row.round - 1] = [];
       round[row.zone - 1] = row.marks;
     }
   });
@@ -1541,7 +1593,7 @@ async function rider_change_number(connection, id, old_number, new_number) {
 
 function compute_update_event(id, event) {
   let cached_riders = Object.values(cache.get_riders(id));
-  let results = compute_event(cached_riders, event, true);
+  let results = compute_event.compute_event(cached_riders, event, true);
 
   for (let n = 0; n < cached_riders.length; n++) {
     let cached_rider = cached_riders[n];
@@ -1555,60 +1607,6 @@ function compute_update_event(id, event) {
    * FIXME: Only set events.recompute when an event needs to be recomputed and
    * do the recompute the first time the results are accessed?
    */
-}
-
-function copy_marks_per_zone(marks_per_zone, from_marks_per_zone, copy_zone) {
-  for (let round_index in from_marks_per_zone) {
-    let from_marks_per_round = from_marks_per_zone[round_index] || [];
-    let marks_per_round = marks_per_zone[round_index];
-    for (let zone_index in from_marks_per_round) {
-      if (!copy_zone(+zone_index + 1))
-	continue;
-      let marks = from_marks_per_round[zone_index];
-      if (marks == null)
-	continue;
-      if (!marks_per_round) {
-	marks_per_round = [];
-	marks_per_zone[round_index] = marks_per_round;
-      }
-      marks_per_round[zone_index] = marks;
-    }
-  }
-}
-
-function ignore_scoring_zones(event, old_rider, rider) {
-  if (!rider.scoring || (old_rider && !old_rider.scoring))
-    return;
-
-  /*
-   * FIXME: When old_rider.scoring == false and rider.scoring == true,
-   * the scoring should actually be recomputed!
-   */
-
-  let scoring_zones = event.scoring_zones;
-  let rc = ranking_class(rider, event);
-  if (rc) {
-    let zones = event.zones[rc - 1] || [];
-    if (!zones.some((zone) => scoring_zones[zone - 1]))
-      return;
-  }
-
-  let old_marks_per_zone = [], old_penalty_marks = null;
-  if (old_rider) {
-    old_marks_per_zone = old_rider.marks_per_zone;
-    old_penalty_marks = old_rider.penalty_marks;
-  }
-  if (deepEqual(old_marks_per_zone, rider.marks_per_zone) &&
-      old_penalty_marks == rider.penalty_marks)
-    return;
-
-  let marks_per_zone = [];
-  copy_marks_per_zone(marks_per_zone, old_marks_per_zone,
-		      (zone) => scoring_zones[zone - 1]);
-  copy_marks_per_zone(marks_per_zone, rider.marks_per_zone,
-		      (zone) => !scoring_zones[zone - 1]);
-  rider.marks_per_zone = marks_per_zone;
-  rider.penalty_marks = old_penalty_marks;
 }
 
 async function admin_save_rider(connection, id, number, rider, tag, query) {
@@ -1661,7 +1659,7 @@ async function admin_save_rider(connection, id, number, rider, tag, query) {
 	rider.rankings = event.rankings.map((ranking) =>
 	  (ranking && ranking.default) ?
 	    {"rank": null, "score": null} : null);
-      ignore_scoring_zones(event, old_rider, rider);
+      // FIXME: Prevent updating rider.computed_marks via admin_save_rider?
       rider = Object.assign(cache.modify_rider(id, number), rider);
     } else {
       await delete_rider(connection, id, number);
@@ -1717,14 +1715,15 @@ function event_reset_numbers(riders) {
 function reset_event(base_event, base_riders, event, riders, reset) {
   if (reset == 'master' || reset == 'register' || reset == 'start') {
     Object.values(riders).forEach((rider) => {
-      rider.scoring = true;
       rider.finish_time = null;
       rider.tie_break = 0;
       rider.rounds = null;
       rider.failure = 0;
       rider.penalty_marks = null;
+      rider.computed_penalty_marks = null;
       rider.marks = null;
       rider.marks_per_zone = [];
+      rider.computed_marks = [];
       rider.marks_per_round = [];
       rider.marks_distribution = [];
       rider.rank = null;
@@ -2444,7 +2443,21 @@ function ranking_class(rider, event) {
 }
 
 function result_marks_per_zone(rider, event, ranking_class) {
-  let marks_per_zone = rider.marks_per_zone;
+  let marks_per_zone;
+
+  if (rider.computed_marks.length) {
+    let rounds = Math.max(
+      rider.computed_marks.length,
+      rider.marks_per_zone.length);
+    marks_per_zone = [];
+    for (let round = 1; round <= rounds; round++) {
+      marks_per_zone[round - 1] =
+	compute_event.resulting_marks_in_round(rider, round);
+    }
+  } else {
+    marks_per_zone = rider.marks_per_zone;
+  }
+
   let skipped_zones = (event.skipped_zones || {})[ranking_class];
   if (skipped_zones) {
     marks_per_zone = clone(marks_per_zone, false);
@@ -2628,7 +2641,7 @@ async function get_event_results(connection, id) {
 	all_riders.push(rider);
     }
 
-    let results = compute_event(all_riders, last_event, false);
+    let results = compute_event.compute_event(all_riders, last_event, false);
 
     for (let n = 0; n < all_riders.length; n++) {
       let rider = all_riders[n];
@@ -3671,17 +3684,24 @@ async function __update_rider(connection, id, number, old_rider, new_rider) {
 	a, b);
     });
 
-  await zipAsync(old_rider.marks_per_zone, new_rider.marks_per_zone,
-    async function(a, b, round_index) {
-      await zipAsync(a, b, async function(a, b, zone_index) {
-	await update(connection, 'marks',
-	  {id: id, number: number, round: round_index + 1, zone: zone_index + 1},
-	  undefined,
-	  a, b,
-	  (x) => (x != null ? {marks: x} : null))
-	&& (changed = true);
+  for (let field of ['marks_per_zone', 'computed_marks']) {
+    let computed = (field == 'computed_marks');
+    await zipAsync(old_rider[field], new_rider[field],
+      async function(a, b, round_index) {
+	await zipAsync(a, b, async function(a, b, zone_index) {
+	  await update(connection, 'marks',
+	    { id: id,
+	      number: number,
+	      round: round_index + 1,
+	      zone: zone_index + 1,
+	      computed: computed },
+	    undefined,
+	    a, b,
+	    (x) => (x != null ? {marks: x} : null))
+	  && (changed = true);
+	});
       });
-    });
+  }
 
   await zipAsync(old_rider.marks_per_round, new_rider.marks_per_round,
     async function(a, b, index) {
@@ -3751,6 +3771,7 @@ async function update_rider(connection, id, number, old_rider, new_rider, update
     marks_distribution: true,
     marks_per_round: true,
     marks_per_zone: true,
+    computed_marks: true,
     number: true,
     rankings: true,
     riders: true,
@@ -5786,17 +5807,12 @@ function scoring_update_riders(id, event, riders) {
   }
 
   function scoring_update_rider(rider) {
-    if (!rider.scoring)
-      return;
-
     let rc = ranking_class(rider, event);
     if (!scoring_classes[rc - 1])
       return;
 
-    let marks_per_zone = [];
-    copy_marks_per_zone(marks_per_zone, rider.marks_per_zone,
-		        (zone) => !scoring_zones[zone - 1]);
-    let penalty_marks = null;
+    let computed_marks = [];
+    let computed_penalty_marks = null;
 
     let items = cache.get_scoring_items(id, rider.number);
     for (let item of items) {
@@ -5805,21 +5821,21 @@ function scoring_update_riders(id, event, riders) {
 	continue;
       if (!scoring_zones[item.zone - 1])
 	continue;
-      let marks_per_round = marks_per_zone[item.round - 1];
+      let marks_per_round = computed_marks[item.round - 1];
       if (!marks_per_round) {
 	marks_per_round = [];
-	marks_per_zone[item.round - 1] = marks_per_round;
+	computed_marks[item.round - 1] = marks_per_round;
       }
       marks_per_round[item.zone - 1] = item.marks;
       if (item.penalty_marks)
-	penalty_marks += item.penalty_marks;
+	computed_penalty_marks += item.penalty_marks;
     }
 
-    if (!deepEqual(rider.marks_per_zone, marks_per_zone) ||
-        rider.penalty_marks != penalty_marks) {
+    if (!deepEqual(rider.computed_marks, computed_marks) ||
+        rider.computed_penalty_marks != computed_penalty_marks) {
       Object.assign(cache.modify_rider(id, rider.number), {
-	marks_per_zone: marks_per_zone,
-	penalty_marks: penalty_marks
+	computed_marks: computed_marks,
+	computed_penalty_marks: computed_penalty_marks
       });
     }
   }
