@@ -224,8 +224,8 @@ var marksController = [
     function scoring_item_background_color(item) {
       if ($scope.num_zones > 1) {
 	let n = item.num / ($scope.num_zones - 1);
-	/* Yellow (h = 1/6) to red (h = 0) transition: */
-	let rgb = hsl2rgb(1/6 * (1 - n), 1, 3/4);
+	/* Yellow (h = 1/6) to red (h = 0) to blue-ish red (h = -1/24) transition: */
+	let rgb = hsl2rgb(-1/24 + (5/24) * (1 - n), 1, 3/4);
 	rgb = rgb.map(function(v) { return Math.floor(v * 0xff); });
 	return '#' + ((rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).padStart(6, '0');
       }
