@@ -255,7 +255,7 @@
 	  <p>
 	    <label for="search_term" accesskey="f" ng-if="!groups"><span class="accesskey">F</span>ahrer suchen:</label>
 	    <label for="search_term" accesskey="g" ng-if="groups"><span class="accesskey">G</span>ruppe suchen:</label><br>
-	    <input type="text" class="default-keydown" ng-disabled="modified()" size="20" maxlength="40" ng-model="search.term" onchange="angular.element(this).scope().find_riders()" id="search_term" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
+	    <input type="text" ng-disabled="modified()" size="20" maxlength="40" ng-model="search.term" onchange="angular.element(this).scope().find_riders()" id="search_term" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in riders_list">
@@ -265,7 +265,7 @@
 	  </p>
 	  <p ng-if="groups && rider">
 	    <label for="member_search_term">Fahrer suchen:</label><br>
-	    <input type="text" class="default-keydown" ng-disabled="!rider" size="20" maxlength="40" ng-model="member_search.term" onchange="angular.element(this).scope().find_members()" id="member_search_term" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off">
+	    <input type="text" ng-disabled="!rider" size="20" maxlength="40" ng-model="member_search.term" onchange="angular.element(this).scope().find_members()" id="member_search_term" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off">
 	  </p>
 	  <p>
 	    <span ng-repeat="number in members_list">

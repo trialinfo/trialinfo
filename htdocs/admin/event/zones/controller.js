@@ -95,12 +95,10 @@ var zonesController = [
     };
 
     function keydownHandler(event) {
-      if (event.target.classList.contains('default-keydown'))
-	return;
-
       if (event.key == 'Enter' &&
 	  (document.activeElement.tagName != "TEXTAREA" ||
-	   event.ctrlKey)) {
+	   event.ctrlKey) &&
+	  !event.target.hasAttribute('onchange')) {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified() && $scope.form.$valid)
