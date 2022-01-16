@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
+ * Copyright 2016-2022  Andreas Gruenbacher  <andreas.gruenbacher@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -64,6 +64,7 @@ var views = {
   'other.html': require('./views/other.marko.js'),
   '2019.html': require('./views/2019.marko.js'),
   '2020.html': require('./views/2020.marko.js'),
+  '2021.html': require('./views/2021.marko.js'),
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
@@ -5964,6 +5965,7 @@ app.get('/ecup.html', conn(pool), serie_index(views['ecup.html']));
 app.get('/other.html', conn(pool), serie_index(views['other.html']));
 app.get('/2019.html', conn(pool), serie_index(views['2019.html']));
 app.get('/2020.html', conn(pool), serie_index(views['2020.html']));
+app.get('/2021.html', conn(pool), serie_index(views['2021.html']));
 
 app.get('/login/', function(req, res, next) {
   var params = {
