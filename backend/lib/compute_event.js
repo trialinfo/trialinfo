@@ -21,6 +21,18 @@ var deepEqual = require('deep-equal');
 var common = require('../htdocs/js/common');
 let acup = require('./acup.js');
 
+function resulting_marks_in_round(rider, round) {
+  let marks_in_round = [];
+  for (let marks_array of [rider.computed_marks, rider.marks_per_zone]) {
+    let marks = marks_array[round - 1] || [];
+    for (let idx in marks) {
+      if (marks[idx] != null)
+	marks_in_round[idx] = marks[idx];
+    }
+  }
+  return marks_in_round;
+}
+
 function compute_event(cached_riders, event, compute_marks) {
   function compute_rider_marks(riders) {
     let marks_skipped_zone = event.marks_skipped_zone || 0;
@@ -39,8 +51,7 @@ function compute_event(cached_riders, event, compute_marks) {
 
 	for (let round = 1; round <= rounds; round++) {
 	  rider.marks_per_round[round - 1] = null;
-	  let marks_in_round =
-	    (rider.marks_per_zone || [])[round - 1] || [];
+	  let marks_in_round = resulting_marks_in_round(rider, round);
 
 	  for (let zone of zones) {
 	    if (((event.skipped_zones[rider.ranking_class] || {})[round] || {})[zone])
@@ -101,8 +112,7 @@ function compute_event(cached_riders, event, compute_marks) {
     let zone_total_marks = [], zone_total_riders = [];
     riders.forEach((rider) => {
       for (let round = 1; round <= rounds; round++) {
-	let marks_in_round =
-	  (rider.marks_per_zone || [])[round - 1] || [];
+	let marks_in_round = resulting_marks_in_round(rider, round);
 
 	for (let zone of zones) {
 	  if (((event.skipped_zones[ranking_class] || {})[round] || {})[zone])
@@ -156,8 +166,7 @@ function compute_event(cached_riders, event, compute_marks) {
 	    if (((event.skipped_zones[ranking_class] || {})[round] || {})[zone])
 	      continue;
 
-	    let marks_in_round =
-	      (rider.marks_per_zone || [])[round - 1] || [];
+	    let marks_in_round = resulting_marks_in_round(rider, round);
 	    let marks = marks_in_round[zone - 1];
 	    if (marks == null) {
 	      num_unfinished++;
@@ -486,7 +495,7 @@ function compute_event(cached_riders, event, compute_marks) {
     };
     for (let field of ['number', 'group', 'date_of_birth', 'class',
 		       'year_of_manufacture', 'penalty_marks', 'failure',
-		       'marks_per_zone', 'tie_break'])
+		       'marks_per_zone', 'computed_marks', 'tie_break'])
       rider[field] = cached_rider[field];
     if (compute_marks) {
       rider.marks = null;
@@ -509,7 +518,11 @@ function compute_event(cached_riders, event, compute_marks) {
       for (let rider of riders) {
 	if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
 	  let year = rider.year_of_manufacture || year_of_event;
-	  let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	  let m;
+	  if (year_of_event <= 2021)
+	    m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	  else
+	    m = Math.trunc(Math.max(0, (year - 1999 + 5) / 5));
 	  if (m)
 	    rider.additional_marks = m;
 	}
@@ -614,6 +627,8 @@ function compute_event(cached_riders, event, compute_marks) {
   return riders;
 }
 
-module.exports = compute_event;
-
+module.exports = {
+  resulting_marks_in_round: resulting_marks_in_round,
+  compute_event: compute_event
+};
 /* ex:set shiftwidth=2: */

@@ -92,11 +92,13 @@ var marksController = [
 	if (rider.start && !rider.failure) {
 	  var rc = ranking_class(rider);
 	  var zones = current_zone != null ? [current_zone] : event.zones[rc - 1];
-	  var marks_per_zone = rider.marks_per_zone;
 
 	  function try_to_focus(round, zone) {
-	    var marks = marks_per_zone[round - 1][zone - 1];
-	    if (marks == null && !zone_skipped(rc, round, zone)) {
+	    for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
+	      if ((marks_array[round - 1] || [])[zone - 1] != null)
+		return false;
+	    }
+	    if (!zone_skipped(rc, round, zone)) {
 	      setFocus('#marks_' + round + '_' + zone);
 	      return true;
 	    }
@@ -224,8 +226,8 @@ var marksController = [
     function scoring_item_background_color(item) {
       if ($scope.num_zones > 1) {
 	let n = item.num / ($scope.num_zones - 1);
-	/* Yellow (h = 1/6) to red (h = 0) transition: */
-	let rgb = hsl2rgb(1/6 * (1 - n), 1, 3/4);
+	/* Yellow (h = 1/6) to red (h = 0) to blue-ish red (h = -1/24) transition: */
+	let rgb = hsl2rgb(-1/24 + (5/24) * (1 - n), 1, 3/4);
 	rgb = rgb.map(function(v) { return Math.floor(v * 0xff); });
 	return '#' + ((rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).padStart(6, '0');
       }
@@ -238,6 +240,32 @@ var marksController = [
 	  return item;
       }
     }
+
+    $scope.marks_class = function(round, zone) {
+      let classes = {};
+
+      let rider = $scope.rider;
+      if (rider) {
+	let marks = (rider.marks_per_zone[round - 1] || [])[zone - 1];
+	let computed_marks = (rider.computed_marks[round - 1] || [])[zone - 1];
+	if (marks != null && computed_marks != null && marks != computed_marks)
+	  classes['marks-mismatch'] = true;
+      }
+
+      return classes;
+    };
+
+    $scope.penalty_marks_class = function() {
+      let classes = {};
+
+      let rider = $scope.rider;
+      if (rider) {
+	if (rider.penalty_marks != null && rider.computed_penalty_marks != null &&
+	    rider.penalty_marks != rider.computed_penalty_marks)
+	  classes['marks-mismatch'] = true;
+      }
+      return classes;
+    };
 
     $scope.scoring_cell_style = function(round, zone) {
       let valid_item = valid_scoring_item(round, zone);
@@ -303,32 +331,6 @@ var marksController = [
 	marks += item.penalty_marks;
       }
       return marks;
-    };
-
-    $scope.scoring_zone_active = function(zone) {
-      let rider = $scope.rider;
-      if (rider && !rider.scoring)
-	return false;
-      return event.scoring_zones[zone - 1];
-    };
-
-    function has_scoring_zones() {
-      let rider = $scope.rider;
-      if (rider) {
-	let rc = ranking_class(rider);
-	if (rc != null) {
-	  let zones = event.zones[rc - 1] || [];
-	  return zones.some(function(zone) { return event.scoring_zones[zone - 1]; });
-	}
-      }
-    }
-    $scope.has_scoring_zones = has_scoring_zones;
-
-    $scope.scoring_active = function() {
-      let rider = $scope.rider;
-      if (rider && !rider.scoring)
-	return false;
-      return has_scoring_zones();
     };
 
     function load_rider(promise, current_zone) {
@@ -412,7 +414,7 @@ var marksController = [
       }
     };
 
-    $scope.current_round = function(rider) {
+    function current_round(rider) {
       if (rider && rider.start) {
 	var round = rider.rounds || 1;
 	var rc = ranking_class(rider);
@@ -420,10 +422,12 @@ var marksController = [
 	  return null;
 	var zones = event.zones[rc - 1] || [];
 	for (var index = 0; index < zones.length; index++) {
-	  var zone = zones[index];
-	  var marks = rider.marks_per_zone[round - 1][zone - 1];
-	  if ((marks == null) && !zone_skipped(rc, round, zone))
-	    return round;
+	  var zone = zones[index], marks;
+	  for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
+	    marks = (marks_array[round - 1] || [])[zone - 1];
+	    if ((marks == null) && !zone_skipped(rc, round, zone))
+	      return round;
+	  }
 	}
 	if (round < event.classes[rc - 1].rounds)
 	  return round + 1;
@@ -433,7 +437,7 @@ var marksController = [
     $scope.card_color = function() {
       var rider = $scope.rider;
       if (rider && !($scope.rider_does_not_start() || rider.failure)) {
-	var round = $scope.current_round(rider);
+	var round = current_round(rider);
 	if (round)
 	  return event.card_colors[round - 1];
       }
@@ -453,6 +457,18 @@ var marksController = [
 
     let year_of_event = (date_of_event(event)).getFullYear();
 
+    function resulting_marks_in_round(rider, round) {
+      let marks_in_round = [];
+      for (let marks_array of [rider.computed_marks, rider.marks_per_zone]) {
+	let marks = marks_array[round - 1] || [];
+	for (let idx in marks) {
+	  if (marks[idx] != null)
+	    marks_in_round[idx] = marks[idx];
+	}
+      }
+      return marks_in_round;
+    }
+
     function calculate_marks() {
       var rider = $scope.rider;
       if (rider) {
@@ -460,8 +476,12 @@ var marksController = [
 
 	if (event.type == 'otsv-acup' && !rider.group) {
 	  if (rider.class >= 8 && rider.class <= 11) {
-	   let year = rider.year_of_manufacture || year_of_event;
-	   let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	    let year = rider.year_of_manufacture || year_of_event;
+	    let m;
+	    if (year_of_event <= 2021)
+	      m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	    else
+	      m = Math.trunc(Math.max(0, (year - 1999 + 5) / 5));
 	   if (m)
 		   rider.additional_marks = m;
 	  }
@@ -472,6 +492,8 @@ var marksController = [
 	  rider.marks += rider.additional_marks;
 	if (rider.penalty_marks != null)
 	  rider.marks += rider.penalty_marks;
+	else if (rider.computed_penalty_marks != null)
+	  rider.marks += rider.computed_penalty_marks;
 
 	if (rider.group) {
 	  for (round = 1; round <= rider.marks_per_zone.length; round++) {
@@ -482,25 +504,23 @@ var marksController = [
 	  if (rider.start) {
 	    var rc = ranking_class(rider);
 	    var zones = event.zones[rc - 1] || [];
+	    var rounds = event.classes[rc - 1].rounds;
 	    rider.rounds = 0;
 	    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
 	    if (event.uci_x10)
 	      rider.marks_distribution.push(0);
-	    delete $scope.zones_skipped;
-	    var skipped = false;
 	    var round;
-	    for (round = 1; round <= rider.marks_per_zone.length; round++) {
-	      var marks_in_round = 0;
+	    for (round = 1; round <= rounds; round++) {
+	      var marks_in_round = resulting_marks_in_round(rider, round);
+	      var total_marks_in_round = 0;
 	      var round_used = false;
 	      for (var index = 0; index < zones.length; index++) {
 		var zone = zones[index];
 		if (!zone_skipped(rc, round, zone)) {
-		  var marks = rider.marks_per_zone[round - 1][zone - 1];
-		  if (marks == null)
-		    skipped = true;
-		  else if (!skipped) {
+		  var marks = marks_in_round[zone - 1];
+		  if (marks != null) {
 		    let actual_marks = (marks == -1) ? event.marks_skipped_zone : marks;
-		    marks_in_round += actual_marks;
+		    total_marks_in_round += actual_marks;
 		    let index;
 		    if (event.uci_x10) {
 		      if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
@@ -516,8 +536,8 @@ var marksController = [
 		}
 	      }
 	      if (round_used) {
-		rider.marks_per_round[round - 1] = marks_in_round;
-		rider.marks += marks_in_round;
+		rider.marks_per_round[round - 1] = total_marks_in_round;
+		rider.marks += total_marks_in_round;
 		rider.rounds = round;
 	      }
 	    }
@@ -525,15 +545,17 @@ var marksController = [
 	    var was_null;
 	    function check_skipped(round, zone) {
 	      if (!zone_skipped(rc, round, zone)) {
-		var marks = rider.marks_per_zone[round - 1][zone - 1];
-		if (marks == null)
-		  was_null = true;
-		else
-		  return was_null;
+		var marks;
+		for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
+		  marks = (marks_array[round - 1] || [])[zone - 1];
+		  if (marks != null)
+		    return was_null;
+		}
+		was_null = true;
 	      }
 	    }
 
-	    var rounds = event.classes[rc - 1].rounds;
+	    delete $scope.zones_skipped;
 	    if ($scope.zone_wise_entry) {
 	      check:
 	      for (var index = 0; index < zones.length; index++) {
@@ -773,9 +795,6 @@ var marksController = [
     };
 
     function keydownHandler(event) {
-      if (event.target.classList.contains('default-keydown'))
-	return;
-
       if (event.key == 'PageUp') {
 	event.preventDefault();
 	if (!$scope.modified()) {
@@ -794,7 +813,8 @@ var marksController = [
 	}
       } else if (event.key == 'Enter' &&
 		 (document.activeElement.tagName != "TEXTAREA" ||
-		  event.ctrlKey)) {
+		  event.ctrlKey) &&
+		 !event.target.hasAttribute('onchange')) {
 	event.preventDefault();
 	$timeout(function() {
 	  if ($scope.modified()) {

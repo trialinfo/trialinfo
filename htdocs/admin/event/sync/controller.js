@@ -133,7 +133,8 @@ var syncController = [
 
     const computed_fields = [
       'decisive_marks', 'decisive_round', 'marks', 'marks_distribution',
-      'marks_per_round', 'penalty_marks', 'rank', 'rounds', 'unfinished_zones'
+      'marks_per_round', 'penalty_marks', 'rank', 'rounds', 'unfinished_zones',
+      'computed_marks'
     ];
 
     function reduce_dump(dump) {
@@ -155,33 +156,6 @@ var syncController = [
       let riders = dump.riders;
       for (let number in riders) {
 	let rider = riders[number];
-	if (!rider.scoring)
-	  continue;
-	let marks_per_zone = [];
-	for (let round_index = 0;
-	     round_index < rider.marks_per_zone.length;
-	     round_index++) {
-	  let rider_marks_in_round =
-	    rider.marks_per_zone[round_index];
-	  if (!rider_marks_in_round)
-	    continue;
-	  let marks_in_round;
-	  for (let zone_index = 0;
-	       zone_index < rider_marks_in_round.length;
-	       zone_index++) {
-	    if (scoring_zones[zone_index])
-	      continue;
-	    let marks = rider_marks_in_round[zone_index];
-	    if (marks == null)
-	      continue;
-	    if (!marks_in_round) {
-	      marks_in_round = [];
-	      marks_per_zone[round_index] = marks_in_round;
-	    }
-	    marks_in_round[zone_index] = marks;
-	  }
-	}
-	rider.marks_per_zone = marks_per_zone;
 	for (let field of computed_fields)
 	  delete rider[field];
       }
