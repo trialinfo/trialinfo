@@ -518,7 +518,11 @@ function compute_event(cached_riders, event, compute_marks) {
       for (let rider of riders) {
 	if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
 	  let year = rider.year_of_manufacture || year_of_event;
-	  let m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	  let m;
+	  if (year_of_event <= 2021)
+	    m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	  else
+	    m = Math.trunc(Math.max(0, (year - 1999 + 5) / 5));
 	  if (m)
 	    rider.additional_marks = m;
 	}
