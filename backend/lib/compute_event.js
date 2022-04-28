@@ -24,7 +24,7 @@ let acup = require('./acup.js');
 function resulting_marks_in_round(rider, round) {
   let marks_in_round = [];
   for (let marks_array of [rider.computed_marks, rider.marks_per_zone]) {
-    let marks = marks_array[round - 1] || [];
+    let marks = (marks_array || [])[round - 1] || [];
     for (let idx in marks) {
       if (marks[idx] != null)
 	marks_in_round[idx] = marks[idx];
