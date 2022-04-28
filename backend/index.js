@@ -2453,7 +2453,7 @@ function ranking_class(rider, event) {
 function result_marks_per_zone(rider, event, ranking_class) {
   let marks_per_zone;
 
-  if (rider.computed_marks.length) {
+  if (rider.computed_marks && rider.computed_marks.length) {
     let rounds = Math.max(
       rider.computed_marks.length,
       rider.marks_per_zone.length);
