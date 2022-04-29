@@ -366,7 +366,7 @@ var ridersController = [
 	'class': null,
 	'number': null,
 	'country': event.country,
-	'rankings': event.rankings.map(function(ranking) { return ranking.default; }),
+	'rankings': normalize_rankings(event.rankings.map((ranking) => ranking.default)),
 	'insurance': event.insurance,
 	'verified': true,
 	'future_starts': {}
@@ -467,15 +467,20 @@ var ridersController = [
       }
     });
 
-    $scope.$watchCollection("rider.rankings", function(value) {
-      if (value) {
-	while (value.length && !value[value.length - 1])
-	  value.pop();
-	value.forEach(function(v, index) {
+    function normalize_rankings(rankings) {
+      if (rankings) {
+	while (rankings.length && !rankings[rankings.length - 1])
+	  rankings.pop();
+	rankings.forEach(function(v, index) {
 	  if (!v && v != null)
-	    value[index] = null;
+	    rankings[index] = null;
 	});
       }
+      return rankings;
+    }
+
+    $scope.$watchCollection("rider.rankings", function(value) {
+      normalize_rankings(value);
     });
 
     $scope.class_may_start = function(class_) {
