@@ -6212,7 +6212,7 @@ app.post('/api/to-pdf', async function(req, res, next) {
   await fsp.write(tmp_html.fd, html);
 
   var tmp_pdf = tmp.fileSync();
-  let args = ['-f', 'pdf', '--base-url', baseurl, tmp_html.name, tmp_pdf.name];
+  let args = ['--base-url', baseurl, tmp_html.name, tmp_pdf.name];
   console.log('weasyprint' + ' ' + args.join(' '));
   var child = child_process.spawn('weasyprint', args);
 
