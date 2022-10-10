@@ -922,7 +922,7 @@ async function admin_pdf_form(res, connection, id, name, numbers, direct) {
       let form = rider.form;
       delete rider.form;
 
-      var tmpfile = tmp.fileSync();
+      var tmpfile = tmp.fileSync({postfix: '.pdf'});
       tmpfiles.push(tmpfile);
 
       var filename = `${pdf_dir}/${form.type}/${event.type}/${form.filename}`;
@@ -935,7 +935,7 @@ async function admin_pdf_form(res, connection, id, name, numbers, direct) {
       await promise;
     }
 
-    tmpresult = tmp.fileSync();
+    tmpresult = tmp.fileSync({postfix: '.pdf'});
     let args = tmpfiles.map((tmpfile) => tmpfile.name);
     args.push(tmpresult.name);
     let promise = spawn('pdfunite', args, {
@@ -953,7 +953,7 @@ async function admin_pdf_form(res, connection, id, name, numbers, direct) {
     if (form == null)
       throw new HTTPError(404, 'Not Found');
 
-    tmpresult = tmp.fileSync();
+    tmpresult = tmp.fileSync({postfix: '.pdf'});
     var filename = `${pdf_dir}/${form.type}/${event.type}/${form.filename}`;
     let promise = spawn('./pdf-fill-form.py', ['--fill', '--print', filename], {
       stdio: ['pipe', tmpresult.fd, process.stderr]
@@ -6208,10 +6208,10 @@ app.post('/api/to-pdf', async function(req, res, next) {
       return x.replace(/\s+ng-\S+="[^"]*"/g, '');
     })*/
 
-  var tmp_html = tmp.fileSync();
+  var tmp_html = tmp.fileSync({postfix: '.html'});
   await fsp.write(tmp_html.fd, html);
 
-  var tmp_pdf = tmp.fileSync();
+  var tmp_pdf = tmp.fileSync({postfix: '.pdf'});
   let args = ['--base-url', baseurl, tmp_html.name, tmp_pdf.name];
   console.log('weasyprint' + ' ' + args.join(' '));
   var child = child_process.spawn('weasyprint', args);
