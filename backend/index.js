@@ -2933,8 +2933,12 @@ async function get_event_results(connection, id) {
     }
   }
 
-  for (let event of events) {
-    let event_hash = {};
+  for (let n = 0; n < events.length; n++) {
+    let event = events[n];
+    let id = ids[n];
+    let event_hash = {
+      id: id
+    };
     ['date', 'location', 'skipped_zones'].forEach((field) => {
       event_hash[field] = event[field];
     });
