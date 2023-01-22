@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2020  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html>
+  <head>
+    <title>ÖTSV Veranstaltungen 2015</title>
+    <link rel="stylesheet" type="text/css" href="app.css" />
+    <style>
+    a { text-decoration:none }
+    .register { background-color:#ffff80 }
+    </style>
+    <script src="js/common.js"></script>
+    <macro show_serie(serie, not_series, ignore)>
+    <p>
+      $ var events = data.events(serie, not_series);
+      <for(event in events)>
+	<a href="event/${event.id}/results">${event.title}</a> ${data.abbreviations(event.series, ignore=ignore)}<br>
+      </for>
+    </p>
+    </macro>
+  </head>
+  <body>
+    <h1>ÖTSV Veranstaltungen 2015</h1>
+    <h2>ÖTSV Cup und OSK Staatsmeisterschaft,<br>ÖTSV Kids e-Cup,<br>ÖTSV Bike Trial Cup</h2>
+    <show_serie serie=16 ignore=[16]/>
+    <p>
+      <a href="serie/17/results">ÖTSV Cup Jahreswertung</a><br>
+      <a href="serie/18/results">OSK Staatsmeisterschaft Jahreswertung</a><br>
+      <a href="serie/20/results">ÖTSV Kids e-Cup Jahreswertung</a><br>
+      <a href="serie/19/results">Bike Trial Cup Jahreswertung</a>
+    </p>
+  </body>
+</html>

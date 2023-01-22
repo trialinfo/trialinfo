@@ -62,6 +62,13 @@ var views = {
   'bike.html': require('./views/bike.marko.js'),
   'ecup.html': require('./views/ecup.marko.js'),
   'other.html': require('./views/other.marko.js'),
+  '2012.html': require('./views/2012.marko.js'),
+  '2013.html': require('./views/2013.marko.js'),
+  '2014.html': require('./views/2014.marko.js'),
+  '2015.html': require('./views/2015.marko.js'),
+  '2016.html': require('./views/2016.marko.js'),
+  '2017.html': require('./views/2017.marko.js'),
+  '2018.html': require('./views/2018.marko.js'),
   '2019.html': require('./views/2019.marko.js'),
   '2020.html': require('./views/2020.marko.js'),
   '2021.html': require('./views/2021.marko.js'),
@@ -5979,6 +5986,13 @@ app.get('/acup.html', conn(pool), serie_index(views['acup.html']));
 app.get('/bike.html', conn(pool), serie_index(views['bike.html']));
 app.get('/ecup.html', conn(pool), serie_index(views['ecup.html']));
 app.get('/other.html', conn(pool), serie_index(views['other.html']));
+app.get('/2012.html', conn(pool), serie_index(views['2012.html']));
+app.get('/2013.html', conn(pool), serie_index(views['2013.html']));
+app.get('/2014.html', conn(pool), serie_index(views['2014.html']));
+app.get('/2015.html', conn(pool), serie_index(views['2015.html']));
+app.get('/2016.html', conn(pool), serie_index(views['2016.html']));
+app.get('/2017.html', conn(pool), serie_index(views['2017.html']));
+app.get('/2018.html', conn(pool), serie_index(views['2018.html']));
 app.get('/2019.html', conn(pool), serie_index(views['2019.html']));
 app.get('/2020.html', conn(pool), serie_index(views['2020.html']));
 app.get('/2021.html', conn(pool), serie_index(views['2021.html']));
