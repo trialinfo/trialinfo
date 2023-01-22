@@ -1,0 +1,134 @@
+<h1>{{stats.event.title}}</h1>
+<h2>Punktestatistik</h2>
+
+<style type="text/css">
+table.ranking {
+  border-collapse:collapse;
+}
+table.ranking td, table.ranking th {
+  border:1px solid #98bf21;
+}
+table.ranking td {
+  padding: 0.1em 0.2em 0.1em 0.2em;
+  text-align: right;
+}
+table.ranking th {
+  padding: 0.2em 0.3em 0.2em 0.3em;
+  font-weight:bolder;
+  background-color:#A7C942;
+  color:#ffffff;
+  text-align: right;
+}
+table.ranking tr.alt {
+  background-color:#EAF2D3;
+}
+table.ranking tr td.individual-marks, table.ranking tr td.distribution {
+  color:#A0A0A0;
+}
+table.ranking tr.total {
+  font-style: italic;
+}
+</style>
+<style type="text/css" ng-if="!features.individual_marks">
+table.ranking tr td.round {
+  color:#A0A0A0;
+}
+table.ranking tr td.important {
+  color:#A11111;
+}
+</style>
+
+<div ng-if="by_class">
+  <div ng-repeat="class in stats.classes">
+    <h3>{{class.name}}</h3>
+    <table class="ranking">
+    <thead>
+    <tr>
+    <th>Sektion</th>
+    <th ng-repeat="marks in marks_list">{{marks}}</th>
+    <th>⌀</th>
+    <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="zone in class.zones" ng-class-even="'alt'">
+    <td>{{zone}}</td>
+    <td ng-repeat="marks in marks_list">{{class.marks_distributions[zone - 1][marks]}}</td>
+    <td>{{average(class.marks_distributions[zone - 1])}}</td>
+    <td ng-bind-html="graph(class.marks_distributions[zone - 1])"></td>
+    </tr>
+    <tr ng-class="class.zones.length % 2 ? 'alt' : null" class="total">
+    <td></td>
+    <td ng-repeat="marks in marks_list">{{class.marks_distribution[marks]}}</td>
+    <td>{{average(class.marks_distribution)}}</td>
+    <td ng-bind-html="graph(class.marks_distribution)"></td>
+    </tr>
+    </tbody>
+    </table>
+  </div>
+</div>
+
+<div ng-if="by_zone">
+  <div ng-repeat="zone_info in stats.zones track by $index" ng-if="zone_info">
+    <h3>Sektion {{$index + 1}}</h3>
+    <table class="ranking">
+    <thead>
+    <tr>
+    <th>Klasse</th>
+    <th ng-repeat="marks in marks_list">{{marks}}</th>
+    <th>⌀</th>
+    <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="class_info in zone_info.marks_distributions track by $index" ng-class-even="'alt'">
+    <td>{{class_info.class.ranking_class}}</td>
+    <td ng-repeat="marks in marks_list">{{class_info.marks_distribution[marks]}}</td>
+    <td>{{average(class_info.marks_distribution)}}</td>
+    <td ng-bind-html="graph(class_info.marks_distribution)"></td>
+    </tr>
+    <tr ng-class="zone_info.marks_distributions.length % 2 ? 'alt' : null" class="total">
+    <td></td>
+    <td ng-repeat="marks in marks_list">{{zone_info.marks_distribution[marks]}}</td>
+    <td>{{average(zone_info.marks_distribution)}}</td>
+    <td ng-bind-html="graph(zone_info.marks_distribution)"></td>
+    </tr>
+    </tbody>
+    </table>
+  </div>
+</div>
+
+<table class="ranking" ng-if="!by_class && !by_zone && stats.classes.length">
+<thead>
+<tr>
+<th>Klasse</th>
+<th ng-repeat="marks in marks_list">{{marks}}</th>
+<th>⌀</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr ng-repeat="class in stats.classes" ng-class-even="'alt'">
+<td>{{class.ranking_class}}</td>
+<td ng-repeat="marks in marks_list">{{class.marks_distribution[marks]}}</td>
+<td>{{average(class.marks_distribution)}}</td>
+<td ng-bind-html="graph(class.marks_distribution)"></td>
+</tr>
+<tr ng-class="stats.classes.length % 2 ? 'alt' : null" class="total">
+<td></td>
+<td ng-repeat="marks in marks_list">{{marks_distribution[marks]}}</td>
+<td>{{average(marks_distribution)}}</td>
+<td ng-bind-html="graph(marks_distribution)"></td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<span ng-repeat="marks in marks_list"><span ng-bind-html="dot(marks)"></span> {{marks}} &nbsp; </span>
+</p>
+
+<p ng-if="!by_zone && !by_class">
+<a href="/event/{{params.id}}/stats?by-class">Nach Klassen</a> <a href="/event/{{params.id}}/stats?by-zone">Nach Sektionen</a>
+</p>
+
+<p ng-if="event.mtime && on_day_of_event()">Letzte Änderung: {{event.mtime}}</p>

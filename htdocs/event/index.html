@@ -26,6 +26,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
       var application = angular.module('application', ['ngRoute', 'argshook.ngAttr', 'app-common']);
     </script>
     <script src="results/controller.js"></script>
+    <script src="stats/controller.js"></script>
     <script>
       application.config([
         '$routeProvider',
@@ -36,6 +37,13 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      controller: eventResultsController,
 	      templateUrl: 'results/view.html',
 	      resolve: eventResultsController.resolve,
+	      reloadOnSearch: false
+	    })
+	    .when('/:id/stats', {
+	      // title: 'Statistik',
+	      controller: eventStatsController,
+	      templateUrl: 'stats/view.html',
+	      resolve: eventStatsController.resolve,
 	      reloadOnSearch: false
 	    });
 	}]);
