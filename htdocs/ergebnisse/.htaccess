@@ -1,7 +1,0 @@
-Options Indexes Includes
-SSILegacyExprParser on
-Options +FollowSymLinks
-
-RewriteEngine On
-RewriteCond %{REQUEST_URI} ^/ergebnisse/$
-RewriteRule (.*) / [R=301]

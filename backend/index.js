@@ -2948,8 +2948,12 @@ async function get_event_results(connection, id) {
     }
   }
 
-  for (let event of events) {
-    let event_hash = {};
+  for (let n = 0; n < events.length; n++) {
+    let event = events[n];
+    let id = ids[n];
+    let event_hash = {
+      id: id
+    };
     ['date', 'location', 'skipped_zones'].forEach((field) => {
       event_hash[field] = event[field];
     });
@@ -3043,6 +3047,80 @@ async function get_event_results(connection, id) {
       hash.event.riders = registered_riders.length;
       hash.registered = registered;
     }
+  }
+
+  return hash;
+}
+
+async function get_event_stats(connection, id) {
+  let event_riders = await get_full_event(connection, id);
+  let event = event_riders.event;
+  let riders = event_riders.riders;
+  let marks_distributions = [];
+
+  let marks_to_stats = (rc, zone, marks) => {
+    let stats_in_rc = marks_distributions[rc - 1];
+    if (!stats_in_rc)
+      stats_in_rc = marks_distributions[rc - 1] = [];
+    let stats_in_zone = stats_in_rc[zone - 1];
+    if (!stats_in_zone)
+      stats_in_zone = stats_in_rc[zone - 1] = {};
+    let count = stats_in_zone[marks];
+    if (!count)
+      count = 0;
+    stats_in_zone[marks] = count + 1;
+  };
+
+  for (let rider of Object.values(riders)) {
+    let rc = ranking_class(rider, event);
+    if (rc == null)
+      continue;
+    let marks_per_zone = result_marks_per_zone(rider, event, rc);
+    for (let round_idx in marks_per_zone) {
+      let marks_in_round = marks_per_zone[round_idx];
+      if (!marks_in_round)
+	continue;
+      for (let zone_idx in marks_in_round) {
+	if (zone_idx == null)
+	  continue;
+	let marks = marks_in_round[zone_idx];
+	if (marks == null || marks == -1)
+	  continue;
+	marks_to_stats(rc, +zone_idx + 1, marks);
+      }
+    }
+  }
+
+  let classes = [];
+  for (let class_idx in marks_distributions) {
+    if (class_idx == null)
+      continue;
+
+    let zones = [];
+    for (let zone of event.zones[class_idx]) {
+      if (marks_distributions[class_idx][zone - 1])
+	zones.push(zone);
+    }
+
+    let stats = {
+      zones: zones,
+      marks_distributions: marks_distributions[class_idx]
+    };
+    for (let field of ['name', 'ranking_class', 'order'])
+      stats[field] = event.classes[class_idx][field];
+    classes.push(stats);
+  }
+  classes.sort((a, b) => a.order - b.order);
+  for (let class_ of classes)
+    delete class_.order;
+
+  let hash = {
+    event: {},
+    classes: classes,
+  };
+
+  for (let field of ['title', 'subtitle', 'four_marks', 'uci_x10']) {
+    hash.event[field] = event[field];
   }
 
   return hash;
@@ -6105,6 +6183,14 @@ app.get('/serie/*', function(req, res, next) {
 
 app.get('/api/event/:id/results', conn(pool), function(req, res, next) {
   get_event_results(req.conn, req.params.id)
+  .then((result) => {
+    res.json(result);
+  }).catch(next);
+});
+
+
+app.get('/api/event/:id/stats', conn(pool), function(req, res, next) {
+  get_event_stats(req.conn, req.params.id)
   .then((result) => {
     res.json(result);
   }).catch(next);

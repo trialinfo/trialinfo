@@ -39,6 +39,7 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
     <script src="event/settings/controller.js"></script>
     <script src="event/zones/controller.js"></script>
     <script src="event/results/controller.js"></script>
+    <script src="event/stats/controller.js"></script>
     <script src="event/sections/controller.js"></script>
     <script src="event/list/controller.js"></script>
     <script src="event/sync/controller.js"></script>
@@ -104,6 +105,12 @@ Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
 	      controller: eventResultsController,
 	      templateUrl: 'event/results/view.html',
 	      resolve: eventResultsController.resolve,
+	      reloadOnSearch: false
+	    }).when('/event/:id/stats', {
+	      title: 'Statistik',
+	      controller: eventStatsController,
+	      templateUrl: 'event/stats/view.html',
+	      resolve: eventStatsController.resolve,
 	      reloadOnSearch: false
 	    }).when('/event/:id/sections', {
 	      title: 'Sektionslisten',
