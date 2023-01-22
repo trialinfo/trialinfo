@@ -166,7 +166,7 @@ var eventResultsController = [
 		  };
 		};
 		let zones = class_.events[event_idx].zones;
-		let skipped_zones = results.events[event_idx].skipped_zones[class_.ranking_class] || {};
+		let skipped_zones = (results.events[event_idx].skipped_zones || {})[class_.ranking_class] || {};
 		result.unfinished_zones = [];
 		for (let round = 1; round <= result.marks_per_zone.length; round++) {
 		  let marks_per_zone = result.marks_per_zone[round - 1] || [];
