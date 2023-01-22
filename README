@@ -51,10 +51,6 @@ Systemvoraussetzungen
 
  * Die Datenbank MySQL (bzw. MariaDB).
 
- * Für die statischen Ergebnissseiten, den Apache Web-Server und die
-   Scriptsprache Perl. Zusätzlich folgende Pakete oder Perl-Module:
-     perl-DBD-MySQL, perl-CGI, perl-JSON.
-
 
 Konfiguration
 =============
@@ -131,9 +127,8 @@ Web Server
 ----------
 
 Die im Backend implementierte Web-Applikation beinhaltet alle Funktionen, um
-Veranstaltungen durchführen zu können.  Einzig die öffentliche Darstellung von
-Ergebnissen ist derzeit noch über Perl CGI-Scripts implementiert.  Wenn diese
-verwendet werden sollen, bietet es sich an, dafür Apache zu verwenden, und
+Veranstaltungen durchführen zu können.  Um mehere Instanzen auf dem gleichen
+Server laufen zu lassen, bietet es sich an, dafür Apache zu verwenden, und
 Apache als Proxy zum Backend zu verwenden.
 
   Beispielkonfiguration für Apache:
@@ -142,19 +137,12 @@ Apache als Proxy zum Backend zu verwenden.
 	DocumentRoot /home/agruen/trialinfo/htdocs
 	ServerName www.trialinfo.at
 
-	ScriptAlias /cgi-bin/ "/home/agruen/trialinfo/cgi-bin/"
-
 	<LocationMatch ".*">
 	    Require all granted
 	</LocationMatch>
 
 	<Directory "/home/agruen/trialinfo/htdocs">
 	    Options Indexes
-	    AllowOverride All
-	</Directory>
-
-	<Directory "/home/agruen/trialinfo/cgi-bin">
-	    Options None
 	    AllowOverride All
 	</Directory>
 
@@ -177,9 +165,6 @@ SELinux
   Wenn die Daten in einem Home Directory liegen, lässt sich SELinux nicht
   leicht so konfigurieren, dass die CGI-Scripts funktionieren.  Sonst sollte
   folgendes klappen:
-
-  $ semanage fcontext -a -t httpd_sys_script_exec_t '/home/agruenba/trialinfo/cgi-bin(/.*)?'
-  $ restorecon -r /home/agruenba/trialinfo/cgi-bin
 
   So kann man selbst erstellte File Context-Regeln anzeigen:
 
@@ -244,19 +229,13 @@ Apache-Module
 Auf manchen Systemen wie Ubuntu 15.04 müssen die verwendeten Apache-Module
 mit folgendem Befehl aktiviert werden:
 
-  $ a2enmod include.load cgid.load rewrite.load
+  $ a2enmod rewrite.load
 
 
-DEB-Paket bauen
+RPM-Paket bauen
 ===============
 
-$ dnf install dpkg dpkg-dev debhelper devscripts
 $ make release
-$ ./deb.sh trialinfo-0.1.tar.gz
-$ debsign ... ?
-
-(When dpkg-buildpackage builds packages builds packages as non-root, it uses
-fakeroot which makes the build takes extremely long.)
 
 
 Veranstaltungsverwaltung
