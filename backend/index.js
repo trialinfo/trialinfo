@@ -72,6 +72,7 @@ var views = {
   '2019.html': require('./views/2019.marko.js'),
   '2020.html': require('./views/2020.marko.js'),
   '2021.html': require('./views/2021.marko.js'),
+  '2022.html': require('./views/2022.marko.js'),
   'login': require('./views/login.marko.js'),
   'change-password': require('./views/change-password.marko.js'),
   'confirmation-sent': require('./views/confirmation-sent.marko.js'),
@@ -6074,6 +6075,7 @@ app.get('/2018.html', conn(pool), serie_index(views['2018.html']));
 app.get('/2019.html', conn(pool), serie_index(views['2019.html']));
 app.get('/2020.html', conn(pool), serie_index(views['2020.html']));
 app.get('/2021.html', conn(pool), serie_index(views['2021.html']));
+app.get('/2022.html', conn(pool), serie_index(views['2022.html']));
 
 app.get('/login/', function(req, res, next) {
   var params = {

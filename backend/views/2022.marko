@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<!--
+TrialInfo
+https://github.com/trialinfo/trialinfo
+
+Copyright 2012-2023  Andreas Grünbacher  <andreas.gruenbacher@gmail.com>
+Lizenz: AGPLv3, http://www.gnu.org/licenses/agpl-3.0.html
+-->
+
+<html>
+  <head>
+    <title>ÖTSV Veranstaltungen 2022</title>
+    <link rel="stylesheet" type="text/css" href="app.css" />
+    <style>
+    a { text-decoration:none }
+    .register { background-color:#ffff80 }
+    </style>
+    <script src="js/common.js"></script>
+    <macro show_serie(serie, not_series, ignore)>
+    <p>
+      $ var events = data.events(serie, not_series);
+      <for(event in events)>
+	<a href="event/${event.id}/results">${event.title}</a> ${data.abbreviations(event.series, ignore=ignore)}<br>
+      </for>
+    </p>
+    </macro>
+  </head>
+  <body>
+    <h1>ÖTSV Veranstaltungen 2022</h1>
+    <h2>ÖTSV Cup und AMF Staatsmeisterschaft</h2>
+    <show_serie serie=63 ignore=[62]/>
+    <p>
+      <a href="serie/63/results">ÖTSV Cup + Damencup Jahreswertung</a><br>
+      <a href="serie/64/results">AMF Staatsmeisterschaft Jahreswertung</a>
+    </p>
+
+    <h2>ÖTSV A-Cup</h2>
+    <show_serie serie=65 ignore=[62,65]/>
+    <p>
+      <a href="serie/65/results">Jahreswertung</a>
+    </p>
+
+    <h2>ÖTSV e-Kids Cup</h2>
+    <show_serie serie=66 ignore=[62,66]/>
+    <p>
+      <a href="serie/66/results">Jahreswertung</a>
+    </p>
+
+    <h2>ÖTSV Bike Trial Cup</h2>
+    <show_serie serie=67 ignore=[62,67]/>
+    <p>
+      <a href="serie/67/results">Jahreswertung</a>
+    </p>
+  </body>
+</html>
