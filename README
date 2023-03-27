@@ -146,7 +146,7 @@ Apache als Proxy zum Backend zu verwenden.
 	    AllowOverride All
 	</Directory>
 
-	<LocationMatch "^/(|login/?|admin/|register/event/\d+|logout|signup|reset|change-password|admin/config.js|api/.*)$">
+	<LocationMatch "^/(.*)$">
 	    ProxyPassMatch "http://localhost:3080/$1"
 	</LocationMatch>
     </VirtualHost>
