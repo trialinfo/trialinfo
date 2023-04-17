@@ -4785,9 +4785,12 @@ async function register_save_rider(connection, id, number, rider, user, query) {
 
     var old_rider;
     if (number != null) {
-      old_rider = await get_rider(connection, id, number);
-      if (old_rider.user_tag != user.user_tag &&
-	  old_rider.email != user.email)
+      var result = await connection.queryAsync(`
+        SELECT 1
+	FROM riders
+	WHERE id = ? AND number = ? AND (user_tag = ? OR email = ?)
+      `, [id, number, user.user_tag, user.email]);
+      if (result.length != 1)
 	throw new HTTPError(403, 'Forbidden');
     } else {
       var result = await connection.queryAsync(`
