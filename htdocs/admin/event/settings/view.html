@@ -206,7 +206,7 @@ a:hover.updown {
 	<th style="text-align:center"><span title="Fahrzeit (HH:MM)">Fahrzeit</span></th>
 	<th style="text-align:center"><span title="Zeitlimit in Sektion (MM:SS)">Zeitlimit</span></th>
 	<th style="text-align:center">Wertung<br>in Klasse</th>
-	<th style="text-align:center">Keine<br>Wertung&nbsp;1</th>
+	<th style="text-align:center;hyphens:auto">{{event.rankings[0].name || 'Wertung&nbsp;1'}}</th>
 	<th style="text-align:center">Außer<br>Konkurrenz</th>
       </tr>
       <tr ng-repeat="index in class_order">
@@ -241,7 +241,7 @@ a:hover.updown {
 	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{index + 1}}" ng-model="event.classes[index].ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
 	</td>
 	<td style="text-align:center">
-	  <input type="checkbox" ng-model="event.classes[index].no_ranking1">
+	  <input type="checkbox" ng-model="event.classes[index].no_ranking1" inverted>
 	</td>
 	<td style="text-align:center">
 	  <input type="checkbox" ng-model="event.classes[index].non_competing">

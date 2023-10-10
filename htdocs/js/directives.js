@@ -173,6 +173,26 @@
     };
   });
 
+  // Model: yyyy-MM-dd, View: d.M.yyyy
+  module.directive('inverted', function() {
+    return {
+      restrict: 'A',
+      require: 'ngModel',
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(value) {
+	  if (typeof value == 'boolean')
+	    value = !value;
+	  return value;
+	});
+	ngModel.$formatters.push(function(value) {
+	  if (typeof value == 'boolean')
+	    value = !value;
+	  return value;
+	});
+      }
+    };
+  });
+
   // Model: true, false, or null, View: 'yes', 'no', '-'
   module.directive('yesNoNull', function() {
     return {
