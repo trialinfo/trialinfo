@@ -10,6 +10,9 @@ table.scoring_table th, table.scoring_table td {
   font-weight:bold;
   color:darkred;
 }
+.class-symbol {
+  stroke:#a0a0a0
+}
 </style>
 <h1>{{event.title}} – Punktevergabe</h1>
 <table>
@@ -19,7 +22,7 @@ table.scoring_table th, table.scoring_table td {
 	<fieldset>
 	  <legend>Punktevergabe</legend>
 	  <p ng-if="rider">
-	    {{rider.number < 0 ? null : rider.number}} <span ng-bind-html="class_symbol()"></span>
+	    {{rider.number < 0 ? null : rider.number}} <span ng-bind-html="classSymbol(event.classes[ranking_class - 1].color)"></span>
 	    {{rider.last_name}} {{rider.first_name}} (<span ng-if="!rider.group" title="{{event.classes[rider['class'] - 1].name}}">Klasse {{rider['class']}}</span><span ng-if="rider.group">Gruppe</span>)
 	  </p>
 	  <p ng-if="!rider.number">
