@@ -1,3 +1,9 @@
+<style>
+.class-symbol {
+  stroke:#a0a0a0
+}
+</style>
+
 <h1>{{event.title}} – {{groups ? 'Gruppen' : 'Fahrer'}}</h1>
 <table>
   <tr>
@@ -10,7 +16,7 @@
 	      <th><label for="class" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
 	      <td>
 		<input ng-disabled="!enabled.rider" type="text" numeric size="2" maxlength="2" min="1" max="15" ng-model="rider.class" id="class">
-		<span ng-bind-html="class_symbol()"></span>
+		<span ng-bind-html="classSymbol()"></span>
 		<select ng-disabled="!enabled.rider" ng-model="rider.class" ng-options="class.class as class.class + ': ' + class.name for class in defined_classes" tabindex="-1">
 		  <option value=""></option>
 		</select>

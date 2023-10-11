@@ -2,9 +2,9 @@
 
 var ridersController = [
   '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window', '$document', 'setFocus',
-  'riderName', 'riderInfo', 'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
+  'riderName', 'riderInfo', 'classSymbol', 'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
   function ($scope, $sce, $http, $timeout, $q, $route, $location, $window, $document, setFocus,
-	    riderName, riderInfo, event, suggestions, groups, riders_hash, groups_hash) {
+	    riderName, riderInfo, classSymbol, event, suggestions, groups, riders_hash, groups_hash) {
     $scope.$root.context(event.title);
 
     /* Im Fahrer-Nennformular Gruppenwertungen herausfiltern und im
@@ -751,14 +751,9 @@ var ridersController = [
 	.find(function(_) { return land == _ });
     };
 
-    $scope.class_symbol = function() {
+    $scope.classSymbol = function() {
       if ($scope.rider && $scope.rider.class != null) {
-	var color = event.classes[$scope.rider.class - 1].color;
-	if (color) {
-	  return $sce.trustAsHtml(
-	    `<span style="display:inline-block; width:8pt; height:8pt; background-color:${color}"></span>`
-	  );
-	}
+	return classSymbol(event.classes[$scope.rider.class - 1].color);
       }
     };
 
