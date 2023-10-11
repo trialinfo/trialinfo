@@ -127,7 +127,7 @@ table.ranking tbody.alt {
       <tbody ng-repeat="number in filtered_zones[zone_nr - 1].riders" ng-init="rider = riders[number]" class="rider" ng-class-even="'alt'">
         <tr>
 	  <td style="text-align:right">{{number < 0 ? null : number}}</td>
-	  <!-- <td ng-bind-html="class_symbol(event.classes[rider.class - 1])"></td> -->
+	  <!-- <td ng-bind-html="classSymbol(event.classes[rider.class - 1].color)"></td> -->
 	  <!-- <td>{{rider.class}}</td> -->
 	  <td style="text-align:left">{{rider.last_name}} {{rider.first_name}}</td>
 	  <td ng-repeat="round in enumerate(1, filtered_zones[zone_nr - 1].rounds)" style="text-align:center">{{rider.marks_per_zone[round - 1][zone_nr - 1]}}</td>

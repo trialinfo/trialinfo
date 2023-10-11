@@ -143,13 +143,6 @@ var eventSectionsController = [
       return list;
     }
 
-    $scope.class_symbol = function(class_) {
-      if (class_.color) {
-	return $sce.trustAsHtml(
-	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + class_.color + '"></span>');
-      }
-    };
-
     $scope.fold = {};
     $scope.settings = function(event) {
       event.preventDefault();
