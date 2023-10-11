@@ -397,6 +397,18 @@
       return infos.join('\n');
     };
   }]);
+
+  module.factory('classSymbol', ['$sce', function($sce) {
+    return function(color) {
+      if (color) {
+	return $sce.trustAsHtml(
+	  `<svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" version="1.1">` +
+	    `<rect x="0" y="0" width="14" height="14" class="class-symbol" stroke-width="3" fill="${color}"></rect>` +
+	  `</svg>`
+	);
+      }
+    };
+  }]);
 }());
 
 /* ex:set shiftwidth=2: */

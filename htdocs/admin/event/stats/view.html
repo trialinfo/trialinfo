@@ -47,7 +47,7 @@ table.ranking tr td.important {
     <table class="ranking">
     <thead>
     <tr>
-    <th><span ng-bind-html="class_symbol(class.color)" style="text-align:center"></span></th>
+    <th><span ng-bind-html="classSymbol(class.color)" style="text-align:center"></span></th>
     <th ng-repeat="marks in marks_list">{{marks}}</th>
     <th>⌀</th>
     <th></th>
@@ -88,7 +88,7 @@ table.ranking tr td.important {
     <tbody>
     <tr ng-repeat="class_info in zone_info.marks_distributions track by $index" ng-class-even="'alt'">
     <td>{{class_info.class.name}}</td>
-    <td ng-bind-html="class_symbol(class_info.class.color)" style="text-align:center"></td>
+    <td ng-bind-html="classSymbol(class_info.class.color)" style="text-align:center"></td>
     <td ng-repeat="marks in marks_list">{{class_info.marks_distribution[marks]}}</td>
     <td>{{average(class_info.marks_distribution)}}</td>
     <td ng-bind-html="graph(class_info.marks_distribution)"></td>
@@ -120,7 +120,7 @@ table.ranking tr td.important {
   <tbody>
   <tr ng-repeat="class in stats.classes" ng-class-even="'alt'">
   <td>{{class.name}}</td>
-  <td ng-bind-html="class_symbol(class.color)" style="text-align:center"></td>
+  <td ng-bind-html="classSymbol(class.color)" style="text-align:center"></td>
   <td ng-repeat="marks in marks_list">{{class.marks_distribution[marks]}}</td>
   <td>{{average(class.marks_distribution)}}</td>
   <td ng-bind-html="graph(class.marks_distribution)"></td>
