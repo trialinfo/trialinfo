@@ -1,6 +1,3 @@
-<h1>{{stats.event.title}}</h1>
-<h2>Punktestatistik</h2>
-
 <style type="text/css">
 table.ranking {
   border-collapse:collapse;
@@ -28,6 +25,9 @@ table.ranking tr td.individual-marks, table.ranking tr td.distribution {
 table.ranking tr.total {
   font-style: italic;
 }
+.class-symbol {
+  stroke:#98bf21
+}
 </style>
 <style type="text/css" ng-if="!features.individual_marks">
 table.ranking tr td.round {
@@ -38,13 +38,16 @@ table.ranking tr td.important {
 }
 </style>
 
+<h1>{{stats.event.title}}</h1>
+
 <div ng-if="by_class">
+  <h2>Punktestatistik nach Klassen</h2>
   <div ng-repeat="class in stats.classes">
     <h3>{{class.name}}</h3>
     <table class="ranking">
     <thead>
     <tr>
-    <th>Sektion</th>
+    <th><span ng-bind-html="classSymbol(class.color)" style="text-align:center"></span></th>
     <th ng-repeat="marks in marks_list">{{marks}}</th>
     <th>⌀</th>
     <th></th>
@@ -69,12 +72,14 @@ table.ranking tr td.important {
 </div>
 
 <div ng-if="by_zone">
+  <h2>Punktestatistik nach Sektionen</h2>
   <div ng-repeat="zone_info in stats.zones track by $index" ng-if="zone_info">
     <h3>Sektion {{$index + 1}}</h3>
     <table class="ranking">
     <thead>
     <tr>
     <th>Klasse</th>
+    <th>Spur</th>
     <th ng-repeat="marks in marks_list">{{marks}}</th>
     <th>⌀</th>
     <th></th>
@@ -82,12 +87,14 @@ table.ranking tr td.important {
     </thead>
     <tbody>
     <tr ng-repeat="class_info in zone_info.marks_distributions track by $index" ng-class-even="'alt'">
-    <td>{{class_info.class.ranking_class}}</td>
+    <td>{{class_info.class.name}}</td>
+    <td ng-bind-html="classSymbol(class_info.class.color)" style="text-align:center"></td>
     <td ng-repeat="marks in marks_list">{{class_info.marks_distribution[marks]}}</td>
     <td>{{average(class_info.marks_distribution)}}</td>
     <td ng-bind-html="graph(class_info.marks_distribution)"></td>
     </tr>
     <tr ng-class="zone_info.marks_distributions.length % 2 ? 'alt' : null" class="total">
+    <td></td>
     <td></td>
     <td ng-repeat="marks in marks_list">{{zone_info.marks_distribution[marks]}}</td>
     <td>{{average(zone_info.marks_distribution)}}</td>
@@ -98,30 +105,36 @@ table.ranking tr td.important {
   </div>
 </div>
 
-<table class="ranking" ng-if="!by_class && !by_zone && stats.classes.length">
-<thead>
-<tr>
-<th>Klasse</th>
-<th ng-repeat="marks in marks_list">{{marks}}</th>
-<th>⌀</th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr ng-repeat="class in stats.classes" ng-class-even="'alt'">
-<td>{{class.ranking_class}}</td>
-<td ng-repeat="marks in marks_list">{{class.marks_distribution[marks]}}</td>
-<td>{{average(class.marks_distribution)}}</td>
-<td ng-bind-html="graph(class.marks_distribution)"></td>
-</tr>
-<tr ng-class="stats.classes.length % 2 ? 'alt' : null" class="total">
-<td></td>
-<td ng-repeat="marks in marks_list">{{marks_distribution[marks]}}</td>
-<td>{{average(marks_distribution)}}</td>
-<td ng-bind-html="graph(marks_distribution)"></td>
-</tr>
-</tbody>
-</table>
+<div ng-if="!by_class && !by_zone">
+  <h2>Punktestatistik</h2>
+  <table class="ranking" ng-if="stats.classes.length">
+  <thead>
+  <tr>
+  <th>Klasse</th>
+  <th>Spur</th>
+  <th ng-repeat="marks in marks_list">{{marks}}</th>
+  <th>⌀</th>
+  <th></th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr ng-repeat="class in stats.classes" ng-class-even="'alt'">
+  <td>{{class.name}}</td>
+  <td ng-bind-html="classSymbol(class.color)" style="text-align:center"></td>
+  <td ng-repeat="marks in marks_list">{{class.marks_distribution[marks]}}</td>
+  <td>{{average(class.marks_distribution)}}</td>
+  <td ng-bind-html="graph(class.marks_distribution)"></td>
+  </tr>
+  <tr ng-class="stats.classes.length % 2 ? 'alt' : null" class="total">
+  <td></td>
+  <td></td>
+  <td ng-repeat="marks in marks_list">{{marks_distribution[marks]}}</td>
+  <td>{{average(marks_distribution)}}</td>
+  <td ng-bind-html="graph(marks_distribution)"></td>
+  </tr>
+  </tbody>
+  </table>
+</div>
 
 <p>
 <span ng-repeat="marks in marks_list"><span ng-bind-html="dot(marks)"></span> {{marks}} &nbsp; </span>

@@ -15,6 +15,9 @@
     animation-timing-function: ease-in-out;
     animation-direction: alternate;
   }
+.class-symbol {
+  stroke:#98bf21
+}
 
   a:link,a:visited,a:hover,a:active .stats-link { text-decoration:none; }
 </style>
@@ -171,7 +174,7 @@ table.ranking tr td.important {
 	    <th ng-if="events.length > 1" colspan="{{1 + marks_distribution_columns + class_ranking.scores}}" style="text-align:center">Gesamt</th>
 	  </tr>
 	  <tr>
-	    <th style="text-align:center" ng-bind-html="class_symbol(class_ranking)" adjust-width="rank" style="border-left:10px solid #98bf21;"></th>
+	    <th style="text-align:center" ng-bind-html="classSymbol(class_ranking.color)" adjust-width="rank" style="border-left:10px solid #98bf21;"></th>
 	    <th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
 	    <th ng-repeat-start="ev in enumerate(0, events.length - 1)" ng-init="event_ranking = class_ranking.events[ev]" style="display:none"></th>
 	    <th rowspan="{{rows_per_rider}}" style="display:none"></th>
@@ -241,7 +244,7 @@ table.ranking tr td.important {
   <table class="ranking">
     <thead>
       <tr>
-	<th style="text-align:center" ng-bind-html="class_symbol(class)" adjust-width="rank"></th>
+	<th style="text-align:center" ng-bind-html="classSymbol(class.color)" adjust-width="rank"></th>
 	<th ng-repeat="field in fields track by $index" ng-attr="field.attr" ng-style="field.style" ng-bind-html="field.heading"></th>
       </tr>
     </thead>

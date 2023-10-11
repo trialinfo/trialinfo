@@ -1,8 +1,8 @@
 'use strict';
 
 var eventStatsController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'stats',
-  function ($scope, $sce, $route, $location, $timeout, $http, $q, stats) {
+  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'classSymbol', 'stats',
+  function ($scope, $sce, $route, $location, $timeout, $http, $q, classSymbol, stats) {
     $scope.stats = stats;
 
     $scope.params = $route.current.params;
@@ -124,11 +124,14 @@ var eventStatsController = [
       return $sce.trustAsHtml(svg);
     };
 
+    $scope.classSymbol = classSymbol;
+
     $scope.dot = (marks) => {
-      let svg = `<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" version="1.1">`;
-      svg += `<rect x="0" y="0" width="10" height="10" fill="${marks_distribution_colors[marks]}"><title>${marks}</title></rect>`;
-      svg += `</svg>`;
-      return $sce.trustAsHtml(svg);
+      return $sce.trustAsHtml(
+	`<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" version="1.1">` +
+	  `<rect x="0" y="0" width="10" height="10" fill="${marks_distribution_colors[marks]}"><title>${marks}</title></rect>` +
+	`</svg>`
+      );
     };
 
     $scope.$on('$routeUpdate', function() {

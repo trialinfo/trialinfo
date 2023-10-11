@@ -1,8 +1,8 @@
 'use strict';
 
 var eventResultsController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'results',
-  function ($scope, $sce, $route, $location, $timeout, $http, $q, fractional, results) {
+  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'classSymbol', 'fractional', 'results',
+  function ($scope, $sce, $route, $location, $timeout, $http, $q, classSymbol, fractional, results) {
     $scope.config = config;
     $scope.show = {
       fields: [],
@@ -308,12 +308,7 @@ var eventResultsController = [
       return list;
     }
 
-    $scope.class_symbol = function(class_) {
-      if (class_.color) {
-	return $sce.trustAsHtml(
-	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + class_.color + '"></span>');
-      }
-    }
+    $scope.classSymbol = classSymbol;
 
     function country_province(rider) {
       var country_province = [];

@@ -173,6 +173,26 @@
     };
   });
 
+  // Model: yyyy-MM-dd, View: d.M.yyyy
+  module.directive('inverted', function() {
+    return {
+      restrict: 'A',
+      require: 'ngModel',
+      link: function($scope, element, attr, ngModel) {
+	ngModel.$parsers.push(function(value) {
+	  if (typeof value == 'boolean')
+	    value = !value;
+	  return value;
+	});
+	ngModel.$formatters.push(function(value) {
+	  if (typeof value == 'boolean')
+	    value = !value;
+	  return value;
+	});
+      }
+    };
+  });
+
   // Model: true, false, or null, View: 'yes', 'no', '-'
   module.directive('yesNoNull', function() {
     return {
@@ -375,6 +395,18 @@
 	infos.push('Geburtsdatum: ' +
 		   $rootScope.$eval('date_of_birth | date:"d.M.yyyy"', rider));
       return infos.join('\n');
+    };
+  }]);
+
+  module.factory('classSymbol', ['$sce', function($sce) {
+    return function(color) {
+      if (color) {
+	return $sce.trustAsHtml(
+	  `<svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" version="1.1">` +
+	    `<rect x="0" y="0" width="14" height="14" class="class-symbol" stroke-width="3" fill="${color}"></rect>` +
+	  `</svg>`
+	);
+      }
     };
   }]);
 }());

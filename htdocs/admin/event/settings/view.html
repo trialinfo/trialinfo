@@ -206,7 +206,7 @@ a:hover.updown {
 	<th style="text-align:center"><span title="Fahrzeit (HH:MM)">Fahrzeit</span></th>
 	<th style="text-align:center"><span title="Zeitlimit in Sektion (MM:SS)">Zeitlimit</span></th>
 	<th style="text-align:center">Wertung<br>in Klasse</th>
-	<th style="text-align:center">Keine<br>Wertung&nbsp;1</th>
+	<th style="text-align:center;hyphens:auto">{{event.rankings[0].name || 'Wertung&nbsp;1'}}</th>
 	<th style="text-align:center">Außer<br>Konkurrenz</th>
       </tr>
       <tr ng-repeat="index in class_order">
@@ -219,12 +219,17 @@ a:hover.updown {
 	  <select ng-model="event.classes[class_active[index + 1] ? index : event.classes[index].ranking_class - 1].color" id="class{{index + 1}}_color" ng-disabled="!class_active[index + 1]">
 	    <option value=""></option>
 	    <option value="#0000ff">Blau</option>
-	    <option value="#ff0000">Rot</option>
-	    <option value="#ffff00">Gelb</option>
-	    <option value="#ffffff">Weiß</option>
-	    <option value="#008000">Grün</option>
 	    <option value="#a52a2a">Braun</option>
-	    <!-- Weitere HTML-Farbcodes (z.B. #f660ab für Pink) hier anhängen. -->
+	    <option value="#ffff00">Gelb</option>
+	    <option value="#a0a0a0">Grau</option>
+	    <option value="#008000">Grün</option>
+	    <option value="#ffa500">Orange</option>
+	    <option value="#f660ab">Pink</option>
+	    <option value="#ff0000">Rot</option>
+	    <option value="#000000">Schwarz</option>
+	    <option value="#8800ff">Violett</option>
+	    <option value="#ffffff">Weiß</option>
+	    <!-- Add more HTML color codes here. -->
 	  </select>
 	</td>
 	<td style="text-align:center">
@@ -241,7 +246,7 @@ a:hover.updown {
 	  <input type="text" numeric size="2" maxlength="2" min="1" max="15" ranking-class="{{index + 1}}" ng-model="event.classes[index].ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
 	</td>
 	<td style="text-align:center">
-	  <input type="checkbox" ng-model="event.classes[index].no_ranking1">
+	  <input type="checkbox" ng-model="event.classes[index].no_ranking1" inverted>
 	</td>
 	<td style="text-align:center">
 	  <input type="checkbox" ng-model="event.classes[index].non_competing">

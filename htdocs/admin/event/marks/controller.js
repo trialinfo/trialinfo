@@ -1,8 +1,8 @@
 'use strict';
 
 var marksController = [
-  '$scope', '$sce', '$http', '$timeout', '$route', '$location', '$document', 'setFocus', 'riderName', 'riderInfo', 'event',
-  function ($scope, $sce, $http, $timeout, $route, $location, $document, setFocus, riderName, riderInfo, event) {
+  '$scope', '$sce', '$http', '$timeout', '$route', '$location', '$document', 'setFocus', 'riderName', 'riderInfo', 'classSymbol', 'event',
+  function ($scope, $sce, $http, $timeout, $route, $location, $document, setFocus, riderName, riderInfo, classSymbol, event) {
     $scope.$root.context(event.title);
 
     $scope.event = event;
@@ -689,16 +689,7 @@ var marksController = [
 	.sort((a, b) => a - b);
     };
 
-    $scope.class_symbol = function() {
-      if ($scope.ranking_class != null) {
-	var color = event.classes[$scope.ranking_class - 1].color;
-	if (color) {
-	  return $sce.trustAsHtml(
-	    `<span style="display:inline-block; width:8pt; height:8pt; background-color:${color}"></span>`
-	  );
-	}
-      }
-    };
+    $scope.classSymbol = classSymbol;
 
     $scope.riderName = riderName;
     $scope.riderInfo = riderInfo;
