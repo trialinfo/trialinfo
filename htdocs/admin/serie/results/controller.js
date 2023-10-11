@@ -1,8 +1,8 @@
 'use strict';
 
 var serieResultsController = [
-  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'fractional', 'results',
-  function ($scope, $sce, $route, $location, $timeout, $http, $q, fractional, results) {
+  '$scope', '$sce', '$route', '$location', '$timeout', '$http', '$q', 'classSymbol', 'fractional', 'results',
+  function ($scope, $sce, $route, $location, $timeout, $http, $q, classSymbol, fractional, results) {
     $scope.config = config;
     $scope.show = {
       fields: [],
@@ -269,13 +269,7 @@ var serieResultsController = [
       return field_list;
     })();
 
-    $scope.class_symbol = function(class_) {
-      var color = class_.color
-      if (color) {
-	return $sce.trustAsHtml(
-	  '<span style="display:inline-block; width:0.8em; height:0.8em; background-color:' + color + '"></span>');
-      }
-    };
+    $scope.classSymbol = classSymbol;
 
     $scope.fold = {};
     $scope.settings = function(event) {
