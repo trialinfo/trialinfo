@@ -1,4 +1,31 @@
 <style type="text/css">
+table.ranking {
+  border-collapse:collapse;
+}
+table.ranking td, table.ranking th {
+  border:1px solid #98bf21;
+}
+table.ranking td {
+  padding: 0.1em 0.2em 0.1em 0.2em;
+}
+table.ranking th {
+  padding: 0.2em 0.3em 0.2em 0.3em;
+  font-weight:bolder;
+  background-color:#A7C942;
+  color:#ffffff;
+}
+table.ranking tbody.alt td, table.ranking tr.alt td {
+  background-color:#EAF2D3;
+}
+table.ranking tr td.individual-marks, table.ranking tr td.distribution {
+  color:#A0A0A0;
+}
+table.ranking tr td.round {
+  color:#A0A0A0;
+}
+table.ranking tr td.important {
+  color:#A11111;
+}
   a:link,a:visited { text-decoration:none; color:black; }
   a:hover,a:active { text-decoration:underline; color:#551a8b; }
 </style>
@@ -66,36 +93,6 @@
   </p>
 </div>
 <h2>{{show.subtitle}}</h2>
-
-<style type="text/css">
-table.ranking {
-  border-collapse:collapse;
-}
-table.ranking td, table.ranking th {
-  border:1px solid #98bf21;
-}
-table.ranking td {
-  padding: 0.1em 0.2em 0.1em 0.2em;
-}
-table.ranking th {
-  padding: 0.2em 0.3em 0.2em 0.3em;
-  font-weight:bolder;
-  background-color:#A7C942;
-  color:#ffffff;
-}
-table.ranking tbody.alt td, table.ranking tr.alt td {
-  background-color:#EAF2D3;
-}
-table.ranking tr td.individual-marks, table.ranking tr td.distribution {
-  color:#A0A0A0;
-}
-table.ranking tr td.round {
-  color:#A0A0A0;
-}
-table.ranking tr td.important {
-  color:#A11111;
-}
-</style>
 
 <p>{{results.summary}}</p>
 <div ng-repeat="ranking in results.rankings">
