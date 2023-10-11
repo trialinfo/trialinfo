@@ -3091,7 +3091,7 @@ async function get_event_stats(connection, id) {
       zones: zones,
       marks_distributions: marks_distributions[class_idx]
     };
-    for (let field of ['name', 'ranking_class', 'order'])
+    for (let field of ['name', 'color', 'ranking_class', 'order'])
       stats[field] = event.classes[class_idx][field];
     classes.push(stats);
   }

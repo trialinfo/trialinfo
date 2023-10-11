@@ -124,11 +124,22 @@ var eventStatsController = [
       return $sce.trustAsHtml(svg);
     };
 
+    $scope.class_symbol = function(color) {
+      if (color) {
+	return $sce.trustAsHtml(
+	  `<svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" version="1.1">` +
+	    `<rect x="0" y="0" width="14" height="14" class="class-symbol" stroke-width="3" fill="${color}"></rect>` +
+	  `</svg>`
+	);
+      }
+    };
+
     $scope.dot = (marks) => {
-      let svg = `<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" version="1.1">`;
-      svg += `<rect x="0" y="0" width="10" height="10" fill="${marks_distribution_colors[marks]}"><title>${marks}</title></rect>`;
-      svg += `</svg>`;
-      return $sce.trustAsHtml(svg);
+      return $sce.trustAsHtml(
+	`<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" version="1.1">` +
+	  `<rect x="0" y="0" width="10" height="10" fill="${marks_distribution_colors[marks]}"><title>${marks}</title></rect>` +
+	`</svg>`
+      );
     };
 
     $scope.$on('$routeUpdate', function() {
