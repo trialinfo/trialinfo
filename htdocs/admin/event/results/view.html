@@ -206,7 +206,7 @@ table.ranking tr td.important {
 	    <td ng-repeat="round in (!features.individual_marks ? enumerate(1, event_ranking.rounds) : [])" rowspan="{{rows_per_rider}}" style="text-align:right" class="round" ng-class="result.round_class(round, rider, class_ranking)" ng-bind-html="result.marks_in_round(round)"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.additional_marks">{{result.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.penalty_marks">{{result.penalty_marks | fractional}}</td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" ng-if="events.length > 1" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}"><span title="{{failure(result)}}">{{failure(result)}}</span></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" ng-if="events.length > 1" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}"><span title="{{failure(result)}}">&empty;</span></td>
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-if-start="result && !result.failure" style="display:none"></td>
 	    <td ng-repeat="zone in (features.individual_marks ? event_ranking.zones : [])" style="text-align:right" class="individual-marks">{{result.marks_in_zone(1, zone)}}</th>
@@ -220,7 +220,7 @@ table.ranking tr td.important {
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-repeat-end style="display:none"></td>
 	    <td ng-if-start="rider.failure" style="display:none"></td>
-	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + marks_distribution_columns + (features.explain_rank && class_ranking.explain_rank)}}"><span title="{{failure(rider)}}">{{failure(rider)}}</span></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + marks_distribution_columns + (features.explain_rank && class_ranking.explain_rank)}}"><span title="{{failure(rider)}}">&empty;</span></td>
 	    <td ng-if-end style="display:none"></td>
 	    <td ng-if-start="!rider.failure" style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rider.marks | fractional}}</td>
