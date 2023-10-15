@@ -137,15 +137,23 @@ var serieResultsController = [
 	}
       }
 
-      if (results.rankings.length &&
-	  results.rankings.every(function(ranking) {
-	    return all_equal(ranking.classes, 'summary');
-	  })) {
-	results.summary = results.rankings[0].classes[0].summary;
-	for (let ranking of results.rankings) {
+      for (let ranking of results.rankings) {
+	if (ranking.classes.every(function(class_ranking) {
+	  return class_ranking.summary == ranking.classes[0].summary;
+	})) {
+	  ranking.summary = ranking.classes[0].summary;
 	  for (let class_ranking of ranking.classes)
 	    delete class_ranking.summary;
 	}
+      }
+
+      if (results.rankings.every(function(ranking) {
+	return ranking.summary != null &&
+	       ranking.summary == results.rankings[0].summary;
+      })) {
+	results.summary = results.rankings[0].summary;
+	for (let ranking of results.rankings)
+	  delete ranking.summary;
       }
     })();
 

@@ -100,10 +100,10 @@ table.ranking tr td.important {
 <p>{{results.summary}}</p>
 <div ng-repeat="ranking in results.rankings">
   <h2>{{ranking.name}}</h2>
+  <p>{{ranking.summary}}</p>
   <div ng-repeat="class_ranking in ranking.classes" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
     <h3>{{class_ranking.class.name}}</h3>
     <p>{{class_ranking.summary}}</p>
-    <!-- summary -->
     <table class="ranking">
       <thead>
         <th style="text-align:center" ng-bind-html="classSymbol(class_ranking.class.color)" adjust-width="rank"></th>
