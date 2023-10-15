@@ -55,17 +55,36 @@ async function compute_serie(connection, serie_id, last_event) {
     return event_order[a] > event_order[b] ? a : b;
   }
 
+  /*
+   * Ignore events which have no results at all.  This ensures that events
+   * won't show up in the results during registration, but it also means that
+   * an event that no riders participated in cannot be part of the results.
+   *
+   * (An event can still be part of the results when it has individual classes
+   * with no riders in them.)
+   */
+
   let events_so_far = [];
   (await connection.queryAsync(`
     SELECT ranking, ranking_class, COUNT(*) AS events
     FROM (
       SELECT DISTINCT ranking_class, ranking, id
       FROM series_events
-      JOIN events USING (id)
+      JOIN (
+	  SELECT id
+	  FROM events
+	  JOIN rider_rankings USING (id)
+	  WHERE score
+      ) AS events USING (id)
       JOIN rankings USING (id)
-      JOIN classes USING (id)
+      JOIN (
+	  SELECT id, class, ranking_class, no_ranking1
+	  FROM classes
+	  JOIN zones USING (id, class)
+	  WHERE rounds AND NOT COALESCE(non_competing, 0)
+      ) AS classes USING (id)
       JOIN series_classes USING (serie, ranking, ranking_class)
-      WHERE serie = ? AND enabled AND
+      WHERE serie = ? AND
             (ranking <> 1 OR NOT COALESCE(no_ranking1, 0))
     ) AS _
     GROUP BY ranking, ranking_class
@@ -108,6 +127,7 @@ async function compute_serie(connection, serie_id, last_event) {
       if (tie_break[row.number])
 	rider.tie_break = tie_break[row.number];
     }
+    delete row.date_of_birth;
     delete row.number;
 
     if (rider.last_id)
@@ -231,10 +251,13 @@ async function compute_serie(connection, serie_id, last_event) {
       });
     }
 
-    function drop_score(events, count) {
-      return Object.values(events)
+    function drop_score(events, drop_limit) {
+      let events_list = Object.values(events);
+      if (events_list.length <= drop_limit)
+	return null;
+      return events_list
 	.sort((a, b) => a.score - b.score)
-	.slice(0, count)
+	.slice(0, events_list.length - drop_limit)
 	.reduce(
 	  (drop, _) => drop + _.score, 0);
     }
@@ -244,26 +267,23 @@ async function compute_serie(connection, serie_id, last_event) {
 	(score, _) => score + _.score, 0);
     });
 
-    if (ranking_class.max_events && ranking_class.drop_events) {
-      let drop_limit = ranking_class.max_events - ranking_class.drop_events;
+    let num_events = ranking_class.events_so_far;
+    let max_events = Math.max(num_events, ranking_class.max_events || 0);
+    let drop_limit = max_events - (ranking_class.drop_events || 0);
+    if (num_events > drop_limit) {
       riders.forEach((rider) => {
-	let events = rider.events;
-	if (events.length > drop_limit) {
-	  rider.drop_score = drop_score(events, events.length - drop_limit);
-	  rider.score -= rider.drop_score;
-	}
+	rider.drop_score = drop_score(rider.events, drop_limit);
+	rider.score -= rider.drop_score;
       });
     }
 
-    riders.forEach((rider) => {
-      /* Assume the rider will participate in all events still taking place. */
-      let events_to_come = 0;
-      if (ranking_class.min_events > 1 && ranking_class.max_events) {
-	let events_so_far = ranking_class.events_so_far;
-	events_to_come = Math.max(0, ranking_class.max_events - events_so_far);
+    if (ranking_class.min_events > 1) {
+      for (rider of riders) {
+	/* Assume the rider will participate in all events still taking place. */
+	let events_to_come = max_events - num_events;
+	rider.ranked = rider.events.length + events_to_come >= ranking_class.min_events;
       }
-      rider.ranked = rider.events.length + events_to_come >= ranking_class.min_events;
-    });
+    }
 
     assign_ranks(riders);
 

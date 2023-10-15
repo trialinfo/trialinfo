@@ -36,11 +36,12 @@ var serieResultsController = [
     }(results.events));
 
     $scope.have_drop_score = function(class_ranking) {
-      if (class_ranking.class.drop_events) {
-	let drop_events = class_ranking.events.length -
-			  (class_ranking.class.max_events -
-			   class_ranking.class.drop_events);
-	return drop_events > 0;
+      let class_ = class_ranking.class;
+      if (class_.drop_events) {
+	let num_events = class_ranking.events.length;
+	let max_events = Math.max(num_events, class_.max_events || 0);
+	let drop_limit = max_events - class_.drop_events;
+	return num_events > drop_limit;
       }
     };
 
@@ -91,9 +92,10 @@ var serieResultsController = [
     (function() {
       function summary(class_ranking) {
 	let class_ = class_ranking.class;
+	let num_events = class_ranking.events.length;
 
-	let summary = 'Stand nach ' + class_ranking.events.length;
-	if (class_.max_events)
+	let summary = 'Stand nach ' + num_events;
+	if (class_.max_events >= num_events)
 	  summary += ' von ' + class_.max_events
 	summary += ' Läufen';
 
@@ -103,10 +105,10 @@ var serieResultsController = [
 	}
 
 	if (class_.drop_events) {
-	  let drop_events = class_ranking.events.length -
-			    (class_.max_events - class_.drop_events);
-	  if (drop_events > 0) {
-	    summary += ', ' + drop_events + ' von ' + class_.drop_events +
+	  let max_events = Math.max(num_events, class_.max_events || 0);
+	  let drop_limit = max_events - class_.drop_events;
+	  if (num_events > drop_limit) {
+	    summary += ', ' + (num_events - drop_limit) + ' von ' + class_.drop_events +
 		       ' ' + (class_.drop_events == 1 ?
 			      'Streichresultat' : 'Streichresultaten') +
 		       ' berücksichtigt';

@@ -3328,12 +3328,22 @@ async function get_serie_results(connection, serie_id) {
       return active_classes;
   }
 
+  /*
+   * Ignore events which have no results at all (see
+   * backend/lib/compute_serie.js).
+   */
+
   let event_has_results = {};
   (await connection.queryAsync(`
     SELECT DISTINCT id
     FROM series_events
-    JOIN rider_rankings USING (id)
-    WHERE serie = ? AND score IS NOT NULL
+    JOIN (
+	SELECT DISTINCT id
+	FROM events
+	JOIN rider_rankings USING (id)
+	WHERE score
+    ) AS events USING (id)
+    WHERE serie = ?
   `, [serie_id])).forEach((row) => {
     event_has_results[row.id] = true;
   });
