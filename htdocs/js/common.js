@@ -120,6 +120,40 @@ var regional_indicator_symbol_codes = {
   'SWE': 'SE'
 };
 
+/*
+Unicode Province Flags (not yet well supported in 2023):
+(Black flag: U+1F3F4)
+
+Austrian provinces: U+1F3F4 'a' 't' X U+E007F, with X:
+'1'	Burgenland
+'2'	Carinthia
+'3'	Lower Austria
+'5'	Salzburg
+'6'	Styria
+'7'	Tyrol
+'4'	Upper Austria
+'9'	Vienna
+'8'	Vorarlberg
+
+German provinces: U+1F3F4 'd' 'e' XY U+E007F, with XY:
+'BW'	Baden-Württemberg
+'BY'	Bavaria
+'BE'	Berlin
+'BB'	Brandenburg
+'HB'	Bremen
+'HH'	Hamburg
+'HE'	Hesse
+'NI'	Lower Saxony
+'MV'	Mecklenburg-Vorpommern
+'NW'	North Rhine-Westphalia
+'RP'	Rhineland-Palatinate
+'SL'	Saarland
+'SN'	Saxony
+'ST'	Saxony-Anhalt
+'SH'	Schleswig-Holstein
+'TH'	Thuringia
+*/
+
 function remaining_time(timestamp) {
   var s = parse_timestamp(timestamp).getTime() - Date.now() + 1000;
   var seconds = Math.trunc(s / 1000),
