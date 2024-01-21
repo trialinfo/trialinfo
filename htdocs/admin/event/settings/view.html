@@ -96,100 +96,6 @@ a:hover.updown {
     </table>
   </fieldset><br>
   <fieldset style="display:inline">
-    <legend>Wertungen</legend>
-    <p>
-      <label for="marks_skipped_zone">Für das Auslassen einer Sektion gibt es <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.marks_skipped_zone" id="marks_skipped_zone" style="text-align: center"> Punkte.</label>
-    </p>
-    <p>
-      <input type="checkbox" ng-model="event.uci_x10" id="uci_x10">
-        <label for="uci_x10">UCI Sektoren-Wertung (Fahrradtrial).</label><br>
-      <input type="checkbox" ng-model="event.four_marks" ng-disabled="event.uci_x10" id="four_marks">
-	<label for="four_marks">Es gilt die Vierpunktewertung (Fahrradtrial).</label><br>
-    </p>
-    <p>
-      <label for="equal_marks_resolution">Bei Gleichstand zählt das Rundenergebnis
-      <select id="equal_marks_resolution" ng-model="event.equal_marks_resolution" ng-disabled="event.type == 'otsv-acup'" numeric>
-	<option value="0">nicht</option>
-	<option value="1">der ersten besseren Runde</option>
-	<option value="2">der letzten besseren Runde</option>
-      </select>.</label>
-    </p>
-    <p>
-      <input type="checkbox" ng-model="event.combine" ng-disabled="!event.base" id="combine">
-        <label for="combine">Kombinierte Wertung mit der vorigen Veranstaltung.</label>
-    </p>
-    <span ng-repeat="ranking in event.rankings track by $index">
-      <fieldset style="display:inline">
-	<legend>Wertung {{$index + 1}}</legend>
-	<table>
-	  <tr>
-	    <th><label for="ranking{{$index + 1}}_name">Bezeichnung</label></th>
-	    <td>
-	      <input type="text" size="20" maxlength="20" ng-model="ranking.name" id="ranking{{$index + 1}}_name" nullable>
-	    </td>
-	  </tr>
-	  <tr ng-if="ranking.name != null">
-	    <th rowspan="6">Eigenschaften</th>
-	    <td>
-	      <input type="checkbox" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
-	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
-	    </td>
-	  </tr>
-	  <tr ng-if="ranking.name != null">
-	    <td>
-	      <input type="radio" ng-disabled="main_rankings().length <= 1" ng-model="event.main_ranking" value="{{$index + 1}}" numeric id="ranking{{$index + 1}}_main">
-	        <label for="ranking{{$index + 1}}_main">In Gesamtwertung anzeigen</label>
-	    </td>
-	  </tr>
-	  <tr ng-if="ranking.name != null">
-	    <td>
-	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
-	        <label for="ranking{{$index + 1}}_split">Von Gesamtwertung trennen</label>
-	    </td>
-	  </tr>
-	  <tr ng-if="ranking.name != null">
-	    <td>
-	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
-	        <label for="ranking{{$index + 1}}_joint">Reihung über alle Klassen</label>
-	    </td>
-	  </tr>
-	  <tr ng-if="ranking.name != null">
-	    <td>
-	      <input type="checkbox" ng-model="ranking.ignore" id="ranking{{$index + 1}}_ignore">
-	        <label for="ranking{{$index + 1}}_ignore">In Auswertung ignorieren</label>
-	    </td>
-	  </tr>
-	  <tr ng-if="ranking.name != null">
-	    <td>
-	      <input type="checkbox" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
-	        <label for="ranking{{$index + 1}}_default">Aktiviert für neue Fahrer</label>
-	    </td>
-	  </tr>
-	</table>
-      </fieldset><br>
-    </span>
-    <fieldset style="display:inline">
-      <legend>Wertungspunkte</legend>
-      <table>
-	<tr>
-	  <th>Rang</th>
-	  <th>Punkte</th>
-	<tr ng-repeat="punkte in event.scores track by $index">
-	  <th style="text-align:center">
-	    <span title="{{$last ? 'Ab dem ' : ''}}{{$index + 1}}. Platz">{{$index + 1}}{{$last ? '+' : ''}}</span>
-	  </th>
-	  <td>
-	    <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.scores[$index]" style="text-align: center">
-	  </td>
-	</tr>
-      </table>
-      <p>
-	<input type="checkbox" ng-model="event.split_score" id="split_score">
-	  <label for="split_score">Punkteteilung bei gleicher Platzierung</label>
-      </p>
-    </fieldset>
-  </fieldset><br>
-  <fieldset style="display:inline">
     <legend>Klassen</legend>
     <!--
     <p>
@@ -288,6 +194,100 @@ a:hover.updown {
 	</td>
       </tr>
     </table>
+  </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Wertungen</legend>
+    <p>
+      <label for="marks_skipped_zone">Für das Auslassen einer Sektion gibt es <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.marks_skipped_zone" id="marks_skipped_zone" style="text-align: center"> Punkte.</label>
+    </p>
+    <p>
+      <input type="checkbox" ng-model="event.uci_x10" id="uci_x10">
+        <label for="uci_x10">UCI Sektoren-Wertung (Fahrradtrial).</label><br>
+      <input type="checkbox" ng-model="event.four_marks" ng-disabled="event.uci_x10" id="four_marks">
+	<label for="four_marks">Es gilt die Vierpunktewertung (Fahrradtrial).</label><br>
+    </p>
+    <p>
+      <label for="equal_marks_resolution">Bei Gleichstand zählt das Rundenergebnis
+      <select id="equal_marks_resolution" ng-model="event.equal_marks_resolution" ng-disabled="event.type == 'otsv-acup'" numeric>
+	<option value="0">nicht</option>
+	<option value="1">der ersten besseren Runde</option>
+	<option value="2">der letzten besseren Runde</option>
+      </select>.</label>
+    </p>
+    <p>
+      <input type="checkbox" ng-model="event.combine" ng-disabled="!event.base" id="combine">
+        <label for="combine">Kombinierte Wertung mit der vorigen Veranstaltung.</label>
+    </p>
+    <span ng-repeat="ranking in event.rankings track by $index">
+      <fieldset style="display:inline">
+	<legend>Wertung {{$index + 1}}</legend>
+	<table>
+	  <tr>
+	    <th><label for="ranking{{$index + 1}}_name">Bezeichnung</label></th>
+	    <td>
+	      <input type="text" size="20" maxlength="20" ng-model="ranking.name" id="ranking{{$index + 1}}_name" nullable>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <th rowspan="6">Eigenschaften</th>
+	    <td>
+	      <input type="checkbox" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
+	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="radio" ng-disabled="main_rankings().length <= 1" ng-model="event.main_ranking" value="{{$index + 1}}" numeric id="ranking{{$index + 1}}_main">
+	        <label for="ranking{{$index + 1}}_main">In Gesamtwertung anzeigen</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
+	        <label for="ranking{{$index + 1}}_split">Von Gesamtwertung trennen</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
+	        <label for="ranking{{$index + 1}}_joint">Reihung über alle Klassen</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="checkbox" ng-model="ranking.ignore" id="ranking{{$index + 1}}_ignore">
+	        <label for="ranking{{$index + 1}}_ignore">In Auswertung ignorieren</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <td>
+	      <input type="checkbox" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
+	        <label for="ranking{{$index + 1}}_default">Aktiviert für neue Fahrer</label>
+	    </td>
+	  </tr>
+	</table>
+      </fieldset><br>
+    </span>
+    <fieldset style="display:inline">
+      <legend>Wertungspunkte</legend>
+      <table>
+	<tr>
+	  <th>Rang</th>
+	  <th>Punkte</th>
+	<tr ng-repeat="punkte in event.scores track by $index">
+	  <th style="text-align:center">
+	    <span title="{{$last ? 'Ab dem ' : ''}}{{$index + 1}}. Platz">{{$index + 1}}{{$last ? '+' : ''}}</span>
+	  </th>
+	  <td>
+	    <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.scores[$index]" style="text-align: center">
+	  </td>
+	</tr>
+      </table>
+      <p>
+	<input type="checkbox" ng-model="event.split_score" id="split_score">
+	  <label for="split_score">Punkteteilung bei gleicher Platzierung</label>
+      </p>
+    </fieldset>
   </fieldset><br>
   <fieldset style="display:inline">
     <legend>Mobile Datenerfassung</legend>
