@@ -176,26 +176,6 @@ a:hover.updown {
     </table>
   </fieldset><br>
   <fieldset style="display:inline">
-    <legend>Kartenfarben</legend>
-    <table>
-      <tr ng-repeat="round in [1, 2, 3, 4, 5]">
-	<th>Runde {{round}}</th>
-	<td>
-	  <select ng-model="event.card_colors[$index]">
-	    <option value=""></option>
-	    <option value="#0000ff">Blau</option>
-	    <option value="#ff0000">Rot</option>
-	    <option value="#ffff00">Gelb</option>
-	    <option value="#ffffff">Weiß</option>
-	    <option value="#008000">Grün</option>
-	    <option value="#a52a2a">Braun</option>
-	    <!-- Weitere HTML-Farbcodes (z.B. #f660ab für Pink) hier anhängen. -->
-	  </select>
-	</td>
-      </tr>
-    </table>
-  </fieldset><br>
-  <fieldset style="display:inline">
     <legend>Wertungen</legend>
     <p>
       <label for="marks_skipped_zone">Für das Auslassen einer Sektion gibt es <input type="text" numeric size="2" maxlength="3" min="0" max="999" ng-model="event.marks_skipped_zone" id="marks_skipped_zone" style="text-align: center"> Punkte.</label>
@@ -288,6 +268,26 @@ a:hover.updown {
 	  <label for="split_score">Punkteteilung bei gleicher Platzierung</label>
       </p>
     </fieldset>
+  </fieldset><br>
+  <fieldset style="display:inline">
+    <legend>Kartenfarben</legend>
+    <table>
+      <tr ng-repeat="round in [1, 2, 3, 4, 5]">
+	<th>Runde {{round}}</th>
+	<td>
+	  <select ng-model="event.card_colors[$index]">
+	    <option value=""></option>
+	    <option value="#0000ff">Blau</option>
+	    <option value="#ff0000">Rot</option>
+	    <option value="#ffff00">Gelb</option>
+	    <option value="#ffffff">Weiß</option>
+	    <option value="#008000">Grün</option>
+	    <option value="#a52a2a">Braun</option>
+	    <!-- Weitere HTML-Farbcodes (z.B. #f660ab für Pink) hier anhängen. -->
+	  </select>
+	</td>
+      </tr>
+    </table>
   </fieldset><br>
   <fieldset style="display:inline">
     <legend>Mobile Datenerfassung</legend>
