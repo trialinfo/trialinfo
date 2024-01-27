@@ -111,8 +111,6 @@ a:hover.updown {
 	<th style="text-align:center">Runden</th>
 	<th style="text-align:center"><span title="Fahrzeit (HH:MM)">Fahrzeit</span></th>
 	<th style="text-align:center"><span title="Zeitlimit in Sektion (MM:SS)">Zeitlimit</span></th>
-	<th style="text-align:center">Wertung<br>in Klasse</th>
-	<th style="text-align:center;hyphens:auto">{{event.rankings[0].name || 'Wertung&nbsp;1'}}</th>
 	<th style="text-align:center">Außer<br>Konkurrenz</th>
       </tr>
       <tr ng-repeat="index in class_order">
@@ -147,12 +145,6 @@ a:hover.updown {
 	</td>
 	<td style="text-align:center">
 	  <input type="text" size="5" maxlength="5" ng-model="event.classes[class_active[index + 1] ? index : event.classes[index].ranking_class - 1].time_limit" iso-time-format="m:ss" style="text-align: center" ng-disabled="!class_active[index + 1]">
-	</td>
-	<td style="text-align:center">
-	  <input type="text" numeric size="2" maxlength="2" ranking-class="index + 1" event="event" ng-model="event.classes[index].ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
-	</td>
-	<td style="text-align:center">
-	  <input type="checkbox" ng-model="event.classes[index].no_ranking1" inverted>
 	</td>
 	<td style="text-align:center">
 	  <input type="checkbox" ng-model="event.classes[index].non_competing">
@@ -243,6 +235,26 @@ a:hover.updown {
 	    <td>
 	      <input type="checkbox" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
 	        <label for="ranking{{$index + 1}}_default">Aktiviert für neue Fahrer</label>
+	    </td>
+	  </tr>
+	  <tr ng-if="ranking.name != null">
+	    <th>Teilnehmende<br>Klassen</th>
+	    <td>
+	      <table>
+		<tr>
+		  <th colspan="2" style="text-align:center">Klasse</th>
+		  <th style="text-align:center">Wertung<br>in Klasse</th>
+		</tr>
+		<tr ng-repeat="index in class_order" ng-if="event.classes[class_active[index + 1] ? index : event.classes[index].ranking_class - 1].rounds">
+		  <td>
+		    <input type="checkbox" ng-model="event.classes[index].no_ranking1" inverted>
+		  </td>
+		  <th style="text-align:center">{{index + 1}}</th>
+		  <td style="text-align:center">
+		    <input type="text" numeric size="2" maxlength="2" ranking-class="index + 1" event="event" ranking-class="{{index + 1}}" ng-model="event.classes[index].ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
+		  </td>
+		</tr>
+	      </table>
 	    </td>
 	  </tr>
 	</table>
