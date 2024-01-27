@@ -167,7 +167,7 @@ a:hover.updown {
 	<th>Klasse</th>
 	<th ng-repeat="zone in zones_list track by $index" style="text-align:center"><span title="Sektion {{$index + 1}}">{{zone}}</span></th>
       </tr>
-      <tr ng-repeat="index in class_order">
+      <tr ng-repeat="index in class_order" ng-if="event.classes[class_active[index + 1] ? index : event.classes[index].ranking_class - 1].rounds">
 	<th style="text-align:center">{{index + 1}}</th>
 	<td ng-repeat="zone in zones_list track by $index" style="text-align:center;padding:0.35em">
 	  <input type="checkbox" ng-model="zones[event.classes[index].ranking_class - 1][$index]" title="Sektion {{$index + 1}}" ng-disabled="!class_active[index + 1]">
