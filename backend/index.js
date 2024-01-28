@@ -276,6 +276,52 @@ async function update_database(connection) {
       DROP TABLE riders_groups
     `);
   }
+  if (!await column_exists(connection, 'ranking_classes', 'id')) {
+    console.log('Creating table `ranking_classes`');
+    await connection.queryAsync(`
+      CREATE TABLE ranking_classes (
+	id INT,
+	ranking INT,
+	class INT,
+	ranking_class INT,
+	PRIMARY KEY (id, ranking, class)
+      )
+    `);
+    await connection.queryAsync(`
+      INSERT INTO ranking_classes
+      SELECT id, ranking, class, ranking_class
+      FROM rankings JOIN classes USING (id)
+      WHERE ranking != 1 || !COALESCE(no_ranking1, 0);
+    `);
+    await connection.queryAsync(`
+      CREATE TEMPORARY TABLE z
+      SELECT DISTINCT id, class, zone FROM classes JOIN (
+        SELECT id, class AS ranking_class, zone
+	FROM zones
+      ) AS _ USING (id, ranking_class)
+    `);
+    await connection.queryAsync(`
+      DELETE FROM zones
+    `);
+    await connection.queryAsync(`
+      INSERT INTO zones
+      SELECT * from z
+    `);
+    await connection.queryAsync(`
+      DROP TABLE z
+    `);
+    await connection.queryAsync(`
+      UPDATE classes AS a JOIN (
+          SELECT id, class AS ranking_class, rounds, color, riding_time, time_limit
+	  FROM classes
+        ) AS b USING (id, ranking_class)
+      SET
+        a.color = b.color,
+	a.rounds = b.rounds,
+	a.riding_time = b.riding_time,
+	a.time_limit = b.time_limit
+    `);
+  }
 }
 
 pool.getConnectionAsync()
@@ -1925,7 +1971,7 @@ async function delete_event(connection, id) {
 		     'events_admins', 'events_admins_inherit', 'events_groups',
 		     'events_groups_inherit', 'riders',
 		     'rider_rankings', 'marks', 'rounds', 'series_events',
-		     'new_numbers', 'result_columns',
+		     'new_numbers', 'result_columns', 'ranking_classes',
 		     'future_events', 'future_starts', 'scoring_zones',
 		     'scoring_devices', 'scoring_marks', 'scoring_seq']) {
     let query = 'DELETE FROM ' + connection.escapeId(table) +
