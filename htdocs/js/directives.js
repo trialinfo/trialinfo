@@ -229,21 +229,29 @@
       restrict: 'A',
       require: 'ngModel',
       link: function($scope, element, attr, ngModel) {
-	ngModel.$parsers.push(function(ranking_class) {
-	  if (typeof ranking_class === 'string') {
-	    ngModel.$setValidity('rankingClass', true);
-	    if (ranking_class === '')
-	      return attr.rankingClass;
-	    else
-	      return ranking_class;
+	let ranking_class = $scope.$eval(attr.rankingClass);
+	let classes = $scope.$eval(attr.event).classes;
+	ngModel.$parsers.push(function(value) {
+	  let valid = false;
+	  if (value === '') {
+	    valid = true;
+	    value = '' + ranking_class;
+	  } else if (typeof value === 'string') {
+	    value = '' + +value;
+	    valid = value == ranking_class ||
+		    ((classes[value - 1] || {}).ranking_class == value &&
+		     !classes.some((class_, index) => index != ranking_class - 1 &&
+						      class_.ranking_class == ranking_class));
 	  }
-	  ngModel.$setValidity('rankingClass', false);
+	  ngModel.$setValidity('rankingClass', valid);
+	  if (valid)
+	    return value;
 	});
-	ngModel.$formatters.push(function(ranking_class) {
-	  if (ranking_class === attr.rankingClass)
+	ngModel.$formatters.push(function(value) {
+	  if (+value === ranking_class)
 	    return '';
 	  else
-	    return ranking_class;
+	    return value;
 	});
       }
     };
