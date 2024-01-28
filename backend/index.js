@@ -1138,6 +1138,28 @@ async function read_event(connection, id, revalidate) {
   event.classes = await get_list(connection, 'classes', 'class', 'id', id);
   event.rankings = await get_list(connection, 'rankings', 'ranking', 'id', id);
 
+  (await connection.queryAsync(`
+    SELECT ranking, class, ranking_class
+    FROM ranking_classes
+    WHERE id = ?`, [id])
+  ).forEach((row) => {
+    let ranking = event.rankings[row.ranking - 1];
+    if (!ranking) {
+      console.log(`Event ${id}: ranking ${row.ranking} is undefined, but ranking class ${row.class} is defined`);
+      return;
+    }
+
+    let classes = ranking.classes;
+    if (!classes) {
+      classes = [];
+      ranking.classes = classes;
+    }
+
+    classes[row.class - 1] = row;
+    delete row.ranking;
+    delete row.class;
+  });
+
   event.card_colors = await get_list(connection, 'card_colors', 'round', 'id', id, 'color');
   event.scores = await get_list(connection, 'scores', 'rank', 'id', id, 'score');
   event.result_columns = await get_list(connection, 'result_columns', 'n', 'id', id, 'name');
@@ -3853,6 +3875,34 @@ async function update_rider(connection, id, number, old_rider, new_rider, update
     old_rider, new_rider);
 }
 
+async function __update_rankings(connection, id, old_event, new_event) {
+  var changed = false;
+
+  var nonkeys = Object.keys(new_event || {}).filter(
+    (field) => field != 'classes'
+  );
+
+  await zipAsync(old_event.rankings, new_event.rankings,
+    async function(a, b, ranking_index) {
+      await update(connection, 'rankings',
+	{id: id, ranking: ranking_index + 1},
+	nonkeys,
+	a, b)
+      && (changed = true);
+
+      await zipAsync((a || {}).classes, (b || {}).classes,
+	async function(a, b, class_index) {
+	  await update(connection, 'ranking_classes',
+	    {id: id, ranking: ranking_index + 1, class: class_index + 1},
+	    undefined,
+	    a, b)
+	  && (changed = true);
+	});
+    });
+
+  return changed;
+}
+
 async function __update_event(connection, id, old_event, new_event) {
   var changed = false;
 
@@ -3870,14 +3920,7 @@ async function __update_event(connection, id, old_event, new_event) {
       && (changed = true);
     });
 
-  await zipAsync(old_event.rankings, new_event.rankings,
-    async function(a, b, index) {
-      await update(connection, 'rankings',
-	{id: id, ranking: index + 1},
-	undefined,
-	a, b)
-      && (changed = true);
-    });
+  await __update_rankings(connection, id, old_event, new_event);
 
   await zipAsync(old_event.card_colors, new_event.card_colors,
     async function(a, b, index) {
