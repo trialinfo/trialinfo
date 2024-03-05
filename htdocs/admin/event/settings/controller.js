@@ -118,6 +118,21 @@ var settingsController = [
       return zones;
     }
 
+    function expand_ranking_classes(classes) {
+      for (let index = 0; index < 15; index++) {
+	let class_ = classes[index];
+	if (class_) {
+	  class_.enabled = true;
+	} else {
+	  class_ = {
+	    enabled: false,
+	    ranking_class: index + 1
+	  };
+	  classes[index] = class_;
+	}
+      }
+    }
+
     function max_zone(event) {
       var max_zone = min_zones;
       angular.forEach(event.zones, function(zones) {
@@ -277,11 +292,15 @@ var settingsController = [
       }, []).sort(function(a, b) {
 	return event.classes[a].order - event.classes[b].order;
       });
-      for (var ranking = 1; ranking <= 4; ranking++)
-	if (!event.rankings[ranking - 1])
+      for (var ranking = 1; ranking <= 4; ranking++) {
+	if (!event.rankings[ranking - 1]) {
 	  event.rankings[ranking - 1] = {
-	      name: null,
+	    name: null,
+	    classes: []
 	  };
+	}
+	expand_ranking_classes(event.rankings[ranking - 1]);
+      }
 
       expand_scores(event.scores);
       normalize_future_events(event);
@@ -338,8 +357,17 @@ var settingsController = [
       }
 
       event.rankings.forEach(function(ranking, index) {
-	if (ranking.name === null || ranking.name === '')
+	if (ranking.name === null || ranking.name === '') {
 	  delete event.rankings[index];
+	} else {
+	  ranking.classes = ranking.classes.map(function(class_) {
+	    if (class_.enabled) {
+	      let c = Object.assign({}, class_);
+	      delete c.enabled;
+	      return c;
+	    }
+	  });
+	}
       });
       trim_array(event.rankings);
 
