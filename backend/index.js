@@ -290,13 +290,23 @@ async function update_database(connection) {
     await connection.queryAsync(`
       INSERT INTO ranking_classes
       SELECT id, ranking, class, ranking_class
-      FROM rankings JOIN classes USING (id)
-      WHERE ranking != 1 || !COALESCE(no_ranking1, 0);
+      FROM rankings
+      JOIN classes USING (id)
+      JOIN (
+        SELECT DISTINCT id, class AS ranking_class
+	FROM classes
+	JOIN (
+	    SELECT DISTINCT id, class AS ranking_class
+	    FROM zones
+	) AS _1 USING (id, ranking_class)
+	WHERE rounds > 0
+      ) AS r USING (id, ranking_class)
+      WHERE (ranking != 1 OR NOT COALESCE(no_ranking1, 0)) AND NOT non_competing
     `);
     await connection.queryAsync(`
       CREATE TEMPORARY TABLE z
       SELECT DISTINCT id, class, zone FROM classes JOIN (
-        SELECT id, class AS ranking_class, zone
+	SELECT id, class AS ranking_class, zone
 	FROM zones
       ) AS _ USING (id, ranking_class)
     `);
@@ -312,16 +322,25 @@ async function update_database(connection) {
     `);
     await connection.queryAsync(`
       UPDATE classes AS a JOIN (
-          SELECT id, class AS ranking_class, rounds, color, riding_time, time_limit
+	  SELECT id, class AS ranking_class, rounds, color, riding_time, time_limit
 	  FROM classes
-        ) AS b USING (id, ranking_class)
+	) AS b USING (id, ranking_class)
       SET
-        a.color = b.color,
+	a.color = b.color,
 	a.rounds = b.rounds,
 	a.riding_time = b.riding_time,
 	a.time_limit = b.time_limit
     `);
   }
+  /*
+    XXX Use this instead of checking if table `ranking_classes` exists!
+  if (await column_exists(connection, 'classes', 'ranking_class')) {
+    await connection.queryAsync(`
+      ALTER TABLE classes
+      DROP ranking_class, DROP no_ranking1
+    `);
+  }
+  */
 }
 
 pool.getConnectionAsync()
@@ -3881,6 +3900,9 @@ async function __update_rankings(connection, id, old_event, new_event) {
   var nonkeys = Object.keys(new_event || {}).filter(
     (field) => field != 'classes'
   );
+
+  console.log('old: ' + JSON.stringify(old_event.rankings));
+  console.log('new: ' + JSON.stringify(new_event.rankings));
 
   await zipAsync(old_event.rankings, new_event.rankings,
     async function(a, b, ranking_index) {

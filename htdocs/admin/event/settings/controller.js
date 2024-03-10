@@ -292,14 +292,15 @@ var settingsController = [
       }, []).sort(function(a, b) {
 	return event.classes[a].order - event.classes[b].order;
       });
+      $scope.rankings = event.rankings;
       for (var ranking = 1; ranking <= 4; ranking++) {
-	if (!event.rankings[ranking - 1]) {
-	  event.rankings[ranking - 1] = {
+	if (!$scope.rankings[ranking - 1]) {
+	  $scope.rankings[ranking - 1] = {
 	    name: null,
 	    classes: []
 	  };
 	}
-	expand_ranking_classes(event.rankings[ranking - 1]);
+	expand_ranking_classes($scope.rankings[ranking - 1].classes);
       }
 
       expand_scores(event.scores);
@@ -356,6 +357,7 @@ var settingsController = [
 	  array.pop()
       }
 
+      /* XXX
       event.rankings.forEach(function(ranking, index) {
 	if (ranking.name === null || ranking.name === '') {
 	  delete event.rankings[index];
@@ -370,6 +372,7 @@ var settingsController = [
 	}
       });
       trim_array(event.rankings);
+      */
 
       var future_events = event.future_events;
       var future_event = future_events[future_events.length - 1];
@@ -600,14 +603,6 @@ var settingsController = [
 	event.target.value = '';
     };
 
-    $scope.$watch('event.classes', function() {
-      var class_active = {};
-      angular.forEach($scope.event.classes, function(class_) {
-	class_active[class_.ranking_class] = true;
-      });
-      $scope.class_active = class_active;
-    }, true);
-
     function zone_active(zone) {
       for (var class_ = 1; class_ <= $scope.zones.length; class_++)
 	if ($scope.zones[class_ - 1][zone - 1])
@@ -650,7 +645,7 @@ var settingsController = [
 
     $scope.main_rankings = function() {
       var main_rankings = [];
-      var rankings = $scope.event.rankings;
+      var rankings = $scope.rankings;
       for (var n = 0; n < rankings.length; n++) {
 	var ranking = rankings[n];
 	if (ranking.name != null && !ranking.split && !ranking.ignore)
@@ -659,10 +654,10 @@ var settingsController = [
       return main_rankings;
     }
 
-    $scope.$watch('event.rankings', function() {
+    $scope.$watch('rankings', function() {
       var event = $scope.event;
 
-      angular.forEach(event.rankings, function(ranking) {
+      angular.forEach($scope.rankings, function(ranking) {
 	if (ranking.ignore)
 	  ranking.split = false;
       });
