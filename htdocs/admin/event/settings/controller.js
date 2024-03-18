@@ -118,9 +118,9 @@ var settingsController = [
       return zones;
     }
 
-    function expand_ranking_classes(classes) {
+    function expand_ranking_classes(ranking) {
       for (let index = 0; index < 15; index++) {
-	let class_ = classes[index];
+	let class_ = ranking.classes[index];
 	if (class_) {
 	  class_.enabled = true;
 	} else {
@@ -128,8 +128,18 @@ var settingsController = [
 	    enabled: false,
 	    ranking_class: index + 1
 	  };
-	  classes[index] = class_;
+	  ranking.classes[index] = class_;
 	}
+      }
+    }
+
+    function collapse_ranking_classes(ranking) {
+      for (let index = 0; index < 15; index++) {
+	let class_ = ranking.classes[index];
+	if (class_.enabled)
+	  delete class_.enabled;
+	else
+	  delete ranking.classes[index];
       }
     }
 
@@ -163,6 +173,7 @@ var settingsController = [
 	});
 	return !(angular.equals($scope.old_event, $scope.event) &&
 		 angular.equals($scope.old_zones, $scope.zones) &&
+		 angular.equals($scope.old_rankings, $scope.rankings) &&
 		 angular.equals(scoring_registered($scope.event), $scope.scoring_registered) &&
 		 angular.equals($scope.features_alt, $scope.features));
       } catch (_) {
@@ -300,7 +311,7 @@ var settingsController = [
 	    classes: []
 	  };
 	}
-	expand_ranking_classes($scope.rankings[ranking - 1].classes);
+	expand_ranking_classes($scope.rankings[ranking - 1]);
       }
 
       expand_scores(event.scores);
@@ -312,6 +323,7 @@ var settingsController = [
       if (!modify) {
 	$scope.old_event = angular.copy(event);
 	$scope.old_zones = angular.copy($scope.zones);
+	$scope.old_rankings = angular.copy($scope.rankings);
 	$scope.features_alt = angular.copy($scope.features);
       }
     }
@@ -357,22 +369,12 @@ var settingsController = [
 	  array.pop()
       }
 
-      /* XXX
-      event.rankings.forEach(function(ranking, index) {
-	if (ranking.name === null || ranking.name === '') {
-	  delete event.rankings[index];
-	} else {
-	  ranking.classes = ranking.classes.map(function(class_) {
-	    if (class_.enabled) {
-	      let c = Object.assign({}, class_);
-	      delete c.enabled;
-	      return c;
-	    }
-	  });
-	}
-      });
+      event.rankings = $scope.rankings;
+      for (var ranking = 1; ranking <= 4; ranking++) {
+	collapse_ranking_classes(event.rankings[ranking - 1]);
+	trim_array(event.rankings[ranking - 1].classes);
+      }
       trim_array(event.rankings);
-      */
 
       var future_events = event.future_events;
       var future_event = future_events[future_events.length - 1];
@@ -598,6 +600,7 @@ var settingsController = [
       }
     });
 
+    /* XXX ? */
     $scope.blur_ranking_class = function(class_, event) {
       if (event.target.value === class_ + '')
 	event.target.value = '';
