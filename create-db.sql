@@ -246,7 +246,6 @@ CREATE TABLE `riders` (
   `version` int(11) NOT NULL DEFAULT 1,
   `id` int(11) NOT NULL DEFAULT 0,
   `number` int(11) NOT NULL,
-  `group` tinyint(1) DEFAULT NULL,
   `class` int(11) DEFAULT NULL,
   `minder` int(11) DEFAULT NULL,
   `applicant` varchar(40) DEFAULT NULL,
@@ -304,16 +303,6 @@ CREATE TABLE `riders` (
   `decisive_round` int(11) DEFAULT NULL,
   `unfinished_zones` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`number`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `riders_groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `riders_groups` (
-  `id` int(11) NOT NULL DEFAULT 0,
-  `group_number` int(11) NOT NULL,
-  `number` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`group_number`,`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `rounds`;
