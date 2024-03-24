@@ -303,7 +303,7 @@ var settingsController = [
       }, []).sort(function(a, b) {
 	return event.classes[a].order - event.classes[b].order;
       });
-      $scope.rankings = event.rankings;
+      $scope.rankings = angular.copy(event.rankings);
       for (var ranking = 1; ranking <= 4; ranking++) {
 	if (!$scope.rankings[ranking - 1]) {
 	  $scope.rankings[ranking - 1] = {
@@ -369,10 +369,15 @@ var settingsController = [
 	  array.pop()
       }
 
-      event.rankings = $scope.rankings;
-      for (var ranking = 1; ranking <= 4; ranking++) {
-	collapse_ranking_classes(event.rankings[ranking - 1]);
-	trim_array(event.rankings[ranking - 1].classes);
+      event.rankings = angular.copy($scope.rankings);
+      for (var r = 1; r <= 4; r++) {
+	var ranking = event.rankings[r - 1];
+	if (ranking.name == null) {
+	  delete event.rankings[r - 1];
+	  continue;
+	}
+	collapse_ranking_classes(ranking);
+	trim_array(ranking.classes);
       }
       trim_array(event.rankings);
 

@@ -1156,6 +1156,8 @@ async function read_event(connection, id, revalidate) {
 
   event.classes = await get_list(connection, 'classes', 'class', 'id', id);
   event.rankings = await get_list(connection, 'rankings', 'ranking', 'id', id);
+  for (let ranking of event.rankings)
+    ranking.classes = [];
 
   (await connection.queryAsync(`
     SELECT ranking, class, ranking_class
@@ -1168,13 +1170,12 @@ async function read_event(connection, id, revalidate) {
       return;
     }
 
-    let classes = ranking.classes;
-    if (!classes) {
-      classes = [];
-      ranking.classes = classes;
+    if (!ranking.classes) {
+      /* This shouldn't happen. */
+      return;
     }
 
-    classes[row.class - 1] = row;
+    ranking.classes[row.class - 1] = row;
     delete row.ranking;
     delete row.class;
   });
@@ -3897,15 +3898,12 @@ async function update_rider(connection, id, number, old_rider, new_rider, update
 async function __update_rankings(connection, id, old_event, new_event) {
   var changed = false;
 
-  var nonkeys = Object.keys(new_event || {}).filter(
-    (field) => field != 'classes'
-  );
-
-  console.log('old: ' + JSON.stringify(old_event.rankings));
-  console.log('new: ' + JSON.stringify(new_event.rankings));
-
   await zipAsync(old_event.rankings, new_event.rankings,
     async function(a, b, ranking_index) {
+      var nonkeys = Object.keys(b || {}).filter(
+	(field) => field != 'classes'
+      );
+
       await update(connection, 'rankings',
 	{id: id, ranking: ranking_index + 1},
 	nonkeys,
