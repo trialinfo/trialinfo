@@ -276,8 +276,11 @@ async function update_database(connection) {
       DROP TABLE riders_groups
     `);
   }
-  if (!await column_exists(connection, 'ranking_classes', 'id')) {
+  if (await column_exists(connection, 'classes', 'ranking_class')) {
     console.log('Creating table `ranking_classes`');
+    await connection.queryAsync(`
+      DROP TABLE IF EXISTS ranking_classes
+    `);
     await connection.queryAsync(`
       CREATE TABLE ranking_classes (
 	id INT,
@@ -331,16 +334,11 @@ async function update_database(connection) {
 	a.riding_time = b.riding_time,
 	a.time_limit = b.time_limit
     `);
-  }
-  /*
-    XXX Use this instead of checking if table `ranking_classes` exists!
-  if (await column_exists(connection, 'classes', 'ranking_class')) {
     await connection.queryAsync(`
       ALTER TABLE classes
-      DROP ranking_class, DROP no_ranking1
+      DROP COLUMN ranking_class, DROP COLUMN no_ranking1
     `);
   }
-  */
 }
 
 pool.getConnectionAsync()
@@ -1255,7 +1253,7 @@ async function read_event(connection, id, revalidate) {
     SELECT DISTINCT abbreviation
     FROM series_events
     JOIN series USING (serie)
-    JOIN classes USING (id)
+    JOIN ranking_classes USING (id)
     JOIN series_classes USING (serie, ranking_class)
     WHERE id = ?
     ORDER BY abbreviation`, [id])
