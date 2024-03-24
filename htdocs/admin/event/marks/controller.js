@@ -474,7 +474,7 @@ var marksController = [
       if (rider) {
 	rider.additional_marks = null;
 
-	if (event.type == 'otsv-acup' && !rider.group) {
+	if (event.type == 'otsv-acup') {
 	  if (rider.class >= 8 && rider.class <= 11) {
 	    let year = rider.year_of_manufacture || year_of_event;
 	    let m;
@@ -495,94 +495,88 @@ var marksController = [
 	else if (rider.computed_penalty_marks != null)
 	  rider.marks += rider.computed_penalty_marks;
 
-	if (rider.group) {
-	  for (round = 1; round <= rider.marks_per_zone.length; round++) {
-	    rider.marks += rider.marks_per_round[round - 1];
-	  }
-	} else {
-	  rider.marks_per_round = [];
-	  if (rider.start) {
-	    var rc = ranking_class(rider);
-	    var zones = event.zones[rc - 1] || [];
-	    var rounds = event.classes[rc - 1].rounds;
-	    rider.rounds = 0;
-	    rider.marks_distribution = [0, 0, 0, 0, 0, 0];
-	    if (event.uci_x10)
-	      rider.marks_distribution.push(0);
-	    var round;
-	    for (round = 1; round <= rounds; round++) {
-	      var marks_in_round = resulting_marks_in_round(rider, round);
-	      var total_marks_in_round = 0;
-	      var round_used = false;
-	      for (var index = 0; index < zones.length; index++) {
-		var zone = zones[index];
-		if (!zone_skipped(rc, round, zone)) {
-		  var marks = marks_in_round[zone - 1];
-		  if (marks != null) {
-		    let actual_marks = (marks == -1) ? event.marks_skipped_zone : marks;
-		    total_marks_in_round += actual_marks;
-		    let index;
-		    if (event.uci_x10) {
-		      if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
-			index = actual_marks / 10;
-		    } else {
-		      if (actual_marks >= 0 && actual_marks <= 5)
-			index = actual_marks;
-		    }
-		    if (index != null)
-		      rider.marks_distribution[index]++;
-		    round_used = true;
-		  }
-		}
-	      }
-	      if (round_used) {
-		rider.marks_per_round[round - 1] = total_marks_in_round;
-		rider.marks += total_marks_in_round;
-		rider.rounds = round;
-	      }
-	    }
-
-	    var was_null;
-	    function check_skipped(round, zone) {
+	rider.marks_per_round = [];
+	if (rider.start) {
+	  var rc = ranking_class(rider);
+	  var zones = event.zones[rc - 1] || [];
+	  var rounds = event.classes[rc - 1].rounds;
+	  rider.rounds = 0;
+	  rider.marks_distribution = [0, 0, 0, 0, 0, 0];
+	  if (event.uci_x10)
+	    rider.marks_distribution.push(0);
+	  var round;
+	  for (round = 1; round <= rounds; round++) {
+	    var marks_in_round = resulting_marks_in_round(rider, round);
+	    var total_marks_in_round = 0;
+	    var round_used = false;
+	    for (var index = 0; index < zones.length; index++) {
+	      var zone = zones[index];
 	      if (!zone_skipped(rc, round, zone)) {
-		var marks;
-		for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
-		  marks = (marks_array[round - 1] || [])[zone - 1];
-		  if (marks != null)
-		    return was_null;
+		var marks = marks_in_round[zone - 1];
+		if (marks != null) {
+		  let actual_marks = (marks == -1) ? event.marks_skipped_zone : marks;
+		  total_marks_in_round += actual_marks;
+		  let index;
+		  if (event.uci_x10) {
+		    if (actual_marks % 10 == 0 && actual_marks >= 0 && actual_marks <= 60)
+		      index = actual_marks / 10;
+		  } else {
+		    if (actual_marks >= 0 && actual_marks <= 5)
+		      index = actual_marks;
+		  }
+		  if (index != null)
+		    rider.marks_distribution[index]++;
+		  round_used = true;
 		}
-		was_null = true;
 	      }
 	    }
+	    if (round_used) {
+	      rider.marks_per_round[round - 1] = total_marks_in_round;
+	      rider.marks += total_marks_in_round;
+	      rider.rounds = round;
+	    }
+	  }
 
-	    delete $scope.zones_skipped;
-	    if ($scope.zone_wise_entry) {
-	      check:
-	      for (var index = 0; index < zones.length; index++) {
-		for (round = 1; round <= rounds; round++) {
-		  if (check_skipped(round, zones[index])) {
-		    $scope.zones_skipped = true;
-		    break check;
-		  }
-		}
+	  var was_null;
+	  function check_skipped(round, zone) {
+	    if (!zone_skipped(rc, round, zone)) {
+	      var marks;
+	      for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
+		marks = (marks_array[round - 1] || [])[zone - 1];
+		if (marks != null)
+		  return was_null;
 	      }
-	    } else {
-	      check:
+	      was_null = true;
+	    }
+	  }
+
+	  delete $scope.zones_skipped;
+	  if ($scope.zone_wise_entry) {
+	    check:
+	    for (var index = 0; index < zones.length; index++) {
 	      for (round = 1; round <= rounds; round++) {
-		for (var index = 0; index < zones.length; index++) {
-		  if (check_skipped(round, zones[index])) {
-		    $scope.zones_skipped = true;
-		    break check;
-		  }
+		if (check_skipped(round, zones[index])) {
+		  $scope.zones_skipped = true;
+		  break check;
 		}
 	      }
 	    }
 	  } else {
-	    rider.rounds = null;
-	    rider.marks_distribution = [null, null, null, null, null, null];
-	    if (event.uci_x10)
-	      rider.marks_distribution.push(null);
+	    check:
+	    for (round = 1; round <= rounds; round++) {
+	      for (var index = 0; index < zones.length; index++) {
+		if (check_skipped(round, zones[index])) {
+		  $scope.zones_skipped = true;
+		  break check;
+		}
+	      }
+	    }
 	  }
+	} else {
+	  rider.rounds = null;
+	  rider.marks_distribution = [null, null, null, null, null, null];
+	  if (event.uci_x10)
+	    rider.marks_distribution.push(null);
 	}
       }
     }
@@ -653,16 +647,8 @@ var marksController = [
       try {
 	var rounds = 0;
 	var rider = $scope.rider;
-	if (rider && rider.group) {
-	  angular.forEach(rider.classes, function(class_) {
-	    var rc = event.classes[class_ - 1].ranking_class;
-	    var r = event.classes[rc - 1].rounds;
-	    rounds = Math.max(rounds, r);
-	  });
-	} else {
-	  var rc = $scope.ranking_class;
-	  rounds = event.classes[rc - 1].rounds;
-	}
+	var rc = $scope.ranking_class;
+	rounds = event.classes[rc - 1].rounds;
 	var rounds_list = [];
 	for (var n = 1; n <= rounds; n++)
 	  rounds_list.push(n);
@@ -672,21 +658,8 @@ var marksController = [
 
     $scope.zones_list = function() {
       var rider = $scope.rider;
-      if (!rider || !rider.group) {
-	var rc = $scope.ranking_class;
-	return event.zones[rc - 1];
-      }
-
-      var zones = {};
-      angular.forEach(rider.classes, function(class_) {
-	var rc = event.classes[class_ - 1].ranking_class;
-	angular.forEach(event.zones[rc - 1], function(zone) {
-	  zones[zone] = true;
-	});
-      });
-      return Object.keys(zones)
-        .map(function(key) { return +key; })
-	.sort((a, b) => a - b);
+      var rc = $scope.ranking_class;
+      return event.zones[rc - 1];
     };
 
     $scope.classSymbol = classSymbol;

@@ -4,7 +4,7 @@
 }
 </style>
 
-<h1>{{event.title}} – {{groups ? 'Gruppen' : 'Fahrer'}}</h1>
+<h1>{{event.title}} – Fahrer</h1>
 <table>
   <tr>
     <td style="vertical-align:top">
@@ -12,7 +12,7 @@
 	<fieldset style="display:inline">
 	  <legend>Nennung</legend>
 	  <table>
-	    <tr ng-if="!groups && features.class">
+	    <tr ng-if="features.class">
 	      <th><label for="class" accesskey="k"><span class="accesskey">K</span>lasse</label></th>
 	      <td>
 		<input ng-disabled="!enabled.rider" type="text" numeric size="2" maxlength="2" min="1" max="15" ng-model="rider.class" id="class">
@@ -38,7 +38,7 @@
 	      </td>
 	    </tr>
 	    <tr ng-if="features.last_name">
-	      <th><label for="last_name" accesskey="n"><span ng-if="groups"><span class="accesskey">N</span>ame</span><span ng-if="!groups"><span class="accesskey">N</span>achname</label></span></th>
+	      <th><label for="last_name" accesskey="n"><span class="accesskey">N</span>achname</label></th>
 	      <td>
 		<input ng-disabled="!enabled.rider" type="text" size="30" maxlength="30" ng-model="rider.last_name" id="last_name">
 	      </td>
@@ -239,12 +239,6 @@
 	      </td>
 	    </tr>
 	  </table>
-	</fieldset><br>
-	<fieldset style="display:inline" ng-if="groups && rider">
-	  <legend>Fahrer in Gruppe</legend>
-	  <span ng-repeat="number in rider.riders">
-	    <a href="" ng-click="remove_member(number)" strike-through="!member_starts(number)" title="{{member_info(number, 'Aus Gruppe entfernen')}}">{{memberName(number)}}</a><br>
-	  </span>
 	</fieldset>
       </form>
     </td>
@@ -259,24 +253,14 @@
 	    <button type="button" ng-disabled="modified()" ng-click="load_last_rider()" tabindex="-1">&gt;|</button>
 	  </p>
 	  <p>
-	    <label for="search_term" accesskey="f" ng-if="!groups"><span class="accesskey">F</span>ahrer suchen:</label>
-	    <label for="search_term" accesskey="g" ng-if="groups"><span class="accesskey">G</span>ruppe suchen:</label><br>
+	    <label for="search_term" accesskey="f"><span class="accesskey">F</span>ahrer suchen:</label><br>
 	    <input type="text" ng-disabled="modified()" size="20" maxlength="40" ng-model="search.term" onchange="angular.element(this).scope().find_riders()" id="search_term" tabindex="-1" autofocus autocomplete="off" autocorrect="off" autocapitalize="off"><br>
 	  </p>
 	  <p>
 	    <span ng-repeat="rider in riders_list">
 	      <a href="" ng-click="load_rider(rider.number)" ng-style="modified() && {'pointer-events':'none'}" title="{{riderInfo(rider)}}">{{riderName(rider)}}</a><br>
 	    </span>
-	    <span ng-if="riders_list && riders_list.length == 0">Keine {{groups ? 'Gruppen' : 'Fahrer'}} gefunden.</span>
-	  </p>
-	  <p ng-if="groups && rider">
-	    <label for="member_search_term">Fahrer suchen:</label><br>
-	    <input type="text" ng-disabled="!rider" size="20" maxlength="40" ng-model="member_search.term" onchange="angular.element(this).scope().find_members()" id="member_search_term" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off">
-	  </p>
-	  <p>
-	    <span ng-repeat="number in members_list">
-	      <a href="" ng-click="add_member(number)" strike-through="!member_starts(number)" title="{{member_info(number, 'Zu Gruppe hinzufügen')}}">{{memberName(number)}}</a><br>
-	    </span>
+	    <span ng-if="riders_list && riders_list.length == 0">Keine Fahrer gefunden.</span>
 	  </p>
 	  <p style="color:red">
 	    <span ng-if="error">{{error}}</span>
@@ -350,17 +334,16 @@
 	  </p>
 	  <p>
 	    <button type="button" ng-disabled="modified() || !enabled.neu || busy" ng-click="new_rider()" accesskey="u" tabindex="-1">
-	      <span ng-if="!groups">Ne<span class="accesskey">u</span>er Fahrer</span>
-	      <span ng-if="groups">Ne<span class="accesskey">u</span>e Gruppe</button></span><br>
+	      <span>Ne<span class="accesskey">u</span>er Fahrer</span>
 	    <span ng-if="features.number">
 	      <button type="button" ng-disabled="!enabled.rider || enabled.number || busy" ng-click="change_number()" accesskey="ä" tabindex="-1">Startnummer <span class="accesskey">ä</span>ndern</button><br>
 	    </span>
-	    <button type="button" ng-disabled="modified() || !enabled.rider || (rider.class == null && (!features.number || rider.number == null)) || busy" ng-click="clone()" accesskey="p" tabindex="-1">{{groups ? 'Gruppe' : 'Fahrer'}} ko<span class="accesskey">p</span>ieren</button><br>
+	    <button type="button" ng-disabled="modified() || !enabled.rider || (rider.class == null && (!features.number || rider.number == null)) || busy" ng-click="clone()" accesskey="p" tabindex="-1">Fahrer ko<span class="accesskey">p</span>ieren</button><br>
 	    <button type="button" ng-disabled="modified() || !enabled.remove || busy" ng-disabled="!enabled.rider" ng-click="remove()" accesskey="l" tabindex="-1">
-	      {{groups ? 'Gruppe' : 'Fahrer'}} <span class="accesskey">l</span>öschen</button>
+	      Fahrer <span class="accesskey">l</span>öschen</button>
 	  </p>
 	  <p>
-	    <span ng-repeat="form in config.pdf_forms[event.type]" ng-if="!groups" style="display:block">
+	    <span ng-repeat="form in config.pdf_forms[event.type]" style="display:block">
 	      <button type="button" ng-disabled="modified() || !enabled.rider" ng-click="pdf_form(form)">{{form.name}}</button>
 	      <button type="button" ng-if="form.direct" ng-disabled="modified() || !enabled.rider" ng-click="print_direct(form)" style="padding:0 0">🖶</button>
 	    </span>

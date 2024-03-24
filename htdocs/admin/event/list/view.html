@@ -37,15 +37,6 @@
 	      <input type="text" size="40" maxlength="70" ng-model="show.subtitle" id="subtitle" nullable>
 	    </td>
 	  </tr>
-	  <tr ng-if="riders_groups"><th>Fahrer/Gruppen</th>
-	    <td>
-	      <select ng-model="show.riders_groups">
-		<option value=""></option>
-		<option value="riders">Fahrer</option>
-		<option value="groups">Gruppen</option>
-	      </select>
-	    </td>
-	  </tr>
 	  <tr ng-if="features.verified"><th>Verifiziert</th>
 	    <td>
 	      <select ng-model="show.verified" yes-no-null>
@@ -80,9 +71,7 @@
 		<option value="no">Nein</option>
 		<option value="yes">Ja</option>
 	      </select>
-		<span ng-if="show.riders">
-		  <input type="checkbox" ng-model="show.riding" id="riding"><label for="riding">Fahrer auf der Strecke</label>
-		</span>
+		<input type="checkbox" ng-model="show.riding" id="riding"><label for="riding">Fahrer auf der Strecke</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="features.registered">
@@ -95,7 +84,7 @@
 	      </select>
 	    </td>
 	  </tr>
-	  <tr ng-repeat="ranking in [1,2,3,4]" ng-if="event.rankings[ranking - 1] && ((show.riders && event.rankings[ranking - 1].riders) || (show.groups && event.rankings[ranking - 1].groups))">
+	  <tr ng-repeat="ranking in [1,2,3,4]" ng-if="event.rankings[ranking - 1] && event.rankings[ranking - 1].riders">
 	    <th>{{ranking_name(ranking)}}</th>
 	    <td>
 	      <select ng-model="show['ranking' + ranking]" yes-no-null>
@@ -132,7 +121,6 @@
 		<option value="-"></option>
 		<option value="club" ng-if="features.club">Club</option>
 		<option value="vehicle" ng-if="features.vehicle">Fahrzeug</option>
-		<option value="group" ng-if="riders_groups">Gruppe</option>
 		<option value="ranking_class">Klasse (in Wertung)</option>
 		<option value="country_province" ng-if="features.country || features.province">Land (Bundesland)</option>
 		<option value="org_fee" ng-if="features.org_fee">ÖTSV-Beitrag</option>
@@ -198,7 +186,7 @@
 	  <tr><th></th>
 	    <td><button type="submit" ng-click="create_pdf($event)">PDF</button></td>
 	  </tr>
-	  <tr ng-repeat="form in config.pdf_forms[event.type]" ng-if="!groups"><th></th>
+	  <tr ng-repeat="form in config.pdf_forms[event.type]"><th></th>
 	    <td>
 	      <button type="button" ng-disabled="!num_riders" ng-click="pdf_forms(form)">{{form.name}}</button>
 	      <button type="button" ng-if="form.direct" ng-disabled="!num_riders" ng-click="print_direct(form)" style="padding:0 0">🖶</button>
@@ -221,7 +209,7 @@ table.liste td, table.liste th {
 </style>
 
 <p>
-  <span ng-if="num_riders">{{num_riders}} Fahrer</span><span ng-if="num_riders && num_groups"> und </span><span ng-if="num_groups == 1">1 Gruppe</span><span ng-if="num_groups > 1">{{num_groups}} Gruppen</span><span ng-if="!(num_riders || num_groups)">Keine Fahrer oder Gruppen</span>.
+  <span ng-if="num_riders">{{num_riders}} Fahrer</span><span ng-if="!num_riders">Keine Fahrer</span>.
 </p>
 <div ng-repeat="group in resulting_list" ng-init="group_index = $index" ng-class="!$first && show['page-break'] ? 'page-break' : ''">
   <h2 ng-if="show.group_by != '-'">{{group_heading(group.group)}}</h2>

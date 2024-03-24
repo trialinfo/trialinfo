@@ -38,14 +38,6 @@
 	    <input type="text" size="40" maxlength="70" ng-model="show.subtitle" id="subtitle" nullable>
 	  </td>
 	  </tr>
-	  <tr ng-if="riders_groups"><th>Fahrer/Gruppen</th>
-	    <td>
-	      <select ng-model="show.riders_groups">
-		<option value=""></option>
-		<option value="rider">Fahrer</option>
-		<option value="groups">Gruppen</option>
-	      </select>
-	    </td></tr>
 	  <tr><th>Klassen</th>
             <td>
               <span ng-repeat="tag in classes">

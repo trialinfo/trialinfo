@@ -2,25 +2,10 @@
 
 var ridersController = [
   '$scope', '$sce', '$http', '$timeout', '$q', '$route', '$location', '$window', '$document', 'setFocus',
-  'riderName', 'riderInfo', 'classSymbol', 'event', 'suggestions', 'groups', 'riders_hash', 'groups_hash',
+  'riderName', 'riderInfo', 'classSymbol', 'event', 'suggestions',
   function ($scope, $sce, $http, $timeout, $q, $route, $location, $window, $document, setFocus,
-	    riderName, riderInfo, classSymbol, event, suggestions, groups, riders_hash, groups_hash) {
+	    riderName, riderInfo, classSymbol, event, suggestions) {
     $scope.$root.context(event.title);
-
-    /* Im Fahrer-Nennformular Gruppenwertungen herausfiltern und im
-       Gruppen-Nennformular Fahrerwertungen herausfiltern.  Eine Wertung ist eine
-       Fahrerwertung, wenn startende Fahrer in der Wertung sind, und eine
-       Gruppenwertung, wenn startende Gruppen in der Wertung sind; wenn in einer
-       Wertung niemand startet, ist auch die Art der Wertung nicht definiert. */
-
-    angular.forEach(event.rankings, function(ranking, index) {
-      if ((groups ? ranking.rider : ranking.groups) && ranking.rider != ranking.groups) {
-	event.features = event.features.filter(
-	  function(feature) {
-	    return feature != 'ranking' + (index + 1);
-	  });
-      }
-    });
 
     $scope.config = config;
     $scope.event = event;
@@ -30,14 +15,6 @@ var ridersController = [
     for (var n = 1; n <= event.rankings.length; n++) {
       if (event.rankings[n - 1])
 	features.rankings.push(n);
-    }
-    if (groups) {
-      /* Folgende Features deaktivieren wir für Gruppen: */
-      angular.forEach(['number', 'first_name', 'guardian', 'date_of_birth', 'street',
-		       'zip', 'city', 'phone', 'emergency_phone', 'license', 'vehicle',
-		       'displacement', 'email', 'registration', 'frame_number'], function(feature) {
-	delete features[feature];
-      });
     }
     $scope.features = features;
 
@@ -52,12 +29,10 @@ var ridersController = [
     create_ranking_labels();
 
     $scope.suggestions = suggestions;
-    $scope.groups = groups;
     $scope.enabled = {neu: true};
 
     $scope.internal = {};
     $scope.search = {};
-    $scope.member_search = {};
 
     function visible_number(rider) {
       var number = rider ? rider.number : null;
@@ -68,9 +43,7 @@ var ridersController = [
       var rider = $scope.rider;
       if (rider) {
 	var enabled = $scope.enabled;
-	if (enabled.rider && groups)
-	  setFocus('#member_search_term');
-	else if (enabled.rider && features['class'] && rider['class'] === null)
+	if (enabled.rider && features['class'] && rider['class'] === null)
 	  setFocus('#class');
 	else if (features.number && enabled.number &&
 		 rider && !(rider.number > 0))
@@ -111,8 +84,6 @@ var ridersController = [
       $scope.internal.number = visible_number(rider);
       $scope.old_rider = angular.copy(rider);
       $scope.search.term = '';
-      $scope.member_search.term = '';
-      $scope.members_list = [];
 
       $scope.fahrer_ist_neu = false;
       angular.extend($scope.enabled, {
@@ -178,48 +149,28 @@ var ridersController = [
     }
 
     $scope.load_rider = function(number) {
-      var params = {
-	group: +groups
-      };
-      load_rider($http.get('/api/event/' + event.id + '/rider/' + number,
-			   {params: params}));
+      load_rider($http.get('/api/event/' + event.id + '/rider/' + number));
     };
 
     $scope.load_first_rider = function() {
-      var params = {
-	group: +groups
-      };
-      load_rider($http.get('/api/event/' + event.id + '/first-rider',
-			   {params: params}));
+      load_rider($http.get('/api/event/' + event.id + '/first-rider'));
       clear_search_result();
     };
 
     $scope.load_previous_rider = function() {
-      var params = {
-	group: +groups
-      };
       if ($scope.rider && $scope.rider.number != null)
-        load_rider($http.get('/api/event/' + event.id + '/previous-rider/' + $scope.rider.number,
-		   {params: params}));
+        load_rider($http.get('/api/event/' + event.id + '/previous-rider/' + $scope.rider.number));
       clear_search_result();
     };
 
     $scope.load_next_rider = function() {
-      var params = {
-	group: +groups
-      };
       if ($scope.rider && $scope.rider.number != null)
-        load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number,
-		   {params: params}));
+        load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number));
       clear_search_result();
     };
 
     $scope.load_last_rider = function() {
-      var params = {
-	group: +groups
-      };
-      load_rider($http.get('/api/event/' + event.id + '/last-rider',
-			   {params: params}));
+      load_rider($http.get('/api/event/' + event.id + '/last-rider'));
       clear_search_result();
     };
 
@@ -227,8 +178,7 @@ var ridersController = [
       if ($scope.search.term !== '') {
 	var url = '/api/event/' + event.id + '/find-riders';
 	var params = {
-	  term: $scope.search.term,
-	  group: +groups
+	  term: $scope.search.term
 	};
 	$http.get(url, {params: params})
 	  .then(function(response) {
@@ -331,7 +281,6 @@ var ridersController = [
 	.then(function(response) {
 	  let new_rider = response.data;
 	  update_numbers($scope.old_rider.number, new_rider.number);
-	  update_hashes($scope.old_rider, new_rider);
 	  assign_rider(new_rider);
 	  setFocus('#search_term');
 	})
@@ -362,7 +311,6 @@ var ridersController = [
        * geändert, obwohl alles gleich ist.  Wir könnten hier alle Properties
        * setzen, aber das dupliziert nur den HTML-Code und ist fehleranfällig. */
       var rider = {
-	'group': groups,
 	'class': null,
 	'number': null,
 	'country': event.country,
@@ -371,14 +319,6 @@ var ridersController = [
 	'verified': true,
 	'future_starts': {}
       };
-      if (groups) {
-	rider.riders = [];
-
-	var max = Object.values(groups_hash).reduce(function(max, group) {
-	  return Math.max(alpha2num(group.last_name), max);
-	}, 0);
-	rider.last_name = num2alpha(max + 1);
-      }
       assign_rider(rider);
       $scope.fahrer_ist_neu = true;
       angular.extend($scope.enabled, {
@@ -562,7 +502,7 @@ var ridersController = [
     };
 
     $scope.remove = function() {
-      if (confirm((groups ? 'Gruppe' : 'Fahrer') + ' ' + riderName($scope.rider) + ' wirklich löschen?')) {
+      if (confirm('Fahrer ' + riderName($scope.rider) + ' wirklich löschen?')) {
 	var old_rider = $scope.old_rider;
 	var number = old_rider.number;
 	var version = old_rider.version;
@@ -573,7 +513,6 @@ var ridersController = [
 	$http.delete('/api/event/' + event.id + '/rider/' + number, {params: params})
 	  .then(function() {
 	    assign_rider(undefined);
-	    update_hashes(old_rider, null);
 	    setFocus('#search_term');
 
 	    if ($scope.riders_list) {
@@ -593,154 +532,10 @@ var ridersController = [
       return rider.start && event.zones[ranking_class - 1];
     };
 
-    $scope.member_starts = function(number) {
-      var rider = riders_hash[number];
-      return !rider || rider_starts(rider);
-    };
-
-    $scope.memberName = function(number) {
-      var name;
-      var list = [];
-      if (number >= 0)
-	list.push(number);
-      var rider = riders_hash[number];
-      if (rider) {
-	name = join(' ', rider.last_name, rider.first_name);
-	angular.forEach(rider.groups, function(number) {
-	  if (number == $scope.rider.number)
-	    return;
-	  var group = groups_hash[number];
-	  if (!group)
-	    return;
-	  var name = join(' ', group.last_name, group.first_name);
-	  if (name != '')
-	    list.push(name);
-	});
-      } else {
-	name = 'Unbekannter Fahrer';
-      }
-      return name +
-	     (list.length ? ' (' + list.join(', ') + ')' : '');
-    };
-
-    $scope.member_info = function(number, action) {
-      var rider = riders_hash[number];
-      if (!rider)
-	return;
-
-      var info = '';
-      if (action)
-	info = action + ':\n';
-      info += riderInfo(rider);
-      if (!rider_starts(rider))
-	info += '\n(Fahrer startet nicht)';
-      return info;
-    };
-
     function not_equal(v1) {
       return function(v2) {
 	return v1 != v2;
       };
-    }
-
-    $scope.members_list = [];
-
-    $scope.remove_member = function(number) {
-      $scope.member_search.term = '';
-
-      var rider = $scope.rider;
-      $scope.rider.riders = rider.riders.filter(not_equal(number));
-      $scope.members_list.push(number);
-      $scope.members_list = normalize_riders_list($scope.members_list);
-      setFocus('#member_search_term');
-    };
-
-    $scope.add_member = function(number) {
-      $scope.member_search.term = '';
-
-      $scope.members_list = $scope.members_list.filter(not_equal(number));
-
-      var rider = $scope.rider;
-      for (var n = 0; n < rider.riders.length; n++)
-	if (rider.riders[n] == number)
-	  return;
-      rider.riders.push(number);
-      rider.riders = normalize_riders_list(rider.riders);
-      setFocus('#member_search_term');
-    };
-
-    function normalize_hash_list(hash, numbers) {
-      return numbers.sort(function(a, b) {
-	var fa = hash[a], fb = hash[b];
-	if (!fa || !fb)
-	  return !fa - !fb;
-	return generic_compare(fa.last_name, fb.last_name) ||
-	       generic_compare(fa.first_name, fb.first_name) ||
-	       a - b;
-      });
-    }
-
-    function normalize_riders_list(numbers) {
-      return normalize_hash_list(riders_hash, numbers);
-    }
-
-    function normalize_groups_list(numbers) {
-      return normalize_hash_list(groups_hash, numbers);
-    }
-
-    $scope.find_members = function() {
-      if ($scope.member_search.term !== '') {
-	var url = '/api/event/' + event.id + '/find-riders';
-	var params = {
-	  term: $scope.member_search.term,
-	  group: 0,
-	  active: true,
-	};
-	$http.get(url, {params: params})
-	  .then(function(response) {
-	    let riders_list = response.data;
-	    var found = normalize_riders_list(
-	      riders_list.map(function(rider) {
-		return rider.number;
-	      }).filter(function(number) {
-		return !$scope.rider.riders.some(function(s) {
-		  return s == number;
-		});
-	      }));
-	    $scope.members_list = found;
-	    if (found.length == 1)
-	      $scope.add_member(found[0]);
-	  })
-	  .catch(network_error);
-      } else {
-	delete $scope.members_list;
-      }
-    }
-
-    function update_hashes(old_group, group) {
-      if (old_group && old_group.group) {
-	var hashed = groups_hash[old_group.number];
-	if (hashed) {
-	  angular.forEach(old_group.riders || [], function(number) {
-	    var rider = riders_hash[number];
-	    rider.groups = rider.groups.filter(not_equal(old_group.number));
-	  });
-	  delete groups_hash[old_group.number];
-	}
-      }
-      if (group && group.group) {
-	var hashed = {};
-	angular.forEach(['first_name', 'last_name', 'class', 'date_of_birth'], function(name) {
-	  hashed[name] = group[name];
-	});
-	hashed.riders = angular.copy(group.riders);
-	groups_hash[group.number] = hashed;
-	angular.forEach(group.riders || [], function(number) {
-	  var rider = riders_hash[number];
-	  rider.groups.push(group.number);
-	  rider.groups = normalize_groups_list(rider.groups);
-	});
-      }
     }
 
     $scope.is_austria = function(land) {
@@ -759,7 +554,7 @@ var ridersController = [
 
     function create_ranking_labels() {
       /* FIXME: Vergebene Accesskeys dynamisch ermitteln. */
-      var accesskeys = 'aknvpsuäl' + (groups ? 'g' : 'f');
+      var accesskeys = 'aknvpsuälf';
       $scope.rankings = [];
       angular.forEach(features.rankings, function(ranking) {
 	var name = event.rankings[ranking - 1].name || '';
@@ -924,7 +719,7 @@ var ridersController = [
     $scope.$emit('$routeUpdate');
   }];
 
-ridersController.resolveFactory = function (groups) {
+ridersController.resolveFactory = function () {
   return {
     event: [
       '$q', '$http', '$route',
@@ -935,22 +730,6 @@ ridersController.resolveFactory = function (groups) {
       '$q', '$http', '$route',
       function($q, $http, $route) {
 	return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/suggestions'));
-      }],
-    riders_hash: [
-      '$q', '$http', '$route',
-      function($q, $http, $route) {
-	if (groups)
-	  return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/riders'));
-      }],
-    groups_hash: [
-      '$q', '$http', '$route',
-      function($q, $http, $route) {
-	if (groups)
-	  return http_request($q, $http.get('/api/event/' + $route.current.params.id + '/groups'));
-      }],
-    groups: [
-      function() {
-	return groups;
       }],
   };
 };

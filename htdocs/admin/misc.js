@@ -92,7 +92,7 @@ function class_may_start(class_, event) {
 
 function rider_does_not_start(rider, event) {
   function class_does_not_start(rider, event) {
-    if (!rider || rider.group)
+    if (!rider)
       return;
 
     var class_ = rider['class'];
@@ -108,7 +108,7 @@ function rider_does_not_start(rider, event) {
     reasons.push(reason);
   if (rider) {
     if (!rider.verified)
-      reasons.push((rider.group ? 'Gruppe' : 'Fahrer') + ' ist nicht verifiziert.');
+      reasons.push('Fahrer ist nicht verifiziert.');
     if (event.features.registered && !rider.registered)
       reasons.push('Nennungseingang ist nicht markiert.');
   }

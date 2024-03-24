@@ -54,19 +54,6 @@ var eventListController = [
       return riders_by_number;
     })(list);
 
-    angular.forEach(list, function(group) {
-      if (group.group) {
-	angular.forEach(group.riders, function(number) {
-	  var rider = riders_by_number[number];
-	  if (rider) {
-	    if (!rider.groups)
-	      rider.groups = [];
-	    rider.groups.push(group.number);
-	  }
-	});
-      }
-    });
-
     function otsv_fee(event) {
       if (event.type == 'otsv' || event.type == 'otsv+amf') {
 	var now, match;
@@ -105,12 +92,11 @@ var eventListController = [
 
     angular.forEach(list, function(rider) {
       angular.forEach(rider.rankings, function(ranking) {
-	var field = rider.group ? 'groups' : 'riders';
 	ranking = event.rankings[ranking - 1];
 	if (ranking) {
-	  if (ranking[field] == null)
-	    ranking[field] = 0;
-	  ranking[field]++;
+	  if (ranking.riders == null)
+	    ranking.riders = 0;
+	  ranking.riders++;
 	}
       });
     });
@@ -144,14 +130,7 @@ var eventListController = [
 	    rider.rankings[0] = false;
 	} catch(_) { }
       }
-
-      if (rider.group)
-	$scope.show.groups = true;
-      else
-	$scope.show.riders = true;
     });
-    if ($scope.show.riders && $scope.show.groups)
-      $scope.riders_groups = true;
 
     function country_province(rider) {
       var country_province = [];
@@ -167,18 +146,6 @@ var eventListController = [
       var r = event.rankings[ranking - 1];
       return r && r.name ? r.name : 'Wertung ' + ranking;
     };
-
-    function groups_list(groups) {
-      var liste = [];
-      angular.forEach(groups, function(number) {
-	var group = riders_by_number[number];
-	if (group)
-	  liste.push(group);
-      });
-      return liste.map(function(group) {
-	return join(' ', group.last_name, group.first_name);
-      }).sort(function(a, b) { return a.localeCompare(b); }).join(', ');
-    }
 
     function address(rider) {
       var address = [], zip_city = [];
@@ -457,15 +424,6 @@ var eventListController = [
 	  },
 	  style: { 'text-align': 'center' },
 	  attr: { 'adjust-width': 'current_round' } },
-      groups:
-	{ name: 'Gruppen',
-	  heading: 'Gruppen',
-	  value: function(rider) {
-	    return groups_list(rider.groups);
-	  },
-	  style: { 'text-align': 'left' },
-	  attr: { 'adjust-width': 'groups' },
-	  when: function() { return $scope.riders_groups; } },
       entry_fee:
 	{ name: 'Nenngeld',
 	  heading: 'Nenngeld',
@@ -531,9 +489,6 @@ var eventListController = [
       if (show.verified !== null &&
 	  !rider.verified == show.verified)
 	return false;
-      if ((rider.group && !show.groups) ||
-	  (!rider.group && !show.riders))
-	return false;
       if (show.number !== null &&
 	  (rider.number >= 0) !== show.number)
 	return false;
@@ -571,7 +526,7 @@ var eventListController = [
 	try {
 	  var ranking_class = event.classes[rider['class'] - 1].ranking_class;
 	  var class_ = event.classes[ranking_class - 1];
-	  if (!rider.failure && rider.rounds < class_.rounds && !rider.group)
+	  if (!rider.failure && rider.rounds < class_.rounds)
 	    return true;
 	} catch(_) { }
 	return false;
@@ -668,39 +623,6 @@ var eventListController = [
 	},
 	compare: function(f1, f2) {
 	  return generic_compare(f1.org_fee, f2.org_fee);
-	}
-      },
-      group: {
-	heading: function(f) {
-	  return f ? join(' ', f.last_name, f.first_name) : 'Keine Gruppen';
-	},
-	group_by: function(list) {
-	  var groups = {}, no_groups = [];
-	  angular.forEach(list, function(rider) {
-	    if (rider.groups && rider.groups.length) {
-	      angular.forEach(rider.groups, function(number) {
-		if (!groups[number])
-		  groups[number] = [];
-		groups[number].push(rider);
-	      });
-	    } else
-	      no_groups.push(rider);
-	  });
-
-	  var resulting_list = [];
-	  if (no_groups.length)
-	    resulting_list.push({group: null, list: no_groups});
-	  return resulting_list.concat(
-	    Object.keys(groups).map(function(number) {
-	      return {
-		group: riders_by_number[number],
-		list: groups[number]
-	      };
-	    }).sort(function(g1, g2) {
-	      return generic_compare(g1.group.last_name, g2.group.last_name) ||
-		     generic_compare(g1.group.first_name, g2.group.first_name);
-	    })
-	  );
 	}
       }
     };
@@ -834,14 +756,7 @@ var eventListController = [
     function update() {
       var filtered = list.filter(filter);
 
-      $scope.num_riders = 0;
-      $scope.num_groups = 0;
-      angular.forEach(filtered, function(rider) {
-	if (rider.group)
-	  $scope.num_groups++;
-	else
-	  $scope.num_riders++;
-      });
+      $scope.num_riders = filtered.length;
 
       var resulting_list = (function(list) {
 	var group_by = group_by_functions[$scope.show.group_by];
@@ -969,20 +884,6 @@ var eventListController = [
       .catch(network_error);
     }
 
-    $scope.$watch('show.riders_groups', function(value) {
-      $scope.show.riders = value != 'groups';
-      $scope.show.groups = value != 'riders';
-      if (!$scope.show.riders) {
-	$scope.show.registered = null;
-	$scope.show.riding = false;
-      }
-      angular.forEach(event.rankings, function(ranking, index) {
-	if (!$scope.show.riders && !ranking.riders)
-	  $scope.show['ranking' + (index + 1)] = null;
-	else if (!$scope.show.groups && !ranking.groups)
-	  $scope.show['ranking' + (index + 1)] = null;
-      });
-    });
     $scope.$watch('show.start', function(value) {
       if (!value)
 	$scope.show.riding = false;
@@ -1001,7 +902,6 @@ var eventListController = [
     });
     $scope.$watch('show.riding', function(value) {
       if (value) {
-	$scope.show.riders_groups = 'riders';
 	$scope.show.verified = true;
 	if (features.registered)
 	  $scope.show.registered = true;
