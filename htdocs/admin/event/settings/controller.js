@@ -551,9 +551,12 @@ var settingsController = [
 	    index + 1;
 	  class_.no_ranking1 =
 	    (type == 'otsv' &&
-	     (index == 0 || (index >= 10 && index <= 12)));
+	     (index == 0 || (index >= 10 && index <= 12) || index == 14)) ||
+	    (type == 'otsv+amf' && index == 14);
 	  class_.non_competing =
-	    (type == 'otsv+amf' && index == 0);
+	    (type == 'otsv' && index == 14) ||
+	    (type == 'otsv+amf' && (index == 0 || index == 14))
+	    ;
 	});
 	if (type == 'otsv' || type == 'otsv+amf') {
 	  $scope.features.start_time = $scope.features.finish_time =
