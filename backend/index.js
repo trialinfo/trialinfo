@@ -3317,20 +3317,24 @@ async function get_serie_results(connection, serie_id) {
       for (let ranking_idx = 0; ranking_idx < rankings.length; ranking_idx++) {
 	let active_in_ranking = {};
 
-	if (!rankings[ranking_idx] || rankings[ranking_idx].name == null)
+	let ranking_obj = rankings[ranking_idx];
+	if (!ranking_obj || ranking_obj.name == null)
 	  continue;
 	for (let idx = 0; idx < classes.length; idx++) {
 	  if (!classes[idx])
 	    continue;
-	  let ridx = classes[idx].ranking_class - 1;
+	  let ranking_class_obj = ranking_obj.classes[idx];
+	  if (!ranking_class_obj)
+	    continue;
+	  /* XXX I'm unsure about this function ... */
+	  let ridx = ranking_class_obj.ranking_class - 1;
 	  if (!classes_in_serie[ranking_idx] ||
 	      !classes_in_serie[ranking_idx][ridx] ||
 	      !classes[ridx])
 	    continue;
-	  if ((ranking_idx != 0 || !classes[idx].no_ranking1) &&
-	      !classes[idx].non_competing &&
-	      classes[ridx].rounds > 0 &&
-	      event.zones[ridx])
+	  if (!classes[idx].non_competing &&
+	      classes[idx].rounds > 0 &&
+	      event.zones[idx])
 	    active_in_ranking[ridx + 1] = true;
 	  }
 
