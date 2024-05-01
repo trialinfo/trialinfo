@@ -886,17 +886,10 @@ async function rider_pdf_form_data(connection, id, number, event) {
     if (cls) {
       rider.class_name = cls.name;
 
-      if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/)))
-	rider.color = match[1];
-      rider.ranking_class = cls.ranking_class;
-
-      cls = event.classes[cls.ranking_class - 1];
-      if (cls) {
-	var match;
-	if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/))) {
-	  rider.ranking_color = match[1];
-	  rider['class_' + match[1].toLowerCase()] = true;
-	}
+      if (cls.color && (match = cls.color.match(/^#([0-9a-fA-F]{6})$/))) {
+	let color = match[1].toLowerCase();
+	rider.color = color;
+	rider['class_' + color] = true;
       }
     }
   }
