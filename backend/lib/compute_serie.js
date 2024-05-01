@@ -78,14 +78,14 @@ async function compute_serie(connection, serie_id, last_event) {
       ) AS events USING (id)
       JOIN rankings USING (id)
       JOIN (
-	  SELECT id, class, ranking_class, no_ranking1
+	  SELECT id, class, ranking_class
 	  FROM classes
 	  JOIN zones USING (id, class)
+	  JOIN ranking_classes USING (id, class)
 	  WHERE rounds AND NOT COALESCE(non_competing, 0)
       ) AS classes USING (id)
       JOIN series_classes USING (serie, ranking, ranking_class)
-      WHERE serie = ? AND
-            (ranking <> 1 OR NOT COALESCE(no_ranking1, 0))
+      WHERE serie = ?
     ) AS _
     GROUP BY ranking, ranking_class
   `, [serie_id])).forEach((row) => {
