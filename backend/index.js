@@ -2703,10 +2703,12 @@ async function get_event_results(connection, id) {
       let hash = {
 	ranking_class: class_nr,
 	scores: ranking != null &&
-		events.some((event) =>
-		  (event.rankings[ranking - 1] || {}).assign_scores &&
-		  (ranking != 1 ||
-		   !(event.classes[class_nr - 1] || {}).no_ranking1)),
+		events.some((event) => {
+		  let ranking_obj = event.rankings[ranking - 1];
+		  return ranking_obj &&
+			 ranking_obj.assign_scores &&
+			 ranking_obj.classes[class_nr - 1];
+		}),
 	events: [],
 	riders: [],
       };
