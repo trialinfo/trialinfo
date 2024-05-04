@@ -2434,17 +2434,7 @@ async function get_full_event(connection, id) {
   };
 }
 
-function ranking_class(rider, event) {
-  if (rider.verified && rider.start &&
-      (rider.registered || !event.features.registered) &&
-      rider.class != null) {
-    let class_ = event.classes[rider.class - 1];
-    if (class_)
-      return class_.ranking_class;
-  }
-}
-
-function result_marks_per_zone(rider, event, ranking_class) {
+function result_marks_per_zone(rider, event) {
   let marks_per_zone;
 
   if (rider.computed_marks && rider.computed_marks.length) {
@@ -2460,7 +2450,7 @@ function result_marks_per_zone(rider, event, ranking_class) {
     marks_per_zone = rider.marks_per_zone;
   }
 
-  let skipped_zones = (event.skipped_zones || {})[ranking_class];
+  let skipped_zones = (event.skipped_zones || {})[rider.class];
   if (skipped_zones) {
     marks_per_zone = clone(marks_per_zone, false);
     for (let round of Object.keys(skipped_zones)) {
@@ -2489,6 +2479,7 @@ async function get_event_results(connection, id) {
   let events = [], last_event;
   let cached_riders = [];
 
+  /* construct the list of included events (more than one for combined rankings) */
   for(;;) {
     ids.unshift(+id);
     let event_riders = await get_full_event(connection, id);
@@ -2509,6 +2500,7 @@ async function get_event_results(connection, id) {
     id = result[0].id;
   }
 
+  /* construct a rider object based on a cached rider */
   function base_rider(rider) {
     let hash = {
       results: []
@@ -2521,50 +2513,58 @@ async function get_event_results(connection, id) {
     return hash;
   }
 
-  function rider_result(rider, event, ranking_class) {
+  /* the result of a rider in a particular event */
+  function rider_result(rider, event) {
     let hash = {};
     for (let field of rider_result_fields)
       hash[field] = rider[field];
     if ((event.classes[rider.class - 1] || {}).non_competing)
       hash.non_competing = true;
-    hash.marks_per_zone = result_marks_per_zone(rider, event, ranking_class);
+    hash.marks_per_zone = result_marks_per_zone(rider, event);
     return hash;
   }
 
-  let riders_by_ranking_class = {};
+  function rider_starts(rider, event) {
+    return rider.verified &&
+	   rider.start &&
+	   (rider.registered || !event.features.registered) &&
+	   rider.class != null;
+  }
+
+  let riders_by_class = {};
   if (ids.length == 1) {
     for (let cached_rider of cached_riders[0]) {
-      let rc = ranking_class(cached_rider, last_event);
-      if (!rc)
+      if (!rider_starts(cached_rider, last_event))
 	continue;
+      let class_ = cached_rider.class;
 
       let rider = base_rider(cached_rider);
       for (let field of ['rank', 'marks', 'marks_distribution',
 			 'decisive_marks', 'failure', 'non_competing'])
 	rider[field] = cached_rider[field];
-      if ((last_event.classes[cached_rider.class - 1] || {}).non_competing)
+      if ((last_event.classes[class_ - 1] || {}).non_competing)
 	rider.non_competing = true;
-      let result = rider_result(cached_rider, events[0], rc);
+      let result = rider_result(cached_rider, events[0]);
       for (let field of ['decisive_round'])
 	result[field] = cached_rider[field];
       if (cached_rider.unfinished_zones && !cached_rider.failure)
         result.rounds = cached_rider.rounds;
       rider.results.push(result);
 
-      if (!riders_by_ranking_class[rc])
-	riders_by_ranking_class[rc] = [];
-      riders_by_ranking_class[rc].push(rider);
+      if (!riders_by_class[class_])
+	riders_by_class[class_] = [];
+      riders_by_class[class_].push(rider);
     }
   } else {
     for (let ev = events.length - 1; ev >= 0; ev--) {
       for (let cached_rider of cached_riders[ev]) {
-	let rc = ranking_class(cached_rider, events[ev]);
-	if (!rc)
+	if (!rider_starts(cached_rider, last_event))
 	  continue;
+	let class_ = cached_rider.class;
 
-	let riders = riders_by_ranking_class[rc];
+	let riders = riders_by_class[class_];
 	if (!riders)
-	  riders = riders_by_ranking_class[rc] = {};
+	  riders = riders_by_class[class_] = {};
 	let rider = riders[cached_rider.number];
 	if (!rider) {
 	  rider = riders[cached_rider.number] = base_rider(cached_rider);
@@ -2575,7 +2575,7 @@ async function get_event_results(connection, id) {
 	  rider.start = true;
 	  rider.registered = true;
 	}
-	let result = rider_result(cached_rider, events[ev], rc);
+	let result = rider_result(cached_rider, events[ev]);
 	result.unfinished_zones = cached_rider.unfinished_zones;
 	rider.results[ev] = result;
 
@@ -2595,9 +2595,9 @@ async function get_event_results(connection, id) {
 	}
       }
     }
-    for (let rc in riders_by_ranking_class) {
-      riders_by_ranking_class[rc] =
-        Object.values(riders_by_ranking_class[rc]);
+    for (let class_ in riders_by_class) {
+      riders_by_class[class_] =
+        Object.values(riders_by_class[class_]);
     }
 
     for (let rc in riders_by_ranking_class) {
@@ -3041,6 +3041,16 @@ async function get_event_results(connection, id) {
   return hash;
 }
 
+function ranking_class(rider, event) {
+  if (rider.verified && rider.start &&
+      (rider.registered || !event.features.registered) &&
+      rider.class != null) {
+    let class_ = event.classes[rider.class - 1];
+    if (class_)
+      return class_.ranking_class;
+  }
+}
+
 async function get_event_stats(connection, id) {
   let event_riders = await get_full_event(connection, id);
   let event = event_riders.event;
@@ -3061,10 +3071,10 @@ async function get_event_stats(connection, id) {
   };
 
   for (let rider of Object.values(riders)) {
-    let rc = ranking_class(rider, event);
+    let rc = ranking_class(rider, event); /* XXX */
     if (rc == null)
       continue;
-    let marks_per_zone = result_marks_per_zone(rider, event, rc);
+    let marks_per_zone = result_marks_per_zone(rider, event);
     for (let round_idx in marks_per_zone) {
       let marks_in_round = marks_per_zone[round_idx];
       if (!marks_in_round)
@@ -3120,12 +3130,12 @@ async function get_section_lists(connection, id) {
   let event = event_riders.event;
   let riders = event_riders.riders;
 
-  function base_rider(rider, event, rc) {
+  function base_rider(rider, event) {
     let hash = {
     };
     for (let field of ['number', 'class', 'last_name', 'first_name'])
       hash[field] = rider[field];
-    hash.marks_per_zone = result_marks_per_zone(rider, event, rc);
+    hash.marks_per_zone = result_marks_per_zone(rider, event);
     return hash;
   }
 
@@ -3134,7 +3144,7 @@ async function get_section_lists(connection, id) {
   for (let rider of Object.values(riders)) {
     if (!rider.start || (event.features.registered && !rider.registered))
       continue;
-    let rc = ranking_class(rider, event);
+    let rc = ranking_class(rider, event); /* XXX */
     if (!rc)
       continue;
 
@@ -3142,7 +3152,7 @@ async function get_section_lists(connection, id) {
     classes[rc] = true;
     if (!riders_by_ranking_class[rc])
       riders_by_ranking_class[rc] = [];
-    riders_by_ranking_class[rc].push(base_rider(rider, event, rc));
+    riders_by_ranking_class[rc].push(base_rider(rider, event));
   }
 
   let riders_by_zone = {};
@@ -4181,7 +4191,7 @@ async function register_get_event(connection, id, user) {
     if (class_ && class_.rounds && event.zones[index]) {
       result.classes[index] = {
 	name: class_.name,
-	ranking_class: class_.ranking_class
+	ranking_class: class_.ranking_class /* XXX */
       };
     }
   });
@@ -5121,7 +5131,7 @@ function serie_index(view) {
 	SELECT DISTINCT serie, id
 	FROM series_events
 	JOIN series_classes USING (serie)
-	JOIN classes USING (id, ranking_class)`))
+	JOIN classes USING (id, ranking_class)`)) /* XXX */
       .forEach((se) => {
 	let event = events[se.id];
 	let serie = series[se.serie];
@@ -5707,7 +5717,7 @@ async function scoring_get_info(connection, id) {
   let classes = {};
   for (let number in riders) {
     let rider = riders[number];
-    let rc = ranking_class(rider, event);
+    let rc = ranking_class(rider, event); /* XXX */
     if (rc && scoring_classes[rc]) {
       classes[rc] = true;
       classes[rider.class] = true;
@@ -5722,7 +5732,7 @@ async function scoring_get_info(connection, id) {
   }
   for (let c in classes) {
     let class_ = {};
-    for (let field of ['rounds', 'name', 'color', 'ranking_class', 'time_limit'])
+    for (let field of ['rounds', 'name', 'color', 'ranking_class', 'time_limit']) /* XXX */
       class_[field] = event.classes[c - 1][field];
     hash.event.classes[c - 1] = class_;
     let rc = class_.ranking_class;
@@ -5915,7 +5925,7 @@ function scoring_update_riders(id, event, riders) {
   }
 
   function scoring_update_rider(rider) {
-    let rc = ranking_class(rider, event);
+    let rc = ranking_class(rider, event); /* XXX */
     if (!scoring_classes[rc - 1])
       return;
 
