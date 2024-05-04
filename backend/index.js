@@ -1447,10 +1447,7 @@ async function get_rider(connection, id, number, params, direction, event) {
     filters.push('number IN (SELECT number ' +
 		   'FROM riders ' +
 		   'JOIN classes USING (id, class) ' +
-		   'JOIN (SELECT id, class AS ranking_class, zone ' +
-		     'FROM zones ' +
-		     'WHERE id = ' + connection.escape(id) +
-		   ') AS _ USING (id, ranking_class) ' +
+		   'JOIN zones USING (id, class) ' +
 		   'WHERE id = ' + connection.escape(id) +
 		   ' AND zone = ' + connection.escape(params.zone) + ')');
   }
