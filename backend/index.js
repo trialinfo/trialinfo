@@ -2542,7 +2542,7 @@ async function get_event_results(connection, id) {
 	rider[field] = cached_rider[field];
       if ((last_event.classes[cached_rider.class - 1] || {}).non_competing)
 	rider.non_competing = true;
-      let result = rider_result(cached_rider, events[0], ranking_class);
+      let result = rider_result(cached_rider, events[0], rc);
       for (let field of ['decisive_round'])
 	result[field] = cached_rider[field];
       if (cached_rider.unfinished_zones && !cached_rider.failure)
