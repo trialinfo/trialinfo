@@ -369,7 +369,7 @@ var marksController = [
       clear_search_result();
     }
 
-    $scope.load_next_rider = function(current_zone) {
+    function load_next_rider(current_zone) {
       var params = {
 	start: 1
       };
@@ -377,6 +377,10 @@ var marksController = [
 	params.zone = current_zone;
       load_rider($http.get('/api/event/' + event.id + '/next-rider/' + $scope.rider.number, {params: params}), current_zone);
       clear_search_result();
+    }
+
+    $scope.load_next_rider = function() {
+      load_next_rider();
     }
 
     $scope.load_last_rider = function() {
@@ -626,7 +630,7 @@ var marksController = [
 	.then(function(response) {
 	  assign_rider(response.data);
 	  if ($scope.zone_wise_entry)
-	    $scope.load_next_rider(current_zone);
+	    load_next_rider(current_zone);
 	  else
 	    setFocus('#search_term');
 	})
@@ -771,7 +775,7 @@ var marksController = [
 	event.preventDefault();
 	if (!$scope.modified()) {
 	  if ($scope.rider)
-	    $scope.load_next_rider();
+	    load_next_rider();
 	  else
 	    $scope.load_last_rider();
 	}
@@ -787,7 +791,7 @@ var marksController = [
 	  } else {
 	    var current_zone = get_current_zone();
 	    if (current_zone)
-	      $scope.load_next_rider(current_zone);
+	      load_next_rider(current_zone);
 	  }});
       } else if (event.key == 'Escape') {
 	event.preventDefault();
