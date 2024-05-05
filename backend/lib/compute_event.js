@@ -33,6 +33,29 @@ function resulting_marks_in_round(rider, round) {
   return marks_in_round;
 }
 
+function riders_per_ranking_class(riders_per_class, event, ranking, include_others) {
+  if (ranking == null) {
+    /* classes and ranking classes are the same */
+    return riders_per_class;
+  }
+
+  let riders_per_ranking_class = {};
+  for (let class_ in riders_per_class) {
+    let ranking_class = (event.rankings[ranking - 1].classes[class_ - 1] || {}).ranking_class;
+    if (ranking_class == null) {
+      if (!include_others)
+	continue;
+      ranking_class = class_;
+    }
+    if (!riders_per_ranking_class[ranking_class])
+      riders_per_ranking_class[ranking_class] = [];
+    riders_per_ranking_class[ranking_class].push.apply(
+      riders_per_class[class_]
+    );
+  }
+  return riders_per_ranking_class;
+}
+
 function compute_event(cached_riders, event, compute_marks) {
   function compute_rider_marks(riders) {
     let marks_skipped_zone = event.marks_skipped_zone || 0;
@@ -464,41 +487,17 @@ function compute_event(cached_riders, event, compute_marks) {
     }
   };
 
-  function riders_per_ranking_class(riders_per_class, ranking, include_others) {
-    let riders_per_ranking_class = {};
-    for (let class_ in riders_per_class) {
-      let ranking_class = (event.rankings[ranking - 1].classes[class_ - 1] || {}).ranking_class;
-      if (ranking_class == null) {
-	if (!include_others)
-	  continue;
-	ranking_class = class_;
-      }
-      if (!riders_per_ranking_class[ranking_class])
-	riders_per_ranking_class[ranking_class] = [];
-      riders_per_ranking_class[ranking_class].push.apply(
-	riders_per_class[class_]
-      );
-    }
-    return riders_per_ranking_class;
-  }
-
   let riders_per_class = group_riders_per_class(riders);
 
   /* Compute overall ranking including all starters. The rank is stored in
      rider.rank, with no associated score.  */
 
-  let overall_riders;
-  if (event.main_ranking == null) {
-    /* classes and ranking classes are the same */
-    overall_riders = riders_per_class;
-  } else {
-    overall_riders = riders_per_ranking_class(riders_per_class, event.main_ranking, true);
-  }
+  let overall_riders = riders_per_ranking_class(riders_per_class, event, event.main_ranking, true);
   for (let class_ in overall_riders)
     compute_projected_marks(overall_riders[class_], class_);
 
   for (let ranking_class in overall_riders) {
-    let riders_in_class = riders_per_class[ranking_class]
+    let riders_in_class = overall_riders[ranking_class]
       .filter(rider_not_split);
 
     compute_ranks(riders_in_class, null, set_decisive_overall, assign_overall_rank);
@@ -526,23 +525,20 @@ function compute_event(cached_riders, event, compute_marks) {
       }
     }
 
+    let riders_in_ranking;
     if (event.rankings[ranking - 1].joint) {
-      let riders_in_ranking = [];
-      for (let class_ in riders_per_class) {
-	riders_in_ranking.push.apply(
-	  riders_per_class[class_].filter(rider_in_ranking)
-	);
-      }
-      compute_ranks(riders_in_ranking, ranking, set_decisive_in_ranking,
-		    assign_ranking_rank(ranking));
+      riders_in_ranking = {null: []};
+      for (let class_ in riders_per_class)
+	riders_in_ranking[null].push.apply(riders_per_class[class_]);
     } else {
-      let riders_in_ranking = riders_per_ranking_class(riders_per_class, ranking, false);
-      for (let ranking_class in riders_in_ranking) {
-	let riders_in_class = riders_in_ranking[ranking_class]
-	  .filter(rider_in_ranking);
-	compute_ranks(riders_in_class, ranking, set_decisive_in_ranking,
-		      assign_ranking_rank(ranking));
-      }
+      riders_in_ranking = riders_per_ranking_class(riders_per_class, event, ranking, false);
+    }
+
+    for (let ranking_class in riders_in_ranking) {
+      let riders_in_class = riders_in_ranking[ranking_class]
+	.filter(rider_in_ranking);
+      compute_ranks(riders_in_class, ranking, set_decisive_in_ranking,
+		    assign_ranking_rank(ranking));
     }
   }
 
@@ -558,6 +554,7 @@ function compute_event(cached_riders, event, compute_marks) {
 
 module.exports = {
   resulting_marks_in_round: resulting_marks_in_round,
+  riders_per_ranking_class: riders_per_ranking_class,
   compute_event: compute_event
 };
 /* ex:set shiftwidth=2: */
