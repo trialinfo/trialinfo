@@ -9,7 +9,7 @@ var settingsController = [
       reset: null,
       sync_target: config.sync_target,
     };
-    var min_zones = 8;
+    var MIN_ZONES = 8;
 
     $scope.event_types = event_types;
 
@@ -144,7 +144,7 @@ var settingsController = [
     }
 
     function max_zone(event) {
-      var max_zone = min_zones;
+      var max_zone = MIN_ZONES;
       angular.forEach(event.zones, function(zones) {
 	if (zones) {
 	  angular.forEach(zones, function(zone) {
@@ -628,7 +628,7 @@ var settingsController = [
 	});
 	max_zone++;
       } else {
-	while (max_zone > min_zones + 1 &&
+	while (max_zone > MIN_ZONES + 1 &&
 	       !zone_active(max_zone - 1)) {
 	  angular.forEach(zones, function(zones) {
 	    zones.pop();
