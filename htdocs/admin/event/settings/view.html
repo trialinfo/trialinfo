@@ -162,7 +162,7 @@ a:hover.updown {
       <tr ng-repeat="index in class_order" ng-if="event.classes[index].rounds">
 	<th style="text-align:center">{{index + 1}}</th>
 	<td ng-repeat="zone in zones_list track by $index" style="text-align:center;padding:0.35em">
-	  <input type="checkbox" ng-model="zones[event.classes[index].ranking_class - 1][$index]" title="Sektion {{$index + 1}}">
+	  <input type="checkbox" ng-model="zones[index][$index]" title="Sektion {{$index + 1}}">
 	</td>
       </tr>
     </table>
@@ -190,51 +190,51 @@ a:hover.updown {
       <input type="checkbox" ng-model="event.combine" ng-disabled="!event.base" id="combine">
         <label for="combine">Kombinierte Wertung mit der vorigen Veranstaltung.</label>
     </p>
-    <span ng-repeat="ranking in rankings track by $index">
+    <span ng-repeat="ranking in rankings track by $index" ng-init="ranking_no = $index + 1">
       <fieldset style="display:inline">
-	<legend>Wertung {{$index + 1}}</legend>
+	<legend>Wertung {{ranking_no}}</legend>
 	<table>
 	  <tr>
-	    <th><label for="ranking{{$index + 1}}_name">Bezeichnung</label></th>
+	    <th><label for="ranking{{ranking_no}}_name">Bezeichnung</label></th>
 	    <td>
-	      <input type="text" size="20" maxlength="20" ng-model="ranking.name" id="ranking{{$index + 1}}_name" nullable>
+	      <input type="text" size="20" maxlength="20" ng-model="ranking.name" id="ranking{{ranking_no}}_name" nullable>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <th rowspan="6">Eigenschaften</th>
 	    <td>
-	      <input type="checkbox" ng-model="ranking.assign_scores" id="ranking{{$index + 1}}_assign_scores">
-	        <label for="ranking{{$index + 1}}_assign_scores">Wertungspunkte vergeben</label>
+	      <input type="checkbox" ng-model="ranking.assign_scores" id="ranking{{ranking_no}}_assign_scores">
+	        <label for="ranking{{ranking_no}}_assign_scores">Wertungspunkte vergeben</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="radio" ng-disabled="main_rankings().length <= 1" ng-model="event.main_ranking" value="{{$index + 1}}" numeric id="ranking{{$index + 1}}_main">
-	        <label for="ranking{{$index + 1}}_main">In Gesamtwertung anzeigen</label>
+	      <input type="radio" ng-disabled="main_rankings().length <= 1" ng-model="event.main_ranking" value="{{ranking_no}}" numeric id="ranking{{ranking_no}}_main">
+	        <label for="ranking{{ranking_no}}_main">In Gesamtwertung anzeigen</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.split" id="ranking{{$index + 1}}_split">
-	        <label for="ranking{{$index + 1}}_split">Von Gesamtwertung trennen</label>
+	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.split" id="ranking{{ranking_no}}_split">
+	        <label for="ranking{{ranking_no}}_split">Von Gesamtwertung trennen</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.joint" id="ranking{{$index + 1}}_joint">
-	        <label for="ranking{{$index + 1}}_joint">Reihung über alle Klassen</label>
+	      <input type="checkbox" ng-disabled="ranking.ignore" ng-model="ranking.joint" id="ranking{{ranking_no}}_joint">
+	        <label for="ranking{{ranking_no}}_joint">Reihung über alle Klassen</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-model="ranking.ignore" id="ranking{{$index + 1}}_ignore">
-	        <label for="ranking{{$index + 1}}_ignore">In Auswertung ignorieren</label>
+	      <input type="checkbox" ng-model="ranking.ignore" id="ranking{{ranking_no}}_ignore">
+	        <label for="ranking{{ranking_no}}_ignore">In Auswertung ignorieren</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
 	    <td>
-	      <input type="checkbox" ng-model="ranking.default" id="ranking{{$index + 1}}_default">
-	        <label for="ranking{{$index + 1}}_default">Aktiviert für neue Fahrer</label>
+	      <input type="checkbox" ng-model="ranking.default" id="ranking{{ranking_no}}_default">
+	        <label for="ranking{{ranking_no}}_default">Aktiviert für neue Fahrer</label>
 	    </td>
 	  </tr>
 	  <tr ng-if="ranking.name != null">
@@ -251,7 +251,7 @@ a:hover.updown {
 		  </td>
 		  <th style="text-align:center">{{index + 1}}</th>
 		  <td style="text-align:center">
-		    <input type="text" numeric size="2" maxlength="2" ranking-class="index + 1" event="event" ranking-class="{{index + 1}}" ng-model="ranking.classes[index].ranking_class" ng-blur="blur_ranking_class(index + 1, $event)" style="text-align: center">
+		    <input type="text" numeric size="2" maxlength="2" ranking-class="index + 1" classes="ranking.classes" ng-model="ranking.classes[index].ranking_class" style="text-align: center">
 		  </td>
 		</tr>
 	      </table>

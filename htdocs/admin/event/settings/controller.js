@@ -579,37 +579,31 @@ var settingsController = [
       if (type === $scope.old_type)
 	return;
       $scope.old_type = type;
-      if (type) {
-	angular.forEach(event.classes, function(class_, index) {
+      if (type == 'otsv' || type == 'otsv+amf') {
+	var amf_type = (type == 'otsv+amf');
+	angular.forEach($scope.rankings[0].classes, function(class_, class_idx) {
+	  /* Jahreswertung */
 	  class_.ranking_class =
-	    (type == 'otsv' &&
-	     index >= 10 && index <= 12) ? index - 9 :
-	    (type == 'otsv+amf' &&
-	     index == 0) ? 11 :
-	    index + 1;
-	  class_.no_ranking1 =
-	    (type == 'otsv' &&
-	     (index == 0 || (index >= 10 && index <= 12) || index == 14)) ||
-	    (type == 'otsv+amf' && index == 14);
-	  class_.non_competing =
-	    (type == 'otsv' && index == 14) ||
-	    (type == 'otsv+amf' && (index == 0 || index == 14))
-	    ;
+	    (!amf_type &&
+	     class_idx >= 10 && class_idx <= 12) ? class_idx - 9 :
+	    (amf_type &&
+	     class_idx == 0) ? 11 :
+	    class_idx + 1;
+	  if (class_idx == 0 || class_idx == 14)
+	    class_.enabled = false;
+	  else if (class_idx >= 10 && class_idx <= 12)
+	    class_.enabled = amf_type;
 	});
-	if (type == 'otsv' || type == 'otsv+amf') {
-	  $scope.features.start_time = $scope.features.finish_time =
-	    (type == 'otsv+amf');
-	}
-	if (type == 'otsv-acup')
-	  event.equal_marks_resolution = 0;
+	angular.forEach(event.classes, function(class_, class_idx) {
+	  class_.non_competing =
+	    class_idx == 14 ||
+	    (amf_type && class_idx == 0);
+	});
+	$scope.features.start_time = $scope.features.finish_time = amf_type;
+      } else if (type == 'otsv-acup') {
+	event.equal_marks_resolution = 0;
       }
     });
-
-    /* XXX ? */
-    $scope.blur_ranking_class = function(class_, event) {
-      if (event.target.value === class_ + '')
-	event.target.value = '';
-    };
 
     function zone_active(zone) {
       for (var class_ = 1; class_ <= $scope.zones.length; class_++)
