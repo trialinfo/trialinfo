@@ -3041,6 +3041,7 @@ async function get_event_results(connection, id) {
   return hash;
 }
 
+/* XXX */
 function ranking_class(rider, event) {
   if (rider.verified && rider.start &&
       (rider.registered || !event.features.registered) &&

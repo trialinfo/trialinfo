@@ -16,6 +16,7 @@ var marksController = [
       focus_marks();
     };
 
+    /* XXX */
     function ranking_class(rider) {
       if (!rider || !rider['class'])
 	return null;
