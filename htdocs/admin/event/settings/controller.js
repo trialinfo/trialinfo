@@ -605,6 +605,11 @@ var settingsController = [
       }
     });
 
+    $scope.blur_ranking_class = function(class_, event) {
+      if (event.target.value === class_ + '')
+	event.target.value = '';
+    };
+
     function zone_active(zone) {
       for (var class_ = 1; class_ <= $scope.zones.length; class_++)
 	if ($scope.zones[class_ - 1][zone - 1])
@@ -672,6 +677,15 @@ var settingsController = [
 	if (event.main_ranking != main_rankings[0])
 	  event.main_ranking = main_rankings[0];
       }
+
+      angular.forEach($scope.rankings, function(ranking) {
+	angular.forEach(ranking.classes, function(class_obj, index) {
+	  if (!class_obj.enabled &&
+	      class_obj.ranking_class != index + 1)
+	    class_obj.ranking_class = index + 1;
+	});
+      });
+
     }, true);
 
     function composed_title(location, date) {

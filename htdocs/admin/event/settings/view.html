@@ -251,7 +251,7 @@ a:hover.updown {
 		  </td>
 		  <th style="text-align:center">{{index + 1}}</th>
 		  <td style="text-align:center">
-		    <input type="text" numeric size="2" maxlength="2" ranking-class="index + 1" classes="ranking.classes" ng-model="ranking.classes[index].ranking_class" style="text-align: center">
+		    <input type="text" numeric size="2" maxlength="2" ranking-class="index + 1" classes="ranking.classes" ng-model="ranking.classes[index].ranking_class" style="text-align: center" ng-disabled="!ranking.classes[index].enabled" ng-blur="blur_ranking_class(index + 1, $event)">
 		  </td>
 		</tr>
 	      </table>
