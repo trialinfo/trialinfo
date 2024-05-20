@@ -3135,6 +3135,7 @@ async function get_section_lists(connection, id) {
       continue;
 
     classes[rider.class] = true;
+    classes[rc] = true;
     if (!riders_by_ranking_class[rc])
       riders_by_ranking_class[rc] = [];
     riders_by_ranking_class[rc].push(base_rider(rider, event, rc));
