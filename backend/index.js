@@ -2600,6 +2600,7 @@ async function get_event_results(connection, id) {
         Object.values(riders_by_class[class_]);
     }
 
+    /* XXX */
     for (let rc in riders_by_ranking_class) {
       for (let rider of riders_by_ranking_class[rc]) {
 	rider.skipped_event = 0;
