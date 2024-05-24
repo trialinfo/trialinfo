@@ -528,8 +528,7 @@ var ridersController = [
     function rider_starts(rider) {
       if (!rider.class || !event.classes[rider['class'] - 1])
 	return false;
-      var ranking_class = event.classes[rider['class'] - 1].ranking_class;
-      return rider.start && event.zones[ranking_class - 1];
+      return rider.start && event.zones[rider['class'] - 1];
     };
 
     function not_equal(v1) {
