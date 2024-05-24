@@ -16,21 +16,13 @@ var marksController = [
       focus_marks();
     };
 
-    /* XXX */
-    function ranking_class(rider) {
-      if (!rider || !rider['class'])
-	return null;
-      return event.classes[rider['class'] - 1].ranking_class;
-    }
-
     /* Um die Maske sinnvoll darstellen zu können, Felder für die befahrenen
      * Sektionen und Runden der ersten startenden Klasse anzeigen.  Das
      * stimmt zumindest bei allen Veranstaltungen, bei denen alle Klassen
      * die selben Sektionen und Runden befahren.  */
     for (var class_ = 1; class_ < event.zones.length + 1; class_++) {
-      var rc = event.classes[class_ - 1].ranking_class;
-      if (event.zones[rc - 1]) {
-	$scope.ranking_class = rc;
+      if (event.zones[class_ - 1]) {
+	$scope['class'] = class_;
 	break;
       }
     }
@@ -39,13 +31,13 @@ var marksController = [
     // old_rider und rider nicht.
     function fill_marks_per_zone(rider) {
       try {
-	var rc = ranking_class(rider);
+	var class_ = rider.class;
 	var marks_per_zone = rider.marks_per_zone;
-	var rounds = event.classes[rc - 1].rounds;
+	var rounds = event.classes[class_ - 1].rounds;
 	for (var n = 0; n < rounds; n++) {
 	  if (marks_per_zone[n] == null)
 	    marks_per_zone[n] = [];
-	  angular.forEach(event.zones[rc - 1],
+	  angular.forEach(event.zones[class_ - 1],
 	    function(zone) {
 	      if (marks_per_zone[n][zone - 1] === undefined)
 		marks_per_zone[n][zone - 1] = null;
@@ -77,7 +69,7 @@ var marksController = [
       if (rider) {
 	fill_marks_per_zone(rider);
 	$scope.rider = rider;
-	$scope.ranking_class = ranking_class(rider);
+	$scope.class = rider.class;
 	calculate_marks();
       } else
 	$scope.rider = undefined;
@@ -91,21 +83,21 @@ var marksController = [
       try {
 	var rider = $scope.rider;
 	if (rider.start && !rider.failure) {
-	  var rc = ranking_class(rider);
-	  var zones = current_zone != null ? [current_zone] : event.zones[rc - 1];
+	  var class_ = rider.class_;
+	  var zones = current_zone != null ? [current_zone] : event.zones[class_ - 1];
 
 	  function try_to_focus(round, zone) {
 	    for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
 	      if ((marks_array[round - 1] || [])[zone - 1] != null)
 		return false;
 	    }
-	    if (!zone_skipped(rc, round, zone)) {
+	    if (!zone_skipped(class_, round, zone)) {
 	      setFocus('#marks_' + round + '_' + zone);
 	      return true;
 	    }
 	  }
 
-	  var rounds = event.classes[rc - 1].rounds;
+	  var rounds = event.classes[class_ - 1].rounds;
 	  if ($scope.zone_wise_entry) {
 	    for (var index = 0; index < zones.length; index++) {
 	      for (var round = rider.rounds || 1; round <= rounds; round++) {
@@ -210,8 +202,8 @@ var marksController = [
 	  }
 
 	  $scope.scoring_table = scoring_table;
-	  let rc = ranking_class($scope.rider);
-	  let zones = event.zones[rc - 1] || [];
+	  let class_ = $scope.rider.class_;
+	  let zones = event.zones[class_ - 1] || [];
 	  $scope.num_zones = zones.length;
 	})
 	.catch(network_error);
@@ -422,19 +414,19 @@ var marksController = [
     function current_round(rider) {
       if (rider && rider.start) {
 	var round = rider.rounds || 1;
-	var rc = ranking_class(rider);
-	if (!rc)
+	var class_ = rider.class;
+	if (class_ == null)
 	  return null;
-	var zones = event.zones[rc - 1] || [];
+	var zones = event.zones[class_ - 1] || [];
 	for (var index = 0; index < zones.length; index++) {
 	  var zone = zones[index], marks;
 	  for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
 	    marks = (marks_array[round - 1] || [])[zone - 1];
-	    if ((marks == null) && !zone_skipped(rc, round, zone))
+	    if ((marks == null) && !zone_skipped(class_, round, zone))
 	      return round;
 	  }
 	}
-	if (round < event.classes[rc - 1].rounds)
+	if (round < event.classes[class_ - 1].rounds)
 	  return round + 1;
       }
     }
@@ -502,9 +494,9 @@ var marksController = [
 
 	rider.marks_per_round = [];
 	if (rider.start) {
-	  var rc = ranking_class(rider);
-	  var zones = event.zones[rc - 1] || [];
-	  var rounds = event.classes[rc - 1].rounds;
+	  var class_ = rider.class;
+	  var zones = event.zones[class_ - 1] || [];
+	  var rounds = event.classes[class_ - 1].rounds;
 	  rider.rounds = 0;
 	  rider.marks_distribution = [0, 0, 0, 0, 0, 0];
 	  if (event.uci_x10)
@@ -516,7 +508,7 @@ var marksController = [
 	    var round_used = false;
 	    for (var index = 0; index < zones.length; index++) {
 	      var zone = zones[index];
-	      if (!zone_skipped(rc, round, zone)) {
+	      if (!zone_skipped(class_, round, zone)) {
 		var marks = marks_in_round[zone - 1];
 		if (marks != null) {
 		  let actual_marks = (marks == -1) ? event.marks_skipped_zone : marks;
@@ -544,7 +536,7 @@ var marksController = [
 
 	  var was_null;
 	  function check_skipped(round, zone) {
-	    if (!zone_skipped(rc, round, zone)) {
+	    if (!zone_skipped(class_, round, zone)) {
 	      var marks;
 	      for (let marks_array of [rider.marks_per_zone, rider.computed_marks]) {
 		marks = (marks_array[round - 1] || [])[zone - 1];
@@ -652,8 +644,7 @@ var marksController = [
       try {
 	var rounds = 0;
 	var rider = $scope.rider;
-	var rc = $scope.ranking_class;
-	rounds = event.classes[rc - 1].rounds;
+	rounds = event.classes[$scope.class - 1].rounds;
 	var rounds_list = [];
 	for (var n = 1; n <= rounds; n++)
 	  rounds_list.push(n);
@@ -663,8 +654,7 @@ var marksController = [
 
     $scope.zones_list = function() {
       var rider = $scope.rider;
-      var rc = $scope.ranking_class;
-      return event.zones[rc - 1];
+      return event.zones[$scope.class - 1];
     };
 
     $scope.classSymbol = classSymbol;
@@ -675,16 +665,16 @@ var marksController = [
     $scope.marks_tab_to = function(round, index) {
       var rider = $scope.rider;
       if (rider) {
-	var rc = ranking_class(rider);
-	var zones = event.zones[rc - 1];
+	var class_ = rider.class;
+	var zones = event.zones[class_ - 1];
 	if ($scope.zone_wise_entry) {
-	  while (round++ < event.classes[rc - 1].rounds) {
-	    if (!zone_skipped(rc, round, zones[index]))
+	  while (round++ < event.classes[class_ - 1].rounds) {
+	    if (!zone_skipped(class_, round, zones[index]))
 	      return 'marks_' + round + '_' + zones[index];
 	  }
 	} else {
 	  while (++index < zones.length) {
-	    if (!zone_skipped(rc, round, zones[index]))
+	    if (!zone_skipped(class_, round, zones[index]))
 	      return 'marks_' + round + '_' + zones[index];
 	  }
 	}
@@ -695,9 +685,9 @@ var marksController = [
       var rider = $scope.rider;
       if (rider) {
 	function move_to(round, index) {
-	  var rc = ranking_class(rider);
-	  var zones = event.zones[rc - 1];
-	  var rounds = event.classes[rc - 1].rounds;
+	  var class_ = rider.class;
+	  var zones = event.zones[class_ - 1];
+	  var rounds = event.classes[class_ - 1].rounds;
 	  if (index >= 0 && index < zones.length &&
 	      round >= 1 && round <= rounds) {
 	    setFocus('#marks_' + round + '_' + zones[index]);
@@ -740,8 +730,7 @@ var marksController = [
     $scope.over_time = function() {
       try {
 	var rider = $scope.rider;
-	var rc = ranking_class(rider);
-	var gesamt = event.classes[rc - 1].riding_time;
+	var gesamt = event.classes[rider.class - 1].riding_time;
 	if (rider.start_time && rider.finish_time && gesamt) {
 	  var start_time = rider.start_time.match(/^(\d\d):(\d\d):(\d\d)$/);
 	  start_time = (+start_time[1] * 60 + +start_time[2]) * 60 + +start_time[3];

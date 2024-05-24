@@ -22,7 +22,7 @@ table.scoring_table th, table.scoring_table td {
 	<fieldset>
 	  <legend>Punktevergabe</legend>
 	  <p ng-if="rider">
-	    {{rider.number < 0 ? null : rider.number}} <span ng-bind-html="classSymbol(event.classes[ranking_class - 1].color)"></span>
+	    {{rider.number < 0 ? null : rider.number}} <span ng-bind-html="classSymbol(event.classes[class - 1].color)"></span>
 	    {{rider.last_name}} {{rider.first_name}} (<span title="{{event.classes[rider['class'] - 1].name}}">Klasse {{rider['class']}}</span>)
 	  </p>
 	  <p ng-if="!rider.number">
@@ -38,13 +38,13 @@ table.scoring_table th, table.scoring_table td {
 		</tr>
 		<tr ng-repeat="round in rounds_list()">
 		  <th style="text-align:right">
-		    <label for="marks_{{round}}_{{event.zones[ranking_class - 1][0]}}" title="Runde {{round}}" accesskey="{{round}}">
+		    <label for="marks_{{round}}_{{event.zones[class - 1][0]}}" title="Runde {{round}}" accesskey="{{round}}">
 		      R<span class="accesskey">{{round}}</span>
 		    </label>
 		  </th>
 		  <td ng-repeat="zone in zones_list()" style="text-align:center">
-		    <input ng-if="!event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="1" maxlength="1" ng-class="marks_class(round, zone)" ng-model="rider.marks_per_zone[round - 1][zone - 1]" placeholder="{{rider.computed_marks[round - 1][zone - 1]}}" ng-disabled="!rider.start || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
-		    <input ng-if="event.uci_x10 && !event.skipped_zones[ranking_class][round][zone]" type="text" size="2" maxlength="2" ng-class="marks_class(round, zone)" ng-model="rider.marks_per_zone[round - 1][zone - 1]" placeholder="{{rider.computed_marks[round - 1][zone - 1]}}" ng-disabled="!rider.start || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="!event.uci_x10 && !event.skipped_zones[class][round][zone]" type="text" size="1" maxlength="1" ng-class="marks_class(round, zone)" ng-model="rider.marks_per_zone[round - 1][zone - 1]" placeholder="{{rider.computed_marks[round - 1][zone - 1]}}" ng-disabled="!rider.start || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
+		    <input ng-if="event.uci_x10 && !event.skipped_zones[class][round][zone]" type="text" size="2" maxlength="2" ng-class="marks_class(round, zone)" ng-model="rider.marks_per_zone[round - 1][zone - 1]" placeholder="{{rider.computed_marks[round - 1][zone - 1]}}" ng-disabled="!rider.start || rider_does_not_start()" marks id="marks_{{round}}_{{zone}}" style="text-align:center" tab-to="marks_tab_to(round, $index)" ng-keydown="marks_keydown($event, round, $index)">
 		  </td>
 		  <td style="text-align:right;font-weight:bold">
 		    <span ng-if="rider.start" title="Runde {{round}}">{{rider.marks_per_round[round - 1]}}</span>
@@ -52,7 +52,7 @@ table.scoring_table th, table.scoring_table td {
 		</tr>
 	      </table>
 	      <p ng-if="rider.start && rider.class != null && !class_may_start(rider.class)" style="color: red">
-		Für Klasse {{ranking_class}} sind keine zu befahrenen Runden und Sektionen<br>
+		Für Klasse {{class}} sind keine zu befahrenen Runden und Sektionen<br>
 		ausgewählt, die Klasse startet daher nicht.
 	      </p>
 	    </fieldset>
@@ -118,7 +118,7 @@ table.scoring_table th, table.scoring_table td {
 		  </select>
 		</td>
 	      </tr>
-	      <tr ng-if="rider && (!old_rider.start || (features.registered && !old_rider.registered)) && starting_classes[ranking_class - 1]">
+	      <tr ng-if="rider && (!old_rider.start || (features.registered && !old_rider.registered)) && starting_classes[class - 1]">
 		<th>Teilnahme</th>
 		<td>
 		  <span ng-if="features.registered">
