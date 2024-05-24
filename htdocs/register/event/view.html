@@ -285,6 +285,7 @@
     <p ng-if="form.$invalid" style="color:red">
       * Eingabe erforderlich
     </p>
+    <!-- XXX -->
     <p ng-if="event.classes[rider.class - 1].ranking_class != rider.class" style="color:green">
      * Klasse „{{event.classes[rider.class - 1].name}}“ wird <span ng-if="hasFutureEvents">am {{date | date:"EEEE"}}</span> in Klasse „{{event.classes[event.classes[rider.class - 1].ranking_class - 1].name}}“ gewertet.
     </p>
