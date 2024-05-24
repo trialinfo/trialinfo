@@ -83,7 +83,7 @@ var marksController = [
       try {
 	var rider = $scope.rider;
 	if (rider.start && !rider.failure) {
-	  var class_ = rider.class_;
+	  var class_ = rider.class;
 	  var zones = current_zone != null ? [current_zone] : event.zones[class_ - 1];
 
 	  function try_to_focus(round, zone) {
@@ -202,7 +202,7 @@ var marksController = [
 	  }
 
 	  $scope.scoring_table = scoring_table;
-	  let class_ = $scope.rider.class_;
+	  let class_ = $scope.rider.class;
 	  let zones = event.zones[class_ - 1] || [];
 	  $scope.num_zones = zones.length;
 	})
