@@ -86,7 +86,7 @@ function generic_compare(v1, v2) {
 }
 
 function class_may_start(class_, event) {
-  return event.zones[event.classes[class_ - 1].ranking_class - 1] &&
+  return event.zones[class_ - 1] &&
 	 event.classes[class_ - 1].rounds;
 }
 
