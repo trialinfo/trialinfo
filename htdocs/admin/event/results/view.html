@@ -200,6 +200,7 @@ table.ranking tr td.important {
 	    <td rowspan="{{rows_per_rider}}" ng-repeat="field in fields track by $index" ng-style="field.style" ng-bind-html="field.html_value(rider)"></td>
 	    <td ng-repeat-start="ev in enumerate(0, events.length - 1)" ng-init="result = rider.results[ev]; event_ranking = class_ranking.events[ev]" style="display:none"></td>
 	    <td ng-if="!result" colspan="{{(features.individual_marks ? event_ranking.zones.length + 1 : event_ranking.rounds) + 1 + event_ranking.additional_marks + event_ranking.penalty_marks + event_ranking.tie_break + marks_distribution_columns}}" rowspan="{{features.individual_marks ? rounds : 1}}"></td>
+
 	    <td ng-if-start="result.failure" style="display:none"></td>
 	    <td ng-repeat="zone in (features.individual_marks ? event_ranking.zones : [])" style="text-align:right" class="individual-marks">{{result.marks_in_zone(1, zone)}}</td>
 	    <td ng-if="features.individual_marks" style="text-align:right" class="round" ng-class="result.round_class(1, rider, class_ranking)" ng-bind-html="result.marks_in_round(1)"></td>
@@ -207,7 +208,9 @@ table.ranking tr td.important {
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.additional_marks">{{result.additional_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.penalty_marks">{{result.penalty_marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" ng-if="events.length > 1" colspan="{{1 + event_ranking.tie_break + marks_distribution_columns}}"><span title="{{failure(result)}}">{{failure(result)}}</span></td>
+	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.tie_break">{{result.tie_break ? result.tie_break + '.' : ''}}</td>
 	    <td ng-if-end style="display:none"></td>
+
 	    <td ng-if-start="result && !result.failure" style="display:none"></td>
 	    <td ng-repeat="zone in (features.individual_marks ? event_ranking.zones : [])" style="text-align:right" class="individual-marks">{{result.marks_in_zone(1, zone)}}</th>
 	    <td ng-if="features.individual_marks" style="text-align:right" class="round" ng-class="result.round_class(1, rider, class_ranking)" ng-bind-html="result.marks_in_round(1)"></td>
@@ -218,15 +221,19 @@ table.ranking tr td.important {
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-repeat="k in distribution" ng-if="events.length > 1" class="distribution">{{result.marks_distribution[k]}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="event_ranking.tie_break">{{result.tie_break ? result.tie_break + '.' : ''}}</td>
 	    <td ng-if-end style="display:none"></td>
+
 	    <td ng-repeat-end style="display:none"></td>
+
 	    <td ng-if-start="rider.failure" style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:0" colspan="{{1 + marks_distribution_columns + (features.explain_rank && class_ranking.explain_rank)}}"><span title="{{failure(rider)}}">{{failure(rider)}}</span></td>
 	    <td ng-if-end style="display:none"></td>
+
 	    <td ng-if-start="!rider.failure" style="display:none"></td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right">{{rider.marks | fractional}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-repeat="k in distribution" class="distribution {{rider.decisive_marks == k ? 'important' : ''}}">{{rider.marks_distribution[k]}}</td>
 	    <td rowspan="{{rows_per_rider}}" style="text-align:left" ng-if="features.explain_rank && class_ranking.explain_rank">{{explain_rank(class_ranking.riders, $index)}}</td>
 	    <td ng-if-end style="display:none"></td>
+
 	    <td rowspan="{{rows_per_rider}}" style="text-align:right" ng-if="class_ranking.scores">{{rider.score | fractional}}</td>
 	  </tr>
 	  <tr ng-repeat="round in (features.individual_marks ? enumerate(2, rounds) : [])">
