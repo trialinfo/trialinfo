@@ -839,6 +839,8 @@ var ridersController = [
       .catch(network_error);
     };
 
+    var year_of_event = (date_of_event(event) || new Date()).getFullYear();
+
     $scope.$watch("rider.class", function(class_) {
       $scope.no_ranking1 = class_ &&
 	event.classes[class_ - 1].no_ranking1;
@@ -865,7 +867,8 @@ var ridersController = [
 	    $scope.min_age = 10;
 	    $scope.max_age_year = 15;
 	  }
-	} else if (event.type.match(/^otsv-ecup/)) {
+	} else if (event.type.match(/^otsv-ecup/) &&
+		   year_of_event < 2025) {
 	  if (class_ == 1) {
 	    $scope.min_age_year = 2;
 	    $scope.max_age_year = 6;
