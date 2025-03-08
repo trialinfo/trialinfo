@@ -193,7 +193,8 @@ var eventController = [
 	    $scope.min_age = 10;
 	    $scope.max_age_year = 15;
 	  }
-	} else if (event.type.match(/^otsv-ecup/)) {
+	} else if (event.type.match(/^otsv-ecup/) &&
+		   year_of_event < 2025) {
 	  if (class_ == 1) {
 	    $scope.min_age_year = 2;
 	    $scope.max_age_year = 6;
