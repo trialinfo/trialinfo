@@ -483,7 +483,7 @@ var marksController = [
 	    else if (year_of_event <= 2024)
 	      m = Math.trunc(Math.max(0, (year - 1999 + 5) / 5));
 	    else
-	      m = Math.trunc(Math.max(0, (year - 1999 + 10) / 10));
+	      m = Math.trunc(Math.max(0, (year - 1999 + 11) / 11));
 	   if (m)
 		   rider.additional_marks = m;
 	  }
