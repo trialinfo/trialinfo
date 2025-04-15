@@ -4466,7 +4466,6 @@ async function email_change_password(mode, to, confirmation_url) {
     text: message,
     headers: {
       'Auto-Submitted': 'auto-generated',
-      'Content-Type': 'text/plain; charset=utf-8'
     }
   });
   console.log('Confirmation email sent to ' + JSON.stringify(to));
