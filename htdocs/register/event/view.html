@@ -216,7 +216,7 @@
 	  <select ng-model="rider.class" ng-disabled="rider.number > 0" required ng-options="class.class as class.name disable when class_disabled[class.class - 1] for class in defined_classes" name="class">
 	    <option value=""></option>
 	  </select><span ng-if="required_error(form.class)" style="color:red">*</span><span ng-if="event.classes[rider.class - 1].ranking_class != rider.class" style="color:green">*</span>
-	  <span ng-if="age && age_year && otsv_event() && !rider.rankings[1]" style="color:red">
+	  <span ng-if="age && age_year && otsv_event()" style="color:red">
 	    <span ng-if="min_age && age < min_age" style="display:block">
 	      <em>Fahrer ist unter {{min_age}} Jahre alt, und darf in Klasse „{{event.classes[rider.class - 1].name}}“ noch nicht starten.</em>
 	    </span>
