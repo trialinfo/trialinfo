@@ -520,11 +520,13 @@ function compute_event(cached_riders, event, compute_marks) {
 	  let year = rider.year_of_manufacture || year_of_event;
 	  let m;
 	  if (year_of_event <= 2021)
-	    m = Math.trunc(Math.max(0, (year - 1987 + 3) / 3));
+	    m = Math.trunc(Math.max(0, (year - 1984) / 3));
 	  else if (year_of_event <= 2024)
-	    m = Math.trunc(Math.max(0, (year - 1999 + 5) / 5));
+	    m = Math.trunc(Math.max(0, (year - 1994) / 5));
+	  else if (year_of_event <= 2025)
+	    m = Math.trunc(Math.max(0, (year - 1988) / 11));
 	  else
-	    m = Math.trunc(Math.max(0, (year - 1999 + 11) / 11));
+	    m = Math.trunc(Math.max(0, (year - 1990) / 5));
 	  if (m)
 	    rider.additional_marks = m;
 	}
