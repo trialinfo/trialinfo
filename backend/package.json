@@ -39,7 +39,7 @@
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "systemd": "^0.3.1",
-    "tmp": "0.0.33"
+    "tmp": "0.2.4"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
