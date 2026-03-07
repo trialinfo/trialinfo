@@ -516,7 +516,9 @@ function compute_event(cached_riders, event, compute_marks) {
     if (event.type == 'otsv-acup') {
       let year_of_event = (common.date_of_event(event)).getFullYear();
       for (let rider of riders) {
-	if ((rider.class >= 8 && rider.class <= 11) && !rider.group) {
+	if (rider.group)
+	  continue;
+	if ((rider.class >= 8 && rider.class <= 12) || rider.rankings[1]) {
 	  let year = rider.year_of_manufacture || year_of_event;
 	  let m;
 	  if (year_of_event <= 2021)
