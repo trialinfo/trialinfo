@@ -475,7 +475,7 @@ var marksController = [
 	rider.additional_marks = null;
 
 	if (event.type == 'otsv-acup' && !rider.group) {
-	  if (rider.class >= 8 && rider.class <= 11) {
+	  if ((rider.class >= 8 && rider.class <= 12) || rider.rankings[1]) {
 	    let year = rider.year_of_manufacture || year_of_event;
 	    let m;
 	    if (year_of_event <= 2021)
